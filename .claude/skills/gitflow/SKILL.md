@@ -19,7 +19,7 @@ Course + team branch model. GitHub is mandatory; product docs vs develop stay se
 | `hotfix/<slug>` | Urgent fix on `main` when demo is broken | PR → `main` (and cherry-pick / merge to `develop`) |
 | `release/<version>` | Optional freeze before final demo (S3) | Team agreement |
 
-`<slug>` = short kebab-case story or task: `savings-create-pot`, `auth-generic-login-error`, `ci-emulator`.
+`<slug>` = short kebab-case story or task: `savings-create-pot`, `auth-generic-login-error`, `t07-9-home-view`.
 
 ## Everyday flow
 
@@ -28,7 +28,7 @@ develop
   └── feature/savings-create-pot     ← create from develop
         commits: feat(savings): … US-17
         PR → develop (one US)
-        review + CI green
+        review + tests pass
         merge (squash or merge — team pick one and stay consistent)
 ```
 

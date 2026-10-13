@@ -1,97 +1,99 @@
 ---
 name: code-style
-description: Load when writing or reviewing Vue 3 + Firebase + TypeScript code for naming, SFC structure, composable ModelView shape, file organization, readability, or F3-Evolt design conventions. Use for any implementation PR review or scaffold on the frontend or shared code.
+description: Load when writing or reviewing Vue 3 + TypeScript or Python FastAPI code for naming, SFC structure, composable ViewModel shape, file organization, readability, or F3-Evolt design conventions. Use for any implementation PR review or scaffold.
 ---
 
-# Code style — Vue 3 + TypeScript (F3-Evolt)
+# Code style — Vue 3 + TypeScript, Python + FastAPI (F3-Evolt)
 
-Clear and traceable — not “cutre”, not over-clever.  
-Stack: **Vue 3 SFC** (`<script setup lang="ts">`), composables, TypeScript, Firebase adapters.
+Clear and traceable — not “cutre”, not over-clever.
+Stack: **Vue 3 SFC** (`<script setup lang="ts">`) with composables and strict TypeScript; **FastAPI** on the backend.
 
 ## Naming
 
 | Kind | Convention | Example |
 |------|------------|---------|
-| Features (folders) | business words | `savings`, `transfers`, `auth` |
-| Models | nouns (pure TS) | `SavingPot`, `Transaction`, `Money` |
-| ModelView composables | `useXxxModelView` | `useContributeModelView` |
-| ModelView commands | verbs | `submitContribution`, `logoutUser` |
-| Vue views | `XxxView.vue` or feature screen names | `ContributeView.vue` |
-| Shared components | `Xxx.vue` presentational | `EmptyState.vue` |
-| Services / use cases | `XxxService` / `CreateXxx` | `CreateSavingPot` |
-| Ports | `XxxRepository` / `XxxGateway` | `UserRepository` |
-| Adapters | `FirebaseXxxAdapter` / `FirestoreXxxAdapter` | `FirestoreUserAdapter` |
-| Files | match main type | `savingPot.ts`, `useSavingsModelView.ts` |
+| Views | `XxxView.vue` | `HomeView.vue`, `TopUpView.vue` |
+| Reusable components | `Xxx.vue` presentational | `MovementRow.vue`, `EmptyState.vue` |
+| ViewModel composables | `useXxxViewModel` | `useHomeViewModel` |
+| ViewModel actions | verbs | `load`, `submit`, `loadMore`, `retry` |
+| Frontend services | `xxxService.ts`, one function per endpoint | `homeService.ts` |
+| Frontend models and types | nouns | `movement.ts`, `Movement` |
+| Backend services | `xxx_service.py` | `topup_service.py` |
+| Backend routers | the resource | `routers/movements.py` |
+| Backend repositories | `XxxRepository` | `MovementRepository` |
+| Files | match their main export | `useHomeViewModel.ts` |
 
 Avoid: `manager`, `helper`, `misc`, `stuff`, `data2`, `handleThing`, `comp1`.
 
 ## Vue SFC shape
 
 ```
-<template>   # structure + bindings only
-<script setup lang="ts">  # props, emits, use ModelView
-<style scoped>            # component-local only
-</style>
+<script setup lang="ts">   # props, emits, use the ViewModel
+<template>                 # structure + bindings only
+<style scoped>             # component-local only
 ```
 
 - One screen or one presentational component per file.
-- Prefer `<script setup lang="ts">` + `defineProps` / `defineEmits`.
-- Shared UI: props in, events out — no Firebase imports.
+- `<script setup lang="ts">` + `defineProps<{…}>()` / `defineEmits<{…}>()`.
+- Reusable components: props in, events out — no service calls.
+- Colours and typography come from the global CSS variables, not from values typed in a component.
 
-## Composable ModelView shape
+## Composable ViewModel shape
 
 ```ts
-// features/<f>/modelview/useXxxModelView.ts
-export function useXxxModelView(...args) {
-  const state = reactive({ loading: false, error: null as string | null })
-  const service = useXxxService()
-  async function submit() { /* command */ }
+// frontend/src/viewmodels/useXxxViewModel.ts
+export function useXxxViewModel() {
+  const isLoading = ref(false)
+  const error = ref<string | null>(null)
   const canSubmit = computed(() => { ... })
-  return { ...toRefs(state), submit, canSubmit }
+  async function submit() { /* action */ }
+  return { isLoading, error, canSubmit, submit }
 }
 ```
 
-- Named exports; one main responsibility per composable.
-- Domain errors → **user-safe** strings before return to the view.
+- Named exports; one screen per composable.
+- Error codes → **user-safe** strings before they reach the view.
 
 ## File shape (all layers)
 
-- One main exported type/function per file.
+- One main exported function, class or type per file.
 - Prefer small modules over long files (open a file, know its job in 5 seconds).
 - No dead code / commented-out blocks in PRs.
-- Pure model files: no `ref`, no `firebase/*`.
+- `models/` files are pure: no `ref`, no HTTP.
 
 ## Clarity rules
 
-1. **Traceable:** template → composable → service → adapter.
+1. **Traceable:** template → composable → service → API.
 2. **Explicit names:** `amount`, `potId` over `a`, `d1`.
 3. **Small functions/composables.**
 4. **No clever one-liners** that need a paragraph of comments.
-5. **Typed boundaries** at service/function edges.
-6. **Consistent errors:** typed domain codes → ModelView user strings.
+5. **Typed boundaries:** service functions and ViewModel actions declare what they take and return; no `any`.
+6. **Money is integer cents** everywhere; only the View shows euros.
+7. **Consistent errors:** the contract's codes → ViewModel user strings.
 
 ## Design rules (SOLID/DRY light)
 
 - One reason to change per composable/service.
-- Prefer adding a use case over a giant switch in a composable.
-- Extract shared **rules** to `shared/services`; don’t abstract two different UI copies for sport.
-- Ports owned by the consumer where practical; Firebase behind adapters.
+- Prefer adding a function over a giant switch in a composable.
+- A rule used in 2+ places goes in one module; don’t abstract two different UI copies for sport.
 
 ## What we reject
 
 | Rejected | Instead |
 |----------|---------|
-| Firebase in `.vue` | Service → port → adapter |
-| Business logic in templates | ModelView / model / service |
-| God composable with 20 commands | Split by flow or extract services |
-| Copy-paste across features | Shared service |
-| Magic money/limit numbers in views | Named constants in model/service |
+| `fetch` or a service call in `.vue` | View → ViewModel → service |
+| Business logic in templates | ViewModel / model / backend service |
+| God composable with 20 actions | Split by screen or extract a model helper |
+| Copy-paste of a rule | One module, imported twice |
+| Magic money/limit numbers in views | Named constants in the model or ViewModel |
+| `any`, or a contract type declared twice | One type in `models/`, imported |
 
 ## Self-check
 
 - [ ] Names match the table above
 - [ ] `<script setup lang="ts">` and thin views
-- [ ] ModelViews are `useXxxModelView` with verb commands
-- [ ] Models pure; Firebase only in adapters/functions
+- [ ] ViewModels are `useXxxViewModel` with verb actions
+- [ ] Models pure; HTTP only in `services/`
+- [ ] No `any`; contract types come from `models/`
 - [ ] Flow traceable end-to-end
 - [ ] Clear enough for another junior to extend

@@ -41,7 +41,7 @@ Short description of the change.
 US ref / problem solved. Link backlog or US id (US-XX).
 
 ## How
-Layers touched (View / ModelView / Service / shared / firebase).
+Layers touched (View / ViewModel / Model, or Router / Service / Repository).
 
 ## AC mapping
 - [ ] AC 1 …
@@ -52,11 +52,11 @@ UI: before/after or empty/loading/error states.
 
 ## Checklist
 - [ ] Commits follow commit-conventions
-- [ ] Architecture: correct layers (no UI→Firebase)
+- [ ] Architecture: correct layers (no API call from a View, no `seed.py` access from a service)
 - [ ] Shared rules not duplicated
 - [ ] Tests added/updated where required
 - [ ] Help/doc text updated if user-facing
-- [ ] CI green
+- [ ] Tests pass (`vitest` / `pytest`)
 - [ ] DoD ready for review
 ```
 
@@ -80,7 +80,7 @@ UI: before/after or empty/loading/error states.
 4. Help/doc if user-facing  
 5. PO accepts  
 6. PR reviewed  
-7. CI green; staging/demo deployable  
+7. CI green; staging/demo deployable (out of Sprint 0: until then, tests pass locally)  
 8. No critical open bugs for that story  
 9. Architecture checklist respected  
 

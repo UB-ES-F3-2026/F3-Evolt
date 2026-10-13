@@ -15,7 +15,7 @@ We comment **why**, not **what**. Comments must help the next junior, not restat
 | Document a **financial invariant** | Restate the function name |
 | Note a **workaround** and when to remove it | Leave “TODO: fix later” with no owner |
 | Link to US / TR when relevant | Comment every import |
-| Document public API of a service briefly | Wall of comments in view widgets |
+| Document public API of a service briefly | Wall of comments in views |
 
 ## What deserves a comment
 
@@ -36,7 +36,7 @@ We comment **why**, not **what**. Comments must help the next junior, not restat
 ```ts
 // Password rules come from US-01 (min 8, one uppercase, one digit).
 // Shared with password reset — do not duplicate in reset flow.
-export function isPasswordStrong(pw: string): boolean { ... }
+export function isPasswordStrong(password: string): boolean { ... }
 ```
 
 ```ts

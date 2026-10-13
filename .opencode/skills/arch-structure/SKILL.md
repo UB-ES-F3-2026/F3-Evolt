@@ -1,83 +1,92 @@
 ---
 name: arch-structure
-description: Load when designing or changing project structure, folders, architecture layers, SOLID, DRY, Clean Architecture, Screaming Architecture, dependency rules, or where a new piece of code should live. Use for any non-trivial feature start or refactor of folder layout.
+description: Load when designing or changing project structure, folders, architecture layers, SOLID, DRY, Clean Architecture, dependency rules, or where a new piece of code should live. Use for any non-trivial feature start or refactor of folder layout.
 ---
 
 # Architecture & Structure (F3-Evolt)
 
-Standards for **Screaming Architecture**, **Clean Architecture**, **SOLID**, **DRY**.
+Standards for the **project layout**, **Clean Architecture** layers, **SOLID** and **DRY**.
 Full context: repo `AGENTS.md`.
 
-## Screaming Architecture
+## Layout
 
-Folders scream **what the product is**, not which technical layer.
-
-```
-src/
-  features/     # auth, account, transfers, savings, gamification, multidivisa, movements
-  shared/       # services, models, components, utils (true cross-feature only)
-  app/          # shell, routing, composition root
-```
-
-- New business capability → new folder under `features/`.
-- Never create `src/components/` or `src/services/` as the top-level organization.
-
-## Feature layout (MVVM + services)
+Two apps in one repo. Inside each one, folders are named after the **layer**.
 
 ```
-features/<feature>/
-  model/       # entities, value types, pure logic
-  modelview/   # UI state + commands (ViewModel pattern)
-  view/        # screens & components
-  services/    # use cases / orchestration / data access for this feature
+backend/
+  app/
+    main.py
+    models/         # data classes
+    repositories/   # access to the in-memory data
+    services/       # business logic
+    routers/        # endpoints
+    data/seed.py    # hardcoded data
+  tests/
+
+frontend/src/
+  models/        # Model: data and JSON mapping
+  services/      # Model: API calls
+  viewmodels/    # ViewModel: state and logic of each screen
+  views/         # View: screens
+  components/    # View: reusable pieces
+  router/
+  mocks/
 ```
+
+- No feature folders (`features/<x>/`) and no `shared/` folder: `components/`, `models/` and `services/` are already shared by every screen.
+- Do not add another top-level folder to `frontend/src/` or `backend/app/` without agreeing it in the team.
 
 ## Dependency rule (Clean Architecture)
 
 ```
-View → ModelView → Services → Ports → Adapters (Firebase/API)
+Frontend:  View  →  ViewModel  →  Service  →  apiClient  →  API
+Backend:   Router  →  Service  →  Repository  →  Data
 ```
 
 | May depend on | Must not depend on |
 |---------------|--------------------|
-| View → ModelView, shared UI | View → Firebase, repositories |
-| ModelView → Model, service **interfaces** | ModelView → Firestore SDK |
-| Services → Models, shared services, adapters | Services → View / ModelView |
-| Shared services → nothing feature-specific | Shared → features/*, view/* |
-
-**Adapters** live at the outer edge (Firebase). **Ports** are small interfaces owned by the feature or shared layer.
+| View → its ViewModel, `components/` | View → services, `fetch` |
+| ViewModel → `services/`, `models/` | ViewModel → templates, views |
+| Frontend service → `apiClient.ts`, `models/`, `mocks/` | Frontend service → ViewModels, views |
+| Router → services | Router → repositories, `data/seed.py` |
+| Backend service → repositories, models | Backend service → `data/seed.py`, routers |
+| Repository → data, models | Repository → services, routers |
 
 ## SOLID (practical)
 
-- **S** — one service = one use case or one policy (not “user manager + rules + Firebase”).
-- **O** — add a new use case / adapter instead of growing a giant switch.
-- **L** — all `XRepository` implementations honour the same contract and errors.
-- **I** — small ports (`findUserById`, `sendMoney`), not mega interfaces.
-- **D** — ModelView/Services depend on ports, never on concrete Firebase classes.
+- **S** — a ViewModel serves one screen; a service function solves one use case (not “home + top-up + limits”).
+- **O** — add a new service function or ViewModel instead of growing a giant switch.
+- **L** — a mock returns exactly what the real service returns: same shape, same errors as `docs/api.md`.
+- **I** — small modules: one service file per resource, one function per endpoint.
+- **D** — each layer talks only to the next one; services never read `seed.py`, views never call `fetch`.
 
 ## DRY
 
-- Same **business rule** in 2+ places → extract to `shared/services` or `shared/models`.
+- Same **business rule** in 2+ places → one module both import (skill `middle-services`).
 - Different UI copies that look similar → do **not** extract yet.
-- Feature services **compose** shared services; they never copy-paste them.
 
 ## Where does new code go?
 
 | Code | Location |
 |------|----------|
-| Entity / value type | `features/<f>/model/` or `shared/models/` if used everywhere |
-| UI-only state | `features/<f>/modelview/` |
-| Screen/widget | `features/<f>/view/` |
-| Use case / orchestration | `features/<f>/services/` |
-| Rule used by 2+ features | `shared/services/` |
-| Firestore/Auth adapter | adapter next to services + port interface |
-| Routing / DI wiring | `app/` |
+| Screen | `frontend/src/views/XxxView.vue` |
+| State and actions of a screen | `frontend/src/viewmodels/useXxxViewModel.ts` |
+| Reusable UI piece | `frontend/src/components/Xxx.vue` |
+| API call | `frontend/src/services/xxxService.ts` (through `apiClient.ts`) |
+| Type of a contract object, API JSON → app object | `frontend/src/models/` |
+| Example data for mocks | `frontend/src/mocks/` |
+| Route | `frontend/src/router/` |
+| Endpoint | `backend/app/routers/` |
+| Business rule | `backend/app/services/` |
+| Data access | `backend/app/repositories/` |
+| Data class | `backend/app/models/` |
+| Hardcoded data | `backend/app/data/seed.py` |
+| Backend test | `backend/tests/` |
 
 ## Self-check before you finish
 
-- [ ] Path is under a **feature** or true **shared**, not a dump layer
-- [ ] No Firebase/HTTP in View or ModelView
-- [ ] Model has no UI or framework imports
-- [ ] Shared code is not a dependency magnet for features
-- [ ] SOLID: no god service; ports are small
-- [ ] DRY: shared rules live in one place
+- [ ] The file is in the folder of its layer
+- [ ] No `fetch` or service call in a View; no template in a ViewModel
+- [ ] Backend services read data only through repositories
+- [ ] SOLID: no god service, no god ViewModel
+- [ ] DRY: each business rule lives in one place
