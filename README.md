@@ -100,3 +100,24 @@ feat(savings): create pot with target US-17
 | `docs/P1/Team Specification.md` | Product catalog + team |
 | `docs/P1/backlog.md` | Product backlog |
 | `docs/P1/trello-backlog.md` | Cards to copy into Trello |
+
+---
+
+## Frontend
+
+Vue 3 + TypeScript + Vite SPA (the repo root *is* the frontend root).
+
+```bash
+npm install
+npm run dev      # dev server on http://localhost:5173
+npm run build    # type-check (vue-tsc) + production build
+npm run preview  # serve the production build
+```
+
+Layout follows the architecture above:
+
+```src/
+  app/                  # shell + router (composition root)
+  features/             # home · movements · topup (model · modelview · view · services)
+  shared/               # cross-feature components, services, models, utils
+```
