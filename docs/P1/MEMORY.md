@@ -122,16 +122,16 @@
 - `plantejament.md` — notes curs
 - `trello-backlog.md` — **24 US + èpiques** per copiar a Trello
 - `PDFs/` — materials de classe
-- `.claude/skills/` · `.opencode/skills/` — **11 skills lazy** (mateix contingut)
+- `.claude/skills/` · `.opencode/skills/` — **10 skills lazy** (mateix contingut)
 
 ## Workflow AI (decisió d'equip)
 
-- **Stack:** Vue 3 + TypeScript (frontend) · Firebase (backend: Functions + Firestore + Auth)
-- **MVVM:** Model · ModelView (composable `useXxxModelView`) · View
-- **Clean Architecture** + **shared services** (middle)
-- **Screaming Architecture**, **SOLID**, **DRY**
+- **Stack:** Vue 3 + TypeScript amb Vite i Vitest (frontend, a `frontend/`) · Python + FastAPI amb pytest i dades en memòria (backend, a `backend/`)
+- **MVVM:** Model · ViewModel (composable `useXxxViewModel`) · View, amb carpetes per capa
+- **Contracte de l'API:** `docs/api.md`
+- **Clean Architecture**, **SOLID**, **DRY**; cada regla de negoci viu un sol cop (al backend)
 - Solucions **clares i traciables** (no cutre, no sobre-enginyeria)
-- Skills: arch-structure, mvvm-patterns (Vue), backend-clean (Firebase), firebase-stack, middle-services, shared-module, code-style, comments-docs, gitflow, pr-conventions, commit-conventions
+- Skills: arch-structure, mvvm-patterns (Vue), backend-clean (FastAPI), middle-services, shared-module, code-style, comments-docs, gitflow, pr-conventions, commit-conventions
 - Commits: `type(scope): subject US-XX`
 - Branches: `develop` = PR base · `feature/<slug>` · `main` = demo/release
 - PR: una US / una tasca tècnica; checklist DoD + arquitectura

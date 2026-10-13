@@ -22,21 +22,22 @@ We use AI as a **co-pilot** (AI-SDLC). Humans own architecture, product and fina
 
 | Concept | What it means for us |
 |---------|----------------------|
-| **Screaming Architecture** | Folders named by business features (`savings`, `transfers`, `auth`…), not by technical layers. |
-| **MVVM** | Each feature uses **Model · ModelView · View** (ModelView = ViewModel). |
-| **Clean Architecture** | View → ModelView → Services → ports → Firebase/API. Outer depends on inner. |
-| **Shared Services** | Cross-feature business logic lives once in `shared/services` (middle layer). |
-| **SOLID** | Small services, small ports, depend on interfaces, one reason to change. |
-| **DRY** | Extract shared **business rules**; do not copy-paste them across features. |
+| **Stack** | Frontend: Vue 3 + TypeScript, Vite, Vue Router, Vitest. Backend: Python + FastAPI, pytest, data in memory. |
+| **Layout** | Two apps, `frontend/` and `backend/`, each with folders named after the layer. |
+| **MVVM** | The frontend uses **Model · ViewModel · View**; a ViewModel is a composable `useXxxViewModel`. |
+| **Clean Architecture** | View → ViewModel → Service → API, and Router → Service → Repository → Data. Each layer knows only the next one. |
+| **Business rules live once** | Enforced in the backend services; a ViewModel repeats a check only for faster feedback. |
+| **SOLID** | Small services, small ViewModels, one reason to change. |
+| **DRY** | Extract shared **business rules**; do not copy-paste them. |
+| **Contract** | [`docs/api.md`](docs/api.md) fixes routes, fields and error codes for both sides. |
 
 ```
-src/
-  features/<feature>/   # model · modelview · view · services
-  shared/               # services · models · components · utils
-  app/                  # shell, routing, composition root
+backend/app/     # models · repositories · services · routers · data/seed.py
+backend/tests/
+frontend/src/    # models · services · viewmodels · views · components · router · mocks
 ```
 
-Flow: **View event → ModelView command → Service → Model update → View re-render.**
+Flow: **View event → ViewModel action → Service → API → View re-render.**
 
 ### AI skills (lazy)
 
@@ -45,12 +46,11 @@ Skills live in the repo and load only when the task matches:
 | Skill | Use when |
 |-------|----------|
 | `arch-structure` | folder layout, layers, SOLID/DRY, dependencies |
-| `mvvm-patterns` | Vue 3 Model / ModelView (composables) / View |
-| `backend-clean` | Firebase backend: use cases, ports, Cloud Functions |
-| `firebase-stack` | Firebase Auth, Firestore, rules, adapters, config |
-| `middle-services` | shared business services / middle layer |
-| `shared-module` | cross-cutting models, utils, contracts |
-| `code-style` | Vue + TS naming, SFC shape, design consistency |
+| `mvvm-patterns` | Vue 3 Model / ViewModel (composables) / View |
+| `backend-clean` | FastAPI backend: routers, services, repositories |
+| `middle-services` | business rules used in more than one place |
+| `shared-module` | reusable models, components, helpers |
+| `code-style` | naming, file shape, design consistency |
 | `comments-docs` | when and how to comment |
 | `gitflow` | branches, develop/main, hotfix, PR base |
 | `pr-conventions` | pull request format and checklist |
@@ -86,7 +86,7 @@ feat(savings): create pot with target US-17
 - Title mirrors the commit
 - Body maps work to acceptance criteria
 - Architecture checklist + DoD before request for review
-- CI green; ≥1 teammate review
+- Tests pass; ≥1 teammate review
 
 ---
 
@@ -95,6 +95,7 @@ feat(savings): create pot with target US-17
 | Path | Content |
 |------|---------|
 | `AGENTS.md` | Engineering + AI standards (source of truth for code style) |
+| `docs/api.md` | API contract shared by backend and frontend |
 | `docs/P1/AGENTS.md` | Course context, Scrum, roles, backlog rules |
 | `docs/P1/MEMORY.md` | Decisions and workflow memory |
 | `docs/P1/Team Specification.md` | Product catalog + team |

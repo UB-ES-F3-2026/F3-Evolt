@@ -4,6 +4,7 @@
 > AI accelerates implementation, tests, docs and refactors **inside these rules**.
 
 Product context lives in `docs/P1/` (backlog, US, roles).
+The API contract shared by backend and frontend is `docs/api.md`.
 This file is the **coding standard** every AI tool and teammate follows.
 
 ---
@@ -21,117 +22,109 @@ Junior developers with real knowledge of patterns. We want:
 
 ## 2. Architecture (non-negotiable)
 
-### 2.1 Screaming Architecture
+### 2.1 Stack
 
-Folders are named after **business features**, not technical layers.
+| Part | Technology |
+|------|------------|
+| **Frontend** | Vue 3 + TypeScript (strict), Vite, Vue Router, Vitest. No Pinia. |
+| **Backend** | Python + FastAPI, pytest. Data lives in memory (seeded at start-up) during Sprint 0. |
+| **Contract** | `docs/api.md`. It changes only through a PR reviewed by backend and frontend. |
 
-```
-src/
-  features/                 # SCREAMS what the product is
-    auth/
-    account/
-    transfers/
-    savings/
-    gamification/
-    multidivisa/
-    movements/
-  shared/                   # true cross-feature code only
-    services/
-    models/
-    components/
-    utils/
-  app/                      # shell, routing, composition root
-```
+### 2.2 Project layout
 
-**Bad (technical layers first):**
+Two apps in one repo. Inside each one, folders are named after the **layer**.
 
 ```
-src/
-  components/
-  services/
-  models/
-  utils/
+backend/
+  app/
+    main.py
+    models/         # data classes
+    repositories/   # access to the in-memory data
+    services/       # business logic
+    routers/        # endpoints
+    data/seed.py    # hardcoded data
+  tests/
+
+frontend/src/
+  models/        # Model: data and JSON mapping
+  services/      # Model: API calls
+  viewmodels/    # ViewModel: state and logic of each screen
+  views/         # View: screens
+  components/    # View: reusable pieces
+  router/
+  mocks/
 ```
 
-**Good (features first):** `features/savings/`, `features/transfers/`, …
+There are no feature folders (`features/<x>/`) and no `shared/` folder: `components/`, `models/` and `services/` are already shared by every screen.
 
-### 2.2 MVVM inside every feature (Model · ModelView · View)
+### 2.3 MVVM in the frontend (Model · ViewModel · View)
 
-Team naming: **ModelView** = ViewModel, implemented in Vue 3 as a **composable**.
+A ViewModel is a Vue 3 **composable** named `useXxxViewModel` (`viewmodels/useHomeViewModel.ts`).
 
-**Stack:** Vue 3 + TypeScript (frontend) · Firebase (backend: Functions + Firestore + Auth)
-
-```
-features/savings/
-  model/          # entities, value types, pure helpers
-  modelview/      # useXxxModelView.ts — state, commands, derived UI data
-  view/           # *.vue screens & components (dumb-ish)
-  services/       # feature services (orchestration + Firebase adapters)
-```
-
-| Layer | Vue piece | Does | May import |
-|-------|-----------|------|------------|
-| **View** | `*.vue` | Render UI, forward user events | ModelView, shared UI |
-| **ModelView** | `useXxxModelView.ts` | UI state, commands, derived values | Model, Services (via interfaces) |
-| **Model** | pure `.ts` | Domain data, pure logic | nothing domain-external |
-| **Services** | plain TS | Use cases, orchestration, adapters | Model, shared services, data sources |
+| Layer | Folders | Contains | Must not contain |
+|-------|---------|----------|------------------|
+| **Model** | `models/`, `services/` | Data, JSON mapping and API calls | Screen state |
+| **ViewModel** | `viewmodels/` | State, validations and actions of each screen | HTML or styles |
+| **View** | `views/`, `components/` | Template and styles; renders what the ViewModel exposes | Business logic or API calls |
 
 **Rules:**
 
-1. View (`.vue`) does **not** call repositories/Firebase directly.
-2. ModelView does **not** render templates or know layout.
-3. Model is pure data + pure functions (no Firebase, no Vue reactivity in domain models).
-4. Services are the only place that talks to shared services / Firebase / APIs.
+1. A `.vue` file never calls a service or `fetch`; it only uses its ViewModel.
+2. A ViewModel has no template and knows nothing about layout.
+3. `models/` is pure data + pure functions (no Vue reactivity, no HTTP).
+4. `services/` is the only place that talks to the API, always through `services/apiClient.ts`.
 
 Full Vue rules: skill `mvvm-patterns`.
 
-### 2.3 Clean Architecture (layers + dependency rule)
+### 2.4 Layers in the backend
 
 ```
-View  →  ModelView  →  Services (use cases)  →  Ports  →  Adapters (Firebase/API)
-                ↘              ↙
-                  Shared services / shared models
+Router  →  Service  →  Repository  →  Models / data
 ```
 
-**Dependency rule:** outer layers depend on inner layers. Inner layers never depend on outer.
+| Layer | Folder | Does | Must not |
+|-------|--------|------|----------|
+| **Router** | `routers/` | Read the request, call one service, return the contract's JSON | Hold business rules |
+| **Service** | `services/` | Business rules: validations, limits, what changes | Read `data/seed.py` directly |
+| **Repository** | `repositories/` | Read and write the in-memory data | Decide business rules |
+| **Model** | `models/` | Data classes with the contract's fields | Import FastAPI |
 
-Clean layers mapped to our tree:
+Services reach the data **only** through repositories, so moving to a real database later means rewriting one folder.
 
-| Clean layer | Lives in | Example |
-|-------------|----------|---------|
-| Entities | `features/*/model/`, `shared/models/` | `SavingPot`, `Transaction` |
-| Use cases / application | `features/*/services/`, `shared/services/` | `ContributeToPot` |
-| Interface adapters | `features/*/modelview/`, Firebase adapters under services | `useSavingsModelView` |
-| Frameworks/drivers | Vue 3, Firebase (Auth/Firestore/Functions) | SFC, callable functions, Firestore SDK |
+Full rules: skill `backend-clean`.
 
-### 2.4 Shared Services (middle layer)
+### 2.5 Clean Architecture (dependency rule)
 
-- **Shared services** = business logic used by more than one feature.
-- Lives in `shared/services/` (or `src/middle/services/` if we prefer a named middle folder).
-- Feature services **compose** shared services; they do not copy-paste them.
-- Shared services must not import features, views, or modelviews.
+```
+Frontend:  View  →  ViewModel  →  Service  →  API
+Backend:   Router  →  Service  →  Repository  →  Data
+```
 
-**Middle layer** = the glue between UI presentation and data backends:
+**Dependency rule:** each layer knows only the next one. Inner layers never import outer ones.
 
-- Shared domain services (XP rules, limits, currency conversion)
-- API / Firestore repositories behind ports
-- Cross-cutting policies (daily limits, atomic balance moves)
+### 2.6 Business rules live once
 
-### 2.5 SOLID — how we apply it (junior-friendly)
+- A business rule (top-up limit, daily limit, XP) is **enforced in the backend** `services/`.
+- A ViewModel may repeat a check only to answer faster on screen; the backend's answer always wins.
+- A rule needed by 2+ services, or a helper needed by 2+ ViewModels, goes in **one** module that both import.
+
+Details: skill `middle-services`.
+
+### 2.7 SOLID — how we apply it (junior-friendly)
 
 | Principle | Practical rule |
 |-----------|----------------|
-| **S**ingle Responsibility | One class/function = one reason to change. A service that both validates password rules AND creates users = split. |
-| **O**pen/Closed | Prefer adding a new use case over editing a huge switch in ModelView. |
-| **L**iskov | Any `AuthRepository` implementation must behave like `AuthRepository` (same contract, same failure modes). |
-| **I**nterface Segregation | Small ports: `createUser`, `login`, not one mega `UserService` with 20 methods. |
-| **D**ependency Inversion | ModelView/Services depend on **ports** (interfaces), not on Firestore classes directly. |
+| **S**ingle Responsibility | One function = one reason to change. A ViewModel serves one screen; a service function solves one use case. |
+| **O**pen/Closed | Prefer adding a new service function or ViewModel over growing a huge switch. |
+| **L**iskov | A mock returns exactly what the real service returns: same shape, same errors as `docs/api.md`. |
+| **I**nterface Segregation | Small modules: one service file per resource, one function per endpoint. |
+| **D**ependency Inversion | Each layer talks only to the next one: services never read `seed.py`, views never call `fetch`. |
 
-### 2.6 DRY — how we apply it
+### 2.8 DRY — how we apply it
 
-- Extract when the **same business rule** appears in 2+ places (e.g. password policy, daily XP cap).
+- Extract when the **same business rule** appears in 2+ places (e.g. top-up limits, daily XP cap).
 - Do **not** extract prematurely for two similar-but-different UI copies.
-- Shared logic → `shared/services` or `shared/models`. Never duplicate in `auth/` and `transfers/`.
+- Never duplicate a rule in two services or two ViewModels.
 
 ---
 
@@ -139,30 +132,32 @@ Clean layers mapped to our tree:
 
 ### Must
 
-- Traceable flow: View event → ModelView command → Service → Model update
+- Traceable flow: View event → ViewModel action → Service → API
 - One public entry per use case (easy to find, easy to test)
 - Errors handled at the right layer; UI shows user-safe messages
-- Business rules live in services/models, not scattered in widgets
-- Tests for use cases and critical pure model logic
+- The frontend decides what to do from the error `code` (and `details`), never from the `message` text
+- Amounts are integer cents everywhere; only the View turns them into euros
+- Each contract object (`Movement`, error codes) has one type, declared in `models/`; no `any`
+- Tests for backend services and for ViewModels
 
 ### Must not
 
-- “Quick” business logic inside a widget/event handler
-- Direct Firestore/HTTP calls from View or ModelView
+- “Quick” business logic inside a template or event handler
+- `fetch` or service calls from a View
+- A backend service reading `seed.py` without a repository
 - God-classes / god-files
-- Copy-paste of the same rule across features
+- Copy-paste of the same rule in several places
 - Clever one-liners that need a comment to understand
 
 ### Naming (clear)
 
-- Features: `savings`, `transfers`, `auth` (business words)
-- Model: nouns (`SavingPot`, `Money`)
-- ModelView (Vue): `useXxxModelView` composables; commands as verbs (`submitContribution`)
-- Vue views: `XxxView.vue`
-- Services / use cases: `XxxService` or `CreateXxx`
-- Ports: `XxxRepository` / `XxxGateway`
-- Adapters: `FirebaseXxxAdapter` / `FirestoreXxxAdapter`
-- Files: match main type (`savingPot.ts`, `useContributeModelView.ts`)
+- Views: `XxxView.vue` (`HomeView.vue`)
+- Components: `Xxx.vue` (`MovementRow.vue`)
+- ViewModels: `useXxxViewModel` composables; actions as verbs (`load`, `submit`, `loadMore`)
+- Frontend services: `xxxService.ts`, one function per endpoint
+- Frontend models: nouns (`movement.ts`)
+- Backend: `xxx_service.py`, `XxxRepository`, routers named after the resource (`routers/home.py`)
+- Files: match their main export (`useHomeViewModel.ts`, `home_service.py`)
 
 ### Comments policy (summary)
 
@@ -178,17 +173,16 @@ Clean layers mapped to our tree:
 1. **Read** the US / acceptance criteria first.
 2. **Load the right skill** (lazy — only what the task needs):
    - Structure / layers → `arch-structure`
-   - Vue UI state / screens / composables → `mvvm-patterns`
-   - Firebase backend / use cases / Functions → `backend-clean`
-   - Firebase Auth/Firestore/rules/config/adapters → `firebase-stack`
-   - Shared business logic → `middle-services`
-   - Cross-cutting types/utils → `shared-module`
-   - Vue + TS naming/style → `code-style`
+   - Vue screens / ViewModels / components → `mvvm-patterns`
+   - FastAPI backend / services / repositories → `backend-clean`
+   - A business rule used in more than one place → `middle-services`
+   - Reusable models, components, helpers → `shared-module`
+   - Naming/style → `code-style`
    - Comments → `comments-docs`
    - Branches / gitflow → `gitflow`
    - PR → `pr-conventions`
    - Commit → `commit-conventions`
-3. **Implement** inside the feature folder; follow dependency rule.
+3. **Implement** in the folder of the right layer; follow the dependency rule.
 4. **Self-check** against the architecture checklist in the skill.
 5. **Human reviews** architecture and trade-offs before merge.
 
@@ -228,14 +222,14 @@ Full rules: skill `gitflow`.
 | `ci` | pipeline |
 | `perf` | performance |
 
-**Scopes:** `auth`, `account`, `transfers`, `savings`, `gamification`, `multidivisa`, `movements`, `shared`, `firebase`, `ci`, `docs`, `app`
+**Scopes:** `auth`, `account`, `transfers`, `savings`, `gamification`, `multidivisa`, `movements`, `backend`, `app`, `ci`, `docs`
 
 Examples:
 
 ```
 feat(savings): create pot with target US-17
 fix(auth): show generic error on bad login US-03
-refactor(shared): extract password policy service US-01
+refactor(account): extract top-up limits US-09
 docs: update AI workflow in AGENTS.md
 ```
 
@@ -243,7 +237,7 @@ Rules:
 
 - Imperative mood (“add”, not “added” / “adds”)
 - One logical change per commit
-- Scope = feature area when possible
+- Scope = business area when possible
 - Reference US when the change maps to a story
 - No secrets, no build junk
 
@@ -257,7 +251,7 @@ Full rules: skill `commit-conventions`.
 - Body: what, why, AC mapping, screenshots if UI
 - Checklist: DoD + architecture checklist
 - ≥1 teammate review (per course DoD proposal)
-- CI green before merge
+- Tests pass before merge
 - Target: `develop` (demo/release on `main` via agreed flow)
 
 Full rules: skills `pr-conventions` + `gitflow`.
@@ -274,7 +268,9 @@ Full rules: skills `pr-conventions` + `gitflow`.
 6. PR reviewed by another member
 7. CI green; staging/demo deployable
 8. No critical open bugs for that story
-9. **Architecture checklist** (layers respected, no UI→Firebase shortcut, shared logic not duplicated)
+9. **Architecture checklist** (layers respected, no API call from a View, shared rules not duplicated)
+
+CI and deployment are out of Sprint 0. Until they exist, point 7 means: `vitest` and `pytest` pass locally, and the PR says so.
 
 ---
 
@@ -282,6 +278,7 @@ Full rules: skills `pr-conventions` + `gitflow`.
 
 | Doc | Role |
 |-----|------|
+| `docs/api.md` | API contract shared by backend and frontend |
 | `docs/P1/AGENTS.md` | course, roles, Scrum, backlog rules |
 | `docs/P1/MEMORY.md` | decisions, workflow memory |
 | `docs/P1/backlog.md` / `trello-backlog.md` | US + AC |
@@ -294,9 +291,10 @@ Full rules: skills `pr-conventions` + `gitflow`.
 
 | Anti-pattern | Do instead |
 |--------------|------------|
-| Firestore call in a widget | Service → port → adapter |
-| Business rule in ModelView only | Put rule in model/service; ModelView orchestrates |
-| `utils.ts` with 50 unrelated helpers | Feature service or `shared/` named module |
-| Same password check in 2 files | `shared/services/passwordPolicy` |
+| `fetch` in a `.vue` file | View → ViewModel → service → `apiClient` |
+| Business rule only in a ViewModel | Enforce it in the backend service; the ViewModel repeats it for UX |
+| Backend service reading `seed.py` | Go through a repository |
+| `utils.ts` with 50 unrelated helpers | A named module in `models/` |
+| Same limit check in 2 files | One module, imported by both |
 | Mega PR with 5 stories | One US per PR |
 | “It works, don’t ask” hack | Real structure, even if slower to type |

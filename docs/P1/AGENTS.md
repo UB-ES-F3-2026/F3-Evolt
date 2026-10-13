@@ -178,12 +178,12 @@ Sense import automàtic. Copiat a mà des de `trello-backlog.md`:
 
 L'estàndard d'arquitectura, skills, commits i PRs viu al **`AGENTS.md` arrel** del repo (i `README.md` per al resum).
 
-- **Stack:** Vue 3 + TypeScript (frontend) · Firebase (backend)
-- **MVVM:** Model · ModelView · View dins de cada feature
-- **Clean Architecture** + **shared services** (capa middle)
-- **Screaming Architecture** (carpetes per features de negoci)
+- **Stack:** Vue 3 + TypeScript amb Vite i Vitest (frontend, a `frontend/`) · Python + FastAPI amb pytest (backend, a `backend/`)
+- **MVVM:** Model · ViewModel · View al frontend, amb carpetes per capa (`models/`, `services/`, `viewmodels/`, `views/`, `components/`)
+- **Contracte de l'API:** `docs/api.md`
+- **Clean Architecture:** View → ViewModel → Service → API, i Router → Service → Repository → Dades
 - **SOLID** i **DRY**
-- Skills AI lazy: `.claude/skills/` i `.opencode/skills/` (Vue, Firebase, gitflow…)
+- Skills AI lazy: `.claude/skills/` i `.opencode/skills/` (Vue, FastAPI, gitflow…)
 - Commits: Conventional Commits + `US-XX`
 - Branches: `develop` = base de PR; `feature/<slug>`; `main` = demo/release
 - PR: una US / una tasca tècnica per PR
