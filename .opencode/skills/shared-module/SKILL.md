@@ -1,63 +1,62 @@
 ---
 name: shared-module
-description: Load when creating or changing cross-cutting models, value types, utilities, DTOs, error types, or shared UI used by more than one feature in F3-Evolt. Use for Money, User refs, movement types, shared enums, mappers, small pure helpers.
+description: Load when creating or changing code that several screens or services reuse in F3-Evolt — frontend models, JSON mappers, reusable components, small pure helpers, backend data classes. Use for money amounts, the Movement model, movement types, icon lists, shared UI pieces.
 ---
 
-# Shared module — models, types, utils
+# Reusable code — models, components, helpers
 
-`shared/` holds code that is **genuinely cross-feature**. Keep it small, pure, and stable.
+With folders by layer, `models/` and `components/` are used by every screen. Keep them small, pure and stable.
 
-## What belongs in `shared/`
+## What goes where
 
 | Kind | Examples | Folder |
 |------|----------|--------|
-| Domain models | `Money`, `UserRef`, `MovementType` | `shared/models/` |
-| Shared services | XP cap, password policy | `shared/services/` |
-| Shared UI | Button, empty state, error banner | `shared/components/` |
-| Small pure utils | date format for display, clamps | `shared/utils/` (named modules) |
+| Frontend types, models and mappers | `movement.ts` (the `Movement` type, API JSON → app object) | `frontend/src/models/` |
+| Reusable UI | `MoneyAmount.vue`, `MovementRow.vue`, `EmptyState.vue` | `frontend/src/components/` |
+| Small pure helpers | euros ↔ cents, date for display | `frontend/src/models/` (named modules) |
+| Backend data classes | `User`, `Account`, `Pot`, `Movement` | `backend/app/models/` |
 
-## What does NOT belong
+## What does NOT belong there
 
-- Feature-only entities → `features/<f>/model/`
-- Feature-only services → `features/<f>/services/`
-- Screen-specific widgets → `features/<f>/view/`
+- State of one screen → its ViewModel
+- Markup that belongs to one screen only → that view
 - A random `utils.ts` kitchen sink
 
 ## Model rules
 
-- **Money**: represent amounts carefully (integer cents or explicit `Money` value type — pick one convention for the team and document it in the model).
-- Prefer value objects over raw `number`/`string` for money and currency.
-- Models are **pure**: no Firebase, no UI, no async I/O.
-- Mappers (domain ↔ Firestore/DTO) live next to adapters or in `shared/models/` if used everywhere — **no business rules inside mappers**.
+- **Money**: integer cents, always positive (`50000` = 500 €). The direction comes from `type` (`income` / `expense`), never from the sign.
+- Each contract object has **one type**, declared in `models/` and imported everywhere. Field names and types are the ones in `docs/api.md`. Closed lists (the `icon` values) are copied from there, not invented.
+- Models are **pure**: no Vue reactivity, no HTTP, no UI.
+- Mappers only change shape — **no business rules inside mappers**.
 
-## Utils rules
+## Helper rules
 
-- One concept per file: `shared/utils/moneyFormat.ts`, not `misc.ts`.
+- One concept per file: `models/money.ts`, not `misc.ts`.
 - Export pure functions only.
-- If a util encodes a **business rule**, it is a **service**, not a util.
+- If a helper encodes a **business rule**, see skill `middle-services`.
 
-## Shared UI rules
+## Reusable component rules
 
-- Presentational components only.
-- Props-driven; no Firestore or ModelView imports inside shared UI.
+- Presentational only: props in, events out.
+- No ViewModel and no service call inside.
+- Handle the unknown case (e.g. a default icon when an unknown `icon` arrives).
 
 ## Dependency direction
 
 ```
-features/*  →  shared/*
-shared/*    →  (other shared or nothing)
-shared/*    ↛  features/*
+views → viewmodels → services → models
+views → components
+models → (nothing)
 ```
 
 ## DRY vs premature extraction
 
-- Two features need the **same entity shape** → `shared/models/`.
-- Two screens look similar but rules differ → **keep separate**; extract later if the rule unifies.
+- Two screens need the **same piece** → `components/` or `models/`.
+- Two screens look similar but behave differently → **keep them separate**; extract later if they converge.
 
 ## Self-check
 
-- [ ] Imported by more than one feature (or clearly will be)
-- [ ] No feature imports from `shared` that create cycles
-- [ ] Models pure; utils pure; shared UI presentational
+- [ ] Used by more than one screen or service (or clearly will be)
+- [ ] Models pure; helpers pure; components presentational
 - [ ] Named modules, not a junk drawer
-- [ ] Money/currency conventions consistent project-wide
+- [ ] Money is integer cents; names match `docs/api.md`

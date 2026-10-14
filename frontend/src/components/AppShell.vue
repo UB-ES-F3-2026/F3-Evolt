@@ -1,5 +1,8 @@
-<script setup lang="ts">
-withDefaults(defineProps<{ title: string; back?: boolean }>(), { back: false })
+<script setup>
+defineProps({
+  title: { type: String, required: true },
+  back: { type: Boolean, default: false },
+})
 </script>
 
 <template>

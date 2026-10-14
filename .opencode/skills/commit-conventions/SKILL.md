@@ -33,10 +33,10 @@ Optional body for “why” when needed. US id optional when there is no story (
 
 ```
 auth  account  transfers  savings  gamification
-multidivisa  movements  shared  firebase  ci  docs  app
+multidivisa  movements  backend  app  ci  docs
 ```
 
-Use the feature folder when possible. `shared` / `firebase` / `ci` / `docs` for cross-cutting work.
+Use the business area when possible. `backend` / `app` (frontend shell) / `ci` / `docs` for cross-cutting work.
 
 ## Examples
 
@@ -44,10 +44,10 @@ Use the feature folder when possible. `shared` / `firebase` / `ci` / `docs` for 
 feat(savings): create pot with target US-17
 feat(savings): move money from balance to pot US-18
 fix(auth): show generic error on bad login US-03
-refactor(shared): extract password policy service US-01
+refactor(account): extract top-up limits US-09
 docs: describe MVVM layout in AGENTS.md
 test(savings): cover contribution validation US-18
-chore: add emulator config for local dev
+chore(app): add vitest config
 ```
 
 ## Rules

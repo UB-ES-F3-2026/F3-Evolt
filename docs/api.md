@@ -1,6 +1,6 @@
 # Contracte de l'API · Sprint 0
 
-Contracte compartit entre el backend (Firebase · Cloud Functions) i el frontend per a les històries **US-07** (saldo a la pantalla principal), **US-08** (llistat de moviments) i **US-09** (recàrrega de prova).
+Contracte compartit entre el backend (FastAPI) i el frontend per a les històries **US-07** (saldo a la pantalla principal), **US-08** (llistat de moviments) i **US-09** (recàrrega de prova).
 
 - Tasca: T07.1 (issue #4).
 - Qualsevol canvi en aquest contracte es fa amb una PR sobre aquest fitxer, revisada per almenys una persona de backend i una de frontend.
