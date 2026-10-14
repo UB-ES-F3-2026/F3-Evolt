@@ -1,0 +1,3 @@
+pytest
+# Windows no porta base de dades de zones horàries: sense això ZoneInfo("Europe/Madrid") falla.
+tzdata
