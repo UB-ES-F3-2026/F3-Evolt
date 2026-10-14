@@ -22,7 +22,7 @@ We use AI as a **co-pilot** (AI-SDLC). Humans own architecture, product and fina
 
 | Concept | What it means for us |
 |---------|----------------------|
-| **Stack** | Frontend: Vue 3 + JavaScript, Vite, Vue Router, Vitest. Backend: Python + FastAPI, pytest, data in memory. |
+| **Stack** | Frontend: Vue 3 + TypeScript, Vite, Vue Router, Vitest. Backend: Python + FastAPI, pytest, data in memory. |
 | **Layout** | Two apps, `frontend/` and `backend/`, each with folders named after the layer. |
 | **MVVM** | The frontend uses **Model · ViewModel · View**; a ViewModel is a composable `useXxxViewModel`. |
 | **Clean Architecture** | View → ViewModel → Service → API, and Router → Service → Repository → Data. Each layer knows only the next one. |
@@ -101,34 +101,3 @@ feat(savings): create pot with target US-17
 | `docs/P1/Team Specification.md` | Product catalog + team |
 | `docs/P1/backlog.md` | Product backlog |
 | `docs/P1/trello-backlog.md` | Cards to copy into Trello |
-
----
-
-## Frontend
-
-Vue 3 + JavaScript + Vite SPA, in [`frontend/`](frontend/).
-
-```bash
-cd frontend
-cp ../.env.example .env   # optional: VITE_* vars are read from frontend/.env
-npm install
-npm run dev               # dev server on http://localhost:5173
-npm run build             # production build
-npm run preview           # serve the production build
-```
-
-Copying `.env.example` is optional for a first run: the in-memory mocks are
-**on by default**. Set `VITE_USE_MOCKS=false` in `frontend/.env` to call the
-real API (and `VITE_API_URL` to point at it).
-
-Layout (`frontend/src/`, folders by layer):
-
-```
-models/       # data and JSON mapping (pure)
-services/     # API calls, one function per endpoint (services/apiClient.js)
-viewmodels/   # useXxxViewModel composables: state and actions of each screen
-views/        # screens (XxxView.vue)
-components/   # reusable pieces
-router/
-mocks/        # in-memory data used unless VITE_USE_MOCKS=false
-```

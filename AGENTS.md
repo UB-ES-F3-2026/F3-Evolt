@@ -26,7 +26,7 @@ Junior developers with real knowledge of patterns. We want:
 
 | Part | Technology |
 |------|------------|
-| **Frontend** | Vue 3 + JavaScript (ES modules, `<script setup>`), Vite, Vue Router, Vitest. No Pinia. |
+| **Frontend** | Vue 3 + TypeScript (strict), Vite, Vue Router, Vitest. No Pinia. |
 | **Backend** | Python + FastAPI, pytest. Data lives in memory (seeded at start-up) during Sprint 0. |
 | **Contract** | `docs/api.md`. It changes only through a PR reviewed by backend and frontend. |
 
@@ -59,7 +59,7 @@ There are no feature folders (`features/<x>/`) and no `shared/` folder: `compone
 
 ### 2.3 MVVM in the frontend (Model · ViewModel · View)
 
-A ViewModel is a Vue 3 **composable** named `useXxxViewModel` (`viewmodels/useHomeViewModel.js`).
+A ViewModel is a Vue 3 **composable** named `useXxxViewModel` (`viewmodels/useHomeViewModel.ts`).
 
 | Layer | Folders | Contains | Must not contain |
 |-------|---------|----------|------------------|
@@ -72,7 +72,7 @@ A ViewModel is a Vue 3 **composable** named `useXxxViewModel` (`viewmodels/useHo
 1. A `.vue` file never calls a service or `fetch`; it only uses its ViewModel.
 2. A ViewModel has no template and knows nothing about layout.
 3. `models/` is pure data + pure functions (no Vue reactivity, no HTTP).
-4. `services/` is the only place that talks to the API, always through `services/apiClient.js`.
+4. `services/` is the only place that talks to the API, always through `services/apiClient.ts`.
 
 Full Vue rules: skill `mvvm-patterns`.
 
@@ -137,7 +137,7 @@ Details: skill `middle-services`.
 - Errors handled at the right layer; UI shows user-safe messages
 - The frontend decides what to do from the error `code` (and `details`), never from the `message` text
 - Amounts are integer cents everywhere; only the View turns them into euros
-- Each contract object (`Movement`, error codes) has one shape, mapped in `models/`; no ad-hoc copies
+- Each contract object (`Movement`, error codes) has one type, declared in `models/`; no `any`
 - Tests for backend services and for ViewModels
 
 ### Must not
@@ -154,10 +154,10 @@ Details: skill `middle-services`.
 - Views: `XxxView.vue` (`HomeView.vue`)
 - Components: `Xxx.vue` (`MovementRow.vue`)
 - ViewModels: `useXxxViewModel` composables; actions as verbs (`load`, `submit`, `loadMore`)
-- Frontend services: `xxxService.js`, one function per endpoint
-- Frontend models: nouns (`movement.js`)
+- Frontend services: `xxxService.ts`, one function per endpoint
+- Frontend models: nouns (`movement.ts`)
 - Backend: `xxx_service.py`, `XxxRepository`, routers named after the resource (`routers/home.py`)
-- Files: match their main export (`useHomeViewModel.js`, `home_service.py`)
+- Files: match their main export (`useHomeViewModel.ts`, `home_service.py`)
 
 ### Comments policy (summary)
 
@@ -294,7 +294,7 @@ CI and deployment are out of Sprint 0. Until they exist, point 7 means: `vitest`
 | `fetch` in a `.vue` file | View → ViewModel → service → `apiClient` |
 | Business rule only in a ViewModel | Enforce it in the backend service; the ViewModel repeats it for UX |
 | Backend service reading `seed.py` | Go through a repository |
-| `utils.js` with 50 unrelated helpers | A named module in `models/` |
+| `utils.ts` with 50 unrelated helpers | A named module in `models/` |
 | Same limit check in 2 files | One module, imported by both |
 | Mega PR with 5 stories | One US per PR |
 | “It works, don’t ask” hack | Real structure, even if slower to type |
