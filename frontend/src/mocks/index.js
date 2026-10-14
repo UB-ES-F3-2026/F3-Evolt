@@ -1,6 +1,7 @@
 /**
  * In-memory mock data, shaped exactly like the API responses in docs/api.md.
- * Used when VITE_USE_MOCKS=true so the UI works before the backend exists.
+ * On by default so the UI works before the backend exists; only an explicit
+ * VITE_USE_MOCKS=false turns them off (so no .env copy is needed to run dev).
  */
 
 const MOVEMENTS = [
@@ -14,7 +15,10 @@ const MOVEMENTS = [
 ]
 
 export function useMocks() {
-  return import.meta.env.VITE_USE_MOCKS === 'true'
+  const value = import.meta.env.VITE_USE_MOCKS
+  // Missing (no .env copied) → mocks on, so `npm run dev` works out of the box.
+  if (value === undefined || value === null || value === '') return true
+  return String(value).toLowerCase() !== 'false'
 }
 
 /** GET /api/home */
