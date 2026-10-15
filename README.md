@@ -90,6 +90,26 @@ feat(savings): create pot with target US-17
 
 ---
 
+## Frontend
+
+Vue 3 + TypeScript + Vite, in [`frontend/`](frontend/).
+
+```bash
+cd frontend
+cp ../.env.example .env   # optional: VITE_* vars are read from frontend/.env
+npm install
+npm run dev               # dev server on http://localhost:5173
+npm run type-check        # TypeScript check (vue-tsc)
+npm run build             # type-check + production build
+npm run preview           # serve the production build
+```
+
+Copying `.env.example` is optional for a first run: the in-memory mocks are
+**on by default**. Set `VITE_USE_MOCKS=false` in `frontend/.env` to call the
+real API (and `VITE_API_URL` to point at it).
+
+---
+
 ## Docs map
 
 | Path | Content |
