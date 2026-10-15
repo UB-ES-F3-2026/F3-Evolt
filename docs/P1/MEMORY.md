@@ -114,15 +114,7 @@
 
 ## Fitxers
 
-- `AGENTS.md` (arrel) — estàndards d'arquitectura + IA (font de veritat de codi)
-- `CLAUDE.md` (arrel) — pointer cap a AGENTS.md
-- `README.md` — resum del workflow AI
-- `docs/P1/AGENTS.md` — visió + metodologia del curs
-- `MEMORY.md` — aquest
-- `plantejament.md` — notes curs
-- `trello-backlog.md` — **24 US + èpiques** per copiar a Trello
-- `PDFs/` — materials de classe
-- `.claude/skills/` · `.opencode/skills/` — **10 skills lazy** (mateix contingut)
+La llista completa de documents és al [`README.md` → Docs map](../../README.md#docs-map).
 
 ## Workflow AI (decisió d'equip)
 

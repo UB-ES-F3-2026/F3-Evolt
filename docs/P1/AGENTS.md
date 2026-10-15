@@ -151,10 +151,7 @@ Separar (com demana el curs):
 
 ## Documents del projecte
 
-- `MEMORY.md` — decisions i flux de treball
-- `plantejament.md` — notes de l'enfocament del projecte
-- `trello-backlog.md` — cards per copiar a Trello (COM/VULL/PER + checklist AC)
-- `PDFs/` — materials de classe
+La llista completa de documents és al [`README.md` → Docs map](../../README.md#docs-map).
 
 ### Trello
 

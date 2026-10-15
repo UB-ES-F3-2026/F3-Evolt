@@ -278,14 +278,7 @@ CI and deployment are out of Sprint 0. Until they exist, point 7 means: `vitest`
 
 ## 7. Sprint / product docs
 
-| Doc | Role |
-|-----|------|
-| `docs/api.md` | API contract shared by backend and frontend |
-| `docs/P1/AGENTS.md` | course, roles, Scrum, backlog rules |
-| `docs/P1/MEMORY.md` | decisions, workflow memory |
-| `docs/P1/backlog.md` / `trello-backlog.md` | US + AC |
-| `README.md` | project + AI workflow overview |
-| `AGENTS.md` (this file) | coding + AI standards |
+The full list of documents and what each one holds is in [`README.md` → Docs map](README.md#docs-map).
 
 ---
 
