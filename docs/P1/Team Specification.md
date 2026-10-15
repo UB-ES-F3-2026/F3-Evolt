@@ -253,7 +253,7 @@ Com a usuari, vull tenir saldos en diferents divises dins del meu compte i canvi
 
 *Històries previstes:* afegir subcompte en divisa, eliminar subcompte, canviar entre divises, pagaments en divisa, límit de canvi sense comissió.
 
-**US-06.1 Afegir subcompte en divisa** Fina 
+**US-25 Afegir subcompte en divisa** Fina 
 
 Com a usuari, vull afegir un subcompte en una nova divisa per poder tenir saldo en aquesta moneda i gestionar-la per separat.
 
@@ -266,7 +266,7 @@ Com a usuari, vull afegir un subcompte en una nova divisa per poder tenir saldo 
 * La pantalla principal mostra el saldo de cada divisa afegida i el total aproximat de totes elles en EUR.  
    PDF
 
-**US-06.2 Eliminar subcompte en divisa** Fina
+**US-26 Eliminar subcompte en divisa** Fina
 
  Com a usuari, vull eliminar un subcompte en divisa per netejar la meva pantalla principal quan ja no necessito operar amb aquella moneda.
 
@@ -275,7 +275,7 @@ Com a usuari, vull afegir un subcompte en una nova divisa per poder tenir saldo 
 * Si el saldo és 0, es mostra un diàleg de confirmació ("Estàs segur que vols eliminar aquest compte?").  
 * En confirmar, retorno a la pantalla principal i el subcompte desapareix de la llista visual.
 
-**US-06.3 Canviar entre divises** Fina
+**US-27 Canviar entre divises** Fina
 
  Com a usuari, vull canviar diners entre les meves divises per disposar de saldo en la moneda que necessito en cada moment.
 
@@ -286,7 +286,7 @@ Com a usuari, vull afegir un subcompte en una nova divisa per poder tenir saldo 
 * En prémer "Confirmar canvi", si hi ha saldo suficient a l'origen, es mostra una pantalla d'èxit.  
 * En tornar a l'inici, els saldos d'ambdós subcomptes s'han actualitzat al moment.
 
-**US-06.4 Pagaments en divisa** Mitjana
+**US-28 Pagaments en divisa** Mitjana
 
  Com a usuari, vull fer pagaments en una altra divisa per poder fer compres internacionals o viatjar sense preocupacions.
 
@@ -297,7 +297,7 @@ Com a usuari, vull afegir un subcompte en una nova divisa per poder tenir saldo 
 * A l'historial, els moviments en divisa mostren sempre l'import original pagat, el tipus de canvi aplicat en aquell moment i la comissió si n'hi hagués.  
    PDF
 
-**US-06.5 Límit de canvi sense comissió** Mitjana 
+**US-29 Límit de canvi sense comissió** Mitjana 
 
 Com a usuari, vull tenir un límit de canvi de moneda sense comissions per estalviar diners en les meves operacions internacionals mensuals.
 
