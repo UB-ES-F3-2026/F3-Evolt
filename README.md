@@ -68,7 +68,7 @@ Full standards: [`AGENTS.md`](AGENTS.md).
 ```
 main        ← demo / release
 develop     ← sprint integration (PR target)
-  feature/<slug>   fix/<slug>   hotfix/<slug>
+  feature/<slug>   fix/<slug>   refactor/<slug>   hotfix/<slug>
 ```
 
 ### Commits
@@ -82,7 +82,8 @@ feat(savings): create pot with target US-17
 ### PRs
 
 - One US or one technical task per PR
-- Branch `feature/<slug>` → PR base **`develop`**
+- Branch `feature/<slug>`, `fix/<slug>` or `refactor/<slug>` → PR base **`develop`**
+- Only `hotfix/<slug>` goes from `main` → PR base `main`
 - Title mirrors the commit
 - Body maps work to acceptance criteria
 - Architecture checklist + DoD before request for review

@@ -62,7 +62,7 @@ UI: before/after or empty/loading/error states.
 
 ## Branch / target
 
-- Branches: `feature/<slug>`, `fix/<slug>`, `refactor/<slug>` from `develop` (see skill `gitflow`).
+- Branches: `feature/<slug>`, `fix/<slug>`, `refactor/<slug>` from `develop`; `hotfix/<slug>` from `main` (see skill `gitflow`).
 - Target: **`develop`** for normal work; `main` only for hotfix/release paths per gitflow.
 - Do not merge to `main` directly without review + green CI (per course rules).
 

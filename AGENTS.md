@@ -200,7 +200,8 @@ AI is a co-pilot. **Humans own** architecture, product, security and final QA.
 | `develop` | Integration for sprint work — **PR target** |
 | `feature/<slug>` | One US or one technical task |
 | `fix/<slug>` | Bugfix |
-| `hotfix/<slug>` | Urgent fix on `main` |
+| `refactor/<slug>` | Behavior-preserving cleanup (one module) |
+| `hotfix/<slug>` | Urgent fix on `main` when the demo is broken |
 
 Full rules: skill `gitflow`.
 
@@ -247,7 +248,8 @@ Full rules: skill `commit-conventions`.
 
 - Title: same shape as commit: `feat(savings): create pot with target US-17`
 - **One US / one technical task per PR**
-- Branch: `feature/<slug>` from `develop`; PR base **`develop`**
+- Branch: `feature/<slug>`, `fix/<slug>` or `refactor/<slug>` from `develop`; PR base **`develop`**
+- Only `hotfix/<slug>` starts from `main`; PR base `main`, then sync `develop`
 - Body: what, why, AC mapping, screenshots if UI
 - Checklist: DoD + architecture checklist
 - ≥1 teammate review (per course DoD proposal)

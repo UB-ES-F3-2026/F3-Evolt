@@ -133,7 +133,7 @@
 - Solucions **clares i traciables** (no cutre, no sobre-enginyeria)
 - Skills: arch-structure, mvvm-patterns (Vue), backend-clean (FastAPI), middle-services, shared-module, code-style, comments-docs, gitflow, pr-conventions, commit-conventions
 - Commits: `type(scope): subject US-XX`
-- Branches: `develop` = PR base · `feature/<slug>` · `main` = demo/release
+- Branches: `develop` = PR base · `feature/<slug>` · `fix/<slug>` · `refactor/<slug>` · `hotfix/<slug>` (des de `main`) · `main` = demo/release
 - PR: una US / una tasca tècnica; checklist DoD + arquitectura
 - Font: arrel `AGENTS.md`
 
