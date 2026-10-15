@@ -13,7 +13,7 @@ A **business rule** is something the product decides: “at most 500 € per top
 |------|-------|---------------|
 | Limits, balances, XP, anything about money | A backend service (`backend/app/services/`) | A ViewModel, only for faster feedback on screen |
 | How an amount typed by the user becomes cents | A frontend model (`frontend/src/models/`) | Nobody — ViewModels import it |
-| How an error code becomes a Catalan message | The ViewModel of that screen | Nobody |
+| How an error code becomes a Catalan message | One pure module in `frontend/src/models/`, shared by the ViewModels | Nobody — each ViewModel calls it |
 
 The backend's answer always wins. A ViewModel check never replaces the service check.
 

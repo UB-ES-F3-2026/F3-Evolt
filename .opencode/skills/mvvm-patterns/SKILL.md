@@ -95,7 +95,7 @@ export function useContributeViewModel(potId: string) {
 ## Errors
 
 - Services reject with the contract's `{ code, message, details? }` (`docs/api.md`).
-- The ViewModel turns the **`code`** (and `details`) into a user-safe message in Catalan. It never reads the `message` text to decide.
+- The ViewModel turns the **`code`** (and `details`) into a user-safe message in Catalan, through the shared module in `models/` (skill `middle-services`). It never reads the `message` text to decide.
 
 ## Forms & validation
 
