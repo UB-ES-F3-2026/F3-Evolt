@@ -1,6 +1,6 @@
 # Product Backlog — P1 (Fintech + Gamificació)
 
-> **Font única per a Trello.** Cada US és una card. Copiar la secció "Card Trello" al tauler.
+> **Detall del bloc P2 (Estalvi).** Les cards de Trello es copien de `trello-backlog.md`, que és l'única font.
 >
 > **Estat fins a Class 3:** Deliver Backlog. No s'assigna a sprint encara (Sprint 0 es planifica a la Class 3).
 >
