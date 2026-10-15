@@ -19,7 +19,7 @@
 | **P3** | Pantalla principal i XP | Saldo a la pantalla principal, Guanyar XP, Nivells i perfil de progrés | EP-11 Insignies i recompenses, EP-15 Administració |
 | **P4** | Moviments | Llistat de moviments, Filtres i cerca, Detall d'un moviment | EP-10 Anàlisi de despeses i pressupostos |
 | **P5** | Social | Cercar un usuari, Sol·licitar diners, Respondre a una sol·licitud | EP-09 Despeses compartides, EP-13 Gamificació social |
-| **P6** | Transferències | Enviar diners, Dades del compte (IBAN), Aportació periòdica | EP-06 Multidivisa |
+| **P6** | Transferències + Multidivisa | Enviar diners, Dades del compte (IBAN), Aportació periòdica, Subcomptes i canvis de divisa (US-25…US-29) | EP-06 Multidivisa |
 
 ### Numeració del backlog
 

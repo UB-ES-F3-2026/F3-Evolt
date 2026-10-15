@@ -928,7 +928,7 @@ El PO accepta l'èpica com a contenidor
 
 ---
 
-# P6 — Transferències
+# P6 — Transferències + Multidivisa
 
 ## US-12 Dades del compte (IBAN)
 
