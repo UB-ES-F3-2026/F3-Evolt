@@ -89,7 +89,7 @@
 | US-28 | Pagaments en divisa | Mitjana |
 | US-29 | Límit de canvi sense comissió | Mitjana |
 
-**Total: 24 US** · Format COM/VULL/PER + AC a `trello-backlog.md`
+**Total: 26 US** · Format COM/VULL/PER + AC a `trello-backlog.md`
 
 ## Èpiques i tech
 
