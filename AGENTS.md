@@ -136,7 +136,7 @@ Details: skill `middle-services`.
 - One public entry per use case (easy to find, easy to test)
 - Errors handled at the right layer; UI shows user-safe messages
 - The frontend decides what to do from the error `code` (and `details`), never from the `message` text
-- Amounts are integer cents everywhere; only the View turns them into euros
+- Amounts are integer cents everywhere until the presentation layer; the ViewModel formats them for display
 - Each contract object (`Movement`, error codes) has one type, declared in `models/`; no `any`
 - Tests for backend services and for ViewModels
 
