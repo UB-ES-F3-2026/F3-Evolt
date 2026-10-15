@@ -208,6 +208,35 @@ El PO accepta l'èpica com a contenidor
 
 ---
 
+### EP-14 Perfil i preferències
+
+**Labels:** Èpica
+
+**Descripció:**
+
+```
+COM: usuari del neobanc
+VULL: gestionar les meves dades i preferències
+PER: adaptar l'app a mi.
+
+Assumptes:
+- Editar nom visible, foto i adreça; canviar email o telèfon verificant-los amb un codi
+- Nom legal i data de naixement no editables des de l'app
+- Canviar contrasenya i preferències de notificacions (excepte les de seguretat)
+- Històries previstes (Team Specification): editar perfil, canviar email o telèfon, canviar contrasenya, preferències de notificacions
+
+Estimació: per definir en refinement
+```
+
+**Checklist Acceptance Criteria:**
+
+```
+L'àrea té almenys una US al backlog
+El PO accepta l'èpica com a contenidor
+```
+
+---
+
 # P3 — Pantalla principal i XP
 
 ## US-07 Saldo a la pantalla principal
@@ -353,6 +382,32 @@ Estimació: per definir en refinement
 
 ```
 L'àrea té almenys una US o spike al backlog
+El PO accepta l'èpica com a contenidor
+```
+
+---
+
+### EP-02 Compte i moviments
+
+**Labels:** Èpica, P3/P4
+
+**Descripció:**
+
+```
+COM: usuari del neobanc
+VULL: consultar el saldo, veure els moviments i afegir diners al compte
+PER: saber d'un cop d'ull com tinc els diners.
+
+Assumptes:
+- Contenidor de US-07, US-08, US-09, US-10, US-11, US-12 (segons Team Specification)
+
+Estimació: per definir en refinement
+```
+
+**Checklist Acceptance Criteria:**
+
+```
+L'àrea té almenys una US al backlog
 El PO accepta l'èpica com a contenidor
 ```
 
@@ -834,6 +889,32 @@ PER: motivar-nos mútuament a estalviar.
 Assumptes:
 - Contenidor de reptes amb amics, rànquing setmanal
 - Privacitat: mai saldos als rànquings
+
+Estimació: per definir en refinement
+```
+
+**Checklist Acceptance Criteria:**
+
+```
+L'àrea té almenys una US al backlog
+El PO accepta l'èpica com a contenidor
+```
+
+---
+
+### EP-03 Pagaments entre usuaris
+
+**Labels:** Èpica, P5/P6
+
+**Descripció:**
+
+```
+COM: usuari del neobanc
+VULL: enviar, demanar i rebre diners entre usuaris de l'app
+PER: saldar deutes de manera senzilla.
+
+Assumptes:
+- Contenidor de US-13, US-14, US-15, US-16 (segons Team Specification)
 
 Estimació: per definir en refinement
 ```

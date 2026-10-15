@@ -17,7 +17,7 @@
 | **P1** | Alta i primers passos | Registre, Verificació del codi, Inici de sessió, Recuperació de contrasenya, Recàrrega de prova | EP-14 Perfil i preferències |
 | **P2** | Estalvi | Crear guardiola, Aportar, Retirar, Progrés i objectiu assolit | EP-12 Reptes i ratxes |
 | **P3** | Pantalla principal i XP | Saldo a la pantalla principal, Guanyar XP, Nivells i perfil de progrés | EP-11 Insignies i recompenses, EP-15 Administració |
-| **P4** | Moviments | Llistat de moviments, Filtres i cerca, Detall d'un moviment | EP-10 Anàlisi de despeses |
+| **P4** | Moviments | Llistat de moviments, Filtres i cerca, Detall d'un moviment | EP-10 Anàlisi de despeses i pressupostos |
 | **P5** | Social | Cercar un usuari, Sol·licitar diners, Respondre a una sol·licitud | EP-09 Despeses compartides, EP-13 Gamificació social |
 | **P6** | Transferències | Enviar diners, Dades del compte (IBAN), Aportació periòdica | EP-06 Multidivisa |
 
@@ -333,7 +333,7 @@ S'actualitza després d'aportar/retirar
 | **EP-13** | Gamificació social | Endavant | Comparar progrés d'estalvi amb altres usuaris (si P5 ho permet) |
 | **EP-06** | Multidivisa | Endavant | Guardioles en altres divises (si es vol més endavant) |
 | **EP-09** | Despeses compartides | Endavant | Guardioles compartides |
-| **EP-10** | Anàlisi de despeses | P4 | Categorització de moviments d'aportació/retirada |
+| **EP-10** | Anàlisi de despeses i pressupostos | P4 | Categorització de moviments d'aportació/retirada |
 | **EP-14** | Perfil i preferències | P1 | Configuració d'usuari que afecta estalvi |
 | **EP-15** | Administració | P3 | Vistes admin/demo per gestionar usuaris i dades |
 
