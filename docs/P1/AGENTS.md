@@ -165,7 +165,7 @@ Sense import automàtic. Copiat a mà des de `trello-backlog.md`:
 3. **Checklist** → `Acceptance Criteria`
 4. Labels (`Fina`/`Mitjana`, `P2`/`P6`, `Estalvi`/`Multidivisa`, `Èpica`…)
 
-**Numeració:** `US-XX` **sencera** (sense decimals). P2 = Estalvi (US-17…20). P6 = Multidivisa (US-25…29).
+**Numeració:** `US-XX` **sencera** (sense decimals). P2 = Estalvi (US-17…20). P6 = Transferències + Multidivisa (US-12, US-14, US-21, US-25…29).
 
 ## Directrius IA
 

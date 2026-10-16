@@ -1,6 +1,6 @@
 # Product Backlog — P1 (Fintech + Gamificació)
 
-> **Font única per a Trello.** Cada US és una card. Copiar la secció "Card Trello" al tauler.
+> **Detall del bloc P2 (Estalvi).** Les cards de Trello es copien de `trello-backlog.md`, que és l'única font.
 >
 > **Estat fins a Class 3:** Deliver Backlog. No s'assigna a sprint encara (Sprint 0 es planifica a la Class 3).
 >
@@ -17,20 +17,13 @@
 | **P1** | Alta i primers passos | Registre, Verificació del codi, Inici de sessió, Recuperació de contrasenya, Recàrrega de prova | EP-14 Perfil i preferències |
 | **P2** | Estalvi | Crear guardiola, Aportar, Retirar, Progrés i objectiu assolit | EP-12 Reptes i ratxes |
 | **P3** | Pantalla principal i XP | Saldo a la pantalla principal, Guanyar XP, Nivells i perfil de progrés | EP-11 Insignies i recompenses, EP-15 Administració |
-| **P4** | Moviments | Llistat de moviments, Filtres i cerca, Detall d'un moviment | EP-10 Anàlisi de despeses |
+| **P4** | Moviments | Llistat de moviments, Filtres i cerca, Detall d'un moviment | EP-10 Anàlisi de despeses i pressupostos |
 | **P5** | Social | Cercar un usuari, Sol·licitar diners, Respondre a una sol·licitud | EP-09 Despeses compartides, EP-13 Gamificació social |
-| **P6** | Transferències | Enviar diners, Dades del compte (IBAN), Aportació periòdica | EP-06 Multidivisa |
+| **P6** | Transferències + Multidivisa | Enviar diners, Dades del compte (IBAN), Aportació periòdica, Subcomptes i canvis de divisa (US-25…US-29) | EP-06 Multidivisa |
 
 ### Numeració del backlog
 
-Format `US-{persona}.{n}` on persona = P1…P6:
-
-- `US-1.x` — P1 Alta i primers passos
-- `US-2.x` — **P2 Estalvi** *(documentades a fons en aquest doc)*
-- `US-3.x` — P3 Pantalla principal i XP
-- `US-4.x` — P4 Moviments
-- `US-5.x` — P5 Social
-- `US-6.x` — P6 Transferències
+`US-XX` sencera (01…29), sense decimals, com a `trello-backlog.md`. Aquest doc detalla les de **P2 Estalvi** (US-17…US-20).
 
 ### Granularitat (20% / 20% / 60%)
 
@@ -54,7 +47,7 @@ Format `US-{persona}.{n}` on persona = P1…P6:
 
 ---
 
-### US-2.1 Crear guardiola
+### US-17 Crear guardiola
 
 **Valor (AS A / I WANT TO / SO I CAN):**
 
@@ -94,7 +87,7 @@ Format `US-{persona}.{n}` on persona = P1…P6:
 **Card Trello:**
 
 ```
-Títol: US-2.1 Crear guardiola
+Títol: US-17 Crear guardiola
 Labels: Fina, Alta, Estalvi, P2
 Description:
 COM: a usuari registrat,
@@ -123,7 +116,7 @@ Funciona en mòbil
 
 ---
 
-### US-2.2 Aportar diners a una guardiola
+### US-18 Aportar diners a una guardiola
 
 **Valor (AS A / I WANT TO / SO I CAN):**
 
@@ -131,7 +124,7 @@ Funciona en mòbil
 
 **Assumptes:**
 
-- L'usuari té almenys 1 guardiola creada (US-2.1)
+- L'usuari té almenys 1 guardiola creada (US-17)
 - L'usuari té saldo principal suficient (o la comprovació ho gestiona)
 - L'aportació mou saldo: principal ↓, guardiola ↑
 - Es registra un moviment dins de la guardiola (i es reflecteix al llistat de moviments si P4 ho mostra)
@@ -162,7 +155,7 @@ Funciona en mòbil
 **Card Trello:**
 
 ```
-Títol: US-2.2 Aportar diners a una guardiola
+Títol: US-18 Aportar diners a una guardiola
 Labels: Fina, Alta, Estalvi, P2
 Description:
 COM: a usuari amb guardioles,
@@ -170,7 +163,7 @@ VULL: aportar diners des del saldo principal a una guardiola
 PER: estalviar cap a un objectiu sense gastar-los del compte principal.
 
 Assumptes:
-- L'usuari té almenys 1 guardiola creada (US-2.1)
+- L'usuari té almenys 1 guardiola creada (US-17)
 - L'usuari té saldo principal suficient (o la comprovació ho gestiona)
 - L'aportació mou saldo: principal ↓, guardiola ↑
 - Es registra un moviment dins de la guardiola
@@ -191,7 +184,7 @@ Operació atòmica
 
 ---
 
-### US-2.3 Retirar diners d'una guardiola
+### US-19 Retirar diners d'una guardiola
 
 **Valor (AS A / I WANT TO / SO I CAN):**
 
@@ -224,13 +217,13 @@ Operació atòmica
 12. **No funcionals:** operació atòmica; si l'objectiu es trenca per la retirada, no cal bloquejar (això és EP-12 més endavant)
 
 **Estimació:** 3 Story Points / 6 Value Points
-**Prioritat:** Alta (complementa US-2.2; cicle complet d'estalvi)
+**Prioritat:** Alta (complementa US-18; cicle complet d'estalvi)
 **INVEST:** ✔ Independent, ✔ Negotiable, ✔ Valuable, ✔ Estimable, ✔ Small, ✔ Testable
 
 **Card Trello:**
 
 ```
-Títol: US-2.3 Retirar diners d'una guardiola
+Títol: US-19 Retirar diners d'una guardiola
 Labels: Fina, Alta, Estalvi, P2
 Description:
 COM: a usuari amb guardioles,
@@ -259,7 +252,7 @@ Guardiola buida no permet retirar
 
 ---
 
-### US-2.4 Veure progrés i objectiu assolit
+### US-20 Veure progrés i objectiu assolit
 
 **Valor (AS A / I WANT TO / SO I CAN):**
 
@@ -282,7 +275,7 @@ Guardiola buida no permet retirar
 5. Quan el saldo és **igual o superior** a l'objectiu, l'estat canvia a **"Objectiu assolit"** (badge o text destacat +, si hi ha gamificació preparada, notificació/celebració)
 6. A la **llista de guardioles**, cada guardiola amb objectiu mostra saldo + mini barra o % ; les sense objectiu mostren saldo sol
 7. Si l'usuari **no** ha posat objectiu, al detall no es mostra barra ni %, només saldo i operacions (aportar/retirar)
-8. El progrés s'actualitza després d'una aportació (US-2.2) o retirada (US-2.3) sense necessitat de re-carregar manualment (o amb refresh explícit acceptable a la demo)
+8. El progrés s'actualitza després d'una aportació (US-18) o retirada (US-19) sense necessitat de re-carregar manualment (o amb refresh explícit acceptable a la demo)
 9. **Error / buit:** guardiola sense dades de progrés no mostra barra trencada; mostra saldo correcte
 10. **No funcionals:** la barra és llegible en mòbil; el % es mostra com a text accessible (no només color)
 
@@ -293,7 +286,7 @@ Guardiola buida no permet retirar
 **Card Trello:**
 
 ```
-Títol: US-2.4 Veure progrés i objectiu assolit
+Títol: US-20 Veure progrés i objectiu assolit
 Labels: Fina, Alta, Estalvi, P2
 Description:
 COM: a usuari amb guardioles amb objectiu,
@@ -333,7 +326,7 @@ S'actualitza després d'aportar/retirar
 | **EP-13** | Gamificació social | Endavant | Comparar progrés d'estalvi amb altres usuaris (si P5 ho permet) |
 | **EP-06** | Multidivisa | Endavant | Guardioles en altres divises (si es vol més endavant) |
 | **EP-09** | Despeses compartides | Endavant | Guardioles compartides |
-| **EP-10** | Anàlisi de despeses | P4 | Categorització de moviments d'aportació/retirada |
+| **EP-10** | Anàlisi de despeses i pressupostos | P4 | Categorització de moviments d'aportació/retirada |
 | **EP-14** | Perfil i preferències | P1 | Configuració d'usuari que afecta estalvi |
 | **EP-15** | Administració | P3 | Vistes admin/demo per gestionar usuaris i dades |
 
@@ -393,10 +386,10 @@ Demana API key (https://trello.com/app-key) + token + URL del tauler. Després c
 
 ### Ordre de les cards P2
 
-1. US-2.1 Crear guardiola — Fina, Alta, Estalvi, P2 — SP 5 / VP 8
-2. US-2.2 Aportar diners a una guardiola — Fina, Alta, Estalvi, P2 — SP 5 / VP 8
-3. US-2.3 Retirar diners d'una guardiola — Fina, Alta, Estalvi, P2 — SP 3 / VP 6
-4. US-2.4 Veure progrés i objectiu assolit — Fina, Alta, Estalvi, P2 — SP 3 / VP 5
+1. US-17 Crear guardiola — Fina, Alta, Estalvi, P2 — SP 5 / VP 8
+2. US-18 Aportar diners a una guardiola — Fina, Alta, Estalvi, P2 — SP 5 / VP 8
+3. US-19 Retirar diners d'una guardiola — Fina, Alta, Estalvi, P2 — SP 3 / VP 6
+4. US-20 Veure progrés i objectiu assolit — Fina, Alta, Estalvi, P2 — SP 3 / VP 5
 5. EP-12 Reptes i ratxes — Èpica, P2
 6. EP-11 Insignies i recompenses — Èpica, Estalvi
 7. TR-05 / TR-06 / Spike-01 — Tech, Sprint 0

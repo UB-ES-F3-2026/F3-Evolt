@@ -89,7 +89,7 @@
 | US-28 | Pagaments en divisa | Mitjana |
 | US-29 | Límit de canvi sense comissió | Mitjana |
 
-**Total: 24 US** · Format COM/VULL/PER + AC a `trello-backlog.md`
+**Total: 26 US** · Format COM/VULL/PER + AC a `trello-backlog.md`
 
 ## Èpiques i tech
 
@@ -102,7 +102,7 @@
 | EP-05 | Gamificació: XP i nivells | Èpica, P3 |
 | EP-06 | Multidivisa | Èpica, Multidivisa, P6 |
 | EP-09 | Despeses compartides | Èpica, Social, P5 |
-| EP-10 | Anàlisi de despeses | Èpica, Moviments, P4 |
+| EP-10 | Anàlisi de despeses i pressupostos | Èpica, Moviments, P4 |
 | EP-11 | Insígnies i recompenses | Èpica |
 | EP-12 | Reptes i ratxes | Èpica, P2 |
 | EP-13 | Gamificació social | Èpica, Social, P5 |
