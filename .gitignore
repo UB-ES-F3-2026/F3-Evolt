@@ -44,3 +44,6 @@ dist/
 *.local
 .DS_Store
 *.tsbuildinfo
+
+# graphify knowledge graph output (local analysis, never pushed)
+graphify-out/
