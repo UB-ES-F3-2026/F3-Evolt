@@ -4,16 +4,30 @@
  */
 
 /** Contract codes (docs/api.md §5) plus the frontend-only `NETWORK_ERROR`. */
-export type ApiErrorCode =
-  | 'INVALID_AMOUNT'
-  | 'AMOUNT_OVER_LIMIT'
-  | 'DAILY_LIMIT_EXCEEDED'
-  | 'VALIDATION_ERROR'
-  | 'INTERNAL_ERROR'
-  | 'NETWORK_ERROR'
+const API_ERROR_CODES = [
+  'INVALID_AMOUNT',
+  'AMOUNT_OVER_LIMIT',
+  'DAILY_LIMIT_EXCEEDED',
+  'VALIDATION_ERROR',
+  'INTERNAL_ERROR',
+  'NETWORK_ERROR',
+] as const
+
+export type ApiErrorCode = (typeof API_ERROR_CODES)[number]
 
 export interface ApiError {
   code: ApiErrorCode
   message: string
   details?: { remainingToday?: number }
+}
+
+/** True when `value` already has the contract error shape with a known `code`. */
+export function isApiError(value: unknown): value is ApiError {
+  if (typeof value !== 'object' || value === null) return false
+  const { code, message } = value as Record<string, unknown>
+  return (
+    typeof code === 'string' &&
+    (API_ERROR_CODES as readonly string[]).includes(code) &&
+    typeof message === 'string'
+  )
 }

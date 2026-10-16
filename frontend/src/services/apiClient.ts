@@ -2,11 +2,13 @@
  * The only place that talks HTTP. Services import `apiGet` / `apiPost`
  * and never call `fetch` themselves.
  *
- * Failures reject with the contract's error shape `{ code, message, details? }`
+ * Failures always reject with the contract's error shape `{ code, message, details? }`
  * (docs/api.md §5) plus a frontend-only `NETWORK_ERROR` when fetch itself fails.
+ * A body that is not a contract error (e.g. FastAPI's default `{ detail }`, HTML,
+ * empty) becomes `VALIDATION_ERROR` on 422 and `INTERNAL_ERROR` otherwise.
  */
 
-import type { ApiError } from '@/models/apiError'
+import { isApiError, type ApiError } from '@/models/apiError'
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 const USER_ID = import.meta.env.VITE_DEMO_USER ?? '1'
@@ -35,11 +37,23 @@ async function request<T>(path: string, { method = 'GET', body }: RequestOptions
   const payload: unknown = await response.json().catch(() => null)
 
   if (!response.ok) {
-    const emptyError: ApiError = { code: 'INTERNAL_ERROR', message: 'Resposta del servidor sense cos.' }
-    throw payload ?? emptyError
+    if (isApiError(payload)) throw payload
+    throw response.status === 422 ? validationError() : internalError()
   }
 
+  // Every endpoint answers with a JSON body; anything else is a server fault.
+  if (payload === null) throw internalError()
+
   return payload as T
+}
+
+// Default texts from docs/api.md §5. The screen text is chosen from `code`.
+function validationError(): ApiError {
+  return { code: 'VALIDATION_ERROR', message: 'Les dades de la petició no són vàlides.' }
+}
+
+function internalError(): ApiError {
+  return { code: 'INTERNAL_ERROR', message: "S'ha produït un error inesperat. Torna-ho a provar més tard." }
 }
 
 export function apiGet<T>(path: string): Promise<T> {
