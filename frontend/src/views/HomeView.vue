@@ -15,7 +15,10 @@ import AppShell from '@/components/AppShell.vue'
     </section>
 
     <section class="card">
-      <h2 class="label">Últims moviments</h2>
+      <div class="section-header">
+        <h2 class="label">Últims moviments</h2>
+        <router-link to="/movements" class="see-all">Veure tots</router-link>
+      </div>
       <p class="value">Encara no hi ha moviments</p>
     </section>
   </AppShell>
@@ -38,5 +41,16 @@ import AppShell from '@/components/AppShell.vue'
 .value {
   margin: 0;
   font-size: 1.125rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.see-all {
+  font-size: 0.875rem;
 }
 </style>
