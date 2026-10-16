@@ -1,35 +1,14 @@
-<script setup>
+<script setup lang="ts">
 import AppShell from '@/components/AppShell.vue'
-import { formatCents } from '@/models/money'
-import { useTopUpViewModel } from '@/viewmodels/useTopUpViewModel'
-
-const { amount, isSubmitting, error, successMessage, newBalance, canSubmit, submit } =
-  useTopUpViewModel()
 </script>
 
 <template>
   <AppShell title="Recàrrega" back>
     <section class="card">
-      <form @submit.prevent="submit">
-        <label class="label" for="amount">Import (€)</label>
-        <input
-          id="amount"
-          v-model="amount"
-          class="input"
-          type="text"
-          inputmode="decimal"
-          placeholder="0,00"
-          :disabled="isSubmitting"
-        />
-        <button class="button" type="submit" :disabled="!canSubmit">
-          {{ isSubmitting ? 'Recarregant…' : 'Recarregar' }}
-        </button>
-      </form>
-
-      <p v-if="error" class="feedback error" role="alert">{{ error }}</p>
-      <p v-if="successMessage" class="feedback success">
-        {{ successMessage }} · Saldo actual: {{ formatCents(newBalance ?? 0) }}
-      </p>
+      <label class="label" for="amount">Import</label>
+      <input id="amount" class="input" type="number" placeholder="0,00" disabled />
+      <button class="button" type="button" disabled>Recarregar</button>
+      <p class="placeholder">La recàrrega encara no està disponible</p>
     </section>
   </AppShell>
 </template>
@@ -64,24 +43,11 @@ const { amount, isSubmitting, error, successMessage, newBalance, canSubmit, subm
   background: var(--color-primary);
   color: #ffffff;
   font-size: 1rem;
-  cursor: pointer;
 }
 
-.button:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-.feedback {
+.placeholder {
   margin: 0.75rem 0 0;
+  color: var(--color-muted);
   font-size: 0.875rem;
-}
-
-.error {
-  color: var(--color-expense);
-}
-
-.success {
-  color: var(--color-income);
 }
 </style>
