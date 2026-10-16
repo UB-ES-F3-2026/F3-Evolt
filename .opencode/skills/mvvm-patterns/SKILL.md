@@ -85,6 +85,7 @@ export function useContributeViewModel(potId: string) {
 7. **Never** call a service or `fetch` from a `.vue` file.
 8. **No Pinia:** the state of a screen stays in its composable.
 9. **Destructure the ViewModel in the View** (`const { balance, load } = useHomeViewModel()`): a template only unwraps refs that are top-level names, so `v-if="viewModel.error"` would always be true.
+10. **A View never imports `services/`.** From `models/` it imports types only (`import type { Movement } from '@/models/movement'`); `components/` may also use pure display helpers such as `formatCents`.
 
 ## Types
 
@@ -95,7 +96,7 @@ export function useContributeViewModel(potId: string) {
 ## Errors
 
 - Services reject with the contract's `{ code, message, details? }` (`docs/api.md`).
-- The ViewModel turns the **`code`** (and `details`) into a user-safe message in Catalan. It never reads the `message` text to decide.
+- The ViewModel turns the **`code`** (and `details`) into a user-safe message in Catalan, through the shared module in `models/` (skill `middle-services`). It never reads the `message` text to decide.
 
 ## Forms & validation
 
@@ -139,7 +140,7 @@ async function submit() {
 
 ## Self-check
 
-- [ ] The `.vue` file has no `fetch` and imports no service
+- [ ] The `.vue` file has no `fetch`, never imports `services/`, and imports from `models/` only types (plus pure display helpers in `components/`)
 - [ ] The ViewModel is a composable `useXxxViewModel` with named actions (verbs)
 - [ ] `models/` stays pure TypeScript (no `ref`/`reactive`, no HTTP)
 - [ ] Loading / error / empty states handled

@@ -68,7 +68,7 @@ export function useXxxViewModel() {
 3. **Small functions/composables.**
 4. **No clever one-liners** that need a paragraph of comments.
 5. **Typed boundaries:** service functions and ViewModel actions declare what they take and return; no `any`.
-6. **Money is integer cents** everywhere; only the View shows euros.
+6. **Money is integer cents** everywhere until the presentation layer; the ViewModel formats it for display.
 7. **Consistent errors:** the contract's codes → ViewModel user strings.
 
 ## Design rules (SOLID/DRY light)

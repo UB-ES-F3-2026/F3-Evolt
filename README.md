@@ -68,7 +68,7 @@ Full standards: [`AGENTS.md`](AGENTS.md).
 ```
 main        ← demo / release
 develop     ← sprint integration (PR target)
-  feature/<slug>   fix/<slug>   hotfix/<slug>
+  feature/<slug>   fix/<slug>   refactor/<slug>   hotfix/<slug>
 ```
 
 ### Commits
@@ -82,7 +82,8 @@ feat(savings): create pot with target US-17
 ### PRs
 
 - One US or one technical task per PR
-- Branch `feature/<slug>` → PR base **`develop`**
+- Branch `feature/<slug>`, `fix/<slug>` or `refactor/<slug>` → PR base **`develop`**
+- Only `hotfix/<slug>` goes from `main` → PR base `main`
 - Title mirrors the commit
 - Body maps work to acceptance criteria
 - Architecture checklist + DoD before request for review
@@ -112,12 +113,19 @@ real API (and `VITE_API_URL` to point at it).
 
 ## Docs map
 
+The only complete list of documents; the others link here.
+
 | Path | Content |
 |------|---------|
+| `README.md` | Project + AI workflow overview (this file) |
 | `AGENTS.md` | Engineering + AI standards (source of truth for code style) |
+| `CLAUDE.md` | Entry point for Claude Code; points to `AGENTS.md` |
+| `.claude/skills/` · `.opencode/skills/` | The 10 lazy AI skills (same content in both) |
 | `docs/api.md` | API contract shared by backend and frontend |
 | `docs/P1/AGENTS.md` | Course context, Scrum, roles, backlog rules |
-| `docs/P1/MEMORY.md` | Decisions and workflow memory |
+| `docs/P1/MEMORY.md` | Team decisions, US and epic index |
 | `docs/P1/Team Specification.md` | Product catalog + team |
-| `docs/P1/backlog.md` | Product backlog |
-| `docs/P1/trello-backlog.md` | Cards to copy into Trello |
+| `docs/P1/trello-backlog.md` | Cards to copy into Trello (all US and epics) |
+| `docs/P1/backlog.md` | Detailed backlog of block P2 (Savings) |
+| `docs/P1/plantejament.md` | Notes from the first class |
+| `docs/P1/PDFs/` | Class material |

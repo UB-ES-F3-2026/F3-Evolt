@@ -114,15 +114,7 @@
 
 ## Fitxers
 
-- `AGENTS.md` (arrel) — estàndards d'arquitectura + IA (font de veritat de codi)
-- `CLAUDE.md` (arrel) — pointer cap a AGENTS.md
-- `README.md` — resum del workflow AI
-- `docs/P1/AGENTS.md` — visió + metodologia del curs
-- `MEMORY.md` — aquest
-- `plantejament.md` — notes curs
-- `trello-backlog.md` — **24 US + èpiques** per copiar a Trello
-- `PDFs/` — materials de classe
-- `.claude/skills/` · `.opencode/skills/` — **10 skills lazy** (mateix contingut)
+La llista completa de documents és al [`README.md` → Docs map](../../README.md#docs-map).
 
 ## Workflow AI (decisió d'equip)
 
@@ -133,7 +125,7 @@
 - Solucions **clares i traciables** (no cutre, no sobre-enginyeria)
 - Skills: arch-structure, mvvm-patterns (Vue), backend-clean (FastAPI), middle-services, shared-module, code-style, comments-docs, gitflow, pr-conventions, commit-conventions
 - Commits: `type(scope): subject US-XX`
-- Branches: `develop` = PR base · `feature/<slug>` · `main` = demo/release
+- Branches: `develop` = PR base · `feature/<slug>` · `fix/<slug>` · `refactor/<slug>` · `hotfix/<slug>` (des de `main`) · `main` = demo/release
 - PR: una US / una tasca tècnica; checklist DoD + arquitectura
 - Font: arrel `AGENTS.md`
 

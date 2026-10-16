@@ -151,10 +151,7 @@ Separar (com demana el curs):
 
 ## Documents del projecte
 
-- `MEMORY.md` — decisions i flux de treball
-- `plantejament.md` — notes de l'enfocament del projecte
-- `trello-backlog.md` — cards per copiar a Trello (COM/VULL/PER + checklist AC)
-- `PDFs/` — materials de classe
+La llista completa de documents és al [`README.md` → Docs map](../../README.md#docs-map).
 
 ### Trello
 
@@ -185,7 +182,7 @@ L'estàndard d'arquitectura, skills, commits i PRs viu al **`AGENTS.md` arrel** 
 - **SOLID** i **DRY**
 - Skills AI lazy: `.claude/skills/` i `.opencode/skills/` (Vue, FastAPI, gitflow…)
 - Commits: Conventional Commits + `US-XX`
-- Branches: `develop` = base de PR; `feature/<slug>`; `main` = demo/release
+- Branches: `develop` = base de PR; `feature/<slug>`, `fix/<slug>`, `refactor/<slug>`; `hotfix/<slug>` des de `main`; `main` = demo/release
 - PR: una US / una tasca tècnica per PR
 
 Producte i backlog: aquest directori `docs/P1/`.

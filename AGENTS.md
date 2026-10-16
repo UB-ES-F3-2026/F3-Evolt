@@ -136,7 +136,7 @@ Details: skill `middle-services`.
 - One public entry per use case (easy to find, easy to test)
 - Errors handled at the right layer; UI shows user-safe messages
 - The frontend decides what to do from the error `code` (and `details`), never from the `message` text
-- Amounts are integer cents everywhere; only the View turns them into euros
+- Amounts are integer cents everywhere until the presentation layer; the ViewModel formats them for display
 - Each contract object (`Movement`, error codes) has one type, declared in `models/`; no `any`
 - Tests for backend services and for ViewModels
 
@@ -200,7 +200,8 @@ AI is a co-pilot. **Humans own** architecture, product, security and final QA.
 | `develop` | Integration for sprint work — **PR target** |
 | `feature/<slug>` | One US or one technical task |
 | `fix/<slug>` | Bugfix |
-| `hotfix/<slug>` | Urgent fix on `main` |
+| `refactor/<slug>` | Behavior-preserving cleanup (one module) |
+| `hotfix/<slug>` | Urgent fix on `main` when the demo is broken |
 
 Full rules: skill `gitflow`.
 
@@ -247,7 +248,8 @@ Full rules: skill `commit-conventions`.
 
 - Title: same shape as commit: `feat(savings): create pot with target US-17`
 - **One US / one technical task per PR**
-- Branch: `feature/<slug>` from `develop`; PR base **`develop`**
+- Branch: `feature/<slug>`, `fix/<slug>` or `refactor/<slug>` from `develop`; PR base **`develop`**
+- Only `hotfix/<slug>` starts from `main`; PR base `main`, then sync `develop`
 - Body: what, why, AC mapping, screenshots if UI
 - Checklist: DoD + architecture checklist
 - ≥1 teammate review (per course DoD proposal)
@@ -276,14 +278,7 @@ CI and deployment are out of Sprint 0. Until they exist, point 7 means: `vitest`
 
 ## 7. Sprint / product docs
 
-| Doc | Role |
-|-----|------|
-| `docs/api.md` | API contract shared by backend and frontend |
-| `docs/P1/AGENTS.md` | course, roles, Scrum, backlog rules |
-| `docs/P1/MEMORY.md` | decisions, workflow memory |
-| `docs/P1/backlog.md` / `trello-backlog.md` | US + AC |
-| `README.md` | project + AI workflow overview |
-| `AGENTS.md` (this file) | coding + AI standards |
+The full list of documents and what each one holds is in [`README.md` → Docs map](README.md#docs-map).
 
 ---
 
