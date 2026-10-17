@@ -16,27 +16,23 @@ els tests (T09.5) i POST /api/dev/reset (T09.6) l'han de fer servir per reinicia
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
-from zoneinfo import ZoneInfo
-
 from app.models import (
     KIND_OTHER,
     KIND_TOPUP,
+    MADRID_TZ,
+    TOPUP_CONCEPT,
+    TOPUP_ICON,
     TYPE_EXPENSE,
     TYPE_INCOME,
     Account,
     Movement,
     Pot,
     User,
+    now_madrid,
 )
-
-# "Avui" és el dia natural a Europe/Madrid (contracte, apartat 1).
-MADRID_TZ = ZoneInfo("Europe/Madrid")
 
 DEMO_USER_ID = 1
 EMPTY_USER_ID = 2
-
-TOPUP_CONCEPT = "Recàrrega"
-TOPUP_ICON = "topup"
 
 # Còpia al frontend: frontend/src/mocks/seed.ts. Si canvies aquestes dades, canvia-les també allà.
 # (dies enrere, hora "HH:MM", concepte, type, icon, import en cèntims)
@@ -113,7 +109,7 @@ def movement_id(number: int) -> str:
 
 def build_seed(now: datetime | None = None) -> SeedData:
     """Crea les dades inicials. `now` permet fixar la data als tests."""
-    now = now or datetime.now(MADRID_TZ).replace(microsecond=0)
+    now = now or now_madrid()
 
     users = {
         DEMO_USER_ID: User(id=DEMO_USER_ID, name="Usuari demo", xp=120),
