@@ -65,7 +65,10 @@ export function useTopUpViewModel(dependencies: TopUpDependencies = defaultDepen
     return true
   }
 
-  return { amount, error, canSubmit, isSubmitting, confirmation, submit }
+  // For the help text under the field, so the view never types the limit itself.
+  const maxAmountCents = MAX_TOPUP_CENTS
+
+  return { amount, error, canSubmit, isSubmitting, confirmation, maxAmountCents, submit }
 }
 
 function defaultDependencies(): TopUpDependencies {
