@@ -13,6 +13,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -51,6 +52,34 @@ def _error_body(
     if details:
         body["details"] = details
     return body
+
+
+class ContractExceptionMiddleware(BaseHTTPMiddleware):
+    """Converteix excepcions inesperades en INTERNAL_ERROR dins del CORS.
+
+    Els handlers registrats amb ``@app.exception_handler`` viuen a
+    ``ExceptionMiddleware``, que queda per fora de ``CORSMiddleware``; per això
+    una 500 no portava ``Access-Control-Allow-Origin``. Aquest middleware
+    captura l'excepció *abans* que surti i deixa que el CORS (extern) hi
+    afegeixi la capçalera. Els errors de contracte coneguts es re-llancen
+    perquè els tractin els handlers habituals.
+    """
+
+    async def dispatch(self, request, call_next):
+        try:
+            return await call_next(request)
+        except (ApiError, RequestValidationError, StarletteHTTPException):
+            raise
+        except Exception:  # noqa: BLE001
+            logger.exception(
+                "Error inesperat a %s %s", request.method, request.url.path
+            )
+            return JSONResponse(
+                status_code=ERROR_STATUS[INTERNAL_ERROR],
+                content=_error_body(
+                    INTERNAL_ERROR, ERROR_MESSAGES[INTERNAL_ERROR], None
+                ),
+            )
 
 
 def _register_error_handlers(app: FastAPI) -> None:
@@ -119,6 +148,9 @@ def create_app() -> FastAPI:
     """Fabriquen una aplicació nova. Els tests la fan servir per afegir-hi
     rutes de proves sense tocar la instància de producció."""
     app = FastAPI(title="F3-Evolt API", lifespan=lifespan)
+    # Primer l'intern (captura excepcions), després el CORS (extern): així
+    # la resposta d'error surt amb Access-Control-Allow-Origin.
+    app.add_middleware(ContractExceptionMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[FRONTEND_ORIGIN],

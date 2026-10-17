@@ -429,6 +429,8 @@ Totes les respostes d'error tenen aquest format:
 | `VALIDATION_ERROR` | 422 | Paràmetres o cos mal formats: falta `amount`, no és un enter, o `offset`/`limit` fora de rang | — |
 | `INTERNAL_ERROR` | 500 | Error inesperat, inclosos els que simula T08.2 | — |
 
+> Qualsevol ruta o mètode no definit es tracta com a error inesperat i retorna `500 INTERNAL_ERROR` (mateix cos que `INTERNAL_ERROR`).
+
 ### Exemples
 
 `INVALID_AMOUNT`:

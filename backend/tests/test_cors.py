@@ -36,3 +36,11 @@ def test_other_origin_gets_no_cors_header(client: TestClient) -> None:
     response = client.get("/api/health", headers={"Origin": "http://localhost:3000"})
 
     assert "access-control-allow-origin" not in response.headers
+
+
+def test_unexpected_error_response_includes_cors_header(client: TestClient) -> None:
+    """Una 500 inesperada (p. ex. /api/probe/crash) també porta CORS."""
+    response = client.get("/api/probe/crash", headers={"Origin": FRONTEND_ORIGIN})
+
+    assert response.status_code == 500
+    assert response.headers["access-control-allow-origin"] == FRONTEND_ORIGIN
