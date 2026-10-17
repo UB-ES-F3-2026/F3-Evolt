@@ -102,5 +102,5 @@ class MovementRepository:
         )
 
     def _by_account(self, account_id: int) -> list[Movement]:
-        """Còpia filtrada dels moviments d'un compte (ajudant intern)."""
+        """Còpia filtrada dels moviments d'un compte (ajudant intern) (T07.4)."""
         return [movement for movement in self._seed.movements if movement.account_id == account_id]
