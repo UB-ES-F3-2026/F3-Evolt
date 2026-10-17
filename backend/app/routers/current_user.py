@@ -20,7 +20,7 @@ def current_user_id(
     """Id de l'usuari de la petició (docs/api.md §2).
 
     Sense capçalera → usuari demo. Amb un valor no numèric o d'un usuari que
-    no existeix → `ApiError(VALIDATION_ERROR)`. Els serveixen reben l'id com a
+    no existeix → `ApiError(VALIDATION_ERROR)`. Els serveis reben l'id com a
     paràmetre, no tornen a mirar la capçalera.
     """
     if x_user_id is None:

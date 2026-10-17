@@ -2,7 +2,7 @@
 
 Aquest mòdul és pur Python: no importa FastAPI ni cap HTTP. La taula de la
 secció 5 de docs/api.md viu aquí una sola vegada (codis, estat HTTP i missatge
-per defecte en català). Els serveixen aixecen `ApiError` amb un codi estable,
+per defecte en català). Els serveis aixequen `ApiError` amb un codi estable,
 i `app/main.py` el converteix a la resposta `{ code, message, details? }`.
 
 Es permet substituir el missatge perquè els missatges del contracte són
@@ -39,7 +39,7 @@ ERROR_MESSAGES: dict[str, str] = {
 class ApiError(Exception):
     """Error de negoci amb el codi del contracte (docs/api.md §5).
 
-    Els serveixen la llencen amb un codi estable; `message` i `details` són
+    Els serveis la llencen amb un codi estable; `message` i `details` són
     opcionals. Sense `message` es fa servir el per defecte d'`ERROR_MESSAGES`.
     """
 
