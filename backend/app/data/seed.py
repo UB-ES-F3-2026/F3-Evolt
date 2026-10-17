@@ -38,6 +38,7 @@ EMPTY_USER_ID = 2
 TOPUP_CONCEPT = "Recàrrega"
 TOPUP_ICON = "topup"
 
+# Còpia al frontend: frontend/src/mocks/seed.ts. Si canvies aquestes dades, canvia-les també allà.
 # (dies enrere, hora "HH:MM", concepte, type, icon, import en cèntims)
 # Ordenat del més antic al més recent: l'ordre de la llista dona el `seq`.
 # Les hores eviten la franja 02:00–03:00, que és ambigua el dia del canvi d'hora.
