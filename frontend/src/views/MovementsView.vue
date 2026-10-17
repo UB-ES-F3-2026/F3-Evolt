@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, useTemplateRef, watch } from 'vue'
 import AppShell from '@/components/AppShell.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import ErrorState from '@/components/ErrorState.vue'
+import LoadingIndicator from '@/components/LoadingIndicator.vue'
 import MovementRow from '@/components/MovementRow.vue'
 import { useBalanceVisibility } from '@/viewmodels/useBalanceVisibility'
 import { useMovementsViewModel } from '@/viewmodels/useMovementsViewModel'
@@ -42,17 +45,14 @@ onBeforeUnmount(() => observer?.disconnect())
 
 <template>
   <AppShell title="Moviments" back>
-    <section v-if="isLoading" class="card state">
-      <p class="state-text">Carregant…</p>
+    <LoadingIndicator v-if="isLoading" />
+
+    <section v-else-if="error && items.length === 0" class="card">
+      <ErrorState :message="error" @retry="retry" />
     </section>
 
-    <section v-else-if="error && items.length === 0" class="card state">
-      <p class="state-text" role="alert">{{ error }}</p>
-      <button type="button" class="retry" @click="retry">Reintentar</button>
-    </section>
-
-    <section v-else-if="isEmpty" class="card state">
-      <p class="state-text">Encara no tens moviments</p>
+    <section v-else-if="isEmpty" class="card">
+      <EmptyState />
     </section>
 
     <section v-else class="card">
@@ -60,11 +60,9 @@ onBeforeUnmount(() => observer?.disconnect())
         <MovementRow v-for="movement in items" :key="movement.id" :movement="movement" :hidden="isHidden" />
       </ul>
 
-      <p v-if="isLoadingMore" class="state-text more">Carregant més moviments…</p>
-      <div v-else-if="error" class="state more">
-        <p class="state-text" role="alert">{{ error }}</p>
-        <button type="button" class="retry" @click="retry">Reintentar</button>
-      </div>
+      <!-- A failed next page keeps the rows already loaded; the error goes after them. -->
+      <LoadingIndicator v-if="isLoadingMore" inline label="Carregant més moviments…" />
+      <ErrorState v-else-if="error" inline :message="error" @retry="retry" />
 
       <div v-if="hasMore" ref="sentinel" class="sentinel" aria-hidden="true" />
     </section>
@@ -81,32 +79,6 @@ onBeforeUnmount(() => observer?.disconnect())
 .movements {
   margin: 0;
   padding: 0;
-}
-
-.state {
-  text-align: center;
-}
-
-.state-text {
-  margin: 0.5rem 0 0;
-  color: var(--color-muted);
-}
-
-.more {
-  text-align: center;
-  padding-top: 0.5rem;
-}
-
-.retry {
-  margin-top: 0.75rem;
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius);
-  background: transparent;
-  color: var(--color-primary);
-  font: inherit;
-  font-size: 0.875rem;
-  cursor: pointer;
 }
 
 .sentinel {
