@@ -62,7 +62,7 @@ A l'Sprint 0 no hi ha login. L'usuari de cada petició es resol així:
 - `X-User-Id` és **opcional**.
 - Sense la capçalera, el backend fa servir l'**usuari 1**.
 - Amb `X-User-Id: 2`, el backend fa servir l'**usuari 2**, que té un compte **sense moviments ni guardioles**. Serveix per provar els estats buits.
-- Comportament amb un valor no vàlid (no numèric o d'un usuari que no existeix): **pendent de T07.2**.
+- Amb un valor **no vàlid** (no numèric, buit, o número d'un usuari que no existeix), qualsevol endpoint retorna `422 VALIDATION_ERROR` sense `details`. Exemples: `X-User-Id: abc`, `X-User-Id: 99`.
 
 ```http
 GET /api/home HTTP/1.1
@@ -73,7 +73,21 @@ X-User-Id: 2
 
 ### `GET /api/health`
 
-Comprova que el backend està en marxa. El cos de la resposta: **pendent de T07.2**.
+Comprova que el backend està en marxa. No fa servir la capçalera `X-User-Id`.
+
+**Resposta `200`:** `{ status }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `status` | string | Sempre `"ok"` quan el backend respon. |
+
+**Resposta:**
+
+```json
+{
+  "status": "ok"
+}
+```
 
 ---
 
@@ -497,8 +511,3 @@ Propostes d'aquest contracte que s'han de confirmar a la revisió de la PR:
 | P5 | [4.3](#43-post-apitopups) | `amount` ha de ser un enter JSON estricte: `"500"`, `500.5` i `500.0` retornen `VALIDATION_ERROR`. |
 | P6 | [5](#5-errors) | Quan un error no té `details`, la clau no apareix a la resposta (en lloc de `"details": null`). |
 | P7 | [1](#dates) | Les dates es donen amb precisió de segons, sense fraccions de segon. |
-
-Pendents de T07.2 (Martí), que s'afegiran a aquest document quan estiguin implementats:
-
-- El comportament de `X-User-Id` amb un valor no vàlid.
-- El cos de la resposta de `GET /api/health`.
