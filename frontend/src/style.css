@@ -3,9 +3,11 @@
   --color-surface: #ffffff;
   --color-text: #1a2233;
   --color-muted: #6c7a96;
+  --color-border: #e6ebf4;
   --color-primary: #4f46e5;
   --color-income: #16a34a;
   --color-expense: #dc2626;
+  --color-error: #dc2626;
   --radius: 0.75rem;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }

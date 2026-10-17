@@ -13,6 +13,10 @@ KIND_TOPUP = "topup"
 KIND_OTHER = "other"
 KINDS = frozenset({KIND_TOPUP, KIND_OTHER})
 
+# Com es mostra sempre una recàrrega de prova (docs/api.md §4.3).
+TOPUP_CONCEPT = "Recàrrega"
+TOPUP_ICON = "topup"
+
 
 @dataclass
 class Movement:
