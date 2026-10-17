@@ -18,7 +18,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.data.seed import build_seed
-from app.routers import health, home, movements
+from app.routers import health, home, movements, topups
 from app.services.errors import (
     ERROR_MESSAGES,
     ERROR_STATUS,
@@ -164,6 +164,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router, prefix="/api")
     app.include_router(home.router, prefix="/api")
     app.include_router(movements.router, prefix="/api")
+    app.include_router(topups.router, prefix="/api")
     _register_error_handlers(app)
     return app
 
