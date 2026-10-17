@@ -12,6 +12,7 @@ from datetime import datetime
 
 from app.models import (
     KIND_TOPUP,
+    MADRID_TZ,
     TOPUP_CONCEPT,
     TOPUP_ICON,
     TYPE_INCOME,
@@ -19,10 +20,20 @@ from app.models import (
     now_madrid,
 )
 from app.repositories import AccountRepository, MovementRepository
-from app.services.errors import AMOUNT_OVER_LIMIT, INVALID_AMOUNT, ApiError
+from app.services.errors import (
+    AMOUNT_OVER_LIMIT,
+    DAILY_LIMIT_EXCEEDED,
+    INVALID_AMOUNT,
+    ApiError,
+)
 
 # Màxim per recàrrega, en cèntims (500,00 €). Exactament el màxim està permès.
 MAX_TOPUP = 50_000
+
+# US-09, criteri 4: no es pot recarregar més de 1.000,00 € en un mateix dia natural
+# a Madrid. Compta la suma de les recàrregues d'avui més la nova; arribar just a
+# 1.000,00 € està permès, perquè el criteri diu "no més de".
+MAX_DAILY_TOPUP = 100_000
 
 
 @dataclass(frozen=True)
@@ -58,11 +69,19 @@ def top_up(
         # aquí és un error de programació i ha d'acabar en INTERNAL_ERROR.
         raise LookupError(f"L'usuari {user_id} no té compte principal")
 
-    # --- T09.2 (Alicia): límit diari -------------------------------------------
-    # Aquí, abans d'escriure res: recàrregues d'avui (Madrid) + `amount` > 100.000
-    # → DAILY_LIMIT_EXCEEDED amb details.remainingToday. La suma del dia la dona
-    # `movements.sum_topups_on_day(account.id, now.astimezone(MADRID_TZ).date())`.
-    # ---------------------------------------------------------------------------
+    # Es comprova abans d'escriure res: si es rebutja, el saldo i els moviments no canvien.
+    today = now.astimezone(MADRID_TZ).date()
+    topped_up_today = movements.sum_topups_on_day(account.id, today)
+    if topped_up_today + amount > MAX_DAILY_TOPUP:
+        remaining_today = max(0, MAX_DAILY_TOPUP - topped_up_today)
+        raise ApiError(
+            DAILY_LIMIT_EXCEEDED,
+            message=(
+                "Has superat el límit diari de recàrrega. "
+                f"Avui encara pots recarregar {_format_euros(remaining_today)}."
+            ),
+            details={"remainingToday": remaining_today},
+        )
 
     movement = movements.add(
         account_id=account.id,
@@ -76,3 +95,9 @@ def top_up(
     new_balance = account.balance + amount
     accounts.set_balance(user_id, new_balance)
     return TopupResult(balance=new_balance, movement=movement)
+
+
+def _format_euros(cents: int) -> str:
+    """Import en format català per al missatge: `100000` → `"1.000,00 €"`."""
+    euros, rest = divmod(cents, 100)
+    return f"{euros:,}".replace(",", ".") + f",{rest:02d} €"
