@@ -26,6 +26,13 @@ beforeEach(() => {
 })
 
 describe('useHomeViewModel', () => {
+  it('starts loading, so the 0 placeholder never shows before the first answer', () => {
+    const viewModel = useHomeViewModel()
+
+    expect(viewModel.isLoading.value).toBe(true)
+    expect(viewModel.error.value).toBeNull()
+  })
+
   it('fills balance, total saved and the last movements', async () => {
     vi.mocked(getHome).mockResolvedValue(home)
     const viewModel = useHomeViewModel()
