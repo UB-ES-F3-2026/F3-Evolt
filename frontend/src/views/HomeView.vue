@@ -1,26 +1,54 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import AppShell from '@/components/AppShell.vue'
+import MoneyAmount from '@/components/MoneyAmount.vue'
+import MovementRow from '@/components/MovementRow.vue'
+import { useHomeViewModel } from '@/viewmodels/useHomeViewModel'
+
+const { balance, totalSaved, lastMovements, hasMovements, isLoading, error, load } = useHomeViewModel()
+
+// Every visit reloads, so a top-up made on another screen shows up (US-07 AC 4).
+onMounted(load)
 </script>
 
 <template>
   <AppShell title="Inici">
-    <section class="card">
-      <h2 class="label">Saldo</h2>
-      <p class="value">—</p>
+    <section v-if="error" class="card state">
+      <p class="state-text" role="alert">{{ error }}</p>
+      <button type="button" class="retry" @click="load">Reintentar</button>
     </section>
 
-    <section class="card">
-      <h2 class="label">Total estalviat</h2>
-      <p class="value">—</p>
+    <section v-else-if="isLoading" class="card state">
+      <p class="state-text">Carregant…</p>
     </section>
 
-    <section class="card">
-      <div class="section-header">
-        <h2 class="label">Últims moviments</h2>
-        <router-link to="/movements" class="see-all">Veure tots</router-link>
-      </div>
-      <p class="value">Encara no hi ha moviments</p>
-    </section>
+    <template v-else>
+      <section class="card">
+        <div class="section-header">
+          <h2 class="label">Saldo disponible</h2>
+        </div>
+        <MoneyAmount class="balance" :cents="balance" />
+        <p class="saved">
+          Total estalviat a guardioles:
+          <MoneyAmount class="saved-amount" :cents="totalSaved" />
+        </p>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <h2 class="label">Últims moviments</h2>
+          <router-link to="/movements" class="see-all">Veure tots</router-link>
+        </div>
+        <ul v-if="hasMovements" class="movements">
+          <MovementRow
+            v-for="movement in lastMovements"
+            :key="movement.id"
+            :movement="movement"
+          />
+        </ul>
+        <p v-else class="state-text">Encara no tens moviments</p>
+      </section>
+    </template>
   </AppShell>
 </template>
 
@@ -32,25 +60,64 @@ import AppShell from '@/components/AppShell.vue'
   margin-bottom: 1rem;
 }
 
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
 .label {
-  margin: 0 0 0.25rem;
+  margin: 0;
   font-size: 0.875rem;
   color: var(--color-muted);
 }
 
-.value {
-  margin: 0;
-  font-size: 1.125rem;
+.balance {
+  display: block;
+  margin: 0.25rem 0 0.5rem;
+  font-size: 2rem;
+  font-weight: 700;
 }
 
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 1rem;
+.saved {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+.saved-amount {
+  color: var(--color-text);
+  font-weight: 600;
 }
 
 .see-all {
   font-size: 0.875rem;
+}
+
+.movements {
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.state {
+  text-align: center;
+}
+
+.state-text {
+  margin: 0.5rem 0 0;
+  color: var(--color-muted);
+}
+
+.retry {
+  margin-top: 0.75rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
 }
 </style>
