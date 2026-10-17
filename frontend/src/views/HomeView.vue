@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { Eye, EyeOff } from '@lucide/vue'
+import { Eye, EyeOff, Plus } from '@lucide/vue'
 import AppShell from '@/components/AppShell.vue'
 import MoneyAmount from '@/components/MoneyAmount.vue'
 import MovementRow from '@/components/MovementRow.vue'
@@ -45,6 +45,10 @@ onMounted(load)
           Total estalviat a guardioles:
           <MoneyAmount class="saved-amount" :cents="totalSaved" :hidden="isHidden" />
         </p>
+        <router-link :to="{ name: 'topup' }" class="add-money">
+          <Plus :size="18" />
+          Afegir diners
+        </router-link>
       </section>
 
       <section class="card">
@@ -117,6 +121,18 @@ onMounted(load)
 
 .saved-amount {
   color: var(--color-text);
+  font-weight: 600;
+}
+
+.add-money {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 1rem;
+  padding: 0.625rem 1rem;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-surface);
   font-weight: 600;
 }
 
