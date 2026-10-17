@@ -2,6 +2,9 @@
 import { onMounted } from 'vue'
 import { Eye, EyeOff } from '@lucide/vue'
 import AppShell from '@/components/AppShell.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import ErrorState from '@/components/ErrorState.vue'
+import LoadingIndicator from '@/components/LoadingIndicator.vue'
 import MoneyAmount from '@/components/MoneyAmount.vue'
 import MovementRow from '@/components/MovementRow.vue'
 import { useBalanceVisibility } from '@/viewmodels/useBalanceVisibility'
@@ -16,14 +19,11 @@ onMounted(load)
 
 <template>
   <AppShell title="Inici">
-    <section v-if="error" class="card state">
-      <p class="state-text" role="alert">{{ error }}</p>
-      <button type="button" class="retry" @click="load">Reintentar</button>
+    <section v-if="error" class="card">
+      <ErrorState :message="error" @retry="load" />
     </section>
 
-    <section v-else-if="isLoading" class="card state">
-      <p class="state-text">Carregant…</p>
-    </section>
+    <LoadingIndicator v-else-if="isLoading" />
 
     <template v-else>
       <section class="card">
@@ -60,7 +60,7 @@ onMounted(load)
             :hidden="isHidden"
           />
         </ul>
-        <p v-else class="state-text">Encara no tens moviments</p>
+        <EmptyState v-else />
       </section>
     </template>
   </AppShell>
@@ -127,26 +127,5 @@ onMounted(load)
 .movements {
   margin: 0.5rem 0 0;
   padding: 0;
-}
-
-.state {
-  text-align: center;
-}
-
-.state-text {
-  margin: 0.5rem 0 0;
-  color: var(--color-muted);
-}
-
-.retry {
-  margin-top: 0.75rem;
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius);
-  background: transparent;
-  color: var(--color-primary);
-  font: inherit;
-  font-size: 0.875rem;
-  cursor: pointer;
 }
 </style>
