@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { messageForCode } from '@/models/errorMessages'
 import type { Home } from '@/models/home'
 import { getHome } from '@/services/homeService'
 import { useHomeViewModel } from './useHomeViewModel'
@@ -52,13 +53,13 @@ describe('useHomeViewModel', () => {
     expect(viewModel.isLoading.value).toBe(false)
   })
 
-  it('shows an error when the home summary cannot be loaded', async () => {
+  it('shows the shared message for the error code when the summary cannot be loaded', async () => {
     vi.mocked(getHome).mockRejectedValue({ code: 'NETWORK_ERROR', message: 'x' })
     const viewModel = useHomeViewModel()
 
     await viewModel.load()
 
-    expect(viewModel.error.value).toBe("No s'ha pogut carregar el saldo. Torna-ho a provar.")
+    expect(viewModel.error.value).toBe(messageForCode('NETWORK_ERROR'))
     expect(viewModel.isLoading.value).toBe(false)
   })
 
