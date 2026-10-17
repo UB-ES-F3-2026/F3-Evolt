@@ -111,6 +111,25 @@ real API (and `VITE_API_URL` to point at it).
 
 ---
 
+## Backend
+
+Python + FastAPI, in [`backend/`](backend/). Data lives in memory (seed). Run every command from `backend/`.
+
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload    # API on http://localhost:8000
+python -m pytest tests/          # tests
+```
+
+Quick check: `curl http://localhost:8000/api/health` → `{"status":"ok"}`.
+The frontend talks to this API when `frontend/.env` sets `VITE_USE_MOCKS=false`
+(see [Frontend](#frontend)).
+
+---
+
 ## Docs map
 
 The only complete list of documents; the others link here.
