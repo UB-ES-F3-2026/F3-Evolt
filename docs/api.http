@@ -1,0 +1,149 @@
+// Col·lecció de peticions d'exemple (T09.6) — un per endpoint i tots els casos
+// d'error documentats a docs/api.md. Compatible amb el client REST de VS Code
+// (extensió "REST Client") i amb l'HTTP Client d'IntelliJ / JetBrains.
+//
+// Cal tenir el backend en marxa: des de backend/,  uvicorn app.main:app --reload
+
+@baseUrl = http://localhost:8000
+
+### Reinici de dades (T09.6): executa aquesta petició abans de qualsevol
+### seqüència amb estat (p. ex. la del límit diari) per tornar al seed inicial.
+### Resposta esperada: 200  { "status": "ok" }
+POST {{baseUrl}}/api/dev/reset
+
+### Salut del backend (T07.2). No resol l'usuari: funciona amb qualsevol
+### capçalera. Resposta esperada: 200  { "status": "ok" }
+GET {{baseUrl}}/api/health
+
+### Pantalla principal (US-07) de l'usuari per defecte (usuari 1, sense capçalera).
+### Resposta esperada: 200 amb balance, totalSaved i els 5 lastMovements.
+GET {{baseUrl}}/api/home
+
+### Pantalla principal de l'usuari 2: compte sense moviments ni guardioles.
+### Resposta esperada: 200 amb totalSaved = 0 i lastMovements = [].
+GET {{baseUrl}}/api/home
+X-User-Id: 2
+
+### Usuari invàlid a la capçalera X-User-Id (T08.1).
+### Resposta esperada: 422  { "code": "VALIDATION_ERROR", ... }  (sense details)
+GET {{baseUrl}}/api/home
+X-User-Id: abc
+
+### Llistat de moviments (US-08): primera pàgina (offset 0, limit 20).
+### Resposta esperada: 200 amb items i nextOffset.
+GET {{baseUrl}}/api/movements
+
+### Llistat de moviments: pàgina següent (offset 20, limit 20).
+### Resposta esperada: 200 amb la pàgina que continua de l'anterior.
+GET {{baseUrl}}/api/movements?offset=20&limit=20
+
+### Offset més enllà del final (P3): no és un error.
+### Resposta esperada: 200 amb items = [] i nextOffset = null.
+GET {{baseUrl}}/api/movements?offset=1000
+
+### Usuari sense moviments (X-User-Id: 2): estat buit de US-08.
+### Resposta esperada: 200 amb items = [] i nextOffset = null.
+GET {{baseUrl}}/api/movements
+X-User-Id: 2
+
+### offset negatiu, fora de rang (rang vàlid: >= 0).
+### Resposta esperada: 422  { "code": "VALIDATION_ERROR", ... }
+GET {{baseUrl}}/api/movements?offset=-1
+
+### limit fora de rang (rang vàlid: 1–50).
+### Resposta esperada: 422  { "code": "VALIDATION_ERROR", ... }
+GET {{baseUrl}}/api/movements?limit=51
+
+### Recàrrega correcta de 20,00 € (2000 cèntims) — US-09.
+### Resposta esperada: 201 amb el saldo nou i el moviment creat.
+POST {{baseUrl}}/api/topups
+Content-Type: application/json
+
+{
+  "amount": 2000
+}
+
+### Import 0: no és més gran que zero.
+### Resposta esperada: 422  { "code": "INVALID_AMOUNT", ... }
+POST {{baseUrl}}/api/topups
+Content-Type: application/json
+
+{
+  "amount": 0
+}
+
+### Import negatiu: tampoc és més gran que zero.
+### Resposta esperada: 422  { "code": "INVALID_AMOUNT", ... }
+POST {{baseUrl}}/api/topups
+Content-Type: application/json
+
+{
+  "amount": -500
+}
+
+### amount com a string (P5): ha de ser un enter JSON estricte.
+### Resposta esperada: 422  { "code": "VALIDATION_ERROR", ... }
+POST {{baseUrl}}/api/topups
+Content-Type: application/json
+
+{
+  "amount": "500"
+}
+
+### Més de 500,00 € per recàrrega (50001 cèntims).
+### Resposta esperada: 422  { "code": "AMOUNT_OVER_LIMIT", ... }
+POST {{baseUrl}}/api/topups
+Content-Type: application/json
+
+{
+  "amount": 50001
+}
+
+### Just al límit: exactament 500,00 € (50000 cèntims) sí que s'accepta.
+### Resposta esperada: 201 amb el saldo nou i el moviment creat.
+POST {{baseUrl}}/api/topups
+Content-Type: application/json
+
+{
+  "amount": 50000
+}
+
+### Límit diari (1.000,00 € = 100000 cèntims). Executa el reinici primer i
+### respecta l'ordre: dues recàrregues de 500,00 € porten el total d'avui a
+### exactament 100000 (permesa); la tercera de 100,00 € el supera.
+### Respostes esperades: 200 ok · 201 · 201 · 422 DAILY_LIMIT_EXCEEDED
+### amb details.remainingToday = 0.
+POST {{baseUrl}}/api/dev/reset
+
+###
+POST {{baseUrl}}/api/topups
+Content-Type: application/json
+
+{
+  "amount": 50000
+}
+
+###
+POST {{baseUrl}}/api/topups
+Content-Type: application/json
+
+{
+  "amount": 50000
+}
+
+###
+POST {{baseUrl}}/api/topups
+Content-Type: application/json
+
+{
+  "amount": 10000
+}
+
+### Ruta inexistent: el contracte tracta qualsevol ruta no definida com a error
+### inesperat (docs/api.md §5).
+### Resposta esperada: 500  { "code": "INTERNAL_ERROR", ... }
+GET {{baseUrl}}/api/nonexistent
+
+// Aquesta col·lecció es pot combinar amb les variables d'entorn de simulació
+// de T08.2 (errors i latència simulats): arrenca uvicorn amb elles definides i
+// envia les peticions d'aquí; el reinici de dades continua funcionant igual.

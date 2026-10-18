@@ -128,6 +128,20 @@ Quick check: `curl http://localhost:8000/api/health` → `{"status":"ok"}`.
 The frontend talks to this API when `frontend/.env` sets `VITE_USE_MOCKS=false`
 (see [Frontend](#frontend)).
 
+### Request collection & manual testing (T09.6)
+
+[`docs/api.http`](docs/api.http) is an example request collection — one request
+per endpoint plus every documented error case (invalid amount, over 500 €,
+daily limit exceeded, user without movements, …). Open it with the **REST
+Client** extension in VS Code or the **HTTP Client** in IntelliJ/JetBrains and
+run the requests one by one; uvicorn must be running
+(`uvicorn app.main:app --reload`).
+
+`POST /api/dev/reset` restores the in-memory seed without restarting the
+server. Run it before any stateful sequence — e.g. the daily-limit chain in the
+collection — so the results are reproducible. The collection can be combined
+with the T08.2 simulation env vars (set them when starting uvicorn).
+
 ---
 
 ## Docs map
@@ -141,6 +155,7 @@ The only complete list of documents; the others link here.
 | `CLAUDE.md` | Entry point for Claude Code; points to `AGENTS.md` |
 | `.claude/skills/` · `.opencode/skills/` | The 10 lazy AI skills (same content in both) |
 | `docs/api.md` | API contract shared by backend and frontend |
+| `docs/api.http` | Example request collection for manual API testing (T09.6) |
 | `docs/P1/AGENTS.md` | Course context, Scrum, roles, backlog rules |
 | `docs/P1/MEMORY.md` | Team decisions, US and epic index |
 | `docs/P1/Team Specification.md` | Product catalog + team |
