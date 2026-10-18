@@ -128,6 +128,25 @@ Quick check: `curl http://localhost:8000/api/health` → `{"status":"ok"}`.
 The frontend talks to this API when `frontend/.env` sets `VITE_USE_MOCKS=false`
 (see [Frontend](#frontend)).
 
+### Simulating delay and failure (T08.2)
+
+Two optional environment variables make every response slower or fail, to
+exercise the frontend's loading and error states. Both are **off** when unset
+or empty; a malformed or out-of-range value is ignored with a server warning.
+
+| Variable | Type | Effect |
+|----------|------|--------|
+| `SIMULATE_DELAY_MS` | integer ≥ 0 | Adds a fixed delay (milliseconds) to every response |
+| `SIMULATE_ERROR_RATE` | float 0–100 | Percentage of requests answered with a 500 `INTERNAL_ERROR` |
+
+```bash
+SIMULATE_DELAY_MS=800 uvicorn app.main:app --reload          # every response +800 ms
+SIMULATE_ERROR_RATE=25 uvicorn app.main:app --reload         # ~1 in 4 requests fails
+SIMULATE_ERROR_RATE=100 uvicorn app.main:app --reload        # every request fails
+```
+
+The simulation affects **every** request, including `/api/health`.
+
 ---
 
 ## Docs map
