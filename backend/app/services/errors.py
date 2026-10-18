@@ -36,6 +36,21 @@ ERROR_MESSAGES: dict[str, str] = {
 }
 
 
+def error_body(
+    code: str,
+    message: str,
+    details: dict[str, object] | None = None,
+) -> dict[str, object]:
+    """Construeix el cos d'error del contracte `{ code, message, details? }`.
+
+    P6 (docs/api.md §5): la clau `details` mai no apareix buida ni null.
+    """
+    body: dict[str, object] = {"code": code, "message": message}
+    if details:
+        body["details"] = details
+    return body
+
+
 class ApiError(Exception):
     """Error de negoci amb el codi del contracte (docs/api.md §5).
 
