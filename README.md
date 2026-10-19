@@ -97,7 +97,7 @@ Vue 3 + TypeScript + Vite, in [`frontend/`](frontend/).
 
 ```bash
 cd frontend
-cp ../.env.example .env   # optional: VITE_* vars are read from frontend/.env
+cp .env.example .env      # optional: VITE_* vars are read from frontend/.env
 npm install
 npm run dev               # dev server on http://localhost:5173
 npm run type-check        # TypeScript check (vue-tsc)
