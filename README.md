@@ -32,7 +32,7 @@ We use AI as a **co-pilot** (AI-SDLC). Humans own architecture, product and fina
 | **Contract** | [`docs/api.md`](docs/api.md) fixes routes, fields and error codes for both sides. |
 
 ```
-backend/app/     # models · repositories · services · routers · data/seed.py
+backend/app/     # middleware · models · repositories · services · routers · data/seed.py
 backend/tests/
 frontend/src/    # models · services · viewmodels · views · components · router · mocks
 ```
