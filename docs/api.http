@@ -24,7 +24,7 @@ GET {{baseUrl}}/api/home
 GET {{baseUrl}}/api/home
 X-User-Id: 2
 
-### Usuari invàlid a la capçalera X-User-Id (T08.1).
+### Usuari invàlid a la capçalera X-User-Id (T07.2).
 ### Resposta esperada: 422  { "code": "VALIDATION_ERROR", ... }  (sense details)
 GET {{baseUrl}}/api/home
 X-User-Id: abc
