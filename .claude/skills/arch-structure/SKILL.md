@@ -16,6 +16,7 @@ Two apps in one repo. Inside each one, folders are named after the **layer**.
 backend/
   app/
     main.py
+    middleware/     # cross-cutting HTTP middleware (CORS, errors, simulation)
     models/         # data classes
     repositories/   # access to the in-memory data
     services/       # business logic
@@ -35,6 +36,7 @@ frontend/src/
 
 - No feature folders (`features/<x>/`) and no `shared/` folder: `components/`, `models/` and `services/` are already shared by every screen.
 - Do not add another top-level folder to `frontend/src/` or `backend/app/` without agreeing it in the team.
+- `middleware/` wraps the HTTP stack (CORS, errors, simulation): it sits outside the Router → Service chain and holds no business rules.
 
 ## Dependency rule (Clean Architecture)
 
@@ -80,6 +82,7 @@ Backend:   Router  →  Service  →  Repository  →  Data
 | Business rule | `backend/app/services/` |
 | Data access | `backend/app/repositories/` |
 | Data class | `backend/app/models/` |
+| Cross-cutting HTTP middleware (CORS, errors, simulation) | `backend/app/middleware/` |
 | Hardcoded data | `backend/app/data/seed.py` |
 | Backend test | `backend/tests/` |
 

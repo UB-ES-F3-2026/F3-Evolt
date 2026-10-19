@@ -18,6 +18,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.data.seed import build_seed
+from app.middleware import SimulationMiddleware, load_simulation_settings
 from app.routers import dev, health, home, movements, topups
 from app.services.errors import (
     ERROR_MESSAGES,
@@ -25,6 +26,7 @@ from app.services.errors import (
     INTERNAL_ERROR,
     VALIDATION_ERROR,
     ApiError,
+    error_body,
 )
 
 logger = logging.getLogger("evolt")
@@ -40,18 +42,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # seed net i els tests no depenen de l'ordre en què s'executen.
     app.state.seed = build_seed()
     yield
-
-
-def _error_body(
-    code: str,
-    message: str,
-    details: dict[str, object] | None,
-) -> dict[str, object]:
-    # P6 (docs/api.md §5): la clau `details` mai no apareix buida ni null.
-    body: dict[str, object] = {"code": code, "message": message}
-    if details:
-        body["details"] = details
-    return body
 
 
 class ContractExceptionMiddleware(BaseHTTPMiddleware):
@@ -76,7 +66,7 @@ class ContractExceptionMiddleware(BaseHTTPMiddleware):
             )
             return JSONResponse(
                 status_code=ERROR_STATUS[INTERNAL_ERROR],
-                content=_error_body(
+                content=error_body(
                     INTERNAL_ERROR, ERROR_MESSAGES[INTERNAL_ERROR], None
                 ),
             )
@@ -89,7 +79,7 @@ def _register_error_handlers(app: FastAPI) -> None:
     async def handle_api_error(request: Request, exc: ApiError) -> JSONResponse:
         return JSONResponse(
             status_code=ERROR_STATUS[exc.code],
-            content=_error_body(exc.code, exc.message, exc.details),
+            content=error_body(exc.code, exc.message, exc.details),
         )
 
     @app.exception_handler(RequestValidationError)
@@ -101,7 +91,7 @@ def _register_error_handlers(app: FastAPI) -> None:
         logger.warning("Petició invàlida: %s", exc.errors())
         return JSONResponse(
             status_code=ERROR_STATUS[VALIDATION_ERROR],
-            content=_error_body(
+            content=error_body(
                 VALIDATION_ERROR, ERROR_MESSAGES[VALIDATION_ERROR], None
             ),
         )
@@ -118,13 +108,13 @@ def _register_error_handlers(app: FastAPI) -> None:
         if exc.status_code == 422:
             return JSONResponse(
                 status_code=ERROR_STATUS[VALIDATION_ERROR],
-                content=_error_body(
+                content=error_body(
                     VALIDATION_ERROR, ERROR_MESSAGES[VALIDATION_ERROR], None
                 ),
             )
         return JSONResponse(
             status_code=ERROR_STATUS[INTERNAL_ERROR],
-            content=_error_body(
+            content=error_body(
                 INTERNAL_ERROR, ERROR_MESSAGES[INTERNAL_ERROR], None
             ),
         )
@@ -138,7 +128,7 @@ def _register_error_handlers(app: FastAPI) -> None:
         )
         return JSONResponse(
             status_code=ERROR_STATUS[INTERNAL_ERROR],
-            content=_error_body(
+            content=error_body(
                 INTERNAL_ERROR, ERROR_MESSAGES[INTERNAL_ERROR], None
             ),
         )
@@ -148,9 +138,19 @@ def create_app() -> FastAPI:
     """Fabriquen una aplicació nova. Els tests la fan servir per afegir-hi
     rutes de proves sense tocar la instància de producció."""
     app = FastAPI(title="F3-Evolt API", lifespan=lifespan)
-    # Primer l'intern (captura excepcions), després el CORS (extern): així
-    # la resposta d'error surt amb Access-Control-Allow-Origin.
+    # Ordre de middleware (afegits de dins cap a fora; el darrer afegit és el
+    # més extern):
+    #   1. ContractExceptionMiddleware (intern): captura excepcions i les
+    #      converteix en INTERNAL_ERROR abans de sortir.
+    #   2. SimulationMiddleware (T08.2): aplica retard/errors simulats a
+    #      cada petició; llegeix l'entorn un cop aquí perquè els tests puguin
+    #      fixar-lo abans de crear l'app. Amb les variables buides o sense
+    #      definir no altera cap resposta.
+    #   3. CORSMiddleware (extern): afegeix Access-Control-Allow-Origin a
+    #      qualsevol resposta, incloses les 500 dels dos nivells anteriors.
     app.add_middleware(ContractExceptionMiddleware)
+    settings = load_simulation_settings()
+    app.add_middleware(SimulationMiddleware, settings=settings)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[FRONTEND_ORIGIN],

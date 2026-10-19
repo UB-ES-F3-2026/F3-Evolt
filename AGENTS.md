@@ -38,6 +38,7 @@ Two apps in one repo. Inside each one, folders are named after the **layer**.
 backend/
   app/
     main.py
+    middleware/     # cross-cutting HTTP middleware (CORS, errors, simulation)
     models/         # data classes
     repositories/   # access to the in-memory data
     services/       # business logic
@@ -90,6 +91,8 @@ Router  →  Service  →  Repository  →  Models / data
 | **Model** | `models/` | Data classes with the contract's fields | Import FastAPI |
 
 Services reach the data **only** through repositories, so moving to a real database later means rewriting one folder.
+
+`middleware/` wraps the HTTP stack for cross-cutting concerns (CORS, error normalization, T08.2 simulation). It sits outside the Router → Service → Repository chain and holds **no business rules**.
 
 Full rules: skill `backend-clean`.
 
