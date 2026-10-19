@@ -140,6 +140,7 @@ Exemple:
 | `GET /api/home` | `200` | US-07 |
 | `GET /api/movements` | `200` | US-08 |
 | `POST /api/topups` | `201` | US-09 |
+| `POST /api/dev/reset` | `200` | T09.6 |
 
 Els exemples d'aquest apartat fan servir les mateixes dades fictícies de l'usuari 1. Les dades reals són les del seed (T07.3).
 
@@ -392,6 +393,33 @@ Content-Type: application/json
   "code": "DAILY_LIMIT_EXCEEDED",
   "message": "Has superat el límit diari de recàrrega. Avui encara pots recarregar 100,00 €.",
   "details": { "remainingToday": 10000 }
+}
+```
+
+### 4.4 `POST /api/dev/reset`
+
+Eina de **desenvolupament** (T09.6), com la capçalera `X-User-Id`. **No l'usa el frontend**: serveix per provar l'API manualment, p. ex. amb la col·lecció [`docs/api.http`](api.http).
+
+L'Sprint 0 manté les dades **en memòria** i les carrega del seed a l'arrencada. Aquest endpoint **restaura les dades inicials sense reiniciar el servidor**, de manera que es puguin reproduir seqüències amb estat (p. ex. el límit diari de recàrrega) des de zero.
+
+- **Cos de la petició:** cap.
+- **Resposta `200`:** `{ status }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `status` | string | Sempre `"ok"` quan el reinici s'ha fet. |
+
+**Petició:**
+
+```http
+POST /api/dev/reset HTTP/1.1
+```
+
+**Resposta:**
+
+```json
+{
+  "status": "ok"
 }
 ```
 
