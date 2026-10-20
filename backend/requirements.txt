@@ -1,0 +1,8 @@
+pytest
+# Windows no porta base de dades de zones horàries: sense això ZoneInfo("Europe/Madrid") falla.
+tzdata
+# API i servidor de desenvolupament (T07.2). --reload necessita els extres standard.
+fastapi
+uvicorn[standard]
+# El TestClient de Starlette parla per HTTP: necessita httpx.
+httpx

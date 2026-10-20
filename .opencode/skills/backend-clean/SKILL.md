@@ -1,141 +1,92 @@
 ---
 name: backend-clean
-description: Load when writing backend logic on Firebase — Cloud Functions, use cases, repositories/ports, atomic Firestore transactions, callable functions, security rules enforcement, server-side validation for F3-Evolt (auth, transfers, savings, gamification, multidivisa).
+description: Load when writing backend code in Python with FastAPI — routers, services, repositories, models, seed data, validation, error responses, pytest tests for F3-Evolt (home, movements, top-ups and later auth, transfers, savings, gamification).
 ---
 
-# Backend on Firebase — Clean Architecture
+# Backend on FastAPI — Clean layers
 
-There is **no custom Node server** in this project. Backend = **Firebase** (Functions + Firestore + Auth).
+Backend = **Python + FastAPI**, tested with **pytest**. During Sprint 0 the data lives **in memory**, loaded from `data/seed.py` at start-up; a real database comes in a later sprint.
 
-Rules live in **use cases**; Firebase only appears in **adapters** and thin **function entries**.
+Every route, field and error code is fixed by `docs/api.md`. Read it before writing an endpoint.
 
 ## Layering
 
 ```
-[Cloud Function entry]           callable / https / trigger
-        ↓
-[Use case / feature service]     features/<f>/services/ or shared/services
-        ↓
-[Port — interface]               e.g. SavingPotRepository, UserGateway
-        ↓
-[Adapter — Firebase]             Firestore / Auth / Messaging adapters
+backend/app/
+  routers/        endpoints
+      ↓
+  services/       business logic
+      ↓
+  repositories/   access to the data
+      ↓
+  models/  +  data/seed.py
 ```
 
-Dependency rule still holds: outer → inner; use cases never import `firebase/*` directly.
+Each layer calls only the one below it.
 
-## Where logic runs
+| Layer | Does | Must not |
+|-------|------|----------|
+| **Router** (`routers/home.py`) | Read the request, call one service, return the contract's JSON | Hold business rules; touch repositories |
+| **Service** (`services/topup_service.py`) | Validate, apply limits, decide what changes | Read `seed.py`; know about HTTP |
+| **Repository** (`repositories/`) | Read and write the in-memory data | Decide business rules |
+| **Model** (`models/`) | Data classes with the contract's fields | Import FastAPI |
 
-| Kind of logic | Where |
-|---------------|--------|
-| Pure domain (money math, progress %) | model / shared services — **can run client or Functions** |
-| Authorization + atomic money moves | **Cloud Functions** (server) |
-| Read-heavy UI queries | Client via adapter + **security rules** |
-| Admin / config (XP values) | Functions + Firestore config docs |
-| Password policy check | Shared service used by Auth flows (client UX + server if enforced server-side) |
+Services reach the data **only** through repositories. Swapping memory for a database later must mean rewriting `repositories/` and nothing else.
 
-**Client** may validate for UX; **Functions** enforce the real invariants (balance, limits, ownership).
+## Service style
 
-## Use-case style
-
-One use case = one public entry = one clear outcome.
+One function = one use case = one clear outcome.
 
 | Use case | Responsibility |
 |----------|----------------|
-| `ContributeToPot` | authz → validate → **transaction** principal↓ pot↑ → movements → XP policy hook |
-| `SendMoney` | authz → balance → atomic transfer → notify |
-| `CreateSavingPot` | authz → validate → create doc |
+| Home summary | balance + sum of all pots + 5 most recent movements |
+| List movements | newest first, `offset`/`limit`, compute `nextOffset` |
+| Top up | validate → check limits → add to balance → create the movement |
 
-Public entry on the function: `execute(...)` or a thin callable wrapper.
+## Validation order (top-up, from the contract)
 
-## Ports
+Stop at the first error:
 
-Small, business-named; implemented only by Firebase adapters:
+1. Body shape: `amount` missing or not an integer → `VALIDATION_ERROR`
+2. Per-top-up limits: `amount ≤ 0` → `INVALID_AMOUNT`; `amount > 50000` → `AMOUNT_OVER_LIMIT`
+3. Daily limit: today's top-ups + `amount > 100000` → `DAILY_LIMIT_EXCEEDED` with `details.remainingToday`
 
-```ts
-interface SavingPotRepository {
-  create(pot: SavingPot): Promise<void>
-  findById(userId: string, potId: string): Promise<SavingPot | null>
-  moveFunds(tx: ContributeTx): Promise<void> // adapter uses Firestore tx
-}
-```
+## All or nothing
 
-## Cloud Functions patterns
+If a request ends in an error, **nothing changes**: neither the balance nor the movements. Validate everything first, write last.
 
-### Callable (preferred for app commands)
+## Money and dates
 
-```ts
-// functions/contributeToPot.ts  (shape — not production glue)
-export const contributeToPot = onCall(async (request) => {
-  const uid = request.auth?.uid
-  if (!uid) throw new HttpsError('unauthenticated', 'Sign in required')
-  const result = await contributeToPotUseCase.execute(uid, request.data)
-  return result
-})
-```
+- Amounts are **integer cents**, always positive. `type` (`income` / `expense`) gives the direction, never the sign.
+- Dates are ISO 8601 with the `Europe/Madrid` offset.
+- “Today” is the calendar day in `Europe/Madrid`, whatever the server's time zone.
+- A top-up is found by the internal field `kind == "topup"`, never by its concept text. `kind` is not returned by the API.
 
-- **Thin handler:** parse input → auth uid → use case → return DTO.
-- No business rules in the handler beyond input shaping.
-- Use **callable** for commands that need trusted server logic.
+## Current user
 
-### Triggers (secondary)
-
-- Firestore triggers only for true async side effects (notifications, denormalized counters) **after** the money path succeeds.
-- Do not move the money mutation into a random trigger without a clear reason.
-
-## Atomic money (TR-03)
-
-Financial moves are **all or nothing**:
-
-```ts
-await db.runTransaction(async (tx) => {
-  const account = await tx.get(accountRef)
-  // check balance inside tx
-  tx.update(accountRef, { balance: newBalance })
-  tx.update(potRef, { balance: newPotBalance })
-  tx.set(movementRef, movement)
-})
-```
-
-- Contribute / transfer / pot withdraw: **one transaction**.
-- On failure: no partial balances; typed error to the client.
-- Design for **idempotency** where a retry could double-charge.
-
-## Validation order (use case)
-
-1. Authenticated `uid` (from `request.auth`, never from client body alone)
-2. Domain invariants (amount > 0, limits, atomicity)
-3. Authorization (resource belongs to caller)
-4. Persistence (transaction)
-5. Side effects (XP, push) only after success
-
-## Security rules (must match use cases)
-
-- Deny by default.
-- User paths: `request.auth.uid == userId` (or documented admin claim).
-- Rules are **not** a second copy of business logic — they gate access; use cases enforce domain rules when the client could bypass rules.
-- Test with emulators before demo.
+There is no login in Sprint 0: user 1 by default, or the one in the `X-User-Id` header. Resolve it in one dependency; services receive the user id as a parameter.
 
 ## Errors
 
 | Layer | Style |
-|-------|--------|
-| Use case | Typed result / stable codes (`INSUFFICIENT_BALANCE`, …) |
-| Function | Map to `HttpsError` / HTTP status |
-| Client | User-safe messages in ModelView |
+|-------|-------|
+| Service | Reports the failure with a stable code (`INVALID_AMOUNT`, …) |
+| Global handler | Turns it into `{ code, message, details? }` with the contract's HTTP status |
+| Unexpected failure | `INTERNAL_ERROR` (500), never a stack trace |
 
-Never return raw Firestore errors to the UI.
+`message` is Catalan text for people. `details` appears only when the error has some.
 
-## Composition
+## Tests
 
-- Shared policies (`DailyXpCap`, `PasswordPolicy`, FX rules) → `shared/services/`.
-- Feature services **call** shared services inside use cases.
-- Adapters per aggregate (users, accounts, pots, movements) — not one mega-repo.
+- pytest, in `backend/tests/`.
+- Reset the in-memory data before each test so the order does not matter.
+- Cover the edges the contract names: exactly 500 €, 500,01 €, the third top-up of the day, a user with no movements, invalid `offset`/`limit`.
 
 ## Self-check
 
-- [ ] Function entry is thin (auth + call use case + respond)
-- [ ] Use cases depend on ports, not `firebase/*`
-- [ ] Money moves use `runTransaction` / batch
-- [ ] Authorization uses authenticated uid
-- [ ] Shared rules not duplicated in Functions
-- [ ] Errors typed; client messages safe
+- [ ] The router is thin (read request → call service → respond)
+- [ ] The service reads and writes only through repositories
+- [ ] Response keys, types and error codes match `docs/api.md`
+- [ ] On error nothing was modified
+- [ ] Amounts are integer cents; “today” uses `Europe/Madrid`
+- [ ] Tests reset the data and pass

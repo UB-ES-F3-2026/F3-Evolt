@@ -1,100 +1,115 @@
 ---
 name: mvvm-patterns
-description: Load when creating or changing Vue frontend UI — screens, components, forms, composable ModelViews, state, events, props. Use for any Vue 3 feature on F3-Evolt (auth, savings, transfers, gamification, multidivisa). Frontend-specific MVVM.
+description: Load when creating or changing Vue frontend UI — screens, components, forms, composable ViewModels, state, events, props. Use for any Vue 3 screen on F3-Evolt (home, movements, top-up, auth, savings, transfers, gamification). Frontend-specific MVVM.
 ---
 
-# Vue MVVM — Model · ModelView · View
+# Vue MVVM — Model · ViewModel · View
 
-Stack: **Vue 3** (`<script setup lang="ts">`) + TypeScript.  
-Team naming: **ModelView** = ViewModel, implemented as a **composable**.
+Stack: **Vue 3** (`<script setup lang="ts">`) + TypeScript + Vite + Vue Router. No Pinia.
+A ViewModel is a **composable** named `useXxxViewModel`.
 
 ## Layers (Vue mapping)
 
 | Layer | Place | Vue piece | Does | Does not |
 |-------|-------|-----------|------|----------|
-| **View** | `features/<f>/view/` | `*.vue` SFC | Render, emit events, bind props | Business rules, Firebase SDK |
-| **ModelView** | `features/<f>/modelview/` | `useXxxModelView.ts` composable | State, commands, derived UI data | Template layout, raw Firestore |
-| **Model** | `features/<f>/model/` | pure `.ts` types + fns | Entities, money math, domain validation | Vue reactivity, Firebase |
-| **Services** | `features/<f>/services/` | plain TS (or thin composable) | Use cases, ports, Firebase adapters | Template / component markup |
+| **View** | `frontend/src/views/`, `components/` | `*.vue` SFC | Template and styles; renders what the ViewModel exposes | Business logic, API calls |
+| **ViewModel** | `frontend/src/viewmodels/` | `useXxxViewModel.ts` composable | State, validations and actions of one screen | HTML, styles |
+| **Model** | `frontend/src/models/`, `services/` | plain `.ts` | Types, data, JSON mapping and API calls | Screen state |
 
 ```
 View (.vue)
-  → useXxxModelView()          // ModelView composable
-      → service / port
-          → adapter (Firebase)
-      → model (pure)
+  → useXxxViewModel()        // ViewModel composable
+      → service              // services/xxxService.ts → apiClient.ts → API
+      → model (pure)         // models/
 ```
 
 ## Canonical flow (example: contribute to pot)
 
-```ts
-// features/savings/view/ContributeView.vue
+Helper names (`eurosToCents`, `toUserMessage`) only show the shape.
+
+```vue
+<!-- frontend/src/views/ContributeView.vue -->
 <script setup lang="ts">
+import { useContributeViewModel } from '@/viewmodels/useContributeViewModel'
+
 const props = defineProps<{ potId: string }>()
 const emit = defineEmits<{ (e: 'done'): void }>()
-const mv = useContributeModelView(props.potId)
+const { amount, error, isSubmitting, canSubmit, submit } = useContributeViewModel(props.potId)
 
 async function onSubmit() {
-  const ok = await mv.submitContribution()
+  const ok = await submit()
   if (ok) emit('done')
 }
 </script>
 ```
 
 ```ts
-// features/savings/modelview/useContributeModelView.ts
-export function useContributeModelView(potId: string) {
+// frontend/src/viewmodels/useContributeViewModel.ts
+export function useContributeViewModel(potId: string) {
   const amount = ref('')
   const error = ref<string | null>(null)
-  const loading = ref(false)
-  const service = useSavingsService()
+  const isSubmitting = ref(false)
+  const canSubmit = computed(() => eurosToCents(amount.value) !== null && !isSubmitting.value)
 
-  async function submitContribution(): Promise<boolean> {
+  async function submit(): Promise<boolean> {
     error.value = null
-    const money = Money.parse(amount.value) // model — pure
-    if (!money) {
+    const cents = eurosToCents(amount.value) // model — pure
+    if (cents === null) {
       error.value = 'Introdueix un import vàlid'
       return false
     }
-    loading.value = true
+    isSubmitting.value = true
     try {
-      await service.contribute(potId, money) // service
+      await contributeToPot(potId, cents) // service
       return true
-    } catch (e) {
-      error.value = toUserMessage(e)
+    } catch (failure) {
+      error.value = toUserMessage(failure)
       return false
     } finally {
-      loading.value = false
+      isSubmitting.value = false
     }
   }
 
-  return { amount, error, loading, submitContribution }
+  return { amount, error, isSubmitting, canSubmit, submit }
 }
 ```
 
 ## Vue rules
 
-1. **SFC View is thin:** template + props/emit + calls ModelView commands. No `if (balance > amount)` business branches in the template logic beyond trivial display.
-2. **One composable per screen/flow** when possible: `useHomeModelView`, `useCreatePotModelView`.
-3. **`<script setup lang="ts">`** — no Options API unless the team already agreed otherwise for a file.
-4. **Props in, events out** for shared components under `view/` or `shared/components/`.
-5. **Derived UI data** (progress %, formatted money, canSubmit) in the ModelView as `computed`, not scattered in templates.
-6. **Loading / empty / error** are part of the ModelView state — views just render them.
-7. **Never** import `firebase/*` or repositories in `.vue` files.
-8. **Pinia** (if used): global/session state only (auth user, theme). Feature ModelView state stays in the composable unless the rule is truly global.
+1. **SFC View is thin:** template + props/emit + calls to ViewModel actions. No `if (balance > amount)` business branches beyond trivial display.
+2. **One composable per screen** when possible: `useHomeViewModel`, `useMovementsViewModel`, `useTopUpViewModel`.
+3. **`<script setup lang="ts">`** — no Options API.
+4. **Props in, events out** for the reusable pieces in `components/`, typed with `defineProps<{…}>()` and `defineEmits<{…}>()`.
+5. **Derived UI data** (formatted state, `canSubmit`, `hasMore`) in the ViewModel as `computed`, not scattered in templates.
+6. **Loading / empty / error** are part of the ViewModel state — views just render them.
+7. **Never** call a service or `fetch` from a `.vue` file.
+8. **No Pinia:** the state of a screen stays in its composable.
+9. **Destructure the ViewModel in the View** (`const { balance, load } = useHomeViewModel()`): a template only unwraps refs that are top-level names, so `v-if="viewModel.error"` would always be true.
+10. **A View never imports `services/`.** From `models/` it imports types only (`import type { Movement } from '@/models/movement'`); `components/` may also use pure display helpers such as `formatCents`.
+
+## Types
+
+- The types of the contract's objects (`Movement`, error codes) live in `models/` and are imported; never redeclare them in a ViewModel or a View.
+- Give `ref` its type when the first value does not show it: `ref<string | null>(null)`, `ref<Movement[]>([])`.
+- No `any`.
+
+## Errors
+
+- Services reject with the contract's `{ code, message, details? }` (`docs/api.md`).
+- The ViewModel turns the **`code`** (and `details`) into a user-safe message in Catalan, through the shared module in `models/` (skill `middle-services`). It never reads the `message` text to decide.
 
 ## Forms & validation
 
 | Kind | Layer |
 |------|--------|
-| Domain (amount > 0, balance, daily limit) | model / service |
-| Presentation (required, input format) | ModelView composable |
-| Same rule twice | Fix DRY — one owner only |
+| Domain (amount > 0, per-top-up limit, daily limit) | Backend service is the owner; the ViewModel repeats it for faster feedback |
+| Presentation (required, input format, decimals) | ViewModel composable |
+| Same rule twice in the frontend | Fix DRY — one owner only |
 
-## Shared UI (`shared/components/`)
+## Reusable UI (`components/`)
 
 - Presentational: props + emits only.
-- No composables that hit Firebase inside shared UI.
+- No ViewModel and no service call inside a reusable component.
 
 ## What “clear” looks like
 
@@ -102,11 +117,11 @@ export function useContributeModelView(potId: string) {
 
 ```vue
 <!-- CreatePotView.vue -->
-<form @submit.prevent="mv.submit">
-  <input v-model="mv.name" :disabled="mv.loading" />
-  <p v-if="mv.error" role="alert">{{ mv.error }}</p>
-  <button type="submit" :disabled="mv.loading || !mv.canSubmit">
-    {{ mv.loading ? 'Creant…' : 'Crear' }}
+<form @submit.prevent="submit">
+  <input v-model="name" :disabled="isSubmitting" />
+  <p v-if="error" role="alert">{{ error }}</p>
+  <button type="submit" :disabled="!canSubmit">
+    {{ isSubmitting ? 'Creant…' : 'Crear' }}
   </button>
 </form>
 ```
@@ -114,11 +129,10 @@ export function useContributeModelView(potId: string) {
 **Bad**
 
 ```vue
-<script setup>
-import { getFirestore, addDoc, collection } from 'firebase/firestore'
+<script setup lang="ts">
 async function submit() {
   if (name.value.length > 0) {
-    await addDoc(collection(getFirestore(), 'pots'), { name: name.value })
+    await fetch('/api/pots', { method: 'POST', body: JSON.stringify({ name: name.value }) })
   }
 }
 </script>
@@ -126,9 +140,10 @@ async function submit() {
 
 ## Self-check
 
-- [ ] Vue SFC has no Firebase/repository imports
-- [ ] ModelView is a composable with named commands (verbs)
-- [ ] Model stays pure TS (no `ref`/`reactive` in domain models)
+- [ ] The `.vue` file has no `fetch`, never imports `services/`, and imports from `models/` only types (plus pure display helpers in `components/`)
+- [ ] The ViewModel is a composable `useXxxViewModel` with named actions (verbs)
+- [ ] `models/` stays pure TypeScript (no `ref`/`reactive`, no HTTP)
 - [ ] Loading / error / empty states handled
-- [ ] `canSubmit` and derived values live in ModelView
+- [ ] `canSubmit` and derived values live in the ViewModel
+- [ ] Types come from `models/`; no `any`
 - [ ] Flow is traceable: template → composable → service

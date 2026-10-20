@@ -89,7 +89,7 @@
 | US-28 | Pagaments en divisa | Mitjana |
 | US-29 | Límit de canvi sense comissió | Mitjana |
 
-**Total: 24 US** · Format COM/VULL/PER + AC a `trello-backlog.md`
+**Total: 26 US** · Format COM/VULL/PER + AC a `trello-backlog.md`
 
 ## Èpiques i tech
 
@@ -102,7 +102,7 @@
 | EP-05 | Gamificació: XP i nivells | Èpica, P3 |
 | EP-06 | Multidivisa | Èpica, Multidivisa, P6 |
 | EP-09 | Despeses compartides | Èpica, Social, P5 |
-| EP-10 | Anàlisi de despeses | Èpica, Moviments, P4 |
+| EP-10 | Anàlisi de despeses i pressupostos | Èpica, Moviments, P4 |
 | EP-11 | Insígnies i recompenses | Èpica |
 | EP-12 | Reptes i ratxes | Èpica, P2 |
 | EP-13 | Gamificació social | Èpica, Social, P5 |
@@ -114,26 +114,18 @@
 
 ## Fitxers
 
-- `AGENTS.md` (arrel) — estàndards d'arquitectura + IA (font de veritat de codi)
-- `CLAUDE.md` (arrel) — pointer cap a AGENTS.md
-- `README.md` — resum del workflow AI
-- `docs/P1/AGENTS.md` — visió + metodologia del curs
-- `MEMORY.md` — aquest
-- `plantejament.md` — notes curs
-- `trello-backlog.md` — **24 US + èpiques** per copiar a Trello
-- `PDFs/` — materials de classe
-- `.claude/skills/` · `.opencode/skills/` — **11 skills lazy** (mateix contingut)
+La llista completa de documents és al [`README.md` → Docs map](../../README.md#docs-map).
 
 ## Workflow AI (decisió d'equip)
 
-- **Stack:** Vue 3 + TypeScript (frontend) · Firebase (backend: Functions + Firestore + Auth)
-- **MVVM:** Model · ModelView (composable `useXxxModelView`) · View
-- **Clean Architecture** + **shared services** (middle)
-- **Screaming Architecture**, **SOLID**, **DRY**
+- **Stack:** Vue 3 + TypeScript amb Vite i Vitest (frontend, a `frontend/`) · Python + FastAPI amb pytest i dades en memòria (backend, a `backend/`)
+- **MVVM:** Model · ViewModel (composable `useXxxViewModel`) · View, amb carpetes per capa
+- **Contracte de l'API:** `docs/api.md`
+- **Clean Architecture**, **SOLID**, **DRY**; cada regla de negoci viu un sol cop (al backend)
 - Solucions **clares i traciables** (no cutre, no sobre-enginyeria)
-- Skills: arch-structure, mvvm-patterns (Vue), backend-clean (Firebase), firebase-stack, middle-services, shared-module, code-style, comments-docs, gitflow, pr-conventions, commit-conventions
+- Skills: arch-structure, mvvm-patterns (Vue), backend-clean (FastAPI), middle-services, shared-module, code-style, comments-docs, gitflow, pr-conventions, commit-conventions
 - Commits: `type(scope): subject US-XX`
-- Branches: `develop` = PR base · `feature/<slug>` · `main` = demo/release
+- Branches: `develop` = PR base · `feature/<slug>` · `fix/<slug>` · `refactor/<slug>` · `hotfix/<slug>` (des de `main`) · `main` = demo/release
 - PR: una US / una tasca tècnica; checklist DoD + arquitectura
 - Font: arrel `AGENTS.md`
 

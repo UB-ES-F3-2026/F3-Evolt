@@ -1,0 +1,24 @@
+# Python: bytecode generat en executar el codi o els tests
+__pycache__/
+*.py[cod]
+
+# Entorns virtuals
+.venv/
+venv/
+env/
+
+# pytest i cobertura
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Configuració local (cada persona té la seva)
+.env
+.env.*
+!.env.example
+
+# Editors i sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

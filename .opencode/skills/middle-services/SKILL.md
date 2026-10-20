@@ -1,83 +1,69 @@
 ---
 name: middle-services
-description: Load when creating shared business services or a middle layer between UI and data — XP rules, limits, currency conversion, password policy, atomic balance moves, cross-feature orchestration. Use when logic is needed by more than one feature or sits between ModelView and Firebase.
+description: Load when adding or changing a business rule that more than one place needs — top-up and transfer limits, daily caps, XP rules, password policy, currency conversion, money parsing. Use to decide where the single owner of the rule lives and who may repeat it.
 ---
 
-# Shared services / middle layer
+# Business rules live once
 
-**Middle layer** = business logic used by more than one feature, living **between** presentation and data backends.
+A **business rule** is something the product decides: “at most 500 € per top-up”, “at most 1.000 € per day”, “top-ups give no XP”. Each rule has **one owner**.
 
-Location: `src/shared/services/` (or `src/middle/services/` if the team names the folder `middle`).
+## Who owns a rule
 
-## When to create a shared service
+| Rule | Owner | May repeat it |
+|------|-------|---------------|
+| Limits, balances, XP, anything about money | A backend service (`backend/app/services/`) | A ViewModel, only for faster feedback on screen |
+| How an amount typed by the user becomes cents | A frontend model (`frontend/src/models/`) | Nobody — ViewModels import it |
+| How an error code becomes a Catalan message | One pure module in `frontend/src/models/`, shared by the ViewModels | Nobody — each ViewModel calls it |
 
-Create it when the **same business rule** appears in 2+ features, e.g.:
+The backend's answer always wins. A ViewModel check never replaces the service check.
 
-- Password policy (register + reset password)
+## When to extract a module
+
+Extract when the **same rule** is needed in 2+ places, e.g.:
+
+- Daily limit (top-ups now, transfers later)
 - Daily XP cap (gamification + savings)
-- Daily recharge / transfer limits (account + transfers)
-- Currency conversion + fee rules (multidivisa + payments)
-- Atomic principal↔pot move (savings + future shared pots)
+- Password policy (register + reset password)
+- Euros → cents parsing (top-up + contribute to pot)
 
-Do **not** create it for one feature’s private logic.
+Do **not** extract logic that only one service or one ViewModel uses.
 
 ## Placement rule
 
 | Rule used by | Put it in |
 |--------------|-----------|
-| 1 feature only | `features/<f>/services/` |
-| 2+ features | `shared/services/` |
-| Pure data shared by all | `shared/models/` |
+| 1 backend service | That service |
+| 2+ backend services | Its own module in `backend/app/services/`, imported by both |
+| 1 ViewModel | That ViewModel |
+| 2+ ViewModels | A pure module in `frontend/src/models/` |
 
-Feature services **call** shared services. Shared services never call features or views.
+## Shape of a shared rule
 
-## Shape of a shared service
+```python
+# backend/app/services/daily_limit.py
+DAILY_TOPUP_LIMIT_CENTS = 100_000
 
-```ts
-// shared/services/dailyXpCap.ts
-export class DailyXpCap {
-  // policy object or config
-  check(userId: string, action: XpAction, amount: number): XpDecision
-}
+def remaining_today(topped_up_today_cents: int) -> int:
+    return max(0, DAILY_TOPUP_LIMIT_CENTS - topped_up_today_cents)
 ```
 
-- **Pure policy** when possible (easy to unit test).
-- **Side effects** (persistence, Firestore) stay in adapters / feature services — shared services expose the rule; adapters apply it.
-
-## Layer responsibilities (middle)
-
-| Piece | Role |
-|-------|------|
-| Shared domain services | XP rules, limits, conversion, password policy |
-| Ports + adapters | Firestore/Auth behind interfaces |
-| Cross-cutting policies | daily limits, atomic balance moves |
-| DTO mappers | domain ↔ API/Firestore shape (no business rules) |
-
-## Composition
-
-```
-SavingsModelView
-  → SavingsService (feature)
-      → DailyXpCap (shared)          # rule
-      → SavingPotRepository (port)
-          → FirestorePotAdapter      # data
-```
-
-Same `DailyXpCap` is reused by gamification without copying the cap logic.
+- **Pure** when possible: values in, value out — easy to unit test.
+- Reading and writing data stays in the service that calls it, through its repository.
+- Limits are named constants, never numbers typed in the middle of a function.
 
 ## Anti-patterns
 
 | Bad | Good |
 |-----|------|
-| XP cap logic pasted in `savings/` and `gamification/` | One `DailyXpCap` in `shared/services/` |
-| Shared service imports a feature folder | Shared imports only models/ports |
-| Shared service renders or knows screens | Pure business + ports only |
-| “Utils” folder collecting random helpers | Named shared **services** with one responsibility |
+| The 500 € limit typed in two services | One named constant, imported |
+| A limit enforced only in the ViewModel | The backend service enforces it; the ViewModel repeats it for UX |
+| A shared rule that reads `seed.py` or calls a repository on its own | Pure function; the calling service passes the data in |
+| A `utils` file collecting random helpers | A named module with one responsibility |
 
 ## Self-check
 
-- [ ] Used by (or clearly needed by) 2+ features, or is a true cross-cutting policy
-- [ ] Lives under `shared/` (or `middle/`), not duplicated
-- [ ] No imports from `features/*` or `view/*`
-- [ ] Single responsibility; testable without UI
-- [ ] Feature services compose it; they do not copy it
+- [ ] The rule has one owner
+- [ ] Money rules are enforced in a backend service
+- [ ] Shared rule modules are pure
+- [ ] Limits are named constants
+- [ ] No copy of the rule elsewhere
