@@ -166,7 +166,7 @@ Obre <http://localhost:5173>. La pantalla té el títol **Inici**.
 |---|---|---|
 | **C1** | Mira la primera targeta. | A sota de «Saldo disponible»: **3.795,21 €**. |
 | **C2** | Mira la mateixa targeta. | «Total estalviat a guardioles: **300,00 €**». |
-| **C3** | Mira la targeta «Últims moviments». | Exactament **5** moviments, en aquest ordre: Restaurant La Plaça (−23,50 €), Bizum enviat (−10,00 €), Supermercat (−45,90 €), Fruiteria (−18,30 €), Cinema (−9,50 €). |
+| **C3** | Mira la targeta «Últims moviments». | Exactament **5** moviments, en aquest ordre: Restaurant La Plaça (−23,50 €), Bizum enviat (−10,00 €), Supermercat (−45,90 €), Fruiteria (−18,30 €), Bitllet de tren (−12,00 €). |
 | **C4** | Clica la icona de l'ull (a la dreta de «Saldo disponible»). | Els imports (saldo, total estalviat i moviments) queden ocults i la icona canvia a un ull ratllat. |
 | **C5** | Torna a clicar l'ull. | Els imports tornen a sortir. |
 | **C6** | Clica l'ull per amagar-los. Tanca la pestanya del navegador. Obre una pestanya nova i ves a <http://localhost:5173>. | Els imports **continuen ocults**. |
