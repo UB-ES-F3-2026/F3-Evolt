@@ -54,14 +54,16 @@ Els criteris d'acceptació descriuen la pantalla amb aquestes paraules:
 **Descripció:**
 
 ```
-COM: a nou usuari
-VULL: registrar-me amb email o telèfon i contrasenya
-PER: obrir un compte al neobanc.
+COM: visitant
+VULL: registrar-me amb el meu email o telèfon i una contrasenya
+PER: poder obrir un compte.
+
+Perfil: visitant, és a dir, una persona que té l'app però encara no té compte. En acabar el registre passa a ser client nou.
 
 Assumptes:
-- Contrasenya: mínim 8 caràcters, 1 majúscula, 1 número
-- Compte nou en estat "pendent de verificació"
-- Cal acceptar termes i política de privacitat
+- Contrasenya: mínim 8 caràcters, 1 majúscula i 1 número
+- El compte nou queda en estat "pendent de verificació"
+- Cal acceptar els termes i la política de privacitat
 
 Estimació: SP 5 · VP 8 · Prioritat Alta
 ```
@@ -69,12 +71,13 @@ Estimació: SP 5 · VP 8 · Prioritat Alta
 **Checklist Acceptance Criteria:**
 
 ```
-El formulari demana email o telèfon, contrasenya i confirmació
-Contrasenya no vàlida → error sota el camp
-Contrasenyes no coincideixen → no es pot continuar
-Email/telèfon ja registrats → missatge que ho indica
-Botó registre desactivat fins acceptar termes i privacitat
-En enviar correctament, el compte queda "pendent de verificació"
+La pantalla "Crear compte" té tres caselles, una sota l'altra: "Email o telèfon", "Contrasenya" i "Repeteix la contrasenya", i a sota el botó lila "Crear compte"
+Si la contrasenya no té mínim 8 caràcters, una majúscula i un número, la casella es posa vermella i a sota surt en vermell "La contrasenya ha de tenir 8 caràcters, una majúscula i un número"
+Si les dues contrasenyes no coincideixen, surt en vermell sota la segona casella "Les contrasenyes no coincideixen" i el botó "Crear compte" queda desactivat
+Si l'email o el telèfon ja estan registrats, surt en vermell "Aquest email o telèfon ja té un compte" i l'enllaç lila "Inicia sessió"
+Sota les caselles hi ha una casella per marcar "Accepto els termes i la política de privacitat"; mentre no està marcada, el botó "Crear compte" surt desactivat (gris clar)
+Quan el formulari s'envia bé, el compte es crea en estat "pendent de verificació"
+Després de crear el compte, l'app passa sola a la pantalla "Verifica el teu compte" (US-2)
 ```
 
 ---
@@ -86,13 +89,15 @@ En enviar correctament, el compte queda "pendent de verificació"
 **Descripció:**
 
 ```
-COM: a nou usuari
+COM: client nou
 VULL: confirmar el meu email o telèfon amb un codi
 PER: demostrar que són meus.
 
+Perfil: client nou, que s'acaba de registrar i té el compte "pendent de verificació".
+
 Assumptes:
 - Codi de 6 dígits per email o SMS
-- Caducitat: 10 minuts
+- El codi caduca als 10 minuts
 - Màxim 5 intents fallits
 
 Estimació: SP 3 · VP 7 · Prioritat Alta
@@ -101,12 +106,12 @@ Estimació: SP 3 · VP 7 · Prioritat Alta
 **Checklist Acceptance Criteria:**
 
 ```
-Després del registre s'envia un codi de 6 dígits
-El codi caduca als 10 minuts
-Codi correcte → compte activat i accedo a la pantalla principal
-Codi incorrecte o caducat → error
-Puc demanar un codi nou i l'anterior deixa de ser vàlid
-Després de 5 intents fallits, cal demanar un codi nou
+Després del registre arriba un codi de 6 números per email o SMS, i l'app mostra la pantalla "Verifica el teu compte" amb 6 caselles, una per número
+Si han passat més de 10 minuts des que s'ha enviat, el codi ja no serveix
+Amb el codi correcte, el compte queda activat i l'app obre la pantalla "Inici"
+Si el codi és incorrecte o ha caducat, les caselles es posen vermelles i surt en vermell "El codi no és correcte o ha caducat"
+A sota hi ha l'enllaç lila "Envia'm un codi nou"; en tocar-lo arriba un codi nou i l'anterior deixa de servir
+Després de 5 codis incorrectes, les caselles es bloquegen i surt "Has fet massa intents. Demana un codi nou"
 ```
 
 ---
@@ -118,14 +123,16 @@ Després de 5 intents fallits, cal demanar un codi nou
 **Descripció:**
 
 ```
-COM: a usuari
-VULL: iniciar sessió amb email o telèfon i contrasenya
+COM: client estàndard
+VULL: iniciar sessió amb el meu email o telèfon i la contrasenya
 PER: accedir al meu compte.
 
+Perfil: client estàndard amb el compte ja verificat. També serveix per al client nou un cop verificat.
+
 Assumptes:
-- Missatge d'error genèric (no diu quin camp falla)
-- Bloqueig temporal després de 5 intents
-- Timeout de sessió: 5 minuts sense activitat
+- Missatge d'error genèric: no diu quina casella falla
+- Bloqueig de 15 minuts després de 5 intents fallits
+- La sessió es tanca després de 5 minuts sense activitat
 
 Estimació: SP 4 · VP 8 · Prioritat Alta
 ```
@@ -133,11 +140,11 @@ Estimació: SP 4 · VP 8 · Prioritat Alta
 **Checklist Acceptance Criteria:**
 
 ```
-Credencials correctes → accedo a la pantalla principal
-Credencials incorrectes → missatge genèric
-5 intents fallits → compte bloquejat 15 minuts + avís per email
-5 minuts sense activitat → sessió tancada, cal tornar a autenticar
-Puc tancar la sessió des del menú
+A la pantalla "Inicia sessió", amb l'email o telèfon i la contrasenya correctes, en tocar el botó lila "Entrar" s'obre la pantalla "Inici"
+Amb dades incorrectes surt en vermell "L'email, el telèfon o la contrasenya no són correctes", sense dir quina casella falla
+Després de 5 intents fallits seguits, el compte es bloqueja 15 minuts, surt en vermell "Compte bloquejat durant 15 minuts" i arriba un avís per email
+Si estic 5 minuts sense fer res, la sessió es tanca, l'app torna a "Inicia sessió" i surt "La sessió s'ha tancat per inactivitat"
+Al menú hi ha l'opció "Tancar sessió", que torna a la pantalla "Inicia sessió"
 ```
 
 ---
@@ -149,14 +156,16 @@ Puc tancar la sessió des del menú
 **Descripció:**
 
 ```
-COM: a usuari
-VULL: restablir la contrasenya si l'oblido
+COM: client estàndard que ha oblidat la contrasenya
+VULL: restablir la contrasenya
 PER: no perdre l'accés al compte.
 
+Perfil: client estàndard que no recorda la contrasenya i no pot entrar.
+
 Assumptes:
-- Enllaç vàlid 30 minuts
-- Email no registrat → mateix missatge que si ho està (no revelar)
-- En canviar-la, es tanquen sessions obertes en altres dispositius
+- L'enllaç funciona durant 30 minuts
+- Si l'email no està registrat, surt el mateix missatge que si ho està
+- En canviar-la, es tanquen les sessions obertes en altres dispositius
 
 Estimació: SP 3 · VP 7 · Prioritat Alta
 ```
@@ -164,12 +173,12 @@ Estimació: SP 3 · VP 7 · Prioritat Alta
 **Checklist Acceptance Criteria:**
 
 ```
-A Inici de sessió hi ha "He oblidat la contrasenya"
-En introduir l'email, rebo un enllaç vàlid 30 minuts
-Email no registrat → mateix missatge que si ho està
-Nova contrasenya ha de complir els mateixos requisits que al registre
-En canviar-la, es tanquen sessions en altres dispositius
-Enllaç caducat → avís i opció de demanar-ne un de nou
+A la pantalla "Inicia sessió", sota el botó "Entrar", hi ha l'enllaç lila "He oblidat la contrasenya"
+En escriure l'email i tocar "Enviar", arriba un email amb un enllaç que funciona durant 30 minuts
+Tant si l'email està registrat com si no, surt el mateix missatge: "Si l'email és correcte, rebràs un enllaç per canviar la contrasenya"
+La contrasenya nova ha de complir el mateix que al registre (8 caràcters, una majúscula i un número), amb el mateix error en vermell si no ho fa
+En canviar-la, es tanquen les sessions obertes en altres dispositius i surt un tic verd amb "Contrasenya canviada"
+Si l'enllaç ha caducat, surt "Aquest enllaç ha caducat" i el botó lila "Demanar-ne un de nou"
 ```
 
 ---
@@ -305,14 +314,16 @@ Si amago els imports i tanco l'app, en tornar a entrar segueixen amagats
 **Descripció:**
 
 ```
-COM: a usuari
+COM: client estàndard
 VULL: guanyar XP quan faig accions financeres saludables
-PER: sentir-me motivat a mantenir bons hàbits.
+PER: sentir-me motivat a mantenir bons hàbits d'estalvi.
+
+Perfil: client estàndard. Els XP de cada acció els configura l'administrador (EP-15).
 
 Assumptes:
-- XP en: crear 1a guardiola, aportar, assolir objectiu
-- Límit diari d'XP per evitar trampes
-- Retirar aportació abans de 7 dies → es resta l'XP
+- XP en crear la primera guardiola, aportar i assolir un objectiu
+- Límit diari d'XP per acció per evitar trampes
+- Retirar una aportació abans de 7 dies resta els XP que havia donat
 
 Estimació: SP 4 · VP 7 · Prioritat Mitjana
 ```
@@ -320,13 +331,12 @@ Estimació: SP 4 · VP 7 · Prioritat Mitjana
 **Checklist Acceptance Criteria:**
 
 ```
-Guanyo XP en crear la primera guardiola
-Guanyo XP en aportar a una guardiola
-Guanyo XP en assolir un objectiu d'estalvi
-Quan guanyo XP, es mostra missatge amb quantitat i motiu
-Si retiro una aportació abans de 7 dies, es resta l'XP d'aquella aportació
-Cada acció té límit diari d'XP
-Puc consultar l'historial d'XP amb data i motiu
+Guanyo XP en crear la primera guardiola, en aportar a una guardiola i en assolir un objectiu d'estalvi
+Els XP que dona cada acció es defineixen en una configuració que l'administrador pot canviar (EP-15), no a cada pantalla
+Quan guanyo XP, surt a dalt de la pantalla durant uns segons un avís amb "+X XP" en lila i el motiu (per exemple "+20 XP · Aportació a Viatge")
+Si retiro una aportació abans de 7 dies, es resten sols els XP que m'havia donat i a l'historial surt "−X XP" en vermell
+Cada acció té un màxim d'XP per dia; un cop arribat, l'acció es pot fer però ja no dona XP
+La pantalla "Historial d'XP" mostra una fila per cada canvi amb la data, el motiu i els XP (en verd si en guanyo, en vermell si en perdo)
 ```
 
 ---
@@ -338,12 +348,14 @@ Puc consultar l'historial d'XP amb data i motiu
 **Descripció:**
 
 ```
-COM: a usuari
+COM: client estàndard
 VULL: pujar de nivell en acumular XP
-PER: veure el meu progrés a llarg termini.
+PER: veure el meu progrés financer a llarg termini.
+
+Perfil: client estàndard.
 
 Assumptes:
-- Cada nivell requereix més XP que l'anterior
+- Cada nivell necessita més XP que l'anterior
 - Celebració en pujar de nivell
 
 Estimació: SP 3 · VP 6 · Prioritat Mitjana
@@ -352,11 +364,11 @@ Estimació: SP 3 · VP 6 · Prioritat Mitjana
 **Checklist Acceptance Criteria:**
 
 ```
-Quan l'XP arriba al llindar del nivell següent, pujo de nivell
-Es mostra una celebració en pujar de nivell
-Cada nivell requereix més XP que l'anterior
-El perfil mostra nivell actual, XP total i barra amb XP que falta
-La pantalla principal mostra el nivell i la barra de progrés
+Quan els XP arriben al mínim del nivell següent, pujo de nivell sol, sense fer res
+En pujar de nivell surt una pantalla de celebració amb el text "Has pujat al nivell X!" i el botó lila "Continuar"
+Cada nivell necessita més XP que l'anterior (per exemple: nivell 2 amb 100 XP i nivell 3 amb 250 XP)
+La pantalla "Perfil" mostra el nivell actual en gran, els XP totals i una barra lila amb els XP que falten per al nivell següent (per exemple "180 / 250 XP")
+A "Inici", sota el saldo, surt en petit el nivell actual i la seva barra de progrés
 ```
 
 ---
@@ -449,16 +461,17 @@ El PO accepta l'èpica com a contenidor
 **Descripció:**
 
 ```
-COM: a usuari registrat
+COM: client estàndard
 VULL: crear una guardiola amb nom i objectiu opcional
 PER: estalviar per a una meta concreta.
 
+Perfil: client estàndard amb la sessió iniciada. El client nou també pot crear la seva primera guardiola.
+
 Assumptes:
-- L'usuari ha d'estar registrat i amb sessió iniciada
-- Mínim 1 guardiola per usuari a la demo
-- L'objectiu (target) és opcional; si s'introdueix, ha de ser un import positiu
+- L'objectiu és opcional; si s'escriu, ha de ser un import positiu
 - La guardiola nova neix amb saldo 0
-- Cada guardiola pot tenir nom, import objectiu i icona (opcional)
+- Cada guardiola té nom i, si es vol, objectiu i color
+- A la demo no hi ha límit de guardioles
 
 Estimació: SP 5 · VP 8 · Prioritat Alta
 ```
@@ -466,13 +479,11 @@ Estimació: SP 5 · VP 8 · Prioritat Alta
 **Checklist Acceptance Criteria:**
 
 ```
-Accedir a Estalvi/Guardioles des de la home
-Veure llista o estat buit amb CTA
-Obrir formulari (nom, objectiu opcional, icona)
-Validar nom obligatori i objectiu > 0
-Crear guardiola amb saldo 0
-Error xarxa no perd les dades
-Funciona en mòbil
+A "Inici" hi ha l'accés "Guardioles", que obre la pantalla "Guardioles"
+Si no en tinc cap, surt el missatge gris "Encara no tens cap guardiola" i el botó lila "Crear guardiola"; si en tinc, surt la llista amb el nom i el saldo de cadascuna
+El botó "Crear guardiola" obre un formulari amb les caselles "Nom" i "Objectiu (opcional)" i una fila de colors per triar
+Si el nom està buit o l'objectiu és 0 o negatiu, la casella es posa vermella, surt el motiu en vermell a sota i el botó "Crear" queda desactivat
+En tocar "Crear", la guardiola nova surt a la llista amb saldo 0,00 €
 ```
 
 ---
@@ -484,16 +495,17 @@ Funciona en mòbil
 **Descripció:**
 
 ```
-COM: a usuari amb guardioles
+COM: client estàndard amb guardioles
 VULL: aportar diners des del saldo principal a una guardiola
 PER: estalviar cap a un objectiu sense gastar-los del compte principal.
 
+Perfil: client estàndard que ja té almenys una guardiola.
+
 Assumptes:
-- L'usuari té almenys 1 guardiola creada (US-17)
-- L'usuari té saldo principal suficient
-- L'aportació mou saldo: principal ↓, guardiola ↑
-- Es registra un moviment dins de la guardiola
-- Import mínim d'aportació: > 0
+- Cal tenir prou saldo principal
+- El saldo principal baixa i el de la guardiola puja
+- Es registra un moviment a la guardiola
+- L'import ha de ser més gran que 0
 
 Estimació: SP 5 · VP 8 · Prioritat Alta
 ```
@@ -501,14 +513,14 @@ Estimació: SP 5 · VP 8 · Prioritat Alta
 **Checklist Acceptance Criteria:**
 
 ```
-Seleccionar guardiola i tocar "Aportar"
-Veure saldo principal i destí
-Validar import > 0 i <= saldo principal
-Saldo principal ↓ i guardiola ↑
-Confirmació visible
-Moviment registrat
-Error backend no canvia saldos
-Operació atòmica
+A la pantalla d'una guardiola hi ha el botó lila "Aportar", que obre la pantalla "Aportar a <nom de la guardiola>"
+A dalt es veu el saldo principal disponible i el nom i el saldo de la guardiola
+L'import ha de ser més gran que 0 i no més gran que el saldo principal; si no, la casella es posa vermella, surt el motiu en vermell i el botó "Confirmar" queda desactivat
+En confirmar, el saldo principal baixa i el de la guardiola puja exactament el mateix import
+Surt un tic verd amb "Has aportat X € a <nom>"
+A l'historial de la guardiola surt l'aportació en verd amb "+" i el concepte "Aportació"
+Si el servidor falla, surt el missatge d'error en vermell i cap dels dos saldos canvia
+Mai es queda a mitges: o canvien els dos saldos o no en canvia cap
 ```
 
 ---
@@ -520,15 +532,16 @@ Operació atòmica
 **Descripció:**
 
 ```
-COM: a usuari amb guardioles
+COM: client estàndard amb guardioles
 VULL: retirar diners d'una guardiola al saldo principal
 PER: fer servir els diners estalviats quan els necessiti.
 
+Perfil: client estàndard amb almenys una guardiola amb saldo.
+
 Assumptes:
-- L'usuari té almenys 1 guardiola amb saldo > 0
-- La retirada mou saldo: guardiola ↓, principal ↑
+- El saldo de la guardiola baixa i el principal puja
 - Es registra un moviment de retirada
-- Import mínim de retirada: > 0
+- L'import ha de ser més gran que 0
 - No es pot retirar més del que té la guardiola
 
 Estimació: SP 3 · VP 6 · Prioritat Alta
@@ -537,34 +550,36 @@ Estimació: SP 3 · VP 6 · Prioritat Alta
 **Checklist Acceptance Criteria:**
 
 ```
-Des de detall guardiola, tocar "Retirar"
-Veure saldo de la guardiola
-Validar import > 0 i <= saldo guardiola
-Guardiola ↓ i principal ↑
-Confirmació visible
-Moviment registrat
-Error backend no canvia saldos
-Guardiola buida no permet retirar
+A la pantalla d'una guardiola hi ha el botó "Retirar", que obre la pantalla "Retirar de <nom de la guardiola>"
+A dalt es veu el saldo que té la guardiola
+L'import ha de ser més gran que 0 i no més gran que el saldo de la guardiola; si no, la casella es posa vermella, surt el motiu en vermell i el botó "Confirmar" queda desactivat
+En confirmar, el saldo de la guardiola baixa i el principal puja exactament el mateix import
+Surt un tic verd amb "Has retirat X € de <nom>"
+A l'historial de la guardiola surt la retirada en vermell amb "−" i el concepte "Retirada"
+Si el servidor falla, surt el missatge d'error en vermell i cap dels dos saldos canvia
+Si la guardiola té 0,00 €, el botó "Retirar" surt desactivat (gris clar)
 ```
 
 ---
 
-## US-20 Progrés i objectiu assolit
+## US-20 Veure progrés i objectiu assolit
 
 **Labels:** Fina, Alta, Estalvi, P2
 
 **Descripció:**
 
 ```
-COM: a usuari amb guardioles amb objectiu
+COM: client estàndard amb guardioles amb objectiu
 VULL: veure el progrés cap a cada objectiu i saber quan l'he assolit
 PER: mantenir la motivació d'estalviar i celebrar les metes.
 
+Perfil: client estàndard amb almenys una guardiola que té objectiu.
+
 Assumptes:
-- Sense objectiu no es mostra barra de progrés
-- Progrés = saldo / objectiu, en percentatge
-- Quan saldo ≥ objectiu → estat "objectiu assolit"
-- Es connecta amb gamificació endavant (EP-11/EP-12)
+- Sense objectiu no hi ha barra de progrés
+- Progrés = saldo / objectiu, en percentatge arrodonit a l'enter
+- Quan el saldo arriba a l'objectiu, la guardiola passa a "Objectiu assolit"
+- Es connecta amb la gamificació (EP-11 i EP-12)
 
 Estimació: SP 3 · VP 5 · Prioritat Alta
 ```
@@ -572,14 +587,14 @@ Estimació: SP 3 · VP 5 · Prioritat Alta
 **Checklist Acceptance Criteria:**
 
 ```
-Detall guardiola amb objectiu mostra saldo, objectiu, barra i %
-Barra reflecteix el percentatge
-Estat "En progrés" si saldo < objectiu
-Estat "Objectiu assolit" si saldo >= objectiu
-Llista mostra mini-progrés
-Sense objectiu, no es mostra barra
-S'actualitza després d'aportar/retirar
-% accessible com a text
+La pantalla d'una guardiola amb objectiu mostra el saldo i l'objectiu (per exemple "120,00 € de 500,00 €"), una barra de progrés i el percentatge
+La part plena de la barra, en lila, correspon al percentatge: amb un 24 %, la barra està plena una quarta part aproximadament
+Si el saldo és menor que l'objectiu, surt l'etiqueta grisa "En progrés"
+Si el saldo arriba o passa l'objectiu, la barra es posa verda i surt l'etiqueta verda "Objectiu assolit"
+A la llista de guardioles, cada guardiola amb objectiu té una barra petita sota el nom
+Les guardioles sense objectiu no tenen barra, només el saldo
+Després d'aportar o retirar, la barra i el percentatge ja surten actualitzats
+El percentatge també surt escrit amb números (per exemple "24 %"), no només com a barra
 ```
 
 ---
@@ -710,14 +725,16 @@ A dalt a l'esquerra hi ha el botó "← Inici", que torna a la pantalla principa
 **Descripció:**
 
 ```
-COM: a usuari del neobanc
-VULL: filtrar i cercar moviments
+COM: client estàndard
+VULL: filtrar i cercar els meus moviments
 PER: trobar ràpidament una operació concreta.
 
+Perfil: client estàndard amb moviments.
+
 Assumptes:
-- Filtres combinables
+- Els filtres es poden combinar
 - Cerca per concepte o contacte
-- Buidar filtres
+- Botó per esborrar els filtres
 
 Estimació: SP 3 · VP 5 · Prioritat Mitjana
 ```
@@ -725,11 +742,11 @@ Estimació: SP 3 · VP 5 · Prioritat Mitjana
 **Checklist Acceptance Criteria:**
 
 ```
-Puc filtrar per rang de dates
-Puc filtrar per tipus (ingrés o despesa)
-Puc cercar per concepte o nom del contacte
-Els filtres es poden combinar i esborrar
-Sense coincidències, es mostra "sense resultats"
+A dalt de la pantalla "Moviments" hi ha el botó "Filtres", que permet triar una data d'inici i una de final; la llista només mostra els moviments entre aquestes dues dates
+Als filtres hi ha tres opcions: "Tots", "Ingressos" (en verd) i "Despeses" (en vermell); en triar-ne una, la llista només mostra aquest tipus
+A dalt de tot hi ha una barra de cerca amb el text gris "Cerca per concepte o contacte"; mentre escric, la llista només mostra els moviments que contenen aquest text
+Les dates, el tipus i la cerca es poden fer servir alhora, i el botó "Esborrar filtres" els treu tots i torna a mostrar la llista completa
+Si cap moviment compleix els filtres, surt el missatge gris "No hi ha resultats" amb el botó "Esborrar filtres"
 ```
 
 ---
@@ -741,12 +758,14 @@ Sense coincidències, es mostra "sense resultats"
 **Descripció:**
 
 ```
-COM: a usuari del neobanc
+COM: client estàndard
 VULL: veure el detall de cada moviment
 PER: entendre exactament què ha passat amb els meus diners.
 
+Perfil: client estàndard amb moviments.
+
 Assumptes:
-- PDF descarregable
+- Justificant en PDF descarregable
 - Formulari de problema vinculat al moviment
 
 Estimació: SP 3 · VP 5 · Prioritat Mitjana
@@ -755,9 +774,9 @@ Estimació: SP 3 · VP 5 · Prioritat Mitjana
 **Checklist Acceptance Criteria:**
 
 ```
-En tocar un moviment, veig data i hora, import, estat, contrapart i referència
-Puc descarregar un justificant en PDF
-Puc reportar un problema amb formulari vinculat a aquell moviment
+En tocar un moviment de la llista s'obre la pantalla "Detall del moviment": a dalt l'import en gran (en verd amb "+" si és un ingrés, en vermell amb "−" si és una despesa) i a sota, en files, la data i l'hora, l'estat ("Completat" o "Pendent"), la contrapart (qui paga o qui cobra) i la referència
+Hi ha el botó "Descarregar justificant", que baixa un PDF amb aquestes mateixes dades
+Hi ha l'enllaç "Reportar un problema", que obre un formulari amb el moviment ja indicat i una casella per explicar què passa
 ```
 
 ---
@@ -798,14 +817,16 @@ El PO accepta l'èpica com a contenidor
 **Descripció:**
 
 ```
-COM: a usuari del neobanc
+COM: client estàndard
 VULL: trobar altres usuaris de l'app
-PER: poder-los-hi enviar diners.
+PER: poder enviar-los diners.
+
+Perfil: client estàndard que vol enviar o demanar diners.
 
 Assumptes:
 - Cerca per @usuari, telèfon o email
 - Mai es mostren dades financeres als resultats
-- No apareixo als meus resultats
+- No apareixo als meus propis resultats
 
 Estimació: SP 2 · VP 6 · Prioritat Alta
 ```
@@ -813,10 +834,9 @@ Estimació: SP 2 · VP 6 · Prioritat Alta
 **Checklist Acceptance Criteria:**
 
 ```
-Puc cercar per @usuari, telèfon o email
-Els resultats mostren nom visible, @usuari i foto (mai dades financeres)
-No apareixo als meus propis resultats
-Puc marcar un usuari com a favorit i apareix primer
+A la pantalla "Enviar diners" hi ha una barra de cerca amb el text gris "@usuari, telèfon o email", i mentre escric surten els usuaris que coincideixen
+Cada resultat mostra només la foto rodona, el nom visible i, a sota en gris, el @usuari; mai cap saldo ni moviment
+Si busco el meu propi nom o @usuari, no surto als resultats
 ```
 
 ---
@@ -828,13 +848,15 @@ Puc marcar un usuari com a favorit i apareix primer
 **Descripció:**
 
 ```
-COM: a usuari del neobanc
+COM: client estàndard
 VULL: demanar diners a un contacte
 PER: que em torni el que em deu.
 
+Perfil: client estàndard.
+
 Assumptes:
-- Estats: pendent, pagada, rebutjada, caducada
-- Caducitat: 7 dies sense resposta
+- Estats: pendent, pagada, rebutjada i caducada
+- Una sol·licitud sense resposta caduca als 7 dies
 
 Estimació: SP 3 · VP 6 · Prioritat Mitjana
 ```
@@ -842,11 +864,10 @@ Estimació: SP 3 · VP 6 · Prioritat Mitjana
 **Checklist Acceptance Criteria:**
 
 ```
-Puc crear una sol·licitud amb destinatari, import i concepte
-El destinatari rep una notificació
-Veig les sol·licituds enviades amb el seu estat
-Puc cancel·lar una sol·licitud pendent
-Una sol·licitud sense resposta caduca als 7 dies
+Amb el botó "Demanar diners" trio el destinatari, escric l'import i un concepte; en tocar el botó lila "Enviar sol·licitud", el destinatari rep la notificació "<nom> et demana X €"
+A "Sol·licituds enviades" veig cada sol·licitud amb el seu estat en una etiqueta de color: "Pendent" (gris), "Pagada" (verd), "Rebutjada" (vermell) o "Caducada" (gris clar)
+Les sol·licituds pendents tenen el botó "Cancel·lar", que demana confirmació i la treu de la llista
+Si en 7 dies ningú respon, la sol·licitud passa sola a "Caducada"
 ```
 
 ---
@@ -858,13 +879,15 @@ Una sol·licitud sense resposta caduca als 7 dies
 **Descripció:**
 
 ```
-COM: a usuari del neobanc
+COM: client estàndard
 VULL: pagar o rebutjar les sol·licituds que rebo
 PER: decidir què pago.
 
+Perfil: client estàndard que ha rebut una sol·licitud.
+
 Assumptes:
-- En pagar s'obre el flux d'enviament pre-emplenat
-- Sense saldo: opció d'afegir diners
+- En pagar s'obre l'enviament amb les dades ja posades
+- Sense saldo, s'ofereix afegir diners
 
 Estimació: SP 3 · VP 6 · Prioritat Mitjana
 ```
@@ -872,10 +895,10 @@ Estimació: SP 3 · VP 6 · Prioritat Mitjana
 **Checklist Acceptance Criteria:**
 
 ```
-Puc pagar o rebutjar cada sol·licitud rebuda
-En pagar, el flux d'enviament s'obre amb destinatari, import i concepte pre-emplenats
-Si la rebutjo, qui l'ha enviada rep una notificació
-Si no tinc saldo suficient, se m'ofereix afegir diners
+A "Sol·licituds rebudes" cada sol·licitud té dos botons: "Pagar" (lila) i "Rebutjar" (blanc amb el text en vermell)
+En tocar "Pagar" s'obre la pantalla "Confirmar" de l'enviament (US-14) amb el destinatari, l'import i el concepte ja posats
+En tocar "Rebutjar", qui l'ha enviada rep la notificació "<nom> ha rebutjat la teva sol·licitud"
+Si no tinc prou saldo per pagar-la, surt en vermell "No tens prou saldo" i el botó lila "Afegir diners", que obre la recàrrega
 ```
 
 ---
@@ -969,13 +992,15 @@ El PO accepta l'èpica com a contenidor
 **Descripció:**
 
 ```
-COM: a usuari del neobanc
+COM: client estàndard
 VULL: consultar el meu IBAN
 PER: poder rebre transferències d'altres bancs.
 
+Perfil: client estàndard amb el compte actiu.
+
 Assumptes:
 - IBAN, BIC i titular visibles
-- Copiar al portapapers
+- L'IBAN es pot copiar
 
 Estimació: SP 2 · VP 5 · Prioritat Mitjana
 ```
@@ -983,29 +1008,31 @@ Estimació: SP 2 · VP 5 · Prioritat Mitjana
 **Checklist Acceptance Criteria:**
 
 ```
-Veig l'IBAN, el BIC i el titular del compte
-En tocar l'IBAN, es copia i apareix una confirmació
-Puc compartir les dades amb altres apps del mòbil
-Quan rebo una transferència externa, apareix als moviments i rebo notificació
+A la pantalla "Dades del compte" surten, una sota l'altra, l'IBAN (en grups de 4 caràcters, per exemple "ES12 3456 7890 ..."), el BIC i el nom del titular
+En tocar l'IBAN es copia, i a baix surt durant uns segons el missatge "IBAN copiat"
+El botó "Compartir" obre el menú del mòbil per enviar les dades per WhatsApp, email o altres apps
+Quan arriba una transferència d'un altre banc, surt als moviments en verd amb "+" i arriba la notificació "Has rebut X €"
 ```
 
 ---
 
-## US-14 Enviar diners a un usuari
+## US-14 Enviar Diners a Usuaris
 
 **Labels:** Fina, Alta, Transferències, P6
 
 **Descripció:**
 
 ```
-COM: a usuari del neobanc
+COM: client estàndard
 VULL: enviar diners a un altre usuari a l'instant
 PER: saldar deutes de manera senzilla.
 
+Perfil: client estàndard amb saldo.
+
 Assumptes:
-- Import > 0 i < límit diari
+- Import més gran que 0 i per sota del límit diari
 - Concepte opcional
-- Notificació a remitent i destinatari
+- Notificació a qui envia i a qui rep
 
 Estimació: SP 5 · VP 8 · Prioritat Alta
 ```
@@ -1013,14 +1040,13 @@ Estimació: SP 5 · VP 8 · Prioritat Alta
 **Checklist Acceptance Criteria:**
 
 ```
-A Pagaments/Social selecciono un destinatari
-A la pantalla d'enviament introdueixo import (> 0) i concepte opcional
-"Continuar" obre pantalla de confirmació amb resum complet
-Sense saldo, error i operació cancel·lada
-Amb saldo, pantalla d'èxit i enviament a l'instant
-El saldo visible s'actualitza
-Notificació automàtica a remitent i destinatari
-A la pantalla principal el pagament ja apareix a ambdós
+A la pantalla "Pagaments" puc triar un destinatari de la llista o amb la cerca (US-13)
+En triar-lo s'obre la pantalla "Enviar", amb la foto i el nom del destinatari a dalt, un teclat numèric per escriure l'import (més gran que 0 i per sota del límit diari) i una casella opcional "Concepte"
+En tocar el botó lila "Continuar" s'obre la pantalla "Confirmar" amb el resum: foto i nom del destinatari, import en gran i concepte
+Si en tocar "Confirmar enviament" no tinc prou saldo, surt en vermell "No tens prou saldo" i no s'envia res
+Si tinc saldo, surt un tic verd amb "Has enviat X € a <nom>", els diners arriben a l'instant i el saldo ja surt actualitzat
+Tots dos reben una notificació: "Has enviat X € a <nom>" i "<nom> t'ha enviat X €"
+En tornar a "Inici", el pagament surt a la llista de moviments de tots dos: en vermell amb "−" per a qui envia i en verd amb "+" per a qui rep
 ```
 
 ---
@@ -1032,13 +1058,15 @@ A la pantalla principal el pagament ja apareix a ambdós
 **Descripció:**
 
 ```
-COM: a usuari del neobanc
-VULL: programar aportacions automàtiques a guardioles
+COM: client estàndard amb guardioles
+VULL: programar aportacions automàtiques
 PER: estalviar de forma constant sense pensar-hi.
+
+Perfil: client estàndard que ja té almenys una guardiola.
 
 Assumptes:
 - Freqüència setmanal o mensual
-- Sense saldo: no es fa l'aportació + notificació
+- Sense saldo, no es fa l'aportació i arriba una notificació
 
 Estimació: SP 4 · VP 6 · Prioritat Mitjana
 ```
@@ -1046,10 +1074,10 @@ Estimació: SP 4 · VP 6 · Prioritat Mitjana
 **Checklist Acceptance Criteria:**
 
 ```
-Puc configurar import, freqüència (setmanal/mensual) i dia
-En la data programada, l'import es transfereix automàticament a la guardiola
-Sense saldo suficient, no es fa l'aportació i rebo una notificació
-Puc pausar, editar o eliminar l'aportació programada
+A la pantalla d'una guardiola, l'opció "Aportació automàtica" permet triar l'import, la freqüència ("Cada setmana" o "Cada mes") i el dia
+El dia programat, l'import passa sol del saldo principal a la guardiola i surt als moviments amb el concepte "Aportació automàtica"
+Si aquell dia no hi ha prou saldo, no es fa l'aportació i arriba la notificació "No s'ha pogut fer l'aportació automàtica a <nom>: saldo insuficient"
+L'aportació programada té els botons "Pausar", "Editar" i "Eliminar" (aquest últim en vermell i amb confirmació)
 ```
 
 ---
@@ -1061,15 +1089,16 @@ Puc pausar, editar o eliminar l'aportació programada
 **Descripció:**
 
 ```
-COM: a usuari del neobanc
+COM: client estàndard
 VULL: afegir un subcompte en una nova divisa
-PER: poder tenir saldo en aquesta moneda i gestionar-la per separat.
+PER: tenir saldo en aquesta moneda i gestionar-la per separat.
+
+Perfil: client estàndard que vol tenir diners en una altra moneda.
 
 Assumptes:
 - Un sol subcompte per divisa
-- A la pantalla principal hi ha opció d'afegir/gestionar subcomptes
-- El nou subcompte neix amb saldo 0
-- El total es mostra aproximadament en EUR
+- El subcompte nou neix amb saldo 0
+- El total de totes les divises es mostra aproximat en euros
 
 Estimació: SP 4 · VP 6 · Prioritat Mitjana
 ```
@@ -1077,12 +1106,12 @@ Estimació: SP 4 · VP 6 · Prioritat Mitjana
 **Checklist Acceptance Criteria:**
 
 ```
-A la pantalla principal, clico a afegir o gestionar subcomptes
-S'obre una llista de divises disponibles
-Si ja tinc un subcompte d'aquella divisa, surt desactivada
-En seleccionar una divisa, hi ha confirmació o missatge d'èxit
-Torno a la pantalla principal i el subcompte hi és amb saldo 0
-La home mostra el saldo de cada divisa i el total aproximat en EUR
+A "Inici" hi ha el botó "Divises", que obre la gestió de subcomptes
+El botó "Afegir divisa" obre la llista de divises disponibles, cadascuna amb el codi i el nom (per exemple "USD · Dòlar americà")
+Les divises de les quals ja tinc subcompte surten en gris i no es poden triar, perquè només hi pot haver un subcompte per divisa
+En triar una divisa surt un tic verd amb "Subcompte en USD creat" i l'app torna a "Inici"
+A "Inici", el subcompte nou surt a la llista amb saldo 0 i el símbol de la seva moneda (per exemple "0,00 $")
+A "Inici" es veu el saldo de cada divisa i, a sota, el total aproximat en euros (per exemple "Total ≈ 1.540,20 €")
 ```
 
 ---
@@ -1094,13 +1123,15 @@ La home mostra el saldo de cada divisa i el total aproximat en EUR
 **Descripció:**
 
 ```
-COM: a usuari del neobanc
+COM: client estàndard amb subcomptes en divisa
 VULL: eliminar un subcompte en divisa
-PER: netejar la pantalla principal quan ja no opero amb aquella moneda.
+PER: netejar la pantalla principal quan ja no necessito aquella moneda.
+
+Perfil: client estàndard que té almenys un subcompte en divisa.
 
 Assumptes:
 - Només es pot eliminar si el saldo és 0
-- Si hi ha saldo, cal buidar-lo abans
+- Si té saldo, cal buidar-lo abans
 
 Estimació: SP 2 · VP 4 · Prioritat Mitjana
 ```
@@ -1108,10 +1139,10 @@ Estimació: SP 2 · VP 4 · Prioritat Mitjana
 **Checklist Acceptance Criteria:**
 
 ```
-Accedeixo a detalls o configuració del subcompte i clico "Eliminar"
-Si saldo > 0, pop-up d'error: s'ha de buidar abans
-Si saldo és 0, diàleg de confirmació
-En confirmar, torno a la home i el subcompte ja no hi és
+A la pantalla d'un subcompte hi ha el botó vermell "Eliminar subcompte"
+Si el subcompte té saldo, surt una finestra amb el text "Abans d'eliminar-lo has de deixar el saldo a 0" i no s'elimina
+Si el saldo és 0, surt una finestra que pregunta "Segur que vols eliminar aquest subcompte?" amb els botons "Cancel·lar" i "Eliminar" (en vermell)
+En confirmar, l'app torna a "Inici" i el subcompte ja no surt a la llista
 ```
 
 ---
@@ -1123,13 +1154,15 @@ En confirmar, torno a la home i el subcompte ja no hi és
 **Descripció:**
 
 ```
-COM: a usuari del neobanc
+COM: client estàndard amb subcomptes en divisa
 VULL: canviar diners entre les meves divises
-PER: disposar de saldo en la moneda que necessito en cada moment.
+PER: tenir saldo en la moneda que necessito en cada moment.
+
+Perfil: client estàndard amb almenys dos subcomptes, un d'ells amb saldo.
 
 Assumptes:
-- Calen dos subcomptes amb saldo
-- Es mostra tipus de canvi i comissió abans de confirmar
+- Calen dos subcomptes i saldo a l'origen
+- Es mostra el tipus de canvi i la comissió abans de confirmar
 
 Estimació: SP 5 · VP 7 · Prioritat Alta
 ```
@@ -1137,12 +1170,11 @@ Estimació: SP 5 · VP 7 · Prioritat Alta
 **Checklist Acceptance Criteria:**
 
 ```
-Accedeixo a la pantalla de canvi
-Selecciono subcompte d'origen i de destí
-Introdueixo l'import amb teclat numèric
-Veig resum: tipus de canvi, comissió i import final
-Si hi ha saldo suficient, pantalla d'èxit
-En tornar a l'inici, els saldos d'ambdós subcomptes s'han actualitzat
+A la pantalla "Canviar" trio el subcompte d'origen (a dalt) i el de destí (a sota)
+Amb un teclat numèric escric l'import que vull canviar, i a sota surt en gris quant rebré aproximadament
+En tocar "Continuar" surt la pantalla de resum amb el tipus de canvi (per exemple "1 € = 1,08 $"), la comissió (o "Sense comissió") i l'import exacte que rebré
+En tocar el botó lila "Confirmar canvi", si tinc prou saldo a l'origen surt un tic verd amb "Canvi fet"; si no, surt en vermell "No tens prou saldo"
+En tornar a "Inici", els saldos dels dos subcomptes ja surten actualitzats
 ```
 
 ---
@@ -1154,14 +1186,16 @@ En tornar a l'inici, els saldos d'ambdós subcomptes s'han actualitzat
 **Descripció:**
 
 ```
-COM: a usuari del neobanc
+COM: client estàndard amb subcomptes en divisa
 VULL: fer pagaments en una altra divisa
-PER: comprar a l'estranger o viatjar sense preocupacions.
+PER: fer compres internacionals o viatjar sense preocupacions.
+
+Perfil: client estàndard que paga en una moneda que no és l'euro.
 
 Assumptes:
-- Si hi ha saldo al subcompte de la divisa, es cobra d'allà
-- Si no, es cobra de EUR amb canvi automàtic
-- L'historial mostra import original, tipus de canvi i comissió
+- Si hi ha saldo al subcompte d'aquella divisa, es cobra d'allà
+- Si no, es cobra dels euros amb el canvi aplicat sol
+- Els moviments mostren l'import original, el tipus de canvi i la comissió
 
 Estimació: SP 5 · VP 7 · Prioritat Alta
 ```
@@ -1169,9 +1203,9 @@ Estimació: SP 5 · VP 7 · Prioritat Alta
 **Checklist Acceptance Criteria:**
 
 ```
-Pagament en divisa amb saldo al subcompte → es cobra d'aquella divisa
-Sense saldo a la divisa → es cobra de EUR amb canvi automàtic
-A l'historial hi ha import original, tipus de canvi i comissió
+Si pago en una divisa estrangera i tinc prou saldo al subcompte d'aquella divisa, el pagament es treu d'aquest subcompte
+Si no tinc prou saldo en aquella divisa, el pagament es treu del compte principal en euros, aplicant el canvi sol
+Als moviments, un pagament en divisa mostra en vermell l'import original (per exemple "−20,00 $") i a sota, en gris, el tipus de canvi aplicat i la comissió si n'hi ha
 ```
 
 ---
@@ -1183,13 +1217,16 @@ A l'historial hi ha import original, tipus de canvi i comissió
 **Descripció:**
 
 ```
-COM: a usuari del neobanc
-VULL: un límit mensual de canvi sense comissió
-PER: estalviar diners a les operacions internacionals.
+COM: client estàndard o client premium
+VULL: tenir un límit mensual de canvi de moneda sense comissions
+PER: estalviar diners en les meves operacions internacionals.
+
+Perfil: client estàndard (límit de 1.000 € al mes sense comissió) i client premium (límit de 5.000 € al mes).
 
 Assumptes:
-- Fins al límit mensual: 0% comissió
-- Un cop superat: comissió visible abans d'acceptar
+- Fins al límit del mes, 0 % de comissió
+- Un cop passat el límit, la comissió es mostra abans d'acceptar
+- El límit torna a començar el dia 1 de cada mes
 
 Estimació: SP 3 · VP 5 · Prioritat Mitjana
 ```
@@ -1197,9 +1234,9 @@ Estimació: SP 3 · VP 5 · Prioritat Mitjana
 **Checklist Acceptance Criteria:**
 
 ```
-Canvis dins del límit mensual: 0% de comissió
-Superat el límit, la pantalla de resum mostra la comissió abans d'acceptar
-Els moviments posteriors reflecteixen la comissió cobrada
+Fins al límit del mes (1.000 € per al client estàndard i 5.000 € per al client premium), els canvis de divisa tenen 0 % de comissió i al resum surt "Sense comissió"
+Un cop passat el límit, la pantalla de resum mostra en vermell la comissió que se suma (per exemple "Comissió: 2,50 €") abans de tocar "Confirmar canvi"
+Als moviments posteriors al límit, la comissió cobrada surt en gris sota l'import
 ```
 
 ---
