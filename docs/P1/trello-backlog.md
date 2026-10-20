@@ -223,21 +223,9 @@ La recàrrega no suma XP
 **Descripció:**
 
 ```
-COM: nou usuari
-VULL: crear el compte i entrar-hi de forma segura
-PER: utilitzar el neobanc.
+Tot el que necessita un usuari per crear el compte i entrar-hi de forma segura.
 
-Assumptes:
-- Contenidor de US-01, US-02, US-03, US-04
-
-Estimació: per definir en refinement
-```
-
-**Checklist Acceptance Criteria:**
-
-```
-L'àrea té almenys una US al backlog
-El PO accepta l'èpica com a contenidor
+Perfil: visitant (registre), client nou (verificació del codi) i client estàndard (inici de sessió i recuperar la contrasenya). Històries: US-1, US-2, US-3 i US-4.
 ```
 
 ---
@@ -249,24 +237,23 @@ El PO accepta l'èpica com a contenidor
 **Descripció:**
 
 ```
-COM: usuari del neobanc
+COM: client estàndard
 VULL: gestionar les meves dades i preferències
-PER: adaptar l'app a mi.
+PER: adaptar l’app a mi
 
-Assumptes:
-- Editar nom visible, foto i adreça; canviar email o telèfon verificant-los amb un codi
-- Nom legal i data de naixement no editables des de l'app
-- Canviar contrasenya i preferències de notificacions (excepte les de seguretat)
-- Històries previstes (Team Specification): editar perfil, canviar email o telèfon, canviar contrasenya, preferències de notificacions
+Històries previstes: editar perfil, canviar email o telèfon, canviar contrasenya, preferències de notificacions
 
-Estimació: per definir en refinement
+Perfil: client estàndard.
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-L'àrea té almenys una US al backlog
-El PO accepta l'èpica com a contenidor
+Puc editar el nom visible, la foto i l'adreça.
+Per canviar l'email o el telèfon he de verificar la nova dada amb un codi.
+El nom legal i la data de naixement no es poden editar des de l'app.
+Puc canviar la contrasenya introduint l'actual.
+Puc activar o desactivar cada tipus de notificació, excepte les de seguretat.
 ```
 
 ---
@@ -380,22 +367,9 @@ A "Inici", sota el saldo, surt en petit el nivell actual i la seva barra de prog
 **Descripció:**
 
 ```
-COM: usuari del neobanc
-VULL: guanyar XP i pujar de nivell per hàbits financers saludables
-PER: mantenir-me motivat a estalviar i gestionar bé els diners.
+El nucli de la gamificació: premiar els hàbits saludables amb XP i nivells.
 
-Assumptes:
-- Contenidor de US-23, US-24
-- Es connecta amb EP-04 (guardioles) i EP-11/EP-12
-
-Estimació: per definir en refinement
-```
-
-**Checklist Acceptance Criteria:**
-
-```
-L'àrea té almenys una US al backlog
-El PO accepta l'èpica com a contenidor
+Perfil: client estàndard. Els valors d'XP i els nivells els configura l'administrador (EP-15). Històries: US-23 i US-24.
 ```
 
 ---
@@ -407,21 +381,20 @@ El PO accepta l'èpica com a contenidor
 **Descripció:**
 
 ```
-COM: a administrador
+COM: administrador
 VULL: configurar reptes, insígnies i valors d'XP des d'un panell
-PER: mantenir la gamificació al dia sense publicar noves versions.
+PER: mantenir la gamificació al dia sense publicar noves versions de l'app
 
-Assumptes:
-- Contenidor de panell admin (crear/activar reptes i insígnies, canvis d'XP)
-
-Estimació: per definir en refinement
+Perfil: administrador, és a dir, una persona de l'equip d'Evolt amb permisos de gestió (no és un client).
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-L'àrea té almenys una US o spike al backlog
-El PO accepta l'èpica com a contenidor
+L'administrador pot crear i publicar reptes i insígnies des del panell.
+L'administrador pot activar o desactivar reptes i insígnies en temps real.
+El sistema bloqueja l'edició de les condicions d'un repte si ja té usuaris actius.
+L'administrador pot modificar els valors d'XP per acció i els llindars de nivell.
 ```
 
 ---
@@ -433,21 +406,9 @@ El PO accepta l'èpica com a contenidor
 **Descripció:**
 
 ```
-COM: usuari del neobanc
-VULL: consultar el saldo, veure els moviments i afegir diners al compte
-PER: saber d'un cop d'ull com tinc els diners.
+Consultar el saldo, veure els moviments i afegir diners al compte.
 
-Assumptes:
-- Contenidor de US-07, US-08, US-09, US-10, US-11, US-12 (segons Team Specification)
-
-Estimació: per definir en refinement
-```
-
-**Checklist Acceptance Criteria:**
-
-```
-L'àrea té almenys una US al backlog
-El PO accepta l'èpica com a contenidor
+Perfil: client estàndard. El client nou, sense moviments, veu els estats buits. Històries: US-07 a US-12.
 ```
 
 ---
@@ -606,22 +567,9 @@ El percentatge també surt escrit amb números (per exemple "24 %"), no només c
 **Descripció:**
 
 ```
-COM: usuari del neobanc
-VULL: crear objectius d'estalvi i moure-hi diners
-PER: estalviar de forma estructurada per a coses concretes.
+Crear objectius d'estalvi i moure-hi diners, de forma manual o automàtica.
 
-Assumptes:
-- Contenidor de US-17, US-18, US-19, US-20, US-21
-- Refinament endavant: aportació periòdica, guardioles compartides
-
-Estimació: per definir en refinement
-```
-
-**Checklist Acceptance Criteria:**
-
-```
-L'àrea té almenys una US al backlog
-El PO accepta l'èpica com a contenidor
+Perfil: client estàndard. El client nou també pot crear la seva primera guardiola. Històries: US-17 a US-21.
 ```
 
 ---
@@ -638,10 +586,12 @@ VULL: refinar l'àrea de reptes i ratxes d'estalvi
 PER: tenir claredat abans dels sprints que ho implementen.
 
 Assumptes:
-- Relació: refina P2 (Estalvi)
+- Relació: refina P2
 - Reptes d'estalvi, ratxes, XP per aportar
 
 Estimació: per definir en refinement
+
+Perfil: les futures històries seran de client estàndard.
 ```
 
 **Checklist Acceptance Criteria:**
@@ -660,22 +610,21 @@ El PO accepta l'èpica com a contenidor del backlog
 **Descripció:**
 
 ```
-COM: equip / PO
-VULL: refinar insígnies i recompenses connectades amb hàbits financers
-PER: celebrar metes i objectius assolits.
+COM: client estàndard
+VULL: aconseguir insígnies i desbloquejar recompenses
+PER: sentir que els meus progressos es reconeixen i mantenir la motivació
 
-Assumptes:
-- Es connecta amb guardioles i XP (EP-04, EP-05)
-- Insignies: primer estalvi, primer objectiu, pressupost complert
-
-Estimació: per definir en refinement
+Perfil: client estàndard. El client nou veu el tutorial de benvinguda.
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-L'àrea té almenys una US futura o spike associat
-El PO accepta l'èpica com a contenidor del backlog
+L'usuari rep insígnies úniques en complir determinades condicions financeres o d'estalvi.
+Existeix una pantalla on l'usuari pot consultar les insígnies assolides i el progrés de les bloquejades.
+L'usuari pot compartir les seves insígnies sense mostrar dades financeres privades.
+En pujar de nivell es desbloquegen recompenses visuals (temes, marcs d'avatar).
+Els nous usuaris disposen d'un tutorial de benvinguda de gamificació.
 ```
 
 ---
@@ -788,22 +737,28 @@ Hi ha l'enllaç "Reportar un problema", que obre un formulari amb el moviment ja
 **Descripció:**
 
 ```
-COM: usuari del neobanc
+COM: client estàndard
 VULL: veure en què gasto i fixar pressupostos
 PER: controlar millor les meves finances.
 
 Assumptes:
-- Contenidor de categorització, gràfics, pressupostos i XP per pressupost
-- Es refinaran en sprints posteriors
+- Històries previstes: categorització automàtica i manual, gràfic mensual, crear pressupost, avisos de pressupost, XP per pressupost complert
+- Depèn del sistema d'XP (US-23)
+- Pendent de decidir com es categoritza una despesa sense comerços
 
 Estimació: per definir en refinement
+
+Perfil: client estàndard amb moviments.
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-L'àrea té almenys una US al backlog
-El PO accepta l'èpica com a contenidor
+Cada despesa s'assigna automàticament a una categoria i la puc canviar manualment
+Veig un gràfic mensual de despesa per categoria i la variació respecte al mes anterior
+Puc crear un pressupost mensual per categoria amb una barra de progrés
+Rebo un avís en arribar al 80% del pressupost i un altre quan el supero
+Acabar el mes sense superar un pressupost dona XP
 ```
 
 ---
@@ -910,22 +865,21 @@ Si no tinc prou saldo per pagar-la, surt en vermell "No tens prou saldo" i el bo
 **Descripció:**
 
 ```
-COM: usuari del neobanc
-VULL: dividir despeses i estalviar en grup
-PER: gestionar diners en comú sense complicacions.
+Dividir despeses i estalviar en grup per gestionar diners en comú sense complicacions.
 
-Assumptes:
-- Contenidor de dividir despesa, guardioles compartides
-- Es refinarà en sprints posteriors
+(Històries previstes: dividir una despesa, seguiment de pagaments dividits, crear guardiola compartida, aportar, retirar i abandonar en grup.)
 
-Estimació: per definir en refinement
+Perfil: client estàndard que comparteix despeses o estalvis amb altres clients.
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-L'àrea té almenys una US al backlog
-El PO accepta l'èpica com a contenidor
+Puc dividir una despesa a parts iguals o amb imports personalitzats, i la suma ha de coincidir amb el total.
+Cada participant rep una sol·licitud de pagament i puc veure qui ha pagat.
+Puc crear una guardiola compartida i convidar-hi contactes.
+Cada membre veu el total i les aportacions de tothom, i només pot retirar el que ha aportat.
+Si un membre abandona la guardiola, se li retorna la seva aportació.
 ```
 
 ---
@@ -937,22 +891,21 @@ El PO accepta l'èpica com a contenidor
 **Descripció:**
 
 ```
-COM: usuari del neobanc
-VULL: competir i col·laborar amb amics
-PER: motivar-nos mútuament a estalviar.
+Competir i col·laborar amb amics per motivar-nos mútuament a estalviar.
 
-Assumptes:
-- Contenidor de reptes amb amics, rànquing setmanal
-- Privacitat: mai saldos als rànquings
+(Històries previstes: reptes amb amics, invitacions a reptes, rànquing setmanal, privacitat del rànquing.)
 
-Estimació: per definir en refinement
+Perfil: client estàndard que té contactes a l'app.
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-L'àrea té almenys una US al backlog
-El PO accepta l'èpica com a contenidor
+Puc crear reptes i convidar-hi amics, que poden acceptar o rebutjar la invitació.
+El progrés dels altres participants es mostra en percentatge, mai en imports.
+Hi ha un rànquing setmanal d'XP entre contactes que es reinicia cada dilluns.
+El rànquing només mostra XP i nivell, mai saldos.
+Puc sortir del rànquing des dels ajustos de privacitat.
 ```
 
 ---
@@ -964,21 +917,9 @@ El PO accepta l'èpica com a contenidor
 **Descripció:**
 
 ```
-COM: usuari del neobanc
-VULL: enviar, demanar i rebre diners entre usuaris de l'app
-PER: saldar deutes de manera senzilla.
+Enviar, demanar i rebre diners entre usuaris de l'app.
 
-Assumptes:
-- Contenidor de US-13, US-14, US-15, US-16 (segons Team Specification)
-
-Estimació: per definir en refinement
-```
-
-**Checklist Acceptance Criteria:**
-
-```
-L'àrea té almenys una US al backlog
-El PO accepta l'èpica com a contenidor
+Perfil: client estàndard. Històries: US-13, US-14, US-15 i US-16.
 ```
 
 ---
@@ -1248,22 +1189,21 @@ Als moviments posteriors al límit, la comissió cobrada surt en gris sota l'imp
 **Descripció:**
 
 ```
-COM: usuari del neobanc
-VULL: tenir saldos en diferents divises i canviar-hi
-PER: gestionar diners quan viatjo o pago en altres monedes.
+COM: client estàndard
+VULL: tenir saldos en diferents divises dins del meu compte i canviar entre elles
+PER: gestionar els diners quan viatjo o pago en altres monedes
 
-Assumptes:
-- Contenidor de US-25, US-26, US-27, US-28, US-29
-- Un subcompte per divisa; total aproximat en EUR
-
-Estimació: per definir en refinement
+Perfil: client estàndard i client premium (el premium té un límit de canvi sense comissió més alt, US-29). Històries: US-25 a US-29.
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-L'àrea té almenys una US al backlog
-El PO accepta l'èpica com a contenidor
+L'usuari pot afegir i eliminar subcomptes en diferents divises (un subcompte per divisa).
+La pantalla principal mostra el saldo de cada divisa i el total aproximat en EUR.
+L'usuari pot canviar diners entre divises visualitzant el tipus de canvi, la comissió i l'import final abans de confirmar.
+Els pagaments es cobren de la divisa corresponent si hi ha saldo, o de la principal aplicant el canvi.
+Els moviments mostren l'import original, el tipus de canvi i la comissió de les operacions en divises.
 ```
 
 ---
