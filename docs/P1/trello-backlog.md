@@ -19,6 +19,30 @@
 | **P5** | Social | US-13, US-15, US-16 |
 | **P6** | Transferències + Multidivisa | US-12, US-14, US-21, US-25…US-29 |
 
+**Sincronitzat amb el Trello el 20/10/2026.** Si canvies una card al Trello, canvia-la també aquí.
+
+## Perfils d'usuari
+
+Cada història diu a quin perfil afecta (camp COM i línia Perfil).
+
+- **Visitant:** persona que té l'app però encara no té compte. Només surt al registre (US-01).
+- **Client nou:** s'acaba de registrar i encara no té moviments ni guardioles. Serveix per a la verificació del codi i per als estats buits.
+- **Client estàndard:** usuari registrat amb el compte actiu, amb saldo, moviments i guardioles. És el perfil de la majoria d'històries.
+- **Client premium:** com el client estàndard, però amb un límit de canvi de divisa sense comissió més alt (5.000 € al mes en lloc de 1.000 €, US-29).
+- **Administrador:** persona de l'equip d'Evolt amb permisos de gestió (no és un client). Configura la gamificació des d'un panell (EP-15).
+
+## Guia d'estil
+
+Els criteris d'acceptació descriuen la pantalla amb aquestes paraules:
+
+- **Lletra:** la del sistema (la que porta el mòbil o l'ordinador).
+- **Fons:** gris molt clar. El contingut va dins de targetes blanques amb les cantonades arrodonides.
+- **Color principal:** lila, per als botons i els enllaços.
+- **Text:** el principal en gris fosc gairebé negre; el secundari (etiquetes, dates, ajudes) en gris clar.
+- **Ingressos:** en verd, amb el signe "+". **Despeses:** en vermell, amb el signe "−". **Errors:** en vermell.
+- **Imports:** en euros, amb coma decimal i el símbol al final, per exemple "1.250,50 €".
+- **Dates:** dia, mes i hora, per exemple "11 d'oct. · 21:15".
+
 ---
 
 # P1 — Alta i primers passos
