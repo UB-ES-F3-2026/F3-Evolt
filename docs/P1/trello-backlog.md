@@ -181,13 +181,15 @@ Enllaç caducat → avís i opció de demanar-ne un de nou
 **Descripció:**
 
 ```
-COM: a usuari
-VULL: afegir diners amb una recàrrega de prova
-PER: poder fer servir els pagaments i l'estalvi.
+COM: client estàndard
+VULL: afegir diners de prova al meu compte
+PER: tenir saldo per provar l'app sense una targeta real.
+
+Perfil: client estàndard (usuari registrat amb el compte actiu, amb saldo, moviments i guardioles). El client nou també pot recarregar.
 
 Assumptes:
-- Recàrrega simulada, sense targeta
-- Límits: > 0 i ≤ 500 € per recàrrega; ≤ 1.000 € al dia
+- Màxim 500 € per recàrrega i 1.000 € al dia
+- Sense targeta: la recàrrega s'aprova a l'instant
 - Les recàrregues no donen XP
 
 Estimació: SP 3 · VP 7 · Prioritat Alta
@@ -196,12 +198,11 @@ Estimació: SP 3 · VP 7 · Prioritat Alta
 **Checklist Acceptance Criteria:**
 
 ```
-A la pantalla principal hi ha "Afegir diners"
-Puc introduir un import > 0 i ≤ 500 € per recàrrega
-No es demanen dades de targeta; s'aprova automàticament
-No puc recarregar més de 1.000 € en un mateix dia
-En confirmar, el saldo s'actualitza i apareix als moviments com "Recàrrega"
-Les recàrregues no donen XP
+A Inici, sota el saldo, hi ha un botó lila amb el text en blanc "+ Afegir diners", que obre la pantalla "Afegir diners"
+Es pot escriure un import més gran que 0 i de com a màxim 500 € (sota la casella hi ha l'ajuda en gris "Màxim 500,00 € per recàrrega"); si l'import no és vàlid, la casella es posa vermella, surt el motiu en vermell sota la casella i el botó "Confirmar" queda desactivat
+Si una recàrrega fa passar de 1.000 € en un mateix dia, no es fa i surt en vermell "Has superat el límit diari de recàrrega. Avui encara pots recarregar X €."
+En confirmar surt un tic verd amb el text "Recàrrega feta: +X €"; després l'app torna sola a Inici, amb el saldo ja actualitzat i la recàrrega a dalt de tot dels moviments, en verd i amb el concepte "Recàrrega"
+La recàrrega no suma XP
 ```
 
 ---
@@ -270,14 +271,17 @@ El PO accepta l'èpica com a contenidor
 **Descripció:**
 
 ```
-COM: a usuari
-VULL: veure el meu saldo a la pantalla principal
-PER: saber d'un cop d'ull com tinc els diners.
+COM: client estàndard
+VULL: veure el meu saldo i resum financer a la pantalla principal
+PER: saber d'un cop d'ull com tinc els diners i controlar la meva activitat.
+
+Perfil: client estàndard (usuari registrat amb el compte actiu, amb saldo, moviments i guardioles). El client nou, que encara no té moviments, veu el saldo i un missatge que ho indica.
 
 Assumptes:
-- Saldo disponible + total estalviat a guardioles
-- Últims 5 moviments
-- Icona d'ull per amagar el saldo (preferència persistent)
+- Saldo disponible i total estalviat a guardioles
+- Els 5 últims moviments
+- Icona d'ull per amagar els imports, i l'app ho recorda
+- Ingressos en verd amb "+" i despeses en vermell amb "−"
 
 Estimació: SP 4 · VP 8 · Prioritat Alta
 ```
@@ -285,12 +289,11 @@ Estimació: SP 4 · VP 8 · Prioritat Alta
 **Checklist Acceptance Criteria:**
 
 ```
-La pantalla principal mostra el saldo disponible
-Mostra el total estalviat a les guardioles
-Mostra els 5 últims moviments
-Amb moviment nou, el saldo s'actualitza sense reiniciar l'app
-Amb la icona d'ull puc amagar el saldo
-La preferència d'amagar es manté a la sessió següent
+En entrar, la pantalla "Inici" mostra a dalt el saldo disponible, amb la lletra més gran de la pantalla i en negreta, sota l'etiqueta "Saldo disponible" en gris
+Sota el saldo surt "Total estalviat a guardioles:" en lletra petita i gris, amb l'import en negreta
+A la part de baix, a la secció "Últims moviments", surten els 5 moviments més recents, cadascun amb la seva icona, el concepte i l'import (ingressos en verd amb "+", despeses en vermell amb "−")
+Al costat del saldo hi ha una icona d'ull; en tocar-la, tots els imports de la pantalla es canvien per "••••", i en tornar-la a tocar es tornen a veure
+Si amago els imports i tanco l'app, en tornar a entrar segueixen amagats
 ```
 
 ---
@@ -670,27 +673,32 @@ El PO accepta l'èpica com a contenidor del backlog
 
 **Descripció:**
 
-
-COM: a usuari del neobanc
-VULL: consultar tots els meus moviments
+```
+COM: client estàndard
+VULL: consultar tots els meus moviments en una llista
 PER: controlar què gasto i què ingresso.
 
+Perfil: client estàndard (usuari registrat amb el compte actiu, amb saldo, moviments i guardioles). El client nou, que encara no té moviments, veu un missatge de llista buida.
+
 Assumptes:
-- Ordenació: del més recent al més antic
-- Paginació / infinite scroll
-- Estat buit amb missatge
+- Ordre del més recent al més antic
+- Es carreguen de 20 en 20 en arribar al final (scroll infinit)
+- Ingressos en verd amb "+" i despeses en vermell amb "−"
 
 Estimació: SP 3 · VP 7 · Prioritat Alta
-
+```
 
 **Checklist Acceptance Criteria:**
 
 ```
-Els moviments es mostren del més recent al més antic
-Cada moviment mostra import, concepte, data i tipus (ingrés/despesa)
-Ingrés i despesa es diferencien amb color
-En arribar al final, se'n carreguen més
-Sense moviments, es mostra un missatge que ho indica
+Els moviments surten del més recent al més antic, dins d'una targeta blanca
+Cada moviment mostra a l'esquerra la icona del tipus; al mig, el concepte i a sota la data en lletra més petita i gris; i a la dreta l'import en negreta
+Els ingressos surten en verd amb "+" (per exemple "+1.800,00 €") i les despeses en vermell amb "−" (per exemple "−23,50 €")
+En baixar fins al final de la llista, se'n carreguen 20 més sense tocar cap botó, i es veu "Carregant més moviments…" mentre arriben
+El client nou, que no té moviments, veu el missatge "Encara no tens moviments" en gris
+A Inici, l'enllaç lila "Veure tots" obre la pantalla "Moviments"
+Mentre la llista carrega es veu "Carregant…"; si falla, surt el missatge d'error en vermell i un botó "Reintentar"
+A dalt a l'esquerra hi ha el botó "← Inici", que torna a la pantalla principal
 ```
 
 ---
