@@ -109,6 +109,33 @@ Copying `.env.example` is optional for a first run: the in-memory mocks are
 **on by default**. Set `VITE_USE_MOCKS=false` in `frontend/.env` to call the
 real API (and `VITE_API_URL` to point at it).
 
+### Deploy (TR06.2)
+
+The frontend runs on [Render](https://render.com) as a free **Static Site**
+(it never sleeps) and talks to the deployed backend:
+
+- **Public URL:** https://f3-evolt.onrender.com
+- **Branch:** `main` (the demo line); redeploy manually from the Render
+  dashboard until automatic deploys exist (TR06.3)
+
+| Render setting | Value |
+|----------------|-------|
+| Root directory | `frontend` |
+| Node version | pinned in `frontend/.node-version` |
+| Build command | `npm ci && npm run build` (exact versions from the lock file) |
+| Publish directory | `dist` |
+| Rewrite rule | `/*` → `/index.html` (action **Rewrite**), so reloading `/movements` does not 404 |
+
+| Variable on Render | Value |
+|--------------------|-------|
+| `VITE_API_URL` | `https://evolt-api.onrender.com` (no trailing slash) |
+| `VITE_USE_MOCKS` | `false` — without it the site shows the mocks, not the backend |
+| `VITE_DEMO_USER` | `1` |
+
+`VITE_*` values are baked into the build: after changing one on Render,
+**redeploy** for it to take effect. The backend must list this URL in its
+`FRONTEND_ORIGINS`, or the browser blocks every request (CORS).
+
 ---
 
 ## Backend
