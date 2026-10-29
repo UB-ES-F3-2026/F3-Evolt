@@ -201,7 +201,7 @@ The backend runs on [Render](https://render.com) (free plan) as a Web Service:
 | Variable on Render | Value |
 |--------------------|-------|
 | `ENABLE_DEV_ROUTES` | `false` — nobody can reset the demo data |
-| `FRONTEND_ORIGINS` | URL of the deployed frontend (TR06.2) |
+| `FRONTEND_ORIGINS` | `https://f3-evolt.onrender.com` (the deployed frontend, TR06.2) |
 
 Quick check: `curl https://evolt-api.onrender.com/api/health` → `{"status":"ok"}`.
 The root URL `/` has no route, so it answers `500 INTERNAL_ERROR` like any unknown path.
