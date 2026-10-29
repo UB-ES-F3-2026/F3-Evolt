@@ -402,6 +402,8 @@ Eina de **desenvolupament** (T09.6), com la capçalera `X-User-Id`. **No l'usa e
 
 L'Sprint 0 manté les dades **en memòria** i les carrega del seed a l'arrencada. Aquest endpoint **restaura les dades inicials sense reiniciar el servidor**, de manera que es puguin reproduir seqüències amb estat (p. ex. el límit diari de recàrrega) des de zero.
 
+Només existeix si la variable d'entorn `ENABLE_DEV_ROUTES` no és `false` (per defecte, sí). Al desplegament (TR06.1) està desactivada: la ruta no es registra i respon com qualsevol ruta inexistent, `500 INTERNAL_ERROR` (§5).
+
 - **Cos de la petició:** cap.
 - **Resposta `200`:** `{ status }`
 
