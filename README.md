@@ -186,7 +186,7 @@ frontend (e.g. `Authorization`)? Add it to `allow_headers` in
 
 The backend runs on [Render](https://render.com) (free plan) as a Web Service:
 
-- **Public URL:** _pending — added once the service is created_
+- **Public URL:** https://evolt-api.onrender.com (e.g. [`/api/health`](https://evolt-api.onrender.com/api/health))
 - **Branch:** `main` (the demo line); redeploy manually from the Render
   dashboard until automatic deploys exist (TR06.3)
 
@@ -203,7 +203,8 @@ The backend runs on [Render](https://render.com) (free plan) as a Web Service:
 | `ENABLE_DEV_ROUTES` | `false` — nobody can reset the demo data |
 | `FRONTEND_ORIGINS` | URL of the deployed frontend (TR06.2) |
 
-Quick check: `curl <public URL>/api/health` → `{"status":"ok"}`.
+Quick check: `curl https://evolt-api.onrender.com/api/health` → `{"status":"ok"}`.
+The root URL `/` has no route, so it answers `500 INTERNAL_ERROR` like any unknown path.
 
 Things to know about the free plan:
 
