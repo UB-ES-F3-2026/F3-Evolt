@@ -89,8 +89,9 @@ Rules for changing `.github/workflows/ci.yml`:
 3. **Never rename `ci`.** It is THE required status check name; renaming breaks
    branch protection silently.
 4. **Never add `paths:` filters**, and if you must, update branch protection
-   (with `paths:` filters, skipped-trigger runs report the check as failed on
-   unrelated PRs — see `docs/branch-protection.md`).
+   (with `paths:` filters the required `ci` check is never reported for
+   unrelated PRs, so they stay blocked forever — see
+   `docs/branch-protection.md`).
 5. Keep `permissions: contents: read`; add threat minimization, not power.
 6. No secrets in `ci.yml`; secrets belong to deploy workflows only
    (see `docs/deploy.md`).

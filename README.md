@@ -150,6 +150,20 @@ SIMULATE_ERROR_RATE=100 uvicorn app.main:app --reload        # every request fai
 
 The simulation affects **every** request, including `/api/health`.
 
+### Request collection & manual testing (T09.6)
+
+[`docs/api.http`](docs/api.http) is an example request collection — one request
+per endpoint plus every documented error case (invalid amount, over 500 €,
+daily limit exceeded, user without movements, …). Open it with the **REST
+Client** extension in VS Code or the **HTTP Client** in IntelliJ/JetBrains and
+run the requests one by one; uvicorn must be running
+(`uvicorn app.main:app --reload`).
+
+`POST /api/dev/reset` restores the in-memory seed without restarting the
+server. Run it before any stateful sequence — e.g. the daily-limit chain in the
+collection — so the results are reproducible. The collection can be combined
+with the T08.2 simulation env vars (set them when starting uvicorn).
+
 ---
 
 ## CI/CD
@@ -171,20 +185,6 @@ click the failing job → read the red step's logs. Locally, run the same
 commands (frontend: `npm run check`; backend: compile check + pytest).
 
 Full guide: [`docs/ci-cd.md`](docs/ci-cd.md).
-
-### Request collection & manual testing (T09.6)
-
-[`docs/api.http`](docs/api.http) is an example request collection — one request
-per endpoint plus every documented error case (invalid amount, over 500 €,
-daily limit exceeded, user without movements, …). Open it with the **REST
-Client** extension in VS Code or the **HTTP Client** in IntelliJ/JetBrains and
-run the requests one by one; uvicorn must be running
-(`uvicorn app.main:app --reload`).
-
-`POST /api/dev/reset` restores the in-memory seed without restarting the
-server. Run it before any stateful sequence — e.g. the daily-limit chain in the
-collection — so the results are reproducible. The collection can be combined
-with the T08.2 simulation env vars (set them when starting uvicorn).
 
 ---
 
