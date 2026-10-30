@@ -95,7 +95,7 @@ Rules for changing `.github/workflows/ci.yml`:
 4. **Never add `paths:` filters**, and if you must, update branch protection
    (with `paths:` filters the required `ci` check is never reported for
    unrelated PRs, so they stay blocked forever — see
-   `docs/branch-protection.md`).
+   [`docs/branch-protection.md`](branch-protection.md)).
 5. Keep `permissions: contents: read`; add threat minimization, not power.
 6. No secrets in `ci.yml`; secrets belong to deploy workflows only
    (see `docs/deploy.md`).
@@ -149,5 +149,5 @@ Notes:
 
 ## Related docs
 
-- See `docs/branch-protection.md` (later PR): required status check `ci`, no pushes straight to `develop`/`main`.
+- See [`docs/branch-protection.md`](branch-protection.md): required status check `ci`, no pushes straight to `develop`/`main`.
 - See `docs/deploy.md` (later PR): what runs after `main` is green, and `DEPLOY_ENABLED`.
