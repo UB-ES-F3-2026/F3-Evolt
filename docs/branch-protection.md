@@ -113,7 +113,10 @@ git reset --hard origin/develop
 > ⚠️ Run this **only on a throwaway clone**, or after confirming nobody else is
 > mid-push: the local temp commit exists only in your clone, and the last line
 > resets your clone back to `origin/develop`. The push itself is expected to
-> fail — that *is* the test. If it succeeds, protection is **not** applied.
+> fail — that *is* the test. If it succeeds, protection is **not** applied:
+> revert the temp commit immediately (`git revert HEAD && git push origin
+> HEAD:develop`, allowed because the branch is still unprotected) and apply
+> the protection before anybody else pushes.
 
 ## Emergency rollback (lockout only)
 
