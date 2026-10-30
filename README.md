@@ -55,6 +55,7 @@ Skills live in the repo and load only when the task matches:
 | `gitflow` | branches, develop/main, hotfix, PR base |
 | `pr-conventions` | pull request format and checklist |
 | `commit-conventions` | Conventional Commits + US reference |
+| `ci-cd` | GitHub Actions, lint, branch protection, deploy |
 
 Locations (same content, for different tools):
 
@@ -100,8 +101,10 @@ cd frontend
 cp .env.example .env      # optional: VITE_* vars are read from frontend/.env
 npm install
 npm run dev               # dev server on http://localhost:5173
+npm run lint              # ESLint (flat config)
 npm run type-check        # TypeScript check (vue-tsc)
 npm run build             # type-check + production build
+npm run check             # lint + type-check + tests + build (what CI runs)
 npm run preview           # serve the production build
 ```
 
@@ -147,6 +150,28 @@ SIMULATE_ERROR_RATE=100 uvicorn app.main:app --reload        # every request fai
 
 The simulation affects **every** request, including `/api/health`.
 
+---
+
+## CI/CD
+
+![CI](https://github.com/UB-ES-F3-2026/F3-Evolt/actions/workflows/ci.yml/badge.svg)
+
+GitHub Actions pipeline in [`.github/workflows/ci.yml`](.github/workflows/ci.yml): every PR (and push) to `develop` or `main` runs two parallel jobs and a gate:
+
+| Job | Runs | Version |
+|-----|------|---------|
+| `backend` | compile check + pytest | Python 3.12 |
+| `frontend` | ESLint + type-check + Vitest + build | Node 22 |
+| `ci` | gate: both jobs must succeed | — |
+
+**`ci` is the required status check: a PR can only merge when it is green.**
+
+How to read green/red: `gh pr checks` in a PR, or the repo's *Actions* tab →
+click the failing job → read the red step's logs. Locally, run the same
+commands (frontend: `npm run check`; backend: compile check + pytest).
+
+Full guide: [`docs/ci-cd.md`](docs/ci-cd.md).
+
 ### Request collection & manual testing (T09.6)
 
 [`docs/api.http`](docs/api.http) is an example request collection — one request
@@ -172,9 +197,10 @@ The only complete list of documents; the others link here.
 | `README.md` | Project + AI workflow overview (this file) |
 | `AGENTS.md` | Engineering + AI standards (source of truth for code style) |
 | `CLAUDE.md` | Entry point for Claude Code; points to `AGENTS.md` |
-| `.claude/skills/` · `.opencode/skills/` | The 10 lazy AI skills (same content in both) |
+| `.claude/skills/` · `.opencode/skills/` | The 11 lazy AI skills (same content in both) |
 | `docs/api.md` | API contract shared by backend and frontend |
 | `docs/api.http` | Example request collection for manual API testing (T09.6) |
+| `docs/ci-cd.md` | CI/CD pipeline: jobs, how to read runs, how to edit |
 | `docs/P1/AGENTS.md` | Course context, Scrum, roles, backlog rules |
 | `docs/P1/MEMORY.md` | Team decisions, US and epic index |
 | `docs/P1/Team Specification.md` | Product catalog + team |
