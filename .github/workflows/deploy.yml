@@ -1,0 +1,119 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false   # never interrupt a half-done deploy
+
+jobs:
+  ci:
+    name: ci
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
+  deploy-backend:
+    name: deploy-backend
+    needs: ci
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Trigger backend deploy hook (Render example)
+        env:
+          HOOK: ${{ secrets.BACKEND_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::error::BACKEND_DEPLOY_HOOK secret is not set (see docs/deploy.md)"
+            exit 1
+          fi
+          curl -fsS -X POST "$HOOK" > /dev/null
+          echo "Backend deploy triggered."
+
+  verify-health:
+    name: verify-health
+    needs: deploy-backend
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Poll /api/health until it answers 200
+        env:
+          BASE_URL: ${{ vars.BACKEND_HEALTH_URL }}
+        run: |
+          if [ -z "$BASE_URL" ]; then
+            echo "::error::BACKEND_HEALTH_URL variable is not set (see docs/deploy.md)"
+            exit 1
+          fi
+          url="${BASE_URL%/}/api/health"
+          attempts=20
+          delay=15
+          for i in $(seq 1 "$attempts"); do
+            echo "[attempt $i/$attempts] GET $url"
+            status=$(curl -s -o /tmp/health.json -w '%{http_code}' --max-time 10 "$url" || echo 000)
+            if [ "$status" = "200" ] && grep -q '"status"' /tmp/health.json; then
+              echo "Backend is healthy: $(cat /tmp/health.json)"
+              exit 0
+            fi
+            echo "not healthy yet (HTTP $status); retrying in ${delay}s"
+            sleep "$delay"
+          done
+          echo "::error::/api/health did not answer 200 after $((attempts * delay))s"
+          exit 1
+
+  deploy-frontend:
+    name: deploy-frontend
+    needs: verify-health
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Build against the real API
+        env:
+          VITE_API_URL: ${{ vars.PUBLIC_API_URL || vars.BACKEND_HEALTH_URL }}
+          VITE_USE_MOCKS: 'false'
+        run: npm run build
+      - name: Trigger frontend deploy hook (Netlify/Vercel example)
+        env:
+          HOOK: ${{ secrets.FRONTEND_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::error::FRONTEND_DEPLOY_HOOK secret is not set (see docs/deploy.md)"
+            exit 1
+          fi
+          curl -fsS -X POST "$HOOK" > /dev/null
+          echo "Frontend deploy triggered."
+      - name: Check the public frontend responds
+        if: vars.FRONTEND_URL != ''
+        env:
+          FRONTEND_URL: ${{ vars.FRONTEND_URL }}
+        run: |
+          # The static host rebuilds asynchronously: give it a few minutes.
+          for i in $(seq 1 12); do
+            status=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$FRONTEND_URL" || echo 000)
+            if [ "$status" = "200" ]; then
+              echo "Frontend responds: $FRONTEND_URL"
+              exit 0
+            fi
+            echo "[attempt $i/12] frontend HTTP $status; retrying in 15s"
+            sleep 15
+          done
+          echo "::error::frontend did not answer 200: $FRONTEND_URL"
+          exit 1
