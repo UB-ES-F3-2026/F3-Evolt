@@ -83,7 +83,8 @@ they can be listed and audited without opening each secret.
 **Frontend — Netlify:**
 
 1. New site from this repo → base directory `frontend/`.
-2. Build command: `npm run build`, publish directory `frontend/dist`.
+2. Build command: `npm run build`, publish directory `dist` (relative to the
+   `frontend/` base).
 3. Site settings → *Environment variables*: `VITE_API_URL` = backend public
    URL, `VITE_USE_MOCKS=false`.
 4. Site configuration → *Build hooks* → copy the URL (**secret**).
@@ -111,7 +112,8 @@ gh variable set DEPLOY_ENABLED      -b "true"
 1. Hosting live per the example above (#92/#93 done).
 2. Set all secrets/variables (see table).
 3. `gh variable set DEPLOY_ENABLED -b "true"` — **last**.
-4. Merge any PR (or run manually) so a push to `main` fires the workflow.
+4. Open the release PR from `develop` to `main` and merge it (or run the
+   workflow manually) so a push to `main` fires the deploy chain.
 5. Watch it:
 
    ```bash

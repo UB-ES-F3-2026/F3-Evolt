@@ -34,7 +34,7 @@ jobs:
             echo "::error::BACKEND_DEPLOY_HOOK secret is not set (see docs/deploy.md)"
             exit 1
           fi
-          curl -fsS -X POST "$HOOK" > /dev/null
+          curl -fsS --max-time 30 --retry 2 -X POST "$HOOK" > /dev/null
           echo "Backend deploy triggered."
 
   verify-health:
@@ -57,7 +57,8 @@ jobs:
           delay=15
           for i in $(seq 1 "$attempts"); do
             echo "[attempt $i/$attempts] GET $url"
-            status=$(curl -s -o /tmp/health.json -w '%{http_code}' --max-time 10 "$url" || echo 000)
+            status=$(curl -s -o /tmp/health.json -w '%{http_code}' --max-time 10 "$url" || true)
+            status=${status:-000}
             if [ "$status" = "200" ] && grep -q '"status"' /tmp/health.json; then
               echo "Backend is healthy: $(cat /tmp/health.json)"
               exit 0
@@ -65,7 +66,7 @@ jobs:
             echo "not healthy yet (HTTP $status); retrying in ${delay}s"
             sleep "$delay"
           done
-          echo "::error::/api/health did not answer 200 after $((attempts * delay))s"
+          echo "::error::/api/health did not answer 200 within ~8 min (waits plus request time)"
           exit 1
 
   deploy-frontend:
@@ -98,7 +99,7 @@ jobs:
             echo "::error::FRONTEND_DEPLOY_HOOK secret is not set (see docs/deploy.md)"
             exit 1
           fi
-          curl -fsS -X POST "$HOOK" > /dev/null
+          curl -fsS --max-time 30 --retry 2 -X POST "$HOOK" > /dev/null
           echo "Frontend deploy triggered."
       - name: Check the public frontend responds
         if: vars.FRONTEND_URL != ''
@@ -107,7 +108,8 @@ jobs:
         run: |
           # The static host rebuilds asynchronously: give it a few minutes.
           for i in $(seq 1 12); do
-            status=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$FRONTEND_URL" || echo 000)
+            status=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$FRONTEND_URL" || true)
+            status=${status:-000}
             if [ "$status" = "200" ]; then
               echo "Frontend responds: $FRONTEND_URL"
               exit 0
