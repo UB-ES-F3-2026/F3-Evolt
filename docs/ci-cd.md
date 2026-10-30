@@ -4,7 +4,7 @@ This repo has one GitHub Actions pipeline ([`.github/workflows/ci.yml`](../.gith
 It runs the backend and frontend checks on every PR and push to `develop`/`main`,
 and a final gate job `ci` that is the **required status check for merging**.
 
-- Workflows: GitHub Actions, defined in `.github/workflows/ci.yml` (job name `CI`).
+- Workflow: GitHub Actions, defined in `.github/workflows/ci.yml` (workflow name `CI`, gate job `ci`).
 - Environments: **Node 22** for the frontend, **Python 3.12** for the backend.
 - Permissions: the workflow requests only `contents: read` (least privilege; no secrets needed).
 - Deploy: `main` pushes trigger the deploy step (see `docs/deploy.md`, arrives in a later PR).
@@ -118,6 +118,10 @@ Notes:
   `rm -rf node_modules && npm ci && npm run lint` reproduces it.
 - CI pins **Node 22 / Python 3.12**; check your local versions with
   `node --version` / `python --version` if results differ.
+- **Node ≥ 25 on your machine:** Node ships an experimental global
+  `localStorage` that shadows jsdom and makes 5 `useBalanceVisibility` tests
+  fail. CI (Node 22) is unaffected; locally run
+  `NODE_OPTIONS=--no-webstorage npm run test` (or use Node 22/24).
 
 ## Failure triage
 

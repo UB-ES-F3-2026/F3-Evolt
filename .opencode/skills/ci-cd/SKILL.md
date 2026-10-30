@@ -78,7 +78,7 @@ sync: `rm -rf node_modules && npm ci && npm run lint`.
 
 ## Branch protection (quick reference)
 
-Exact commands live in `docs/branch-protection.md` (later PR). The shape:
+Exact commands live in `docs/branch-protection.md`. The shape:
 
 - Required status check: **`ci`** — this exact name, one check for the whole pipeline.
 - PRs only into `develop` and `main`; no direct pushes (see skill `gitflow`).
