@@ -1,8 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { onSessionEnded, touchSession } from '@/services/session'
+import ForgotPasswordView from '@/views/ForgotPasswordView.vue'
 import HomeView from '@/views/HomeView.vue'
 import LoginView from '@/views/LoginView.vue'
 import MovementsView from '@/views/MovementsView.vue'
+import NewPasswordView from '@/views/NewPasswordView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import TopUpView from '@/views/TopUpView.vue'
 import VerifyView from '@/views/VerifyView.vue'
@@ -17,6 +19,9 @@ const router = createRouter({
     { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
     { path: '/register', name: 'register', component: RegisterView, meta: { public: true } },
     { path: '/verify', name: 'verify', component: VerifyView, meta: { public: true } },
+    { path: '/forgot-password', name: 'forgot-password', component: ForgotPasswordView, meta: { public: true } },
+    // This path is in the recovery link the backend sends (docs/api.md §8.10).
+    { path: '/nova-contrasenya', name: 'new-password', component: NewPasswordView, meta: { public: true } },
   ],
 })
 
