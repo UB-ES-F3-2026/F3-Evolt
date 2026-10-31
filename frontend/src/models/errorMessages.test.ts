@@ -16,6 +16,11 @@ describe('toUserMessage', () => {
     ['INVALID_CODE', 'El codi no és correcte o ha caducat.'],
     ['CODE_EXPIRED', 'El codi no és correcte o ha caducat.'],
     ['TOO_MANY_ATTEMPTS', 'Has fet massa intents. Demana un codi nou.'],
+    ['INVALID_CREDENTIALS', "L'email, el telèfon o la contrasenya no són correctes."],
+    ['ACCOUNT_LOCKED', 'Compte bloquejat durant 15 minuts.'],
+    ['ACCOUNT_NOT_VERIFIED', "Has de verificar el compte abans d'iniciar sessió."],
+    ['UNAUTHENTICATED', 'Cal iniciar sessió.'],
+    ['SESSION_EXPIRED', "La sessió s'ha tancat per inactivitat."],
   ])('gives the access code %s the text of docs/api.md §8.14', (code, text) => {
     expect(toUserMessage({ code, message: 'x' })).toBe(text)
   })

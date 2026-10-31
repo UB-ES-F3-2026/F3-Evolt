@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { mockOutbox, mockRegister, mockResendCode, mockVerify } from './auth'
+import { mockLogin, mockLogout, mockOutbox, mockRegister, mockResendCode, mockVerify } from './auth'
 
 const VALID = { identifier: 'ana@x.com', password: 'Platja2026', acceptedTerms: true }
 const TEN_MINUTES_MS = 10 * 60 * 1000
@@ -143,5 +143,71 @@ describe('mockResendCode', () => {
 
     expect(mockOutbox('ningu@x.com')).toEqual([])
     expect(mockOutbox('demo@evolt.test')).toEqual([])
+  })
+})
+
+describe('mockLogin', () => {
+  const DEMO = { identifier: 'demo@evolt.test', password: 'Evolt2026' }
+  const WRONG = { ...DEMO, password: 'Dolent2026' }
+
+  it('opens a session with the seed credentials, normalizing the email', () => {
+    expect(mockLogin(DEMO).token).not.toBe('')
+    expect(mockLogin({ ...DEMO, identifier: 'DEMO@evolt.test' }).token).not.toBe('')
+  })
+
+  it.each([
+    ['a wrong password', WRONG],
+    ['an account that does not exist', { identifier: 'ningu@x.com', password: 'Evolt2026' }],
+    ['a broken identifier', { identifier: '12ab', password: 'Evolt2026' }],
+  ])('answers the same to %s', (_reason, request) => {
+    expectFailure(() => mockLogin(request), 'INVALID_CREDENTIALS')
+  })
+
+  it('does not let a pending account in, and only says so with the right password', () => {
+    mockRegister(VALID)
+    const pending = { identifier: VALID.identifier, password: VALID.password }
+
+    expectFailure(() => mockLogin(pending), 'ACCOUNT_NOT_VERIFIED')
+    expectFailure(() => mockLogin({ ...pending, password: 'Dolent2026' }), 'INVALID_CREDENTIALS')
+  })
+
+  it('locks the account at the fifth error in a row and leaves a warning', () => {
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      expectFailure(() => mockLogin(WRONG), 'INVALID_CREDENTIALS')
+    }
+    expectFailure(() => mockLogin(WRONG), 'ACCOUNT_LOCKED')
+
+    expectFailure(() => mockLogin(DEMO), 'ACCOUNT_LOCKED')
+    expect(mockOutbox(DEMO.identifier)[0]?.type).toBe('account_locked')
+  })
+
+  it('unlocks the account after 15 minutes', () => {
+    vi.useFakeTimers()
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      expect(() => mockLogin(WRONG)).toThrow()
+    }
+
+    vi.advanceTimersByTime(15 * 60 * 1000 - 1000)
+    expectFailure(() => mockLogin(DEMO), 'ACCOUNT_LOCKED')
+
+    vi.advanceTimersByTime(1000)
+    expect(mockLogin(DEMO).token).not.toBe('')
+  })
+
+  it('a good login starts the count of errors again', () => {
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      expect(() => mockLogin(WRONG)).toThrow()
+    }
+    mockLogin(DEMO)
+
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      expectFailure(() => mockLogin(WRONG), 'INVALID_CREDENTIALS')
+    }
+  })
+})
+
+describe('mockLogout', () => {
+  it('always answers ok', () => {
+    expect(mockLogout()).toEqual({ status: 'ok' })
   })
 })

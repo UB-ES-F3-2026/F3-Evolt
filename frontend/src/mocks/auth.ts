@@ -7,6 +7,7 @@
 
 import type { ApiErrorCode } from '@/models/apiError'
 import type {
+  LoginRequest,
   RegisterJson,
   RegisterRequest,
   SessionJson,
@@ -21,11 +22,15 @@ const STORAGE_KEY = 'evolt.mock.auth'
 const MAX_PASSWORD_BYTES = 72
 const CODE_LIFETIME_MS = 10 * 60 * 1000
 const MAX_CODE_ATTEMPTS = 5
+const MAX_LOGIN_ERRORS = 5
+const LOCK_MS = 15 * 60 * 1000
 
 interface MockUser {
   identifier: string
   password: string
   status: 'pending' | 'active'
+  failedLogins: number
+  lockedUntil: number | null
 }
 
 interface MockCode {
@@ -37,8 +42,8 @@ interface MockCode {
 
 interface MockMessage {
   to: string
-  type: 'verification_code'
-  code: string
+  type: 'verification_code' | 'account_locked'
+  code?: string
 }
 
 interface MockState {
@@ -57,7 +62,7 @@ export function mockRegister({ identifier, password, acceptedTerms }: RegisterRe
   const state = loadState()
   if (state.users.some((user) => user.identifier === normalized)) throw failure('ALREADY_REGISTERED')
 
-  state.users.push({ identifier: normalized, password, status: 'pending' })
+  state.users.push({ ...newUser(normalized, password), status: 'pending' })
   sendNewCode(state, normalized)
   saveState(state)
   return { identifier: normalized, status: 'pending' }
@@ -97,6 +102,42 @@ export function mockResendCode(identifier: string): StatusJson {
     sendNewCode(state, normalized)
     saveState(state)
   }
+  return { status: 'ok' }
+}
+
+/** POST /api/auth/login — validations in the order of docs/api.md §8.8. */
+export function mockLogin({ identifier, password }: LoginRequest): SessionJson {
+  const state = loadState()
+  const normalized = normalizeIdentifier(identifier)
+  const user = state.users.find((one) => one.identifier === normalized)
+  if (user === undefined) throw failure('INVALID_CREDENTIALS')
+
+  if (user.lockedUntil !== null && Date.now() < user.lockedUntil) throw lockedFailure(user.lockedUntil)
+  user.lockedUntil = null
+
+  if (password !== user.password) {
+    user.failedLogins += 1
+    if (user.failedLogins >= MAX_LOGIN_ERRORS) {
+      const lockedUntil = Date.now() + LOCK_MS
+      user.failedLogins = 0
+      user.lockedUntil = lockedUntil
+      state.outbox.push({ to: user.identifier, type: 'account_locked' })
+      console.info(`[mock] Avís per a ${user.identifier}: compte bloquejat durant 15 minuts`)
+      saveState(state)
+      throw lockedFailure(lockedUntil)
+    }
+    saveState(state)
+    throw failure('INVALID_CREDENTIALS')
+  }
+
+  user.failedLogins = 0
+  saveState(state)
+  if (user.status === 'pending') throw failure('ACCOUNT_NOT_VERIFIED')
+  return { token: newToken() }
+}
+
+/** POST /api/auth/logout — always `ok`, whatever the token (docs/api.md §8.9). */
+export function mockLogout(): StatusJson {
   return { status: 'ok' }
 }
 
@@ -142,6 +183,16 @@ function failure(code: ApiErrorCode) {
   return mockError(code, messageForCode(code))
 }
 
+function lockedFailure(lockedUntil: number) {
+  return mockError('ACCOUNT_LOCKED', messageForCode('ACCOUNT_LOCKED'), {
+    lockedUntil: new Date(lockedUntil).toISOString(),
+  })
+}
+
+function newUser(identifier: string, password: string): MockUser {
+  return { identifier, password, status: 'active', failedLogins: 0, lockedUntil: null }
+}
+
 function loadState(): MockState {
   const saved = sessionStorage.getItem(STORAGE_KEY)
   return saved === null ? initialState() : (JSON.parse(saved) as MockState)
@@ -154,10 +205,7 @@ function saveState(state: MockState): void {
 /** The fictitious accounts of the backend seed (docs/api.md §8.13). */
 function initialState(): MockState {
   return {
-    users: [
-      { identifier: 'demo@evolt.test', password: 'Evolt2026', status: 'active' },
-      { identifier: 'buit@evolt.test', password: 'Evolt2026', status: 'active' },
-    ],
+    users: [newUser('demo@evolt.test', 'Evolt2026'), newUser('buit@evolt.test', 'Evolt2026')],
     codes: [],
     outbox: [],
   }

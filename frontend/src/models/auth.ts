@@ -27,4 +27,9 @@ export interface StatusJson {
   status: 'ok'
 }
 
+export interface LoginRequest {
+  identifier: string
+  password: string
+}
+
 export const CODE_LENGTH = 6

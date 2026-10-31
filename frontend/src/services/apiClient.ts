@@ -6,9 +6,13 @@
  * (docs/api.md §5) plus a frontend-only `NETWORK_ERROR` when fetch itself fails.
  * A body that is not a contract error (e.g. FastAPI's default `{ detail }`, HTML,
  * empty) becomes `VALIDATION_ERROR` on 422 and `INTERNAL_ERROR` otherwise.
+ *
+ * It also carries the session: the token goes in `Authorization` (docs/api.md §8.2),
+ * and an answer saying the session is gone ends it, whatever screen asked.
  */
 
 import { isApiError, type ApiError } from '@/models/apiError'
+import { endSession, getToken, touchSession } from './session'
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 const USER_ID = import.meta.env.VITE_DEMO_USER ?? '1'
@@ -19,13 +23,19 @@ interface RequestOptions {
 }
 
 async function request<T>(path: string, { method = 'GET', body }: RequestOptions = {}): Promise<T> {
+  const token = getToken()
+  // For the backend, any request with the token counts as activity, even one that fails.
+  touchSession()
+
   let response: Response
   try {
     response = await fetch(`${BASE_URL}${path}`, {
       method,
       headers: {
         'Content-Type': 'application/json',
+        // T03.5 removes X-User-Id. With a token the backend ignores it (docs/api.md §8.2).
         'X-User-Id': USER_ID,
+        ...(token === null ? {} : { Authorization: `Bearer ${token}` }),
       },
       body: body === undefined ? undefined : JSON.stringify(body),
     })
@@ -37,7 +47,11 @@ async function request<T>(path: string, { method = 'GET', body }: RequestOptions
   const payload: unknown = await response.json().catch(() => null)
 
   if (!response.ok) {
-    if (isApiError(payload)) throw payload
+    if (isApiError(payload)) {
+      if (payload.code === 'SESSION_EXPIRED') endSession('inactivity')
+      if (payload.code === 'UNAUTHENTICATED') endSession('unauthenticated')
+      throw payload
+    }
     throw response.status === 422 ? validationError() : internalError()
   }
 

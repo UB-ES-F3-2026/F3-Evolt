@@ -16,6 +16,11 @@ const API_ERROR_CODES = [
   'INVALID_CODE',
   'CODE_EXPIRED',
   'TOO_MANY_ATTEMPTS',
+  'INVALID_CREDENTIALS',
+  'ACCOUNT_LOCKED',
+  'ACCOUNT_NOT_VERIFIED',
+  'UNAUTHENTICATED',
+  'SESSION_EXPIRED',
 ] as const
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number]
@@ -23,7 +28,7 @@ export type ApiErrorCode = (typeof API_ERROR_CODES)[number]
 export interface ApiError {
   code: ApiErrorCode
   message: string
-  details?: { remainingToday?: number }
+  details?: { remainingToday?: number; lockedUntil?: string }
 }
 
 /** True when `value` already has the contract error shape with a known `code`. */
