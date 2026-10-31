@@ -91,7 +91,7 @@ jobs:
           VITE_API_URL: ${{ vars.PUBLIC_API_URL || vars.BACKEND_HEALTH_URL }}
           VITE_USE_MOCKS: 'false'
         run: npm run build
-      - name: Trigger frontend deploy hook (Netlify/Vercel example)
+      - name: Trigger frontend deploy hook (Render static site example)
         env:
           HOOK: ${{ secrets.FRONTEND_DEPLOY_HOOK }}
         run: |

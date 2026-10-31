@@ -219,7 +219,7 @@ The only complete list of documents; the others link here.
 | `docs/ci-cd.md` | CI/CD pipeline: jobs, how to read runs, how to edit |
 | `backend/README.md` | Backend setup, Ruff config/commands and troubleshooting |
 | `docs/branch-protection.md` | Rules on develop/main, how to apply/roll back |
-| `docs/deploy.md` | Auto-deploy from main: gate, secrets/variables, Render/Netlify example |
+| `docs/deploy.md` | Auto-deploy from main: gate, secrets/variables, Render example |
 | `docs/demo-review.md` | Post-deploy demo script and secret audit (#95) |
 | `docs/P1/AGENTS.md` | Course context, Scrum, roles, backlog rules |
 | `docs/P1/MEMORY.md` | Team decisions, US and epic index |

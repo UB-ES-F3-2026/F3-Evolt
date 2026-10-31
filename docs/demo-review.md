@@ -13,7 +13,8 @@ backend URLs. Everything below assumes a live deployment.
 
 ## 1. Demo script (from the public URL)
 
-Open `FRONTEND_URL` (the Netlify-style public frontend) and walk through:
+Open `FRONTEND_URL` (the deployed frontend, e.g.
+`https://f3-evolt.onrender.com`) and walk through:
 
 | # | Check | What "pass" looks like |
 |---|-------|------------------------|
@@ -27,7 +28,7 @@ Open `FRONTEND_URL` (the Netlify-style public frontend) and walk through:
 | 8 | Top-up — invalid amount | `0`, negative or non-numeric → inline validation, no request sent |
 | 9 | Top-up — over 500 € limit | Error (`amount_over_limit` family) shown, balance unchanged |
 | 10 | Daily limit | Successive top-ups up to the 1 000 € daily cap → daily-limit error once exceeded |
-| 11 | Fresh state before stateful runs | `POST /api/dev/reset` restores the seed — **only if `/api/dev` is enabled in that environment** (backend decision, #92) |
+| 11 | Fresh state before stateful runs | `POST /api/dev/reset` restores the seed — **disabled on the Render demo** (`ENABLE_DEV_ROUTES=false`, #92), so only use it on a local/controlled backend |
 
 **Demo knobs** (only in a *controlled* demo environment, never default on the
 deployed instance): backend env vars `SIMULATE_DELAY_MS` and
