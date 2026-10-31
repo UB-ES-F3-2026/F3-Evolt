@@ -17,6 +17,9 @@ const MESSAGES: Record<ApiErrorCode, string> = {
   NETWORK_ERROR: 'No hi ha connexió amb el servidor. Torna-ho a provar.',
   WEAK_PASSWORD: 'La contrasenya ha de tenir 8 caràcters, una majúscula i un número.',
   ALREADY_REGISTERED: 'Aquest email o telèfon ja té un compte.',
+  INVALID_CODE: 'El codi no és correcte o ha caducat.',
+  CODE_EXPIRED: 'El codi no és correcte o ha caducat.',
+  TOO_MANY_ATTEMPTS: 'Has fet massa intents. Demana un codi nou.',
 }
 
 export function messageForCode(code: ApiErrorCode, details?: ApiError['details']): string {
