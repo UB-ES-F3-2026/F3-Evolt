@@ -6,13 +6,21 @@
  */
 
 import type { ApiErrorCode } from '@/models/apiError'
-import type { RegisterJson, RegisterRequest } from '@/models/auth'
+import type {
+  RegisterJson,
+  RegisterRequest,
+  SessionJson,
+  StatusJson,
+  VerifyRequest,
+} from '@/models/auth'
 import { messageForCode } from '@/models/errorMessages'
 import { isPasswordStrong } from '@/models/password'
 import { mockError } from './index'
 
 const STORAGE_KEY = 'evolt.mock.auth'
 const MAX_PASSWORD_BYTES = 72
+const CODE_LIFETIME_MS = 10 * 60 * 1000
+const MAX_CODE_ATTEMPTS = 5
 
 interface MockUser {
   identifier: string
@@ -55,6 +63,43 @@ export function mockRegister({ identifier, password, acceptedTerms }: RegisterRe
   return { identifier: normalized, status: 'pending' }
 }
 
+/** POST /api/auth/verify — validations in the order of docs/api.md §8.6. */
+export function mockVerify({ identifier, code }: VerifyRequest): SessionJson {
+  if (!/^\d{6}$/.test(code)) throw failure('VALIDATION_ERROR')
+
+  const state = loadState()
+  const normalized = normalizeIdentifier(identifier)
+  const user = state.users.find((one) => one.identifier === normalized && one.status === 'pending')
+  const current = state.codes.find((one) => one.identifier === normalized)
+  if (user === undefined || current === undefined) throw failure('INVALID_CODE')
+
+  if (current.failedAttempts >= MAX_CODE_ATTEMPTS) throw failure('TOO_MANY_ATTEMPTS')
+  if (Date.now() - current.createdAt >= CODE_LIFETIME_MS) throw failure('CODE_EXPIRED')
+  if (code !== current.code) {
+    current.failedAttempts += 1
+    saveState(state)
+    throw failure(current.failedAttempts >= MAX_CODE_ATTEMPTS ? 'TOO_MANY_ATTEMPTS' : 'INVALID_CODE')
+  }
+
+  user.status = 'active'
+  state.codes = state.codes.filter((one) => one !== current)
+  saveState(state)
+  return { token: newToken() }
+}
+
+/** POST /api/auth/resend-code — same answer whether the account exists or not (§8.7). */
+export function mockResendCode(identifier: string): StatusJson {
+  const normalized = normalizeIdentifier(identifier)
+  if (normalized === null) throw failure('VALIDATION_ERROR')
+
+  const state = loadState()
+  if (state.users.some((user) => user.identifier === normalized && user.status === 'pending')) {
+    sendNewCode(state, normalized)
+    saveState(state)
+  }
+  return { status: 'ok' }
+}
+
 /** GET /api/dev/outbox?to= — newest first. */
 export function mockOutbox(to: string): MockMessage[] {
   const normalized = normalizeIdentifier(to)
@@ -87,6 +132,10 @@ function sendNewCode(state: MockState, identifier: string): void {
   state.codes.push({ identifier, code, createdAt: Date.now(), failedAttempts: 0 })
   state.outbox.push({ to: identifier, type: 'verification_code', code })
   console.info(`[mock] Codi de verificació per a ${identifier}: ${code}`)
+}
+
+function newToken(): string {
+  return `mock-token-${Date.now()}`
 }
 
 function failure(code: ApiErrorCode) {
