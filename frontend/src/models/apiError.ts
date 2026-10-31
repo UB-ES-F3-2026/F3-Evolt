@@ -11,6 +11,8 @@ const API_ERROR_CODES = [
   'VALIDATION_ERROR',
   'INTERNAL_ERROR',
   'NETWORK_ERROR',
+  'WEAK_PASSWORD',
+  'ALREADY_REGISTERED',
 ] as const
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number]
