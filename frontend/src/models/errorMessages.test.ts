@@ -21,6 +21,7 @@ describe('toUserMessage', () => {
     ['ACCOUNT_NOT_VERIFIED', "Has de verificar el compte abans d'iniciar sessió."],
     ['UNAUTHENTICATED', 'Cal iniciar sessió.'],
     ['SESSION_EXPIRED', "La sessió s'ha tancat per inactivitat."],
+    ['RESET_LINK_EXPIRED', 'Aquest enllaç ha caducat.'],
   ])('gives the access code %s the text of docs/api.md §8.14', (code, text) => {
     expect(toUserMessage({ code, message: 'x' })).toBe(text)
   })

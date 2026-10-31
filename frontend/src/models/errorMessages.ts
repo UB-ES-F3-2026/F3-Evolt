@@ -26,6 +26,7 @@ const MESSAGES: Record<ApiErrorCode, string> = {
   ACCOUNT_NOT_VERIFIED: "Has de verificar el compte abans d'iniciar sessió.",
   UNAUTHENTICATED: 'Cal iniciar sessió.',
   SESSION_EXPIRED: "La sessió s'ha tancat per inactivitat.",
+  RESET_LINK_EXPIRED: 'Aquest enllaç ha caducat.',
 }
 
 export function messageForCode(code: ApiErrorCode, details?: ApiError['details']): string {

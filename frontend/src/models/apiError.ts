@@ -21,6 +21,7 @@ const API_ERROR_CODES = [
   'ACCOUNT_NOT_VERIFIED',
   'UNAUTHENTICATED',
   'SESSION_EXPIRED',
+  'RESET_LINK_EXPIRED',
 ] as const
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number]
