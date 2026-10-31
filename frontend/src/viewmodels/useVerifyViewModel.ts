@@ -102,7 +102,7 @@ function defaultDependencies(): VerifyDependencies {
     verify,
     resendCode,
     saveToken,
-    goHome: () => router.push({ name: 'home' }),
+    goHome: () => router.replace({ name: 'home' }),
     goToRegister: () => router.replace({ name: 'register' }),
   }
 }
