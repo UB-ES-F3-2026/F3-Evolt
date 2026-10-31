@@ -128,6 +128,6 @@ function signedAmount(movement: MovementJson): number {
   return movement.type === 'income' ? movement.amount : -movement.amount
 }
 
-function mockError(code: ApiError['code'], message: string, details?: ApiError['details']): ApiError {
+export function mockError(code: ApiError['code'], message: string, details?: ApiError['details']): ApiError {
   return details === undefined ? { code, message } : { code, message, details }
 }
