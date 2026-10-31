@@ -20,6 +20,12 @@ const MESSAGES: Record<ApiErrorCode, string> = {
   INVALID_CODE: 'El codi no és correcte o ha caducat.',
   CODE_EXPIRED: 'El codi no és correcte o ha caducat.',
   TOO_MANY_ATTEMPTS: 'Has fet massa intents. Demana un codi nou.',
+  // Generic on purpose (US-03): it must not say whether the account exists.
+  INVALID_CREDENTIALS: "L'email, el telèfon o la contrasenya no són correctes.",
+  ACCOUNT_LOCKED: 'Compte bloquejat durant 15 minuts.',
+  ACCOUNT_NOT_VERIFIED: "Has de verificar el compte abans d'iniciar sessió.",
+  UNAUTHENTICATED: 'Cal iniciar sessió.',
+  SESSION_EXPIRED: "La sessió s'ha tancat per inactivitat.",
 }
 
 export function messageForCode(code: ApiErrorCode, details?: ApiError['details']): string {
