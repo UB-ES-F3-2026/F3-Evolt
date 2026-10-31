@@ -10,6 +10,7 @@ import type {
   LoginRequest,
   RegisterJson,
   RegisterRequest,
+  ResetPasswordRequest,
   SessionJson,
   StatusJson,
   VerifyRequest,
@@ -24,6 +25,7 @@ const CODE_LIFETIME_MS = 10 * 60 * 1000
 const MAX_CODE_ATTEMPTS = 5
 const MAX_LOGIN_ERRORS = 5
 const LOCK_MS = 15 * 60 * 1000
+const LINK_LIFETIME_MS = 30 * 60 * 1000
 
 interface MockUser {
   identifier: string
@@ -40,23 +42,30 @@ interface MockCode {
   failedAttempts: number
 }
 
+interface MockResetLink {
+  identifier: string
+  token: string
+  createdAt: number
+}
+
 interface MockMessage {
   to: string
-  type: 'verification_code' | 'account_locked'
+  type: 'verification_code' | 'account_locked' | 'password_reset'
   code?: string
+  link?: string
 }
 
 interface MockState {
   users: MockUser[]
   codes: MockCode[]
+  resetLinks: MockResetLink[]
   outbox: MockMessage[]
 }
 
 /** POST /api/auth/register — validations in the order of docs/api.md §8.5. */
 export function mockRegister({ identifier, password, acceptedTerms }: RegisterRequest): RegisterJson {
   const normalized = normalizeIdentifier(identifier)
-  const isTooLong = new TextEncoder().encode(password).length > MAX_PASSWORD_BYTES
-  if (normalized === null || acceptedTerms !== true || isTooLong) throw failure('VALIDATION_ERROR')
+  if (normalized === null || acceptedTerms !== true || isTooLong(password)) throw failure('VALIDATION_ERROR')
   if (!isPasswordStrong(password)) throw failure('WEAK_PASSWORD')
 
   const state = loadState()
@@ -141,6 +150,46 @@ export function mockLogout(): StatusJson {
   return { status: 'ok' }
 }
 
+/** POST /api/auth/forgot-password — same answer whether the account exists or not (§8.10). */
+export function mockForgotPassword(identifier: string): StatusJson {
+  const normalized = normalizeIdentifier(identifier)
+  if (normalized === null) throw failure('VALIDATION_ERROR')
+
+  const state = loadState()
+  if (state.users.some((user) => user.identifier === normalized)) {
+    const token = `mock-reset-${Date.now()}`
+    const link = `${window.location.origin}/nova-contrasenya?token=${token}`
+    state.resetLinks = state.resetLinks.filter((one) => one.identifier !== normalized)
+    state.resetLinks.push({ identifier: normalized, token, createdAt: Date.now() })
+    state.outbox.push({ to: normalized, type: 'password_reset', link })
+    console.info(`[mock] Enllaç de recuperació per a ${normalized}: ${link}`)
+    saveState(state)
+  }
+  return { status: 'ok' }
+}
+
+/** POST /api/auth/reset-password — validations in the order of docs/api.md §8.11. */
+export function mockResetPassword({ token, password }: ResetPasswordRequest): StatusJson {
+  if (isTooLong(password)) throw failure('VALIDATION_ERROR')
+
+  const state = loadState()
+  const current = state.resetLinks.find((one) => one.token === token)
+  if (current === undefined || Date.now() - current.createdAt >= LINK_LIFETIME_MS) {
+    throw failure('RESET_LINK_EXPIRED')
+  }
+  if (!isPasswordStrong(password)) throw failure('WEAK_PASSWORD')
+
+  const user = state.users.find((one) => one.identifier === current.identifier)
+  if (user !== undefined) {
+    user.password = password
+    user.failedLogins = 0
+    user.lockedUntil = null
+  }
+  state.resetLinks = state.resetLinks.filter((one) => one !== current)
+  saveState(state)
+  return { status: 'ok' }
+}
+
 /** GET /api/dev/outbox?to= — newest first. */
 export function mockOutbox(to: string): MockMessage[] {
   const normalized = normalizeIdentifier(to)
@@ -175,6 +224,10 @@ function sendNewCode(state: MockState, identifier: string): void {
   console.info(`[mock] Codi de verificació per a ${identifier}: ${code}`)
 }
 
+function isTooLong(password: string): boolean {
+  return new TextEncoder().encode(password).length > MAX_PASSWORD_BYTES
+}
+
 function newToken(): string {
   return `mock-token-${Date.now()}`
 }
@@ -207,6 +260,7 @@ function initialState(): MockState {
   return {
     users: [newUser('demo@evolt.test', 'Evolt2026'), newUser('buit@evolt.test', 'Evolt2026')],
     codes: [],
+    resetLinks: [],
     outbox: [],
   }
 }

@@ -1,6 +1,15 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { mockLogin, mockLogout, mockOutbox, mockRegister, mockResendCode, mockVerify } from './auth'
+import {
+  mockForgotPassword,
+  mockLogin,
+  mockLogout,
+  mockOutbox,
+  mockRegister,
+  mockResendCode,
+  mockResetPassword,
+  mockVerify,
+} from './auth'
 
 const VALID = { identifier: 'ana@x.com', password: 'Platja2026', acceptedTerms: true }
 const TEN_MINUTES_MS = 10 * 60 * 1000
@@ -209,5 +218,98 @@ describe('mockLogin', () => {
 describe('mockLogout', () => {
   it('always answers ok', () => {
     expect(mockLogout()).toEqual({ status: 'ok' })
+  })
+})
+
+describe('password recovery', () => {
+  const DEMO = 'demo@evolt.test'
+
+  function resetToken(): string {
+    const link = mockOutbox(DEMO)[0]?.link ?? ''
+    return new URL(link).searchParams.get('token') ?? ''
+  }
+
+  it('leaves a link for an account that exists', () => {
+    expect(mockForgotPassword(DEMO)).toEqual({ status: 'ok' })
+
+    expect(mockOutbox(DEMO)[0]?.type).toBe('password_reset')
+    expect(mockOutbox(DEMO)[0]?.link).toContain('/nova-contrasenya?token=')
+  })
+
+  it('answers the same and sends nothing for an account that does not exist', () => {
+    expect(mockForgotPassword('ningu@x.com')).toEqual({ status: 'ok' })
+
+    expect(mockOutbox('ningu@x.com')).toEqual([])
+  })
+
+  it('changes the password, and the old one stops working', () => {
+    mockForgotPassword(DEMO)
+
+    expect(mockResetPassword({ token: resetToken(), password: 'NovaClau2026' })).toEqual({ status: 'ok' })
+
+    expect(mockLogin({ identifier: DEMO, password: 'NovaClau2026' }).token).not.toBe('')
+    expectFailure(() => mockLogin({ identifier: DEMO, password: 'Evolt2026' }), 'INVALID_CREDENTIALS')
+  })
+
+  it('a link works only once', () => {
+    mockForgotPassword(DEMO)
+    const token = resetToken()
+    mockResetPassword({ token, password: 'NovaClau2026' })
+
+    expectFailure(() => mockResetPassword({ token, password: 'AltraClau2026' }), 'RESET_LINK_EXPIRED')
+  })
+
+  it('a weak password does not spend the link', () => {
+    mockForgotPassword(DEMO)
+    const token = resetToken()
+
+    expectFailure(() => mockResetPassword({ token, password: 'novaclau' }), 'WEAK_PASSWORD')
+    expect(mockResetPassword({ token, password: 'NovaClau2026' })).toEqual({ status: 'ok' })
+  })
+
+  it('the link still works one second before the 30 minutes', () => {
+    vi.useFakeTimers()
+    mockForgotPassword(DEMO)
+    const token = resetToken()
+
+    vi.advanceTimersByTime(30 * 60 * 1000 - 1000)
+
+    expect(mockResetPassword({ token, password: 'NovaClau2026' })).toEqual({ status: 'ok' })
+  })
+
+  it('the link stops working at exactly 30 minutes', () => {
+    vi.useFakeTimers()
+    mockForgotPassword(DEMO)
+    const token = resetToken()
+
+    vi.advanceTimersByTime(30 * 60 * 1000)
+
+    expectFailure(() => mockResetPassword({ token, password: 'NovaClau2026' }), 'RESET_LINK_EXPIRED')
+  })
+
+  it('a new link makes the previous one stop working', () => {
+    vi.useFakeTimers()
+    mockForgotPassword(DEMO)
+    const first = resetToken()
+
+    vi.advanceTimersByTime(60 * 1000)
+    mockForgotPassword(DEMO)
+
+    expectFailure(() => mockResetPassword({ token: first, password: 'NovaClau2026' }), 'RESET_LINK_EXPIRED')
+  })
+
+  it('changing the password unlocks the account', () => {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      expect(() => mockLogin({ identifier: DEMO, password: 'Dolent2026' })).toThrow()
+    }
+    mockForgotPassword(DEMO)
+
+    mockResetPassword({ token: resetToken(), password: 'NovaClau2026' })
+
+    expect(mockLogin({ identifier: DEMO, password: 'NovaClau2026' }).token).not.toBe('')
+  })
+
+  it('an invented token is an expired link', () => {
+    expectFailure(() => mockResetPassword({ token: 'inventat', password: 'NovaClau2026' }), 'RESET_LINK_EXPIRED')
   })
 })
