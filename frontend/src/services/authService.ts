@@ -2,11 +2,20 @@
 
 import { apiPost } from './apiClient'
 import { useMocks } from '@/mocks'
-import { mockLogin, mockLogout, mockRegister, mockResendCode, mockVerify } from '@/mocks/auth'
+import {
+  mockForgotPassword,
+  mockLogin,
+  mockLogout,
+  mockRegister,
+  mockResendCode,
+  mockResetPassword,
+  mockVerify,
+} from '@/mocks/auth'
 import type {
   LoginRequest,
   RegisterJson,
   RegisterRequest,
+  ResetPasswordRequest,
   SessionJson,
   StatusJson,
   VerifyRequest,
@@ -32,4 +41,16 @@ export async function login(request: LoginRequest): Promise<SessionJson> {
 
 export async function logout(): Promise<StatusJson> {
   return useMocks() ? mockLogout() : apiPost<StatusJson>('/api/auth/logout', undefined)
+}
+
+export async function forgotPassword(identifier: string): Promise<StatusJson> {
+  return useMocks()
+    ? mockForgotPassword(identifier)
+    : apiPost<StatusJson>('/api/auth/forgot-password', { identifier })
+}
+
+export async function resetPassword(request: ResetPasswordRequest): Promise<StatusJson> {
+  return useMocks()
+    ? mockResetPassword(request)
+    : apiPost<StatusJson>('/api/auth/reset-password', request)
 }
