@@ -7,7 +7,9 @@ and a final gate job `ci` that is the **required status check for merging**.
 - Workflow: GitHub Actions, defined in `.github/workflows/ci.yml` (workflow name `CI`, gate job `ci`).
 - Environments: **Node 22** for the frontend, **Python 3.12** and **Ruff 0.17.3** for the backend.
 - Permissions: the workflow requests only `contents: read` (least privilege; no secrets needed).
-- Deploy: `main` pushes trigger the deploy step (see `docs/deploy.md`, arrives in a later PR).
+- Deploy: a second workflow ([`deploy.yml`](../.github/workflows/deploy.yml))
+  triggers on push to `main`; deploy jobs are gated by `DEPLOY_ENABLED` (see
+  [`docs/deploy.md`](deploy.md)).
 
 ---
 
@@ -98,7 +100,7 @@ Rules for changing `.github/workflows/ci.yml`:
    [`docs/branch-protection.md`](branch-protection.md)).
 5. Keep `permissions: contents: read`; add threat minimization, not power.
 6. No secrets in `ci.yml`; secrets belong to deploy workflows only
-   (see `docs/deploy.md`).
+   (see [`docs/deploy.md`](deploy.md)).
 
 ## Reproduce CI locally
 
@@ -150,4 +152,4 @@ Notes:
 ## Related docs
 
 - See [`docs/branch-protection.md`](branch-protection.md): required status check `ci`, no pushes straight to `develop`/`main`.
-- See `docs/deploy.md` (later PR): what runs after `main` is green, and `DEPLOY_ENABLED`.
+- See [`docs/deploy.md`](deploy.md): what runs after `main` is green, the `DEPLOY_ENABLED` gate and the secrets/variables to set.
