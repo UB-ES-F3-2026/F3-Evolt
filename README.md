@@ -180,6 +180,21 @@ GitHub Actions pipeline in [`.github/workflows/ci.yml`](.github/workflows/ci.yml
 
 **`ci` is the required status check: a PR can only merge when it is green.**
 
+### Triggers
+
+`ci.yml` listens to four events. Several triggers are **OR**; the filters inside
+one trigger are **AND**.
+
+| Trigger | When it runs | Notes |
+|---------|--------------|-------|
+| `pull_request` → `develop`, `main` | PR opened, updated (new push) or reopened | Default types: `opened`, `synchronize`, `reopened`. Runs on the synthetic merge commit. Merging does not re-run it (`closed` is not included). |
+| `push` → `develop`, `main` | A commit lands on the branch (e.g. a merge) | It does not allow direct pushes; branch protection blocks those. Feature-branch pushes are covered by the PR's `synchronize` event. |
+| `workflow_dispatch` | Manual run from *Actions* → *Run workflow*, or `gh workflow run ci.yml --ref develop` | Dormant until the workflow exists on the default branch (`main`). `pull_request`/`push` already work from `develop`. |
+| `workflow_call` | Another workflow calls this one | `deploy.yml` calls it so deploy reuses this CI instead of duplicating it. |
+
+No `paths:` filters on purpose: a required check that is skipped (e.g. a
+docs-only PR) stays pending and blocks the PR forever.
+
 How to read green/red: `gh pr checks` in a PR, or the repo's *Actions* tab →
 click the failing job → read the red step's logs. Locally, run the same
 commands (frontend: `npm run check`; backend: compile check + pytest).

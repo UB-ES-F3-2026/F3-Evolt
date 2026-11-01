@@ -41,6 +41,9 @@ and a final gate job `ci` that is the **required status check for merging**.
 - Both finish → the **gate job `ci`** marks the whole pipeline pass/fail.
 - Push to `main` → after green `ci`, the deploy flow takes over (later effort).
 - Manual runs (`workflow_dispatch`) and reusable runs (`workflow_call`) are supported.
+  `workflow_dispatch` only appears once the workflow exists on the default branch
+  (`main`); `pull_request`/`push` already work from `develop`.
+- Trigger reference (what fires when): see the *Triggers* table in `README.md`.
 
 ## How to read a run
 
