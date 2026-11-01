@@ -18,6 +18,16 @@ We use AI as a **co-pilot** (AI-SDLC). Humans own architecture, product and fina
 4. Human reviews structure and trade-offs — not only “does it work”.
 5. Commit + PR with our conventions.
 
+### Board
+
+- **Product backlog (user stories):** [Trello](https://trello.com/b/LxXzo6NC/kanban).
+- **Sprint tasks (issues):** [GitHub Project](https://github.com/users/IzanFarreny47/projects/2) —
+  `Backlog` · `To do` · `In progress` · `Review` · `Done`. **Review holds at most
+  3 cards**: before opening a new PR, review someone else's.
+- New issues: **New issue → Tasca**. The template carries estimated hours and,
+  under «En tancar-la», real hours and «Com s'ha usat la IA» (Definition of
+  Done) — fill them in before closing the issue.
+
 ### Architecture in one screen
 
 | Concept | What it means for us |
