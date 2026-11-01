@@ -125,6 +125,10 @@ Notes:
   with `node --version` / `python --version` if results differ.
 - Ruff is a dev tool, not a runtime dependency; it is installed only in CI.
   Locally: `.venv/bin/pip install ruff==0.17.3` once, or `uvx ruff check .`.
+  Full Ruff guide: [`backend/README.md`](../backend/README.md).
+- ESLint is **type-aware** (`recommendedTypeChecked`). Known findings that are
+  not fixed yet are kept as **warnings**, so `npm run lint` still exits 0;
+  only errors fail the job.
 - **Node ≥ 25 on your machine:** Node ships an experimental global
   `localStorage` that shadows jsdom and makes 5 `useBalanceVisibility` tests
   fail. CI (Node 22) is unaffected; locally run

@@ -1,6 +1,18 @@
+# Ruff is the backend linter. It is a dev tool, not a runtime dependency:
+# CI installs it separately and it is not in requirements.txt.
+
 [tool.ruff]
+# Generous limit: some Spanish comments and error messages are long.
+# E501 (line length) is intentionally not selected below, so this is informational.
 line-length = 120
+# The backend runs on Python 3.12 (see docs/ci-cd.md), so UP may use 3.12 syntax.
 target-version = "py312"
 
 [tool.ruff.lint]
+# E4/E7/E9: pycodestyle subsets (imports, statements, syntax/runtime errors)
+# F:         pyflakes (undefined names, unused imports/variables)
+# I:         isort (import order)
+# B:         flake8-bugbear (likely bugs; e.g. zip without strict=)
+# UP:        pyupgrade (modern syntax for target-version; e.g. datetime.UTC)
+# E501 (line length) is style only and is deliberately not selected.
 select = ["E4", "E7", "E9", "F", "I", "B", "UP"]
