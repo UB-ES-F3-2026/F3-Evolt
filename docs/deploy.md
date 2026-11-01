@@ -3,10 +3,10 @@
 Auto-deploy to a hosting provider. The workflow lives in
 [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml).
 
-Hosting is **not decided yet** (issues #92 backend / #93 frontend, open). Until
-then the workflow is **provider-agnostic** (driven by repository
-secrets/variables) and **dormant**: it runs on every push to `main` and stays
-green with all deploy jobs skipped.
+Hosting is **Render** (PRs #107/#108, both services live). The workflow stays
+**provider-agnostic** (driven by repository secrets/variables) and **dormant**
+until those secrets/variables exist: it runs on every push to `main` and stays
+green with all deploy jobs skipped while `DEPLOY_ENABLED` is unset.
 
 ---
 
@@ -23,7 +23,7 @@ deploy-backend    ← POST to the backend deploy hook (Render example)
         │
         ▼
 verify-health     ← poll GET {BACKEND_HEALTH_URL}/api/health until 200
-        │           (20 attempts × 15 s = 5 min budget)
+        │           (20 attempts × 15 s ≈ 5 min of waits, ~8 min worst case)
         ▼
 deploy-frontend   ← npm ci + build against the real API,
         │           POST to the frontend deploy hook (Render static site example)
@@ -45,10 +45,11 @@ Every deploy job has `if: vars.DEPLOY_ENABLED == 'true'`.
   skipped and the workflow run is **green**.
 - **`true`** → the chain runs: hook → health poll → frontend build + hook.
 
-This is **deliberate**: `main` gets pushes every sprint, but the hosting
-providers only exist after #92/#93. Without the gate, every merge to `main`
-would be red while hosting is missing. Only set the variable to `true` when
-hosting is actually wired up.
+This is **deliberate**: `main` gets pushes every sprint, but the deploy hooks
+and health URL are only configured once #107/#108 land and someone creates the
+Render hooks. Without the gate, every merge to `main` would be red while those
+secrets are missing. Only set the variable to `true` when hosting is actually
+wired up.
 
 ## Secrets and variables
 
@@ -115,7 +116,7 @@ gh variable set DEPLOY_ENABLED      -b "true"
 
 ## First deploy checklist
 
-1. Hosting live per the example above (#92/#93 done).
+1. Hosting live per the example above (#107/#108; both public URLs answer).
 2. Set all secrets/variables (see table).
 3. `gh variable set DEPLOY_ENABLED -b "true"` — **last**.
 4. Open the release PR from `develop` to `main` and merge it (or run the
@@ -147,7 +148,7 @@ Note: the reusable `ci` job always runs; the deploy chain only runs if
 | `::error::BACKEND_DEPLOY_HOOK secret is not set` | Secret missing | `gh secret set BACKEND_DEPLOY_HOOK` |
 | `::error::FRONTEND_DEPLOY_HOOK secret is not set` | Secret missing | `gh secret set FRONTEND_DEPLOY_HOOK` |
 | `::error::BACKEND_HEALTH_URL variable is not set` | Variable missing | `gh variable set BACKEND_HEALTH_URL -b "https://…"` |
-| Health poll times out (5 min) | Free tier **cold start** (first boot takes longer than the budget), wrong URL, or the app crashed | Cold start: rerun once; check the Render dashboard/logs; confirm the URL answers manually with `curl` |
+| Health poll times out (~8 min worst case) | Free tier **cold start** (first boot takes longer than the budget), wrong URL, or the app crashed | Cold start: rerun once; check the Render dashboard/logs; confirm the URL answers manually with `curl` |
 | Frontend 404 on refresh / deep link | Missing SPA rewrite | Add the Rewrite `/*` → `/index.html` rule on the Render static site |
 | CORS errors in the browser console | Backend allows only localhost | Configure the deployed frontend origin in the backend deploy environment (#92 owns backend config) |
 
@@ -165,6 +166,7 @@ Note: the reusable `ci` job always runs; the deploy chain only runs if
 
 ## Status
 
-Automation is **ready**; the gate keeps `main` green while hosting is missing.
-The acceptance criterion of #94 ("merging to `main` produces a real deploy")
-can only be **verified** after #92 and #93 provide the public URLs.
+Automation is **ready**; the gate keeps `main` green while the Render hooks are
+missing. The acceptance criterion of #94 ("merging to `main` produces a real
+deploy") can only be **verified** after #107/#108 merge and the first real
+deploy runs with `DEPLOY_ENABLED=true`.

@@ -6,8 +6,9 @@ Manual review to run **after every successful `Deploy` run on `main`** and
 1. The deployed app works end-to-end from the public URL (demo script).
 2. No secrets or configuration leaked into the repo.
 
-Current status: **blocked** until #92/#93 give us public `FRONTEND_URL` and
-backend URLs. Everything below assumes a live deployment.
+Current status: the public URLs already exist from Render (PRs #107/#108), but
+the **first full pass** is blocked until #94 deploys from `main` with
+`DEPLOY_ENABLED=true`. Everything below assumes a live deployment.
 
 ---
 
@@ -35,7 +36,7 @@ deployed instance): backend env vars `SIMULATE_DELAY_MS` and
 `SIMULATE_ERROR_RATE` make loading and error states easy to show; both are
 documented in [`README.md → Simulating delay and failure`](../README.md) and
 affect every request including `/api/health` (which is why the Deploy health
-poll has a 5-minute tolerance).
+poll has an ~8-minute worst-case tolerance).
 
 ## 2. Secret audit
 
@@ -70,6 +71,6 @@ Add a comment on issue #95 with:
 
 ## 4. Current status
 
-- [ ] Public `FRONTEND_URL` available → **pending #93**
-- [ ] Public backend + `/api/health` reachable → **pending #92**
-- [ ] First full pass of this checklist after the first real deploy (`DEPLOY_ENABLED=true`)
+- [x] Public `FRONTEND_URL` available: `https://f3-evolt.onrender.com` (PR #108)
+- [x] Public backend + `/api/health` reachable: `https://evolt-api.onrender.com/api/health` (PR #107)
+- [ ] First full pass of this checklist after the first real deploy (`DEPLOY_ENABLED=true`, #94)
