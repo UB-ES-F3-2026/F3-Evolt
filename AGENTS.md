@@ -185,6 +185,7 @@ Details: skill `middle-services`.
    - Branches / gitflow → `gitflow`
    - PR → `pr-conventions`
    - Commit → `commit-conventions`
+   - CI/CD, workflows, lint, branch protection, deploy → `ci-cd`
 3. **Implement** in the folder of the right layer; follow the dependency rule.
 4. **Self-check** against the architecture checklist in the skill.
 5. **Human reviews** architecture and trade-offs before merge.
@@ -257,6 +258,7 @@ Full rules: skill `commit-conventions`.
 - Checklist: DoD + architecture checklist
 - ≥1 teammate review (per course DoD proposal)
 - Tests pass before merge
+- Required status check: the `ci` GitHub Actions job must be green
 - Target: `develop` (demo/release on `main` via agreed flow)
 
 Full rules: skills `pr-conventions` + `gitflow`.
@@ -271,7 +273,7 @@ Full rules: skills `pr-conventions` + `gitflow`.
 4. Help/doc text updated if user-facing
 5. Product Owner accepts
 6. PR reviewed by another member
-7. CI green; staging/demo deployable
+7. CI green: the `ci` GitHub Actions check passes on the PR (Ruff, pytest, ESLint, type-check, Vitest, build). Deploys from `main` are automated (see `docs/ci-cd.md`).
 8. No critical open bugs for that story
 9. **Architecture checklist** (layers respected, no API call from a View, shared rules not duplicated)
 
