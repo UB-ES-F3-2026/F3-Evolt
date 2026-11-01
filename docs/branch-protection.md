@@ -31,7 +31,8 @@ before reviewing.
 ## Prerequisites (do these before applying anything)
 
 1. **`.github/workflows/ci.yml` must exist on `develop`.** This happens when
-   PR #89 merges into `develop`. If you apply protection before that, PRs from
+   the TR05.1 PR (#110) merges into `develop` (issue #89). If you apply
+   protection before that, PRs from
    branches that predate the workflow never report a `ci` check and stay blocked
    with no way to merge them.
 2. **At least one CI run must exist** so the check name is a real, selectable
@@ -154,9 +155,9 @@ checks are reported, branch protection needs the same change in the same PR.
 
 ## Current status
 
-**Not applied yet.** The workflow from PART A has to land first.
+**Not applied yet.** The TR05.1 workflow has to land first.
 
-- [ ] PR #89 (`feature/devops/t05-1-ci-pipeline`) merges into `develop`
+- [ ] PR #110 (`feature/devops/t05-1-ci-pipeline`, issue #89) merges into `develop`
 - [ ] At least one CI run exists on `develop` (happens automatically on merge)
 - [ ] Check names verified with the `gh api` command above
 - [ ] `develop` and `main` protected with the payload above (owner: team, per issue #90)
