@@ -15,6 +15,7 @@ Contracte compartit entre el backend (FastAPI) i el frontend per a les històrie
 5. [Errors](#5-errors)
 6. [Model intern (no exposat a l'API)](#6-model-intern-no-exposat-a-lapi)
 7. [Punts pendents de validar](#7-punts-pendents-de-validar)
+9. [Guardioles (US-17 i US-18)](#9-guardioles-us-17-i-us-18)
 
 ---
 
@@ -93,7 +94,7 @@ Comprova que el backend està en marxa. No fa servir la capçalera `X-User-Id`.
 
 ## 3. Objecte `Movement`
 
-Representa un moviment del compte principal. És el mateix objecte a `GET /api/home`, `GET /api/movements` i `POST /api/topups`.
+Representa un moviment del compte principal. És el mateix objecte a `GET /api/home`, `GET /api/movements`, `POST /api/topups` i `POST /api/pots/{potId}/contributions` ([apartat 9.4](#94-post-apipotspotidcontributions)).
 
 | Camp | Tipus | Notes |
 |---|---|---|
@@ -114,6 +115,7 @@ Valors d'`icon` (llista tancada):
 | `shopping` | Compres |
 | `food` | Menjar i restaurants |
 | `transport` | Transport |
+| `savings` | Aportació a una guardiola ([apartat 9.4](#94-post-apipotspotidcontributions)) **[PROPOSTA — pendent de validar]** |
 | `other` | Qualsevol altre moviment |
 
 Exemple:
@@ -141,6 +143,10 @@ Exemple:
 | `GET /api/movements` | `200` | US-08 |
 | `POST /api/topups` | `201` | US-09 |
 | `POST /api/dev/reset` | `200` | T09.6 |
+| `GET /api/pots` | `200` | US-17 · [9.2](#92-get-apipots) |
+| `POST /api/pots` | `201` | US-17 · [9.3](#93-post-apipots) |
+| `POST /api/pots/{potId}/contributions` | `201` | US-18 · [9.4](#94-post-apipotspotidcontributions) |
+| `GET /api/pots/{potId}/movements` | `200` | US-18 · [9.5](#95-get-apipotspotidmovements) |
 
 Els exemples d'aquest apartat fan servir les mateixes dades fictícies de l'usuari 1. Les dades reals són les del seed (T07.3).
 
@@ -451,13 +457,22 @@ Totes les respostes d'error tenen aquest format:
 
 | `code` | HTTP | Quan | `details` |
 |---|---|---|---|
-| `INVALID_AMOUNT` | 422 | `amount ≤ 0` | — |
+| `INVALID_AMOUNT` | 422 | `amount ≤ 0`, a una recàrrega o a una aportació a una guardiola ([9.4](#94-post-apipotspotidcontributions)) | — |
 | `AMOUNT_OVER_LIMIT` | 422 | `amount > 50000` | — |
 | `DAILY_LIMIT_EXCEEDED` | 422 | Recàrregues d'avui + `amount > 100000` | `{ remainingToday }` (cèntims) |
 | `VALIDATION_ERROR` | 422 | Paràmetres o cos mal formats: falta `amount`, no és un enter, o `offset`/`limit` fora de rang | — |
 | `INTERNAL_ERROR` | 500 | Error inesperat, inclosos els que simula T08.2 | — |
 
 > Qualsevol ruta o mètode no definit es tracta com a error inesperat i retorna `500 INTERNAL_ERROR` (mateix cos que `INTERNAL_ERROR`).
+
+Codis de l'estalvi (Sprint 1, [apartat 9](#9-guardioles-us-17-i-us-18)):
+
+| `code` | HTTP | Quan | `details` |
+|---|---|---|---|
+| `INVALID_POT_NAME` | 422 | El nom de la guardiola és buit o només té espais | — |
+| `INVALID_TARGET` | 422 | L'objectiu de la guardiola és `≤ 0` | — |
+| `INSUFFICIENT_BALANCE` | 422 | L'aportació supera el saldo del compte principal | — |
+| `POT_NOT_FOUND` | 404 **[PROPOSTA — pendent de validar]** | La guardiola no existeix o és d'un altre usuari | — |
 
 ### Exemples
 
@@ -541,3 +556,413 @@ Propostes d'aquest contracte que s'han de confirmar a la revisió de la PR:
 | P5 | [4.3](#43-post-apitopups) | `amount` ha de ser un enter JSON estricte: `"500"`, `500.5` i `500.0` retornen `VALIDATION_ERROR`. |
 | P6 | [5](#5-errors) | Quan un error no té `details`, la clau no apareix a la resposta (en lloc de `"details": null`). |
 | P7 | [1](#dates) | Les dates es donen amb precisió de segons, sense fraccions de segon. |
+
+Propostes de l'estalvi (T17.1), per validar a la revisió de la PR de l'Sprint 1:
+
+| # | Apartat | Proposta |
+|---|---|---|
+| P21 | [9.1](#91-objecte-pot) | `Pot.id` és un string opac amb el format `pot-01`, `pot-02`…, com `Movement.id` (P1). |
+| P22 | [9.1](#91-objecte-pot) | Llista tancada de colors: `purple` (el valor per defecte), `blue`, `teal`, `orange`, `pink` i `yellow`. No hi ha verd ni vermell, perquè la guia d'estil els reserva per als ingressos, les despeses i els errors. S'ha de validar amb la Jiajun. |
+| P23 | [9.2](#92-get-apipots) | `GET /api/pots` respon `{ items }`, amb les guardioles en ordre de creació (la més antiga primer). |
+| P24 | [9.3](#93-post-apipots) | `POST /api/pots` respon `201` amb l'objecte `Pot` sol, sense embolcall. |
+| P25 | [9.3](#93-post-apipots) | El nom es desa sense els espais del principi i del final, i es poden repetir noms. |
+| P26 | [9.3](#93-post-apipots) | Ordre de les validacions en crear: format (`VALIDATION_ERROR`) → `INVALID_POT_NAME` → `INVALID_TARGET`. |
+| P27 | [9.4](#94-post-apipotspotidcontributions) | L'aportació respon `201` amb `{ balance, pot, movement }`. |
+| P28 | [9.4](#94-post-apipotspotidcontributions) | Ordre de les validacions en aportar: format (`VALIDATION_ERROR`) → `POT_NOT_FOUND` → `INVALID_AMOUNT` → `INSUFFICIENT_BALANCE`. |
+| P29 | [3](#3-objecte-movement), [9.4](#94-post-apipotspotidcontributions) | El moviment del compte principal d'una aportació té el concepte `"Aportació a <nom de la guardiola>"` i la icona nova `savings`. L'alternativa a la icona nova és `transfer`. |
+| P30 | [9.4](#94-post-apipotspotidcontributions) | Es pot aportar a una guardiola que ja ha arribat a l'objectiu. Dues aportacions alhora s'apliquen una darrere l'altra. |
+| P31 | [9.5](#95-get-apipotspotidmovements) | L'historial respon `{ items }`, del més recent al més antic i sense paginació. Cada entrada té `id` (`pmov-01`, `pmov-02`…), `amount`, `concept`, `date` i `type`. |
+| P32 | [9.8](#98-model-intern-de-lestalvi) | Cada guardiola del seed té una entrada inicial «Saldo inicial» pel seu saldo, i el seed dona un color a cada guardiola i un objectiu a dues. |
+| P33 | [9.7](#97-errors) | `POT_NOT_FOUND` respon `404`, seguint la P11 de l'accés. Si la P11 no s'aprova, l'estat el decideix l'equip. |
+
+---
+
+## 9. Guardioles (US-17 i US-18)
+
+Crear guardioles, llistar-les, aportar-hi diners del compte principal i consultar-ne l'historial. Tasca: T17.1 (issue #71).
+
+| Tasca | Què implementa d'aquest apartat |
+|---|---|
+| T17.2 (backend) | [9.1](#91-objecte-pot), [9.2](#92-get-apipots), [9.3](#93-post-apipots) i les guardioles del seed de [9.8](#98-model-intern-de-lestalvi) |
+| T18.1 (backend) | [9.4](#94-post-apipotspotidcontributions), [9.5](#95-get-apipotspotidmovements), [9.6](#96-efecte-sobre-altres-rutes) i l'historial de [9.8](#98-model-intern-de-lestalvi) |
+| T17.3, T17.4, T18.2, T18.4 (frontend) | Les pantalles que criden aquestes rutes |
+
+Totes les rutes d'aquest apartat resolen l'usuari igual que la resta ([apartat 2](#2-usuari-actual-i-estat-del-servei)): cada usuari només veu i modifica les seves guardioles. Segueixen les convencions de l'[apartat 1](#1-convencions-generals): imports en cèntims enters, dates ISO 8601 amb el desplaçament de Madrid i claus en camelCase.
+
+Els exemples d'aquest apartat fan servir les dades de l'usuari 1 del seed: compte principal amb `379521` (3.795,21 €) i tres guardioles que sumen `30000` (300,00 €). Les dates d'exemple són del 3/11/2026 (`+01:00`, horari d'hivern).
+
+### 9.1 Objecte `Pot`
+
+Una guardiola de l'usuari. És el mateix objecte a totes les respostes d'aquest apartat.
+
+| Camp | Tipus | Notes |
+|---|---|---|
+| `id` | string | Identificador opac, com `Movement.id` (P1). El frontend no l'ha d'interpretar. Format `pot-01`, `pot-02`… **[PROPOSTA — pendent de validar]** |
+| `name` | string | Mai buit: té almenys un caràcter que no és un espai. |
+| `balance` | integer | Cèntims, `≥ 0`. Una guardiola nova té `0`. |
+| `target` | integer \| `null` | Objectiu en cèntims, `> 0`. Val `null` si la guardiola no en té, perquè és opcional. |
+| `color` | string | Un dels valors de la llista tancada següent. |
+
+Valors de `color` (llista tancada) **[PROPOSTA — pendent de validar]**:
+
+| Valor | Notes |
+|---|---|
+| `purple` | Valor per defecte si no se n'envia cap. És el lila de la guia d'estil. |
+| `blue` | |
+| `teal` | |
+| `orange` | |
+| `pink` | |
+| `yellow` | |
+
+- No hi ha verd ni vermell: la guia d'estil els reserva per als ingressos, les despeses i els errors.
+- El backend només guarda el nom del color. Quin to exacte es pinta el decideix el frontend.
+
+Exemple:
+
+```json
+{
+  "id": "pot-01",
+  "name": "Vacances",
+  "balance": 15000,
+  "target": 100000,
+  "color": "blue"
+}
+```
+
+### 9.2 `GET /api/pots`
+
+Les guardioles de l'usuari (US-17).
+
+**Resposta `200`:** `{ items }` **[PROPOSTA — pendent de validar]**
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `items` | `Pot[]` | Totes les guardioles de l'usuari, en ordre de creació, de la més antiga a la més nova **[PROPOSTA — pendent de validar]**. Pot ser una llista buida. |
+
+- No té paginació: a la demo, un usuari té poques guardioles.
+- Un usuari sense guardioles rep `{ "items": [] }`. És l'estat buit de US-17 (criteri 2): el frontend mostra «Encara no tens cap guardiola».
+
+**Petició:**
+
+```http
+GET /api/pots HTTP/1.1
+```
+
+**Resposta:**
+
+```json
+{
+  "items": [
+    {
+      "id": "pot-01",
+      "name": "Vacances",
+      "balance": 15000,
+      "target": 100000,
+      "color": "blue"
+    },
+    {
+      "id": "pot-02",
+      "name": "Emergències",
+      "balance": 10000,
+      "target": null,
+      "color": "orange"
+    },
+    {
+      "id": "pot-03",
+      "name": "Regal d'aniversari",
+      "balance": 5000,
+      "target": 8000,
+      "color": "pink"
+    }
+  ]
+}
+```
+
+**Usuari sense guardioles** (`X-User-Id: 2`):
+
+```json
+{
+  "items": []
+}
+```
+
+### 9.3 `POST /api/pots`
+
+Crea una guardiola (US-17).
+
+**Cos de la petició:** `{ name, target?, color? }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `name` | string | Obligatori. Es desa sense els espais del principi i del final **[PROPOSTA — pendent de validar]**. |
+| `target` | integer \| `null` | Opcional. Objectiu en cèntims. Si no s'envia, o val `null`, la guardiola no té objectiu. |
+| `color` | string | Opcional. Un dels valors de [9.1](#91-objecte-pot). Si no s'envia, o val `null`, és `purple`. |
+
+**Resposta `201`:** l'objecte `Pot` creat, sol **[PROPOSTA — pendent de validar]**.
+
+- La guardiola neix amb `balance: 0`.
+- Es retorna l'objecte sol perquè només hi ha una cosa a retornar, i és exactament el mateix objecte que surt a `GET /api/pots`. La recàrrega i l'aportació retornen un objecte amb diverses claus perquè canvien més d'una cosa (el saldo i el moviment).
+
+**Ordre de les validacions.** S'aturen al primer error **[PROPOSTA — pendent de validar]**:
+
+1. Format del cos → `VALIDATION_ERROR`:
+   - falta `name` o no és un string;
+   - `target` no és un enter JSON estricte, com a P5 (`"300"`, `300.5` i `300.0` no valen);
+   - `color` no és de la llista tancada.
+2. `name` buit o només amb espais → `INVALID_POT_NAME`.
+3. `target ≤ 0` → `INVALID_TARGET`.
+
+**Regles:**
+
+- Si hi ha un error, no es crea res.
+- No hi ha límit de guardioles (assumpte de US-17).
+- Es poden repetir noms **[PROPOSTA — pendent de validar]**.
+- Fora de l'abast d'aquest sprint: editar i esborrar guardioles, que no són als criteris de US-17.
+
+**Petició:**
+
+```http
+POST /api/pots HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Viatge",
+  "target": 30000,
+  "color": "teal"
+}
+```
+
+**Resposta `201`:**
+
+```json
+{
+  "id": "pot-04",
+  "name": "Viatge",
+  "balance": 0,
+  "target": 30000,
+  "color": "teal"
+}
+```
+
+### 9.4 `POST /api/pots/{potId}/contributions`
+
+Aporta diners del compte principal a una guardiola (US-18).
+
+**Cos de la petició:** `{ amount }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `amount` | integer | Import de l'aportació en cèntims. Obligatori. Enter JSON estricte, com a P5. |
+
+**Resposta `201`:** `{ balance, pot, movement }` **[PROPOSTA — pendent de validar]**
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `balance` | integer | Saldo **nou** del compte principal, en cèntims. |
+| `pot` | `Pot` | La guardiola amb el saldo nou. |
+| `movement` | `Movement` | El moviment que s'ha creat al compte principal. |
+
+Amb aquesta resposta, el frontend pot pintar el tic verd «Has aportat X € a <nom>» i actualitzar els dos saldos sense tornar a demanar res.
+
+**Ordre de les validacions.** S'aturen al primer error **[PROPOSTA — pendent de validar]**:
+
+1. Format del cos: `amount` falta o no és un enter JSON estricte → `VALIDATION_ERROR`.
+2. La guardiola no existeix o és d'un altre usuari → `POT_NOT_FOUND`. La resposta és la mateixa en tots dos casos, perquè no es pugui saber si una guardiola d'un altre usuari existeix. Un `potId` amb un format qualsevol (p. ex. `abc`) també dona `POT_NOT_FOUND`.
+3. `amount ≤ 0` → `INVALID_AMOUNT`, el mateix codi que a la recàrrega.
+4. `amount` més gran que el saldo del compte principal → `INSUFFICIENT_BALANCE`.
+
+**Regles:**
+
+- Aportar **exactament** tot el saldo del compte principal està permès, perquè el criteri diu «no més gran que el saldo principal». El compte es queda a `0`.
+- **Tot o res** (US-18, criteris 4, 7 i 8). Una aportació fa quatre canvis: el saldo del compte, el saldo de la guardiola, un moviment nou al compte i una entrada nova a l'historial de la guardiola. O es fan tots quatre, o no se'n fa cap. Si hi ha un error, no canvia res.
+- **Moviment del compte principal.** Cada aportació crea, en la mateixa operació, un moviment del compte principal (decisió de l'equip: així el saldo del compte continua sent la suma dels seus moviments):
+  - `type: "expense"`;
+  - `amount` igual a l'aportació;
+  - `concept: "Aportació a <nom de la guardiola>"`, p. ex. `"Aportació a Vacances"` **[PROPOSTA — pendent de validar]**;
+  - `icon: "savings"`, un valor nou de la llista de l'[apartat 3](#3-objecte-movement) **[PROPOSTA — pendent de validar]**. Si el frontend rep una icona que no coneix, ja mostra `other` (`frontend/src/models/movement.ts`), així que la icona nova no trenca res. Per mostrar-la, però, s'ha d'afegir al frontend. L'alternativa és fer servir `transfer`;
+  - `date`: el moment de l'aportació;
+  - `kind` intern `"other"`, perquè no compti per al límit diari de recàrrega.
+- **Casos límit** **[PROPOSTA — pendent de validar]**:
+  - Es pot aportar a una guardiola que ja ha arribat a l'objectiu, o que el passaria: els criteris no ho prohibeixen, i l'objectiu és una meta, no un límit.
+  - Dues aportacions alhora s'apliquen una darrere l'altra. La segona es valida amb el saldo que ha deixat la primera: si ja no n'hi ha prou, rep `INSUFFICIENT_BALANCE`. El saldo del compte mai pot quedar negatiu.
+- En aquest sprint, aportar no dona XP: la gamificació no és a l'abast.
+
+**Petició:**
+
+```http
+POST /api/pots/pot-01/contributions HTTP/1.1
+Content-Type: application/json
+
+{
+  "amount": 3000
+}
+```
+
+**Resposta `201`** (saldo anterior del compte: `379521`; saldo anterior de la guardiola: `15000`):
+
+```json
+{
+  "balance": 376521,
+  "pot": {
+    "id": "pot-01",
+    "name": "Vacances",
+    "balance": 18000,
+    "target": 100000,
+    "color": "blue"
+  },
+  "movement": {
+    "id": "mov-31",
+    "amount": 3000,
+    "concept": "Aportació a Vacances",
+    "date": "2026-11-03T10:00:00+01:00",
+    "type": "expense",
+    "icon": "savings"
+  }
+}
+```
+
+### 9.5 `GET /api/pots/{potId}/movements`
+
+L'historial d'una guardiola (US-18, criteri 6).
+
+**Resposta `200`:** `{ items }` **[PROPOSTA — pendent de validar]**
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `items` | Entrada[] | Les entrades de l'historial, de la més recent a la més antiga, sense paginació. |
+
+Cada entrada de l'historial **[PROPOSTA — pendent de validar]**:
+
+| Camp | Tipus | Notes |
+|---|---|---|
+| `id` | string | Identificador opac. Format `pmov-01`, `pmov-02`… |
+| `amount` | integer | Cèntims, sempre `> 0`. |
+| `concept` | string | `"Aportació"` a les aportacions. `"Saldo inicial"` a l'entrada inicial de les guardioles del seed ([9.8](#98-model-intern-de-lestalvi)). |
+| `date` | string | ISO 8601 amb desplaçament. |
+| `type` | `"income"` \| `"expense"` | Des del punt de vista de la **guardiola**: una aportació hi fa entrar diners, i per tant és `income`. El frontend la mostra en verd i amb «+». |
+
+- L'historial és de la guardiola, no del compte. Per això l'aportació hi surt com a `income` amb el concepte «Aportació», mentre que al compte principal surt com a `expense` amb el concepte «Aportació a <nom>».
+- El saldo d'una guardiola és sempre la suma del seu historial.
+- Si dues entrades tenen la mateixa data, va primer la creada més tard, com a P4.
+- La guardiola no existeix o és d'un altre usuari → `POT_NOT_FOUND`.
+
+**Petició** (després de l'aportació de l'exemple de 9.4):
+
+```http
+GET /api/pots/pot-01/movements HTTP/1.1
+```
+
+**Resposta:**
+
+```json
+{
+  "items": [
+    {
+      "id": "pmov-04",
+      "amount": 3000,
+      "concept": "Aportació",
+      "date": "2026-11-03T10:00:00+01:00",
+      "type": "income"
+    },
+    {
+      "id": "pmov-01",
+      "amount": 15000,
+      "concept": "Saldo inicial",
+      "date": "2026-10-04T10:00:00+02:00",
+      "type": "income"
+    }
+  ]
+}
+```
+
+### 9.6 Efecte sobre altres rutes
+
+Després d'una aportació (US-18, criteri 4):
+
+- `GET /api/home`: el `balance` baixa i el `totalSaved` puja exactament el mateix import. La suma `balance + totalSaved` no canvia.
+- El moviment del compte principal surt el primer a `lastMovements` i a `GET /api/movements`.
+- El límit diari de recàrrega no canvia: l'aportació no és una recàrrega.
+
+Exemple amb l'aportació de 9.4:
+
+| | `balance` | `totalSaved` | `balance + totalSaved` |
+|---|---|---|---|
+| Abans | `379521` | `30000` | `409521` |
+| Després | `376521` | `33000` | `409521` |
+
+Crear una guardiola no canvia res a `GET /api/home`: neix amb saldo `0`.
+
+### 9.7 Errors
+
+Els codis són a la taula de l'[apartat 5](#taula-de-codis). Els missatges són orientatius: el frontend decideix a partir del `code`.
+
+| `code` | HTTP | Ruta | Quan |
+|---|---|---|---|
+| `VALIDATION_ERROR` | 422 | Totes les de `POST` | El cos està mal format ([9.3](#93-post-apipots), [9.4](#94-post-apipotspotidcontributions)) |
+| `INVALID_POT_NAME` | 422 | `POST /api/pots` | El nom és buit o només té espais |
+| `INVALID_TARGET` | 422 | `POST /api/pots` | `target ≤ 0` |
+| `POT_NOT_FOUND` | 404 **[PROPOSTA — pendent de validar]** | Les de `/api/pots/{potId}/…` | La guardiola no existeix o és d'un altre usuari |
+| `INVALID_AMOUNT` | 422 | `POST /api/pots/{potId}/contributions` | `amount ≤ 0` |
+| `INSUFFICIENT_BALANCE` | 422 | `POST /api/pots/{potId}/contributions` | L'aportació supera el saldo del compte principal |
+
+- El `404` segueix la P11 de l'accés (PR #105), que ja proposa estats diferents de `422` i `500`. Si la P11 no s'aprova, l'estat el decideix l'equip.
+- Un `POT_NOT_FOUND` és un error de negoci amb el seu `code`. No té res a veure amb el `500 INTERNAL_ERROR` de les rutes que no existeixen ([apartat 5](#taula-de-codis)).
+
+`INVALID_POT_NAME`:
+
+```json
+{
+  "code": "INVALID_POT_NAME",
+  "message": "El nom de la guardiola no pot estar buit."
+}
+```
+
+`INVALID_TARGET`:
+
+```json
+{
+  "code": "INVALID_TARGET",
+  "message": "L'objectiu ha de ser més gran que 0."
+}
+```
+
+`INSUFFICIENT_BALANCE`:
+
+```json
+{
+  "code": "INSUFFICIENT_BALANCE",
+  "message": "No tens prou saldo per fer aquesta aportació."
+}
+```
+
+`POT_NOT_FOUND`:
+
+```json
+{
+  "code": "POT_NOT_FOUND",
+  "message": "No s'ha trobat la guardiola."
+}
+```
+
+### 9.8 Model intern de l'estalvi
+
+Aquest apartat és per al backend. El frontend no en depèn.
+
+- **`Pot`** guanya `target` (enter o `None`) i `color`, i el seu `id` passa a ser un string (P21). Continua tenint `user_id`, que no s'exposa.
+- **Historial.** Cada entrada de l'historial pertany a una guardiola i té els camps de [9.5](#95-get-apipotspotidmovements). Com es desa ho proposa la T18.1.
+- **Una aportació escriu quatre coses alhora:** el saldo del compte, el saldo de la guardiola, el moviment del compte i l'entrada de l'historial. Es valida tot abans d'escriure. Si una escriptura falla a mig camí, es desfan les anteriors abans de deixar sortir l'error.
+- **Invariants:**
+  - el saldo del compte és la suma dels `signed_amount` dels seus moviments;
+  - el saldo d'una guardiola és la suma del seu historial;
+  - `balance + totalSaved` és igual abans i després d'aportar.
+- **Seed** **[PROPOSTA — pendent de validar]**. Les tres guardioles de l'usuari 1 no canvien de nom ni de saldo, perquè en depenen els tests i els mocks del frontend. Guanyen:
+
+  | `id` | `name` | `balance` | `target` | `color` | Entrada inicial de l'historial |
+  |---|---|---|---|---|---|
+  | `pot-01` | Vacances | `15000` | `100000` | `blue` | `pmov-01`, «Saldo inicial», `15000` |
+  | `pot-02` | Emergències | `10000` | `null` | `orange` | `pmov-02`, «Saldo inicial», `10000` |
+  | `pot-03` | Regal d'aniversari | `5000` | `8000` | `pink` | `pmov-03`, «Saldo inicial», `5000` |
+
+  - Les entrades inicials tenen una data anterior a avui, com la resta del seed.
+  - Les guardioles i les entrades noves continuen la numeració (`pot-04`, `pmov-04`…). Els comptadors es reinicien amb el seed (`POST /api/dev/reset`).
+  - L'usuari 2 continua sense guardioles.
