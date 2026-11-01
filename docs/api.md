@@ -415,7 +415,7 @@ Eina de **desenvolupament** (T09.6), com la capçalera `X-User-Id`. **No l'usa e
 
 L'Sprint 0 manté les dades **en memòria** i les carrega del seed a l'arrencada. Aquest endpoint **restaura les dades inicials sense reiniciar el servidor**, de manera que es puguin reproduir seqüències amb estat (p. ex. el límit diari de recàrrega) des de zero.
 
-> **Sprint 1.** Amb Firestore ([apartat 8.13](#813-model-intern-de-laccés)), aquest endpoint esborra les col·leccions i hi torna a escriure el seed. Per això només es pot fer servir amb l'**emulador de Firebase** o el projecte de desenvolupament, **mai** amb les dades del desplegament.
+> **Sprint 1.** Si s'aprova la P20 i es fusiona la tasca de persistència (#106), les dades passen a Firestore ([apartat 8.13](#813-model-intern-de-laccés)) i aquest endpoint esborrarà les col·leccions i hi tornarà a escriure el seed. Llavors només es podrà fer servir amb l'**emulador de Firebase** o el projecte de desenvolupament, **mai** amb les dades del desplegament.
 
 - **Cos de la petició:** cap.
 - **Resposta `200`:** `{ status }`
@@ -476,7 +476,7 @@ Codis de l'accés (Sprint 1, [apartat 8](#8-accés-us-01-a-us-04)):
 
 | `code` | HTTP | Quan | `details` |
 |---|---|---|---|
-| `UNAUTHENTICATED` | 401 | Ruta protegida sense token, o amb un token desconegut o ja tancat | — |
+| `UNAUTHENTICATED` | 401 | Ruta protegida sense token, o amb un token desconegut o ja tancat. També `GET /api/dev/outbox` sense la clau correcta quan `DEV_OUTBOX_KEY` està definida ([8.12](#812-get-apidevoutbox)) | — |
 | `SESSION_EXPIRED` | 401 | La sessió ha passat 5 minuts sense activitat | — |
 | `WEAK_PASSWORD` | 422 | La contrasenya no compleix la política ([8.4](#84-política-de-contrasenya)) | — |
 | `ALREADY_REGISTERED` | 409 | L'email o el telèfon ja té un compte | — |
@@ -488,7 +488,7 @@ Codis de l'accés (Sprint 1, [apartat 8](#8-accés-us-01-a-us-04)):
 | `ACCOUNT_NOT_VERIFIED` | 403 | Login correcte d'un compte encara pendent de verificació | — |
 | `RESET_LINK_EXPIRED` | 422 | Enllaç de recuperació caducat, ja usat o desconegut | — |
 
-> Fins a l'Sprint 0 tots els errors eren `422` o `500`. Els codis d'accés fan servir també `401`, `403`, `409`, `423` i `429` **[PROPOSTA — pendent de validar]**. El frontend continua decidint només amb el `code`: l'`apiClient` ja propaga qualsevol cos d'error del contracte, sigui quin sigui l'estat HTTP.
+> Fins a l'Sprint 0 tots els errors eren `422` o `500`. Els codis d'accés fan servir també `401`, `403`, `409`, `423` i `429`, i els recursos que no existeixen (p. ex. una guardiola) faran servir `404` **[PROPOSTA — pendent de validar]**. El frontend continua decidint només amb el `code`: l'`apiClient` ja propaga qualsevol cos d'error del contracte, sigui quin sigui l'estat HTTP.
 
 > Qualsevol ruta o mètode no definit es tracta com a error inesperat i retorna `500 INTERNAL_ERROR` (mateix cos que `INTERNAL_ERROR`).
 
@@ -583,16 +583,17 @@ Propostes de l'accés (T01.1), per validar a la revisió de la PR de l'Sprint 1:
 | P8 | [8.8](#88-post-apiauthlogin) | Un compte «pendent» **no** pot iniciar sessió. Amb la contrasenya correcta rep `ACCOUNT_NOT_VERIFIED`; amb una d'incorrecta, el mateix `INVALID_CREDENTIALS` que la resta. |
 | P9 | [8.6](#86-post-apiauthverify) | Verificar el codi obre la sessió directament i retorna un `token`, perquè l'app passi a «Inici» sense tornar a demanar la contrasenya (US-02). |
 | P10 | [8.10](#810-post-apiauthforgot-password) | La recuperació accepta email **o** telèfon, perquè qui s'ha registrat amb telèfon també pugui recuperar el compte (l'enllaç li arriba per SMS). |
-| P11 | [5](#taula-de-codis) | Els errors d'accés fan servir `401`, `403`, `409`, `423` i `429`, a més de `422` i `500`. |
+| P11 | [5](#taula-de-codis) | Els errors d'accés fan servir `401`, `403`, `409`, `423` i `429`, a més de `422` i `500`. Els recursos que no existeixen fan servir `404`. |
 | P12 | [8.2](#transició-des-dx-user-id) | `X-User-Id` queda darrere de la variable `ALLOW_X_USER_ID`: activada per defecte fins a la T03.5 i desactivada després, excepte als tests. |
 | P13 | [8.13](#813-model-intern-de-laccés) | Credencials fictícies del seed: `demo@evolt.test` (usuari 1) i `buit@evolt.test` (usuari 2), totes dues amb la contrasenya `Evolt2026`. |
 | P14 | [8.9](#89-post-apiauthlogout) | `logout` sempre respon `200`, encara que el token ja no sigui vàlid. |
 | P15 | [8.11](#811-post-apiauthreset-password) | Canviar la contrasenya amb l'enllaç també desbloqueja el compte i posa a zero els errors de login. |
 | P16 | [8.4](#84-política-de-contrasenya) | Una contrasenya de més de 72 bytes és `VALIDATION_ERROR` (límit de bcrypt). |
-| P17 | [8.10](#810-post-apiauthforgot-password) | L'enllaç de recuperació apunta a `http://localhost:5173/nova-contrasenya?token=<token>`. |
+| P17 | [8.10](#810-post-apiauthforgot-password) | L'enllaç de recuperació és `<FRONTEND_URL>/nova-contrasenya?token=<token>`, amb `FRONTEND_URL` per defecte `http://localhost:5173` i, a Render, l'URL del frontend desplegat. |
 | P18 | [8.7](#87-post-apiauthresend-code), [8.10](#810-post-apiauthforgot-password) | Demanar un codi o un enllaç nou invalida l'anterior. |
 | P19 | [8.5](#85-post-apiauthregister) | El registre crea també el compte principal amb saldo `0`, sense moviments ni guardioles. |
 | P20 | [8.13](#813-model-intern-de-laccés) | Les dades es guarden a Cloud Firestore amb l'Admin SDK des del backend. El login és propi (no Firebase Auth) i el frontend no parla amb Firebase. |
+| P34 | [8.12](#812-get-apidevoutbox) | La bústia simulada es pot activar al desplegament amb `ENABLE_DEV_OUTBOX`, independent d'`ENABLE_DEV_ROUTES`, però protegida amb la clau `DEV_OUTBOX_KEY` (capçalera `X-Dev-Key`). El número salta a P34 perquè P21–P33 són del contracte de guardioles (§9). |
 
 ---
 
@@ -624,6 +625,17 @@ Les proves d'acceptació de US-01 a US-04 són a [`docs/proves-acces.md`](proves
 
 Tots aquests temps es calculen amb el rellotge del backend (`models/clock.py`), que els tests poden fixar.
 
+#### Variables d'entorn de l'accés
+
+Es llegeixen amb la resta de la configuració del backend (`ENABLE_DEV_ROUTES`, `FRONTEND_ORIGINS`...). Un valor booleà mal escrit es tracta com a `false`.
+
+| Variable | Per defecte | Què fa | Apartat |
+|---|---|---|---|
+| `ALLOW_X_USER_ID` | `1` fins a la T03.5; `0` després | Accepta la capçalera `X-User-Id` quan no hi ha token. | [8.2](#transició-des-dx-user-id) |
+| `FRONTEND_URL` | `http://localhost:5173` | Base de l'enllaç de recuperació. A Render, `https://f3-evolt.onrender.com`. | [8.10](#810-post-apiauthforgot-password) |
+| `ENABLE_DEV_OUTBOX` | El mateix valor que `ENABLE_DEV_ROUTES` | Activa `GET /api/dev/outbox` encara que les altres rutes `/api/dev` estiguin desactivades. | [8.12](#812-get-apidevoutbox) |
+| `DEV_OUTBOX_KEY` | Sense definir | Si està definida, `GET /api/dev/outbox` demana la capçalera `X-Dev-Key` amb aquest valor. A Render va com a secret. | [8.12](#812-get-apidevoutbox) |
+
 ### 8.2 Sessió
 
 - El login ([8.8](#88-post-apiauthlogin)) i la verificació del codi ([8.6](#86-post-apiauthverify)) retornen un **`token`**: un string opac que el frontend no ha d'interpretar.
@@ -639,7 +651,7 @@ Authorization: Bearer 9fJx2sQ0b7Wm4LrT1vYc8NnK3pZa6HdE5gUiOeRkXwA
 - **Inactivitat:** cada petició a una ruta protegida amb un token vàlid compta com a activitat, encara que acabi en error de negoci (p. ex. `AMOUNT_OVER_LIMIT`). Si han passat 5 minuts o més des de l'última activitat, la petició respon `401 SESSION_EXPIRED` i el token deixa de ser vàlid.
 - Sense capçalera `Authorization`, o amb un token desconegut o ja tancat → `401 UNAUTHENTICATED`.
 - Un usuari pot tenir **diverses sessions** obertes alhora (un dispositiu per sessió). El logout tanca només la seva; canviar la contrasenya les tanca totes ([8.11](#811-post-apiauthreset-password)).
-- Les sessions es guarden a **Firestore** ([8.13](#813-model-intern-de-laccés)): **sobreviuen a un reinici del backend**. `POST /api/dev/reset` les tanca totes.
+- Les sessions es guarden **en memòria**: reiniciar el backend o cridar `POST /api/dev/reset` les tanca totes. Si s'aprova la P20 i es fusiona la tasca de persistència (#106), passaran a Firestore ([8.13](#813-model-intern-de-laccés)) i sobreviuran als reinicis; `POST /api/dev/reset` les continuarà tancant.
 - Com guarda el token el frontend i si també té un temporitzador propi d'inactivitat ho decideix la T03.3. La referència sempre és la resposta del backend.
 
 #### Transició des d'`X-User-Id`
@@ -880,7 +892,7 @@ Demana un enllaç per canviar la contrasenya («He oblidat la contrasenya», US-
 - `identifier` mal format → `VALIDATION_ERROR`.
 - **Resposta `200`:** `{ status }`, amb `status` sempre `"ok"`, **existeixi o no el compte**. El frontend mostra sempre «Si l'email és correcte, rebràs un enllaç per canviar la contrasenya».
 - Si el compte existeix (pendent, actiu o bloquejat): es genera un enllaç d'**un sol ús** que caduca als 30 minuts, l'enllaç anterior **deixa de servir** **[PROPOSTA — pendent de validar]** i es deixa a la bústia simulada.
-- L'enllaç és `http://localhost:5173/nova-contrasenya?token=<token>`. La T04.2 crea aquesta ruta del frontend, que llegeix el `token` de l'URL. **[PROPOSTA — pendent de validar]**
+- L'enllaç és `<FRONTEND_URL>/nova-contrasenya?token=<token>`. `FRONTEND_URL` és una variable d'entorn ([8.1](#variables-dentorn-de-laccés)): en local val `http://localhost:5173` i a Render, l'URL del frontend desplegat. La T04.2 crea aquesta ruta del frontend, que llegeix el `token` de l'URL. **[PROPOSTA — pendent de validar]**
 
 ### 8.11 `POST /api/auth/reset-password`
 
@@ -912,6 +924,13 @@ Canvia la contrasenya amb el token de l'enllaç («Nova contrasenya», US-04).
 
 Bústia simulada: eina de **desenvolupament**, com `POST /api/dev/reset`. En lloc d'enviar emails o SMS de veritat, el backend desa aquí els missatges. **No l'usa l'app**: serveix per llegir el codi o l'enllaç a les proves manuals, a la demo i als tests.
 
+**Disponibilitat i protecció** **[PROPOSTA — pendent de validar]**:
+
+- La ruta existeix si `ENABLE_DEV_OUTBOX` és `true`. Per defecte pren el valor d'`ENABLE_DEV_ROUTES`, així que en local està activa i al desplegament no, tret que s'activi expressament ([8.1](#variables-dentorn-de-laccés)). Si no existeix, respon com qualsevol ruta no definida ([apartat 5](#5-errors)).
+- Si `DEV_OUTBOX_KEY` està definida, la petició ha de portar la capçalera `X-Dev-Key` amb aquest valor; si falta o no coincideix → `401 UNAUTHENTICATED`. En local no es defineix i no cal cap capçalera.
+- **Per què cal la clau:** la bústia conté codis i enllaços de recuperació de qualsevol compte. Oberta a l'URL pública, qualsevol persona podria demanar «He oblidat la contrasenya» per a `demo@evolt.test`, llegir-ne l'enllaç i canviar-li la contrasenya. Per tant, **al desplegament la bústia només s'activa amb `DEV_OUTBOX_KEY` definida**.
+- La clau va com a secret a Render i es comparteix només dins de l'equip; **mai** al repositori ni a l'URL (`?key=`), perquè quedaria a l'historial del navegador i als logs. A la demo es llegeix la bústia amb `docs/api.http` o `curl`.
+
 **Paràmetre de consulta opcional:** `to`, un `identifier`. Es normalitza i només es retornen els missatges per a aquell destinatari.
 
 **Resposta `200`:** `{ messages }`, del més recent al més antic.
@@ -932,6 +951,13 @@ Com als errors (P6), les claus `code` i `link` no apareixen als missatges que no
 
 ```http
 GET /api/dev/outbox?to=ana@x.com HTTP/1.1
+```
+
+Al desplegament, amb la clau:
+
+```http
+GET /api/dev/outbox?to=ana@x.com HTTP/1.1
+X-Dev-Key: <DEV_OUTBOX_KEY>
 ```
 
 **Resposta:**
@@ -962,7 +988,7 @@ Textos dels altres dos tipus:
 
 Aquest apartat és per al backend. El frontend no en depèn.
 
-**Emmagatzematge.** A l'Sprint 1 les dades passen de la memòria a **Cloud Firestore** **[PROPOSTA — pendent de validar]**:
+**Emmagatzematge.** Si s'aprova la P20, les dades passen de la memòria a **Cloud Firestore** amb la tasca de persistència (#106) **[PROPOSTA — pendent de validar]**:
 
 - Només el backend parla amb Firestore, amb l'Admin SDK de Python (`firebase-admin`). El frontend **no** usa Firebase: continua cridant només aquesta API.
 - El login el fa el nostre backend tal com descriu aquest apartat. **No** es fa servir Firebase Auth.

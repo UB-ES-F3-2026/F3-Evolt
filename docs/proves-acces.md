@@ -169,6 +169,7 @@ Totes les proves parteixen d'`ana@x.com` registrada a **T0** (R-01) i del seu co
 | **C-10** | — | `reset-password` amb un token inventat | `422 RESET_LINK_EXPIRED`. |
 | **C-11** | Usuari 1 bloquejat (S-12) | `forgot-password` i `reset-password` correcte | Login amb la contrasenya nova: `200`. El compte s'ha desbloquejat. |
 | **C-12** | `+34612345678` registrat (R-12) | `forgot-password` amb `612 34 56 78` | `200` i un missatge `password_reset` pel canal `sms`. |
+| **C-13** | `FRONTEND_URL=https://f3-evolt.onrender.com` | `forgot-password` amb `demo@evolt.test` | El `link` de la bústia comença per `https://f3-evolt.onrender.com/nova-contrasenya?token=`. Sense la variable, per `http://localhost:5173/nova-contrasenya?token=`. |
 
 ### Pantalla (T04.2)
 
@@ -200,6 +201,10 @@ Proves comunes del backend (T03.1), amb `ALLOW_X_USER_ID=0` excepte on es diu el
 | **G-08** | Tots els tests de Home, moviments i recàrrega de l'Sprint 0 | Continuen passant (amb `ALLOW_X_USER_ID=1` o amb un token). |
 | **G-09** | `POST /api/dev/reset` amb una sessió oberta | La sessió es tanca i la bústia queda buida. |
 | **G-10** | Amb Firestore (o l'emulador): registrar `ana@x.com`, fer login, **reiniciar el backend** i fer `GET /api/home` amb el mateix token | `200`: l'usuari i la sessió continuen existint després del reinici. |
+| **G-11** | Amb `ENABLE_DEV_ROUTES=false` i sense `ENABLE_DEV_OUTBOX`: `GET /api/dev/outbox` i `POST /api/dev/reset` | Totes dues responen com una ruta no definida: la bústia segueix `ENABLE_DEV_ROUTES`. |
+| **G-12** | Amb `ENABLE_DEV_ROUTES=false` i `ENABLE_DEV_OUTBOX=true`: `GET /api/dev/outbox` i `POST /api/dev/reset` | La bústia respon `200`; el reinici continua sense existir. |
+| **G-13** | Amb `DEV_OUTBOX_KEY` definida: `GET /api/dev/outbox` sense `X-Dev-Key` i amb una clau incorrecta | `401 UNAUTHENTICATED` en tots dos casos. |
+| **G-14** | Amb `DEV_OUTBOX_KEY` definida: `GET /api/dev/outbox` amb `X-Dev-Key` correcta | `200` amb els missatges. |
 
 ---
 
@@ -226,7 +231,7 @@ Proves comunes del backend (T03.1), amb `ALLOW_X_USER_ID=0` excepte on es diu el
 | US-03 · 5 minuts sense activitat: la sessió es tanca | S-18, S-19, S-20, S-21, S-22, SP-04 |
 | US-03 · «Tancar sessió» torna a «Inicia sessió» | S-09, S-10, S-11, SP-05 |
 | US-04 · Enllaç «He oblidat la contrasenya» sota «Entrar» | CP-01 |
-| US-04 · Arriba un enllaç que funciona 30 minuts | C-01, C-05, C-06, C-12, CP-02 |
+| US-04 · Arriba un enllaç que funciona 30 minuts | C-01, C-05, C-06, C-12, C-13, CP-02 |
 | US-04 · El mateix missatge tant si l'email existeix com si no | C-02, CP-03 |
 | US-04 · La contrasenya nova compleix la mateixa política | C-07, CP-04 |
 | US-04 · Es tanquen les altres sessions i surt «Contrasenya canviada» | C-03, C-08, CP-05, CP-07 |
