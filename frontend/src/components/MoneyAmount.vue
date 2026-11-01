@@ -11,7 +11,7 @@ const props = withDefaults(
     /** Adds `+` or `−` in front, for amounts with a direction (income / expense). */
     sign?: 'positive' | 'negative'
   }>(),
-  { hidden: false },
+  { hidden: false, sign: undefined },
 )
 
 const SIGN_TEXT = { positive: '+', negative: '−' } as const
