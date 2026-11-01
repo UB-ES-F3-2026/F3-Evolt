@@ -165,6 +165,57 @@ server. Run it before any stateful sequence — e.g. the daily-limit chain in th
 collection — so the results are reproducible. The collection can be combined
 with the T08.2 simulation env vars (set them when starting uvicorn).
 
+When `ENABLE_DEV_ROUTES=false` (see [Deploy](#deploy-tr061)) this endpoint does
+not exist.
+
+### Environment variables
+
+Every backend setting comes from the environment. With nothing set, the backend
+runs exactly as in local development.
+
+| Variable | Default | Effect | Secret |
+|----------|---------|--------|--------|
+| `FRONTEND_ORIGINS` | `http://localhost:5173` | Comma-separated origins allowed by CORS (no trailing slash needed) | No |
+| `ENABLE_DEV_ROUTES` | `true` | `false` removes `/api/dev/*`; a misspelled value also disables them | No |
+| `SIMULATE_DELAY_MS` | off | See [Simulating delay and failure](#simulating-delay-and-failure-t082) | No |
+| `SIMULATE_ERROR_RATE` | off | See [Simulating delay and failure](#simulating-delay-and-failure-t082) | No |
+
+**Adding a variable or a secret?** Add a row here in the same PR and tell the
+person in charge of the deploy, so it is set on Render too. Secrets go only in
+the Render dashboard, never in the repo. **Adding a request header** in the
+frontend (e.g. `Authorization`)? Add it to `allow_headers` in
+`backend/app/main.py`, or the browser will block the request.
+
+### Deploy (TR06.1)
+
+The backend runs on [Render](https://render.com) (free plan) as a Web Service:
+
+- **Public URL:** https://evolt-api.onrender.com (e.g. [`/api/health`](https://evolt-api.onrender.com/api/health))
+- **Branch:** `main` (the demo line); redeploy manually from the Render
+  dashboard until automatic deploys exist (TR06.3)
+
+| Render setting | Value |
+|----------------|-------|
+| Root directory | `backend` |
+| Runtime | Python (version pinned in `backend/.python-version`) |
+| Build command | `pip install -r requirements.txt` |
+| Start command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
+| Health check path | `/api/health` |
+
+| Variable on Render | Value |
+|--------------------|-------|
+| `ENABLE_DEV_ROUTES` | `false` — nobody can reset the demo data |
+| `FRONTEND_ORIGINS` | `https://f3-evolt.onrender.com` (the deployed frontend, TR06.2) |
+
+Quick check: `curl https://evolt-api.onrender.com/api/health` → `{"status":"ok"}`.
+The root URL `/` has no route, so it answers `500 INTERNAL_ERROR` like any unknown path.
+
+Things to know about the free plan:
+
+- After ~15 minutes without requests the service sleeps; the next request
+  wakes it up and takes 30–60 s. Open the URL a couple of minutes before a demo.
+- Data still lives in memory: every restart or sleep resets it to the seed.
+
 ---
 
 ## CI/CD
