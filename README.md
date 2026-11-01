@@ -218,6 +218,7 @@ The only complete list of documents; the others link here.
 | `docs/api.http` | Example request collection for manual API testing (T09.6) |
 | `docs/ci-cd.md` | CI/CD pipeline: jobs, how to read runs, how to edit |
 | `backend/README.md` | Backend setup, Ruff config/commands and troubleshooting |
+| `docs/branch-protection.md` | Rules on develop/main, how to apply/roll back |
 | `docs/P1/AGENTS.md` | Course context, Scrum, roles, backlog rules |
 | `docs/P1/MEMORY.md` | Team decisions, US and epic index |
 | `docs/P1/Team Specification.md` | Product catalog + team |
