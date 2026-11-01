@@ -174,7 +174,7 @@ GitHub Actions pipeline in [`.github/workflows/ci.yml`](.github/workflows/ci.yml
 
 | Job | Runs | Version |
 |-----|------|---------|
-| `backend` | compile check + pytest | Python 3.12 |
+| `backend` | Ruff + compile check + pytest | Python 3.12 |
 | `frontend` | ESLint + type-check + Vitest + build | Node 22 |
 | `ci` | gate: both jobs must succeed | — |
 
@@ -197,7 +197,7 @@ docs-only PR) stays pending and blocks the PR forever.
 
 How to read green/red: `gh pr checks` in a PR, or the repo's *Actions* tab →
 click the failing job → read the red step's logs. Locally, run the same
-commands (frontend: `npm run check`; backend: compile check + pytest).
+commands (frontend: `npm run check`; backend: Ruff + compile check + pytest).
 
 Full guide: [`docs/ci-cd.md`](docs/ci-cd.md).
 

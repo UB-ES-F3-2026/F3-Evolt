@@ -12,7 +12,7 @@ One pipeline, one required check. Workflow: `.github/workflows/ci.yml` (name `CI
 ```
 PR / push to develop or main
         │
-        ├── backend  (Python 3.12) ── compileall + pytest
+        ├── backend  (Python 3.12) ── ruff + compileall + pytest
         │
         └── frontend (Node 22)     ── lint + type-check + test + build
         │
@@ -70,7 +70,7 @@ blocks merge, nothing else needs protection.
 
 ```bash
 (cd frontend && npm run check)          # lint + type-check + test + build
-(cd backend  && .venv/bin/python -m compileall -q app && .venv/bin/python -m pytest tests/ -q)
+(cd backend  && .venv/bin/ruff check . && .venv/bin/python -m compileall -q app && .venv/bin/python -m pytest tests/ -q)
 ```
 
 If `npm ci` behaves differently than `npm install`, the lockfile is out of
@@ -92,6 +92,6 @@ Exact commands live in `docs/branch-protection.md`. The shape:
 - [ ] No `paths:` filters; triggers cover `pull_request` + `push` on develop/main
 - [ ] `permissions: contents: read`; no new permissions without a reason
 - [ ] No secrets or `.env` values in the workflow
-- [ ] Node 22 / Python 3.12 pinned
-- [ ] Same commands pass locally (`npm run check`, compileall + pytest)
+- [ ] Node 22 / Python 3.12 / Ruff 0.17.3 pinned
+- [ ] Same commands pass locally (`npm run check`, ruff + compileall + pytest)
 - [ ] Workflow YAML parses: `python3 -c "import yaml; yaml.safe_load(open('.github/workflows/ci.yml'))"`

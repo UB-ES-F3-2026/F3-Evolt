@@ -5,7 +5,7 @@ It runs the backend and frontend checks on every PR and push to `develop`/`main`
 and a final gate job `ci` that is the **required status check for merging**.
 
 - Workflow: GitHub Actions, defined in `.github/workflows/ci.yml` (workflow name `CI`, gate job `ci`).
-- Environments: **Node 22** for the frontend, **Python 3.12** for the backend.
+- Environments: **Node 22** for the frontend, **Python 3.12** and **Ruff 0.17.3** for the backend.
 - Permissions: the workflow requests only `contents: read` (least privilege; no secrets needed).
 - Deploy: `main` pushes trigger the deploy step (see `docs/deploy.md`, arrives in a later PR).
 
@@ -23,9 +23,9 @@ and a final gate job `ci` that is the **required status check for merging**.
         ┌───────────┐                            ┌───────────┐
         │  backend  │                            │ frontend  │
         │  (py3.12) │                            │ (node 22) │
-        │ compileall│                            │   lint    │
-        │   pytest  │                            │ type-check│
-        │           │                            │   test    │
+        │   ruff    │                            │   lint    │
+        │ compileall│                            │ type-check│
+        │   pytest  │                            │   test    │
         │           │                            │   build   │
         └─────┬─────┘                            └─────┬─────┘
               └──────────────────┬──────────────────────┘
@@ -67,6 +67,7 @@ Every CI step maps to a command you run locally first:
 
 | CI job | Step | Local command (run from repo root) |
 |--------|------|------------------------------------|
+| backend | Ruff | `cd backend && .venv/bin/ruff check .` (or `uvx ruff check .`) |
 | backend | Compile check | `cd backend && .venv/bin/python -m compileall -q app` |
 | backend | pytest | `cd backend && .venv/bin/python -m pytest tests/ -q` |
 | frontend | Lint | `cd frontend && npm run lint` |
@@ -85,7 +86,7 @@ be newer** — a tiny local-only difference is possible but rare).
 Rules for changing `.github/workflows/ci.yml`:
 
 1. **Step vs job:** a *step* is one extra line inside an existing job
-   (e.g. add `ruff` to the `backend` job before `pytest`). A *job* is a new
+   (e.g. add `mypy` to the `backend` job before `pytest`). A *job* is a new
    parallel lane (e.g. a `docs` job).
 2. **If you add a job, add it to `ci.needs`** — otherwise the gate can go green
    while your new job fails (it only asserts what it waits for).
@@ -107,8 +108,9 @@ Before pushing, run what CI runs:
 # frontend — all four checks in one line
 cd frontend && npm run check
 
-# backend — compile check + pytest
+# backend — ruff + compile check + pytest
 cd backend
+.venv/bin/ruff check .
 .venv/bin/python -m compileall -q app
 .venv/bin/python -m pytest tests/ -q
 ```
@@ -119,8 +121,10 @@ Notes:
 - CI installs with `npm ci` (clean, lockfile-driven). If your local run passes
   but CI fails right after `npm ci`, your `package-lock.json` is out of sync;
   `rm -rf node_modules && npm ci && npm run lint` reproduces it.
-- CI pins **Node 22 / Python 3.12**; check your local versions with
-  `node --version` / `python --version` if results differ.
+- CI pins **Node 22 / Python 3.12 / Ruff 0.17.3**; check your local versions
+  with `node --version` / `python --version` if results differ.
+- Ruff is a dev tool, not a runtime dependency; it is installed only in CI.
+  Locally: `.venv/bin/pip install ruff==0.17.3` once, or `uvx ruff check .`.
 - **Node ≥ 25 on your machine:** Node ships an experimental global
   `localStorage` that shadows jsdom and makes 5 `useBalanceVisibility` tests
   fail. CI (Node 22) is unaffected; locally run
@@ -133,6 +137,7 @@ Notes:
 | `ci` red, `backend` green, `frontend` red | One frontend step failed | Red step in the run → same command locally |
 | `Lint` fails only on CI | ESLint version differs (`~` vs `^`), or local uncommitted files | `npm ci`, re-run locally |
 | `npm ci` fails in CI | `package-lock.json` out of sync | Re-install locally with the lock (`rm -rf node_modules && npm ci`), commit the lock |
+| `Ruff` fails only on CI | Local code was not linted, or Ruff version differs | `cd backend && uvx ruff check .`; CI pins 0.17.3 |
 | `pytest` fails only on CI | Local data state (in-memory seed) or Python version | Read the failing test; CI uses Python 3.12 |
 | `ci` red although both jobs green | Gate run was from an older definition / manual skip | Re-run; never rename `ci` |
 | Both jobs red right after checkout | YAML syntax broken | `python3 -c "import yaml; yaml.safe_load(open('.github/workflows/ci.yml'))"` |

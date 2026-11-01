@@ -273,7 +273,7 @@ Full rules: skills `pr-conventions` + `gitflow`.
 4. Help/doc text updated if user-facing
 5. Product Owner accepts
 6. PR reviewed by another member
-7. CI green: the `ci` GitHub Actions check passes on the PR (pytest, ESLint, type-check, Vitest, build). Deploys from `main` are automated (see `docs/ci-cd.md`).
+7. CI green: the `ci` GitHub Actions check passes on the PR (Ruff, pytest, ESLint, type-check, Vitest, build). Deploys from `main` are automated (see `docs/ci-cd.md`).
 8. No critical open bugs for that story
 9. **Architecture checklist** (layers respected, no API call from a View, shared rules not duplicated)
 
