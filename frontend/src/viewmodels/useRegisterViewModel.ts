@@ -30,7 +30,7 @@ export function useRegisterViewModel(dependencies: RegisterDependencies = defaul
   )
 
   // New data makes the previous answer from the backend stale.
-  watch([identifier, password], () => {
+  watch([identifier, password, repeatedPassword, acceptedTerms], () => {
     submitError.value = null
     isAlreadyRegistered.value = false
   })

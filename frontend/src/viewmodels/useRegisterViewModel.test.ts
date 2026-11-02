@@ -129,4 +129,26 @@ describe('useRegisterViewModel', () => {
     expect(viewModel.submitError.value).toBeNull()
     expect(viewModel.isAlreadyRegistered.value).toBe(false)
   })
+
+  it('clears the backend answer when the second password changes', async () => {
+    const failure = { code: 'VALIDATION_ERROR', message: 'x' }
+    const viewModel = filledViewModel(fakeDependencies({ register: vi.fn(() => Promise.reject(failure)) }))
+    await viewModel.submit()
+
+    viewModel.repeatedPassword.value = 'Platja2027'
+    await nextTick()
+
+    expect(viewModel.submitError.value).toBeNull()
+  })
+
+  it('clears the backend answer when the terms change', async () => {
+    const failure = { code: 'VALIDATION_ERROR', message: 'x' }
+    const viewModel = filledViewModel(fakeDependencies({ register: vi.fn(() => Promise.reject(failure)) }))
+    await viewModel.submit()
+
+    viewModel.acceptedTerms.value = false
+    await nextTick()
+
+    expect(viewModel.submitError.value).toBeNull()
+  })
 })
