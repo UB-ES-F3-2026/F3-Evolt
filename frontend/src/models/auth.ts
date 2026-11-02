@@ -11,3 +11,20 @@ export interface RegisterJson {
   identifier: string
   status: 'pending'
 }
+
+export interface VerifyRequest {
+  identifier: string
+  /** A string, so the zeros on the left are not lost. */
+  code: string
+}
+
+/** Answer of the routes that open a session. The token is opaque: the frontend never reads it. */
+export interface SessionJson {
+  token: string
+}
+
+export interface StatusJson {
+  status: 'ok'
+}
+
+export const CODE_LENGTH = 6
