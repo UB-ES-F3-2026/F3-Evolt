@@ -30,5 +30,6 @@ Read **[`AGENTS.md`](AGENTS.md)** — it is the source of truth for architecture
 | `gitflow` | branches, develop/main, PR base |
 | `pr-conventions` | pull requests |
 | `commit-conventions` | commit messages |
+| `ci-cd` | GitHub Actions, lint, branch protection, deploy |
 
 Product/backlog context: `docs/P1/`.
