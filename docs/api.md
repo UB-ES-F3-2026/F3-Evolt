@@ -593,7 +593,7 @@ Propostes de l'accés (T01.1), per validar a la revisió de la PR de l'Sprint 1:
 | P18 | [8.7](#87-post-apiauthresend-code), [8.10](#810-post-apiauthforgot-password) | Demanar un codi o un enllaç nou invalida l'anterior. |
 | P19 | [8.5](#85-post-apiauthregister) | El registre crea també el compte principal amb saldo `0`, sense moviments ni guardioles. |
 | P20 | [8.13](#813-model-intern-de-laccés) | Les dades es guarden a Cloud Firestore amb l'Admin SDK des del backend. El login és propi (no Firebase Auth) i el frontend no parla amb Firebase. |
-| P34 | [8.12](#812-get-apidevoutbox) | La bústia simulada es pot activar al desplegament amb `ENABLE_DEV_OUTBOX`, independent d'`ENABLE_DEV_ROUTES`, però protegida amb la clau `DEV_OUTBOX_KEY` (capçalera `X-Dev-Key`). El número salta a P34 perquè P21–P33 són del contracte de guardioles (§9). |
+| P46 | [8.12](#812-get-apidevoutbox) | La bústia simulada es pot activar al desplegament amb `ENABLE_DEV_OUTBOX`, independent d'`ENABLE_DEV_ROUTES`, però protegida amb la clau `DEV_OUTBOX_KEY` (capçalera `X-Dev-Key`). El número salta a P46 perquè P21–P33 són del contracte de guardioles (§9) i P34–P45, del de moviments (§10). |
 
 ---
 
@@ -924,7 +924,7 @@ Canvia la contrasenya amb el token de l'enllaç («Nova contrasenya», US-04).
 
 Bústia simulada: eina de **desenvolupament**, com `POST /api/dev/reset`. En lloc d'enviar emails o SMS de veritat, el backend desa aquí els missatges. **No l'usa l'app**: serveix per llegir el codi o l'enllaç a les proves manuals, a la demo i als tests.
 
-**Disponibilitat i protecció** **[PROPOSTA — pendent de validar]**:
+**Disponibilitat i protecció** (P46) **[PROPOSTA — pendent de validar]**:
 
 - La ruta existeix si `ENABLE_DEV_OUTBOX` és `true`. Per defecte pren el valor d'`ENABLE_DEV_ROUTES`, així que en local està activa i al desplegament no, tret que s'activi expressament ([8.1](#variables-dentorn-de-laccés)). Si no existeix, respon com qualsevol ruta no definida ([apartat 5](#5-errors)).
 - Si `DEV_OUTBOX_KEY` està definida, la petició ha de portar la capçalera `X-Dev-Key` amb aquest valor; si falta o no coincideix → `401 UNAUTHENTICATED`. En local no es defineix i no cal cap capçalera.
