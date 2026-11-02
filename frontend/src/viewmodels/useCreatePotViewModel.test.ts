@@ -53,6 +53,16 @@ describe('useCreatePotViewModel', () => {
     expect(viewModel.canSubmit.value).toBe(false)
   })
 
+  it('turns the name red when it is left empty, so filling only the target shows why "Crear" is off', async () => {
+    const { viewModel } = setUp()
+
+    viewModel.touchName()
+    await type(viewModel.target, '300')
+
+    expect(viewModel.nameError.value).toBe(messageForCode('INVALID_POT_NAME'))
+    expect(viewModel.canSubmit.value).toBe(false)
+  })
+
   it.each([
     ['0', messageForCode('INVALID_TARGET')],
     ['0,00', messageForCode('INVALID_TARGET')],
