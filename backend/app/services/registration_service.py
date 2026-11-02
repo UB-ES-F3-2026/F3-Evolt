@@ -1,0 +1,62 @@
+"""Registre d'un compte nou (T01.2 · US-01, docs/api.md §8.5).
+
+Ordre de les validacions (s'aturen al primer error):
+  1. Format → VALIDATION_ERROR: els tipus del cos els comprova el router; aquí,
+     `acceptedTerms` ha de ser `true`, l'identificador ha de ser vàlid i la
+     contrasenya no pot passar de 72 bytes.
+  2. Política de contrasenya → WEAK_PASSWORD.
+  3. Identificador ja registrat, pendent o actiu → ALREADY_REGISTERED.
+Tot o res: primer es valida tot i només al final s'escriu.
+"""
+
+from app.models import STATUS_PENDING, User
+from app.repositories import AccountRepository, UserRepository
+from app.services.errors import (
+    ALREADY_REGISTERED,
+    VALIDATION_ERROR,
+    WEAK_PASSWORD,
+    ApiError,
+)
+from app.services.identifier import InvalidIdentifier, normalize_identifier
+from app.services.password_hashing import hash_password
+from app.services.password_policy import fits_password_hash, is_strong_password
+
+# El registre no demana nom (US-01). El camp existeix al model per a l'usuari del seed.
+NEW_USER_NAME = ""
+
+
+def register(
+    raw_identifier: str,
+    password: str,
+    accepted_terms: bool,
+    users: UserRepository,
+    accounts: AccountRepository,
+) -> User:
+    """Crea l'usuari en estat «pendent» amb el seu compte principal a 0.
+
+    No obre cap sessió (US-01). El codi de verificació l'afegeix la T02.1.
+    """
+    if accepted_terms is not True:
+        raise ApiError(VALIDATION_ERROR)
+    try:
+        identifier = normalize_identifier(raw_identifier)
+    except InvalidIdentifier:
+        raise ApiError(VALIDATION_ERROR) from None
+    if not fits_password_hash(password):
+        raise ApiError(VALIDATION_ERROR)
+
+    if not is_strong_password(password):
+        raise ApiError(WEAK_PASSWORD)
+
+    if users.find_by_identifier(identifier.value) is not None:
+        raise ApiError(ALREADY_REGISTERED)
+
+    user = users.add(
+        name=NEW_USER_NAME,
+        identifier=identifier.value,
+        identifier_type=identifier.type,
+        password_hash=hash_password(password),
+        status=STATUS_PENDING,
+    )
+    accounts.create_for_user(user.id)
+    return user

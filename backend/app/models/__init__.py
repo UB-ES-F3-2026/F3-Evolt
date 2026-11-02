@@ -19,7 +19,15 @@ from app.models.movement import (
     Movement,
 )
 from app.models.pot import Pot
-from app.models.user import User
+from app.models.user import (
+    IDENTIFIER_EMAIL,
+    IDENTIFIER_PHONE,
+    IDENTIFIER_TYPES,
+    STATUS_ACTIVE,
+    STATUS_PENDING,
+    USER_STATUSES,
+    User,
+)
 
 __all__ = [
     "Account",
@@ -27,6 +35,12 @@ __all__ = [
     "Pot",
     "User",
     "ICONS",
+    "IDENTIFIER_EMAIL",
+    "IDENTIFIER_PHONE",
+    "IDENTIFIER_TYPES",
+    "STATUS_ACTIVE",
+    "STATUS_PENDING",
+    "USER_STATUSES",
     "KINDS",
     "KIND_OTHER",
     "KIND_TOPUP",
