@@ -88,10 +88,13 @@ _USER1_MOVEMENTS: list[tuple[int, str, str, str, str, int]] = [
     (1, "21:15", "Restaurant La Plaça", TYPE_EXPENSE, "food", 2350),
 ]
 
-_USER1_POTS: list[tuple[str, int]] = [
-    ("Vacances", 15000),
-    ("Emergències", 10000),
-    ("Regal d'aniversari", 5000),
+# Guardioles de l'usuari 1 (docs/api.md §9.8). El nom i el saldo no canvien des de
+# l'Sprint 0: els fan servir els tests i frontend/src/mocks/seed.ts.
+# (nom, saldo en cèntims, objectiu en cèntims o None, color)
+_USER1_POTS: list[tuple[str, int, int | None, str]] = [
+    ("Vacances", 15000, 100000, "blue"),
+    ("Emergències", 10000, None, "orange"),
+    ("Regal d'aniversari", 5000, 8000, "pink"),
 ]
 
 
@@ -106,6 +109,8 @@ class SeedData:
     next_movement_seq: int = field(default=1)
     # Comptador per als usuaris nous del registre (T01.2).
     next_user_id: int = field(default=1)
+    # Comptador per a les guardioles noves (T17.2): pot-04, pot-05…
+    next_pot_number: int = field(default=1)
 
 
 def _days_ago_at(now: datetime, days_ago: int, hhmm: str) -> datetime:
@@ -122,6 +127,11 @@ def _days_ago_at(now: datetime, days_ago: int, hhmm: str) -> datetime:
 def movement_id(number: int) -> str:
     """Id opac dels moviments (P1). El frontend no l'ha d'interpretar."""
     return f"mov-{number:02d}"
+
+
+def pot_id(number: int) -> str:
+    """Id opac de les guardioles (docs/api.md §9.1, P21). El frontend no l'ha d'interpretar."""
+    return f"pot-{number:02d}"
 
 
 def build_seed(now: datetime | None = None) -> SeedData:
@@ -176,8 +186,15 @@ def build_seed(now: datetime | None = None) -> SeedData:
     }
 
     pots = [
-        Pot(id=index, user_id=DEMO_USER_ID, name=name, balance=balance)
-        for index, (name, balance) in enumerate(_USER1_POTS, start=1)
+        Pot(
+            id=pot_id(number),
+            user_id=DEMO_USER_ID,
+            name=name,
+            balance=balance,
+            target=target,
+            color=color,
+        )
+        for number, (name, balance, target, color) in enumerate(_USER1_POTS, start=1)
     ]
 
     next_number = len(movements) + 1
@@ -189,4 +206,5 @@ def build_seed(now: datetime | None = None) -> SeedData:
         next_movement_number=next_number,
         next_movement_seq=next_number,
         next_user_id=max(users) + 1,
+        next_pot_number=len(pots) + 1,
     )

@@ -20,7 +20,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.config import load_app_settings
 from app.data.seed import build_seed
 from app.middleware import SimulationMiddleware, load_simulation_settings
-from app.routers import auth, dev, health, home, movements, topups
+from app.routers import auth, dev, health, home, movements, pots, topups
 from app.services.errors import (
     ERROR_MESSAGES,
     ERROR_STATUS,
@@ -173,6 +173,7 @@ def create_app() -> FastAPI:
     app.include_router(movements.router, prefix="/api")
     app.include_router(topups.router, prefix="/api")
     app.include_router(auth.router, prefix="/api")
+    app.include_router(pots.router, prefix="/api")
     # Eines de desenvolupament: fora quan ENABLE_DEV_ROUTES=false (desplegament).
     if app_settings.dev_routes_enabled:
         app.include_router(dev.router, prefix="/api")
