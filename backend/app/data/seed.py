@@ -2,6 +2,8 @@
 
 - Usuari 1: compte amb saldo, 3 guardioles i 30 moviments (ingressos i despeses).
 - Usuari 2: compte sense moviments ni guardioles, saldo 0.
+- Tots dos estan actius i tenen credencials fictícies per iniciar sessió (T01.2,
+  docs/api.md §8.13).
 
 Regles del contracte que es compleixen aquí:
 - Dates relatives a avui (avui - N dies, N ≥ 1): el llistat sempre sembla recent
@@ -17,9 +19,11 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
 from app.models import (
+    IDENTIFIER_EMAIL,
     KIND_OTHER,
     KIND_TOPUP,
     MADRID_TZ,
+    STATUS_ACTIVE,
     TOPUP_CONCEPT,
     TOPUP_ICON,
     TYPE_EXPENSE,
@@ -33,6 +37,17 @@ from app.models import (
 
 DEMO_USER_ID = 1
 EMPTY_USER_ID = 2
+
+# Credencials fictícies del seed (docs/api.md §8.13, P13). No són secretes: surten
+# al contracte i serveixen per a la demo i les proves. El domini `.test` està
+# reservat i no arriba a cap bústia real.
+DEMO_IDENTIFIER = "demo@evolt.test"
+EMPTY_IDENTIFIER = "buit@evolt.test"
+SEED_PASSWORD = "Evolt2026"
+# Hash de bcrypt de SEED_PASSWORD, calculat una vegada i escrit aquí: bcrypt és
+# lent a propòsit (~0,25 s) i build_seed() es crida a cada test i a cada reinici.
+# test_seed.py comprova que correspon a SEED_PASSWORD.
+SEED_PASSWORD_HASH = "$2b$12$w0xKg70bzkJkEQXZoAeGn.1I05ZAySxhbb35VfvduDwxbsCM4uovq"
 
 # Còpia al frontend: frontend/src/mocks/seed.ts. Si canvies aquestes dades, canvia-les també allà.
 # (dies enrere, hora "HH:MM", concepte, type, icon, import en cèntims)
@@ -89,6 +104,8 @@ class SeedData:
     # Comptadors per crear moviments nous (recàrregues) sense repetir id ni seq.
     next_movement_number: int = field(default=1)
     next_movement_seq: int = field(default=1)
+    # Comptador per als usuaris nous del registre (T01.2).
+    next_user_id: int = field(default=1)
 
 
 def _days_ago_at(now: datetime, days_ago: int, hhmm: str) -> datetime:
@@ -112,8 +129,24 @@ def build_seed(now: datetime | None = None) -> SeedData:
     now = now or now_madrid()
 
     users = {
-        DEMO_USER_ID: User(id=DEMO_USER_ID, name="Usuari demo", xp=120),
-        EMPTY_USER_ID: User(id=EMPTY_USER_ID, name="Usuari nou", xp=0),
+        DEMO_USER_ID: User(
+            id=DEMO_USER_ID,
+            name="Usuari demo",
+            identifier=DEMO_IDENTIFIER,
+            identifier_type=IDENTIFIER_EMAIL,
+            password_hash=SEED_PASSWORD_HASH,
+            status=STATUS_ACTIVE,
+            xp=120,
+        ),
+        EMPTY_USER_ID: User(
+            id=EMPTY_USER_ID,
+            name="Usuari nou",
+            identifier=EMPTY_IDENTIFIER,
+            identifier_type=IDENTIFIER_EMAIL,
+            password_hash=SEED_PASSWORD_HASH,
+            status=STATUS_ACTIVE,
+            xp=0,
+        ),
     }
 
     movements: list[Movement] = []
@@ -155,4 +188,5 @@ def build_seed(now: datetime | None = None) -> SeedData:
         movements=movements,
         next_movement_number=next_number,
         next_movement_seq=next_number,
+        next_user_id=max(users) + 1,
     )

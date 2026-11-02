@@ -712,7 +712,7 @@ Les rutes d'accés reben un sol camp, **`identifier`**, que pot ser un email o u
 
 | Tipus | Com es reconeix | Normalització | Vàlid si | Exemple |
 |---|---|---|---|---|
-| Email | Conté `@` | Treu els espais del principi i del final i el passa a minúscules. | Té exactament una `@`, alguna cosa abans, i un domini amb almenys un punt, sense espais. | `" Ana@X.com "` → `"ana@x.com"` |
+| Email | Conté `@` | Treu els espais del principi i del final i el passa a minúscules. | Té exactament una `@`, alguna cosa abans, i un domini amb almenys un punt amb text a banda i banda (`x.com`; no `x.` ni `.com`), sense espais. | `" Ana@X.com "` → `"ana@x.com"` |
 | Telèfon | No conté `@` | Treu espais, `-`, `.`, `(` i `)`. Un `00` inicial passa a ser `+`. Un número de 9 xifres sense prefix rep `+34`. | És `+` seguit de 8 a 15 xifres, i la primera no és `0`. | `"612 34 56 78"` → `"+34612345678"` |
 
 - Un `identifier` que no és vàlid retorna `422 VALIDATION_ERROR`, excepte al login, que respon `INVALID_CREDENTIALS` per no dir quina casella falla ([8.8](#88-post-apiauthlogin)).

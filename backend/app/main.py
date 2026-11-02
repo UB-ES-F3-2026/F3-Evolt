@@ -20,7 +20,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.config import load_app_settings
 from app.data.seed import build_seed
 from app.middleware import SimulationMiddleware, load_simulation_settings
-from app.routers import dev, health, home, movements, topups
+from app.routers import auth, dev, health, home, movements, topups
 from app.services.errors import (
     ERROR_MESSAGES,
     ERROR_STATUS,
@@ -84,8 +84,14 @@ def _register_error_handlers(app: FastAPI) -> None:
         request: Request, exc: RequestValidationError
     ) -> JSONResponse:
         # El detall de quin camp ha fallat és per als logs, mai per al client:
-        # el contracte no el publica en aquest error.
-        logger.warning("Petició invàlida: %s", exc.errors())
+        # el contracte no el publica en aquest error. Sense el valor rebut
+        # (`input`): podria ser una contrasenya, i no ha de sortir mai als logs
+        # (docs/api.md §8.4).
+        failures = [
+            {key: error[key] for key in ("loc", "type", "msg") if key in error}
+            for error in exc.errors()
+        ]
+        logger.warning("Petició invàlida: %s", failures)
         return JSONResponse(
             status_code=ERROR_STATUS[VALIDATION_ERROR],
             content=error_body(
@@ -166,6 +172,7 @@ def create_app() -> FastAPI:
     app.include_router(home.router, prefix="/api")
     app.include_router(movements.router, prefix="/api")
     app.include_router(topups.router, prefix="/api")
+    app.include_router(auth.router, prefix="/api")
     # Eines de desenvolupament: fora quan ENABLE_DEV_ROUTES=false (desplegament).
     if app_settings.dev_routes_enabled:
         app.include_router(dev.router, prefix="/api")
