@@ -13,6 +13,16 @@ export type PotColor = (typeof POT_COLORS)[number]
 /** The colour of a pot created without choosing one (docs/api.md §9.3). */
 export const DEFAULT_POT_COLOR: PotColor = 'purple'
 
+/** How each colour is named to the person (screen readers and the colour picker). */
+export const POT_COLOR_LABELS: Record<PotColor, string> = {
+  purple: 'Lila',
+  blue: 'Blau',
+  teal: 'Turquesa',
+  orange: 'Taronja',
+  pink: 'Rosa',
+  yellow: 'Groc',
+}
+
 export interface Pot {
   id: string
   name: string
@@ -33,6 +43,13 @@ export interface PotJson {
 /** GET /api/pots (docs/api.md §9.2). */
 export interface PotsJson {
   items: PotJson[]
+}
+
+/** POST /api/pots body (docs/api.md §9.3). `target` in cents, null for a pot without one. */
+export interface CreatePotRequest {
+  name: string
+  target: number | null
+  color: PotColor
 }
 
 export function isPotColor(value: string): value is PotColor {

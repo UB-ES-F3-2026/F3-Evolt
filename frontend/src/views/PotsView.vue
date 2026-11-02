@@ -26,7 +26,7 @@ onMounted(load)
 
     <section v-else-if="isEmpty" class="card empty">
       <EmptyState message="Encara no tens cap guardiola" />
-      <router-link to="/pots/new" class="create">Crear guardiola</router-link>
+      <router-link :to="{ name: 'create-pot' }" class="create">Crear guardiola</router-link>
     </section>
 
     <template v-else>
@@ -35,7 +35,7 @@ onMounted(load)
           <PotRow v-for="pot in pots" :key="pot.id" :pot="pot" :hidden="isHidden" />
         </ul>
       </section>
-      <router-link to="/pots/new" class="create">
+      <router-link :to="{ name: 'create-pot' }" class="create">
         <Plus :size="18" />
         Crear guardiola
       </router-link>
