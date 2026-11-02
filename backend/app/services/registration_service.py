@@ -9,6 +9,8 @@ Ordre de les validacions (s'aturen al primer error):
 Tot o res: primer es valida tot i només al final s'escriu.
 """
 
+import threading
+
 from app.models import STATUS_PENDING, User
 from app.repositories import AccountRepository, UserRepository
 from app.services.errors import (
@@ -23,6 +25,12 @@ from app.services.password_policy import fits_password_hash, is_strong_password
 
 # El registre no demana nom (US-01). El camp existeix al model per a l'usuari del seed.
 NEW_USER_NAME = ""
+
+# Les rutes síncrones de FastAPI corren en un pool de fils: sense aquest pany, dos
+# registres alhora amb el mateix email podrien passar tots dos la comprovació del
+# duplicat i crear dos usuaris. Protegeix «comprovar el duplicat + escriure» mentre
+# les dades siguin en memòria; amb Firestore (#106) ho farà una transacció.
+_REGISTRATION_LOCK = threading.Lock()
 
 
 def register(
@@ -51,12 +59,23 @@ def register(
     if users.find_by_identifier(identifier.value) is not None:
         raise ApiError(ALREADY_REGISTERED)
 
-    user = users.add(
-        name=NEW_USER_NAME,
-        identifier=identifier.value,
-        identifier_type=identifier.type,
-        password_hash=hash_password(password),
-        status=STATUS_PENDING,
-    )
-    accounts.create_for_user(user.id)
+    # bcrypt és lent a propòsit: el hash es fa fora del pany perquè dos registres
+    # d'emails diferents no s'esperin l'un a l'altre.
+    password_hash = hash_password(password)
+
+    with _REGISTRATION_LOCK:
+        # Es torna a comprovar dins del pany: un altre registre amb el mateix
+        # email pot haver acabat mentre es feia el hash.
+        if users.find_by_identifier(identifier.value) is not None:
+            raise ApiError(ALREADY_REGISTERED)
+        # Dues escriptures que han d'anar juntes: amb Firestore (#106), a la
+        # mateixa transacció, perquè no quedi mai un usuari sense compte.
+        user = users.add(
+            name=NEW_USER_NAME,
+            identifier=identifier.value,
+            identifier_type=identifier.type,
+            password_hash=password_hash,
+            status=STATUS_PENDING,
+        )
+        accounts.create_for_user(user.id)
     return user

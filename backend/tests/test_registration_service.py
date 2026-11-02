@@ -3,6 +3,7 @@
 Executar des de backend/:  python -m pytest tests/test_registration_service.py
 """
 
+import threading
 from datetime import datetime
 
 import pytest
@@ -63,3 +64,29 @@ def test_errors_raise_and_change_nothing(seed, kwargs, code):
     assert error.value.code == code
     assert error.value.details is None
     assert _snapshot(seed) == before
+
+
+def test_simultaneous_registrations_with_the_same_email_create_one_user(seed):
+    # Revisió de la PR: dos registres alhora no poden crear dos usuaris amb el mateix email.
+    threads_count = 8
+    barrier = threading.Barrier(threads_count)
+    results: list[str] = []
+
+    def attempt():
+        barrier.wait()  # tots els fils comencen alhora
+        try:
+            _register(seed)
+            results.append("created")
+        except ApiError as error:
+            results.append(error.code)
+
+    threads = [threading.Thread(target=attempt) for _ in range(threads_count)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    assert results.count("created") == 1
+    assert results.count(ALREADY_REGISTERED) == threads_count - 1
+    assert [u.identifier for u in seed.users.values()].count("ana@x.com") == 1
+    assert seed.next_user_id == 4

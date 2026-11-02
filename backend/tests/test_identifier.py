@@ -33,6 +33,8 @@ def test_email_is_trimmed_and_lowercased(raw: str, expected: str) -> None:
         "ana@",  # R-11: sense domini
         "@x.com",  # sense res abans de l'@
         "ana@x",  # domini sense punt
+        "ana@x.",  # sense text després del punt
+        "ana@.com",  # sense text abans del punt
         "ana@@x.com",
         "ana@x@y.com",
         "ana @x.com",  # espai a dins

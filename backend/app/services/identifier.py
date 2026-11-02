@@ -39,6 +39,7 @@ def normalize_identifier(raw: str) -> Identifier:
     """Normalitza un email o un telèfon, o llança `InvalidIdentifier`.
 
     - Amb `@` és un email: es treuen els espais dels extrems i es passa a minúscules.
+      El domini ha de tenir un punt amb text a banda i banda (`x.com`, no `x.` ni `.com`).
     - Sense `@` és un telèfon: es treuen els separadors, `00` passa a `+` i un
       número de 9 xifres sense prefix rep `+34`.
     """
@@ -54,7 +55,9 @@ def _normalize_email(text: str) -> str:
     if (
         email.count("@") != 1
         or not local
-        or "." not in domain
+        # Un punt que no sigui ni el primer ni l'últim caràcter del domini: la
+        # mateixa regla que el frontend (`/^[^@\s]+@[^@\s]+\.[^@\s]+$/`).
+        or "." not in domain[1:-1]
         or any(char.isspace() for char in email)
     ):
         raise InvalidIdentifier("L'email no és vàlid")
