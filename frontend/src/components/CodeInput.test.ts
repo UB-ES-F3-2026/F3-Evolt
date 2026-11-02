@@ -22,7 +22,7 @@ function boxes(wrapper: ReturnType<typeof mountInput>) {
 }
 
 function typed(wrapper: ReturnType<typeof mountInput>) {
-  return wrapper.props('modelValue')
+  return wrapper.props('modelValue') as string
 }
 
 describe('CodeInput', () => {

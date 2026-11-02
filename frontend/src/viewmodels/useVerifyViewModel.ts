@@ -96,7 +96,8 @@ export function useVerifyViewModel(dependencies: VerifyDependencies = defaultDep
 
 function defaultDependencies(): VerifyDependencies {
   const router = useRouter()
-  const saved: unknown = window.history.state?.identifier
+  const state = window.history.state as { identifier?: unknown } | null
+  const saved = state?.identifier
   return {
     identifier: typeof saved === 'string' ? saved : null,
     verify,
