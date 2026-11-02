@@ -15,7 +15,7 @@ from app.data.seed import (
     build_seed,
 )
 from app.models import KIND_OTHER, KIND_TOPUP, TYPE_EXPENSE, TYPE_INCOME
-from app.repositories import AccountRepository, MovementRepository, PotRepository
+from app.repositories import AccountRepository, MovementRepository, PotRepository, UserRepository
 
 # Data fixa perquè els tests no depenguin del dia en què s'executen.
 NOW = datetime(2026, 10, 13, 15, 0, 0, tzinfo=MADRID_TZ)
@@ -293,3 +293,57 @@ def test_sum_topups_handles_dst_and_foreign_offsets(seed):
         movements.add(**_movement_kwargs(kind=KIND_TOPUP, icon="topup", type=TYPE_INCOME, date=moment))
     assert movements.sum_topups_on_day(account_id, date(2026, 10, 25)) == 2000
     assert movements.sum_topups_on_day(account_id, date(2026, 10, 26)) == 1000
+
+
+# --- UserRepository i compte nou (T01.2) -----------------------------------------------
+
+
+def _new_user(users, identifier="ana@x.com"):
+    return users.add(
+        name="",
+        identifier=identifier,
+        identifier_type="email",
+        password_hash="$2b$12$hash",
+        status="pending",
+    )
+
+
+def test_find_by_identifier_is_exact(seed):
+    users = UserRepository(seed)
+
+    assert users.find_by_identifier("demo@evolt.test").id == DEMO_USER_ID
+    assert users.find_by_identifier("buit@evolt.test").id == EMPTY_USER_ID
+    # Normalitzar és feina del servei: el repositori compara tal qual.
+    assert users.find_by_identifier("DEMO@evolt.test") is None
+    assert users.find_by_identifier("ningu@x.com") is None
+
+
+def test_add_user_gets_a_new_id_and_is_findable(seed):
+    users = UserRepository(seed)
+
+    ana = _new_user(users)
+    pau = _new_user(users, "pau@x.com")
+
+    assert (ana.id, pau.id) == (3, 4)
+    assert users.get(ana.id) is ana
+    assert users.find_by_identifier("pau@x.com") is pau
+    assert seed.next_user_id == 5
+
+
+def test_get_unknown_user_is_none(seed):
+    assert UserRepository(seed).get(99) is None
+
+
+def test_create_account_for_new_user_starts_at_zero(seed):
+    user = _new_user(UserRepository(seed))
+    accounts = AccountRepository(seed)
+
+    account = accounts.create_for_user(user.id)
+
+    assert account.balance == 0
+    assert accounts.get_by_user(user.id) is account
+
+
+def test_user_cannot_get_a_second_account(seed):
+    with pytest.raises(ValueError):
+        AccountRepository(seed).create_for_user(DEMO_USER_ID)
