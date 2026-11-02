@@ -1090,7 +1090,7 @@ Crear guardioles, llistar-les, aportar-hi diners del compte principal i consulta
 | T18.1 (backend) | [9.4](#94-post-apipotspotidcontributions), [9.5](#95-get-apipotspotidmovements), [9.6](#96-efecte-sobre-altres-rutes) i l'historial de [9.8](#98-model-intern-de-lestalvi) |
 | T17.3, T17.4, T18.2, T18.4 (frontend) | Les pantalles que criden aquestes rutes |
 
-Totes les rutes d'aquest apartat resolen l'usuari igual que la resta ([apartat 2](#2-usuari-actual-i-estat-del-servei)): cada usuari només veu i modifica les seves guardioles. Segueixen les convencions de l'[apartat 1](#1-convencions-generals): imports en cèntims enters, dates ISO 8601 amb el desplaçament de Madrid i claus en camelCase.
+Totes les rutes d'aquest apartat són **rutes protegides** i resolen l'usuari igual que la resta: amb `X-User-Id` ([apartat 2](#2-usuari-actual-i-estat-del-servei)) mentre estigui permesa, i a partir de la T03.1 amb la sessió ([apartat 8.2](#82-sessió)). Cada usuari només veu i modifica les seves guardioles. Segueixen les convencions de l'[apartat 1](#1-convencions-generals): imports en cèntims enters, dates ISO 8601 amb el desplaçament de Madrid i claus en camelCase.
 
 Els exemples d'aquest apartat fan servir les dades de l'usuari 1 del seed: compte principal amb `379521` (3.795,21 €) i tres guardioles que sumen `30000` (300,00 €). Les dates d'exemple són del 3/11/2026 (`+01:00`, horari d'hivern).
 
@@ -1408,7 +1408,7 @@ Els codis són a la taula de l'[apartat 5](#taula-de-codis). Els missatges són 
 | `INVALID_AMOUNT` | 422 | `POST /api/pots/{potId}/contributions` | `amount ≤ 0` |
 | `INSUFFICIENT_BALANCE` | 422 | `POST /api/pots/{potId}/contributions` | L'aportació supera el saldo del compte principal |
 
-- El `404` segueix la P11 de l'accés (PR #105), que ja proposa estats diferents de `422` i `500`. Si la P11 no s'aprova, l'estat el decideix l'equip.
+- El `404` segueix la P11 ([apartat 7](#7-punts-pendents-de-validar)), que ja el preveu per als recursos que no existeixen. Si la P11 no s'aprova, l'estat el decideix l'equip.
 - Un `POT_NOT_FOUND` és un error de negoci amb el seu `code`. No té res a veure amb el `500 INTERNAL_ERROR` de les rutes que no existeixen ([apartat 5](#taula-de-codis)).
 
 `INVALID_POT_NAME`:
@@ -1458,6 +1458,7 @@ Aquest apartat és per al backend. El frontend no en depèn.
   - el saldo del compte és la suma dels `signed_amount` dels seus moviments;
   - el saldo d'una guardiola és la suma del seu historial;
   - `balance + totalSaved` és igual abans i després d'aportar.
+- **Amb Firestore** (si s'aprova la P20, #106): les guardioles i el seu historial seran col·leccions més, els ids necessitaran un comptador propi perquè Firestore no té autoincrement, i l'aportació haurà d'anar dins d'una **transacció**, com la recàrrega ([8.13](#813-model-intern-de-laccés)).
 - **Seed** **[PROPOSTA — pendent de validar]**. Les tres guardioles de l'usuari 1 no canvien de nom ni de saldo, perquè en depenen els tests i els mocks del frontend. Guanyen:
 
   | `id` | `name` | `balance` | `target` | `color` | Entrada inicial de l'historial |
