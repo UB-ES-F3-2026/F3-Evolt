@@ -663,7 +663,7 @@ Propostes dels moviments (T10.1), per validar a la revisió de la PR de l'Sprint
 | P41 | [10.3](#103-get-apimovementsmovementid), [10.4](#104-post-apimovementsmovementidreports) | `MOVEMENT_NOT_FOUND` respon `404`, seguint la P11 de l'accés (com `POT_NOT_FOUND` a l'estalvi). |
 | P42 | [10.4](#104-post-apimovementsmovementidreports) | L'informe respon `201` amb `{ id, movementId, description, createdAt }`, amb ids `rep-01`, `rep-02`… Es poden enviar diversos informes sobre el mateix moviment. |
 | P43 | [10.4](#104-post-apimovementsmovementidreports) | Codi propi `INVALID_DESCRIPTION` (`422`) per a una descripció buida, només amb espais o de més de 500 caràcters. La descripció es desa sense els espais dels extrems. |
-| P44 | [10.5](#105-justificant-pdf) | El justificant PDF es genera al navegador amb **jsPDF** (llicència MIT). S'ha de validar amb la Jiajun. |
+| P44 | [10.5](#105-justificant-pdf) | El justificant PDF el genera una Cloud Function de Firebase (decisió de PO). La URL i la comprovació de la sessió es defineixen a la T11.3, i depèn de la persistència a Firestore (P20, #106). |
 | P45 | [10.7](#107-model-intern-dels-moviments) | Seed: els noms fictius de la contrapart de la taula de 10.7, i el moviment més recent de l'usuari 1 (`mov-30`) en estat `pending`. |
 
 ---
@@ -1125,7 +1125,8 @@ Camps nous del moviment, filtres i cerca al llistat, detall d'un moviment, infor
 | T10.2 (backend) | [10.1](#101-camps-nous-de-movement) i el seed de [10.7](#107-model-intern-dels-moviments) |
 | T10.3 (backend) | [10.2](#102-filtres-de-get-apimovements) |
 | T11.1 (backend) | [10.3](#103-get-apimovementsmovementid) i [10.4](#104-post-apimovementsmovementidreports) |
-| T10.4, T11.2, T11.3 (frontend) | Les pantalles que fan servir aquestes rutes, i el justificant de [10.5](#105-justificant-pdf) |
+| T10.4, T11.2 (frontend) | Les pantalles que fan servir aquestes rutes |
+| T11.3 (Cloud Function i frontend) | El justificant de [10.5](#105-justificant-pdf): la funció que el genera i el botó que el baixa |
 
 Totes les rutes d'aquest apartat són **rutes protegides** i resolen l'usuari igual que la resta: amb `X-User-Id` ([apartat 2](#2-usuari-actual-i-estat-del-servei)) mentre estigui permesa, i a partir de la T03.1 amb la sessió ([apartat 8.2](#82-sessió)). Cada usuari només veu els seus moviments. Segueixen les convencions de l'[apartat 1](#1-convencions-generals).
 
@@ -1265,7 +1266,6 @@ El detall d'un moviment (US-11, criteri 1).
 **Resposta `200`:** l'objecte `Movement` sencer ([apartat 3](#3-objecte-movement) i [10.1](#101-camps-nous-de-movement)): l'import i el tipus, la data i l'hora, l'estat, la contrapart i la referència.
 
 - Si el moviment no existeix o és d'un altre usuari → `MOVEMENT_NOT_FOUND`. La resposta és la mateixa en tots dos casos, perquè no es pugui saber si un moviment d'un altre usuari existeix. Un `movementId` amb un format qualsevol (p. ex. `abc`) també dona `MOVEMENT_NOT_FOUND`.
-- No hi ha cap ruta de PDF: el justificant es genera al navegador amb aquestes dades ([10.5](#105-justificant-pdf)).
 
 **Petició:**
 
@@ -1345,10 +1345,12 @@ Content-Type: application/json
 
 ### 10.5 Justificant PDF
 
-El justificant (US-11, criteri 2) es genera **al navegador** (T11.3), a partir de la resposta de [10.3](#103-get-apimovementsmovementid). El backend no té cap ruta de PDF.
+El justificant (US-11, criteri 2) el genera **el servidor**, amb una **Cloud Function de Firebase** (decisió de PO a la revisió del contracte). El frontend només té el botó «Descarregar justificant», que el baixa.
 
-- Llibreria: **jsPDF**, amb llicència MIT **[PROPOSTA — pendent de validar]**. S'ha de validar amb la Jiajun.
-- El PDF porta les mateixes dades que la pantalla «Detall del moviment»: el concepte, l'import amb el signe, la data i l'hora, l'estat, la contrapart (o «—» si és `null`) i la referència. L'import i la referència han de coincidir exactament amb els del detall.
+- La URL de la funció i com comprova la sessió es defineixen a la **T11.3**.
+- **Depèn de la persistència a Firestore** (P20, #106): la funció ha de llegir el moviment i validar la sessió, i amb les dades en memòria del backend no hi pot accedir.
+- És la part **menys prioritària** de l'sprint: si no arriba, el criteri 2 de US-11 passa a l'Sprint 2.
+- El PDF porta les mateixes dades que la pantalla «Detall del moviment» ([10.3](#103-get-apimovementsmovementid)): el concepte, l'import amb el signe, la data i l'hora, l'estat, la contrapart (o «—» si és `null`) i la referència. L'import i la referència han de coincidir exactament amb els del detall.
 
 ### 10.6 Errors
 
