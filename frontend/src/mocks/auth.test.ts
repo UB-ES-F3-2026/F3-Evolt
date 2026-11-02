@@ -4,6 +4,16 @@ import { mockOutbox, mockRegister } from './auth'
 
 const VALID = { identifier: 'ana@x.com', password: 'Platja2026', acceptedTerms: true }
 
+function expectFailure(action: () => unknown, code: string) {
+  let failure: unknown
+  try {
+    action()
+  } catch (thrown) {
+    failure = thrown
+  }
+  expect(failure).toMatchObject({ code })
+}
+
 beforeEach(() => {
   sessionStorage.clear()
   vi.spyOn(console, 'info').mockImplementation(() => undefined)
@@ -28,23 +38,21 @@ describe('mockRegister', () => {
     ['a broken phone', { ...VALID, identifier: '12ab' }],
     ['a password over 72 bytes', { ...VALID, password: `Aa1${'x'.repeat(70)}` }],
   ])('answers VALIDATION_ERROR to %s', (_reason, request) => {
-    expect(() => mockRegister(request)).toThrow(expect.objectContaining({ code: 'VALIDATION_ERROR' }))
+    expectFailure(() => mockRegister(request), 'VALIDATION_ERROR')
   })
 
   it('checks the format before the password policy', () => {
     const request = { ...VALID, password: 'WEAK', acceptedTerms: false }
-    expect(() => mockRegister(request)).toThrow(expect.objectContaining({ code: 'VALIDATION_ERROR' }))
+    expectFailure(() => mockRegister(request), 'VALIDATION_ERROR')
   })
 
   it('checks the password policy before the duplicate', () => {
     const request = { ...VALID, identifier: 'demo@evolt.test', password: 'curta' }
-    expect(() => mockRegister(request)).toThrow(expect.objectContaining({ code: 'WEAK_PASSWORD' }))
+    expectFailure(() => mockRegister(request), 'WEAK_PASSWORD')
   })
 
   it.each(['demo@evolt.test', 'ANA@x.com'])('rejects the duplicate %s', (identifier) => {
     mockRegister(VALID)
-    expect(() => mockRegister({ ...VALID, identifier })).toThrow(
-      expect.objectContaining({ code: 'ALREADY_REGISTERED' }),
-    )
+    expectFailure(() => mockRegister({ ...VALID, identifier }), 'ALREADY_REGISTERED')
   })
 })
