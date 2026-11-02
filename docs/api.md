@@ -1353,6 +1353,7 @@ Amb aquesta resposta, el frontend pot pintar el tic verd «Has aportat X € a <
   - `concept: "Aportació a <nom de la guardiola>"`, p. ex. `"Aportació a Vacances"` **[PROPOSTA — pendent de validar]**;
   - `icon: "savings"`, un valor nou de la llista de l'[apartat 3](#3-objecte-movement) **[PROPOSTA — pendent de validar]**. Si el frontend rep una icona que no coneix, ja mostra `other` (`frontend/src/models/movement.ts`), així que la icona nova no trenca res. Per mostrar-la, però, s'ha d'afegir al frontend. L'alternativa és fer servir `transfer`;
   - `date`: el moment de l'aportació;
+  - `counterparty: null`, `status: "completed"` i una `reference` nova, com tots els moviments nous ([10.1](#101-camps-nous-de-movement), P38);
   - `kind` intern `"other"`, perquè no compti per al límit diari de recàrrega.
 - **Casos límit** **[PROPOSTA — pendent de validar]**:
   - Es pot aportar a una guardiola que ja ha arribat a l'objectiu, o que el passaria: els criteris no ho prohibeixen, i l'objectiu és una meta, no un límit.
@@ -1388,7 +1389,10 @@ Content-Type: application/json
     "concept": "Aportació a Vacances",
     "date": "2026-11-03T10:00:00+01:00",
     "type": "expense",
-    "icon": "savings"
+    "icon": "savings",
+    "counterparty": null,
+    "status": "completed",
+    "reference": "EVT-000031"
   }
 }
 ```
