@@ -18,6 +18,16 @@ We use AI as a **co-pilot** (AI-SDLC). Humans own architecture, product and fina
 4. Human reviews structure and trade-offs — not only “does it work”.
 5. Commit + PR with our conventions.
 
+### Board
+
+- **Product backlog (user stories):** [Trello](https://trello.com/b/LxXzo6NC/kanban).
+- **Sprint tasks (issues):** [GitHub Project](https://github.com/users/IzanFarreny47/projects/2) —
+  `Backlog` · `To do` · `In progress` · `Review` · `Done`. **Review holds at most
+  3 cards**: before opening a new PR, review someone else's.
+- New issues: **New issue → Tasca**. The template carries estimated hours and,
+  under «En tancar-la», real hours and «Com s'ha usat la IA» (Definition of
+  Done) — fill them in before closing the issue.
+
 ### Architecture in one screen
 
 | Concept | What it means for us |
@@ -164,6 +174,57 @@ run the requests one by one; uvicorn must be running
 server. Run it before any stateful sequence — e.g. the daily-limit chain in the
 collection — so the results are reproducible. The collection can be combined
 with the T08.2 simulation env vars (set them when starting uvicorn).
+
+When `ENABLE_DEV_ROUTES=false` (see [Deploy](#deploy-tr061)) this endpoint does
+not exist.
+
+### Environment variables
+
+Every backend setting comes from the environment. With nothing set, the backend
+runs exactly as in local development.
+
+| Variable | Default | Effect | Secret |
+|----------|---------|--------|--------|
+| `FRONTEND_ORIGINS` | `http://localhost:5173` | Comma-separated origins allowed by CORS (no trailing slash needed) | No |
+| `ENABLE_DEV_ROUTES` | `true` | `false` removes `/api/dev/*`; a misspelled value also disables them | No |
+| `SIMULATE_DELAY_MS` | off | See [Simulating delay and failure](#simulating-delay-and-failure-t082) | No |
+| `SIMULATE_ERROR_RATE` | off | See [Simulating delay and failure](#simulating-delay-and-failure-t082) | No |
+
+**Adding a variable or a secret?** Add a row here in the same PR and tell the
+person in charge of the deploy, so it is set on Render too. Secrets go only in
+the Render dashboard, never in the repo. **Adding a request header** in the
+frontend (e.g. `Authorization`)? Add it to `allow_headers` in
+`backend/app/main.py`, or the browser will block the request.
+
+### Deploy (TR06.1)
+
+The backend runs on [Render](https://render.com) (free plan) as a Web Service:
+
+- **Public URL:** https://evolt-api.onrender.com (e.g. [`/api/health`](https://evolt-api.onrender.com/api/health))
+- **Branch:** `main` (the demo line); redeploy manually from the Render
+  dashboard until automatic deploys exist (TR06.3)
+
+| Render setting | Value |
+|----------------|-------|
+| Root directory | `backend` |
+| Runtime | Python (version pinned in `backend/.python-version`) |
+| Build command | `pip install -r requirements.txt` |
+| Start command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
+| Health check path | `/api/health` |
+
+| Variable on Render | Value |
+|--------------------|-------|
+| `ENABLE_DEV_ROUTES` | `false` — nobody can reset the demo data |
+| `FRONTEND_ORIGINS` | `https://f3-evolt.onrender.com` (the deployed frontend, TR06.2) |
+
+Quick check: `curl https://evolt-api.onrender.com/api/health` → `{"status":"ok"}`.
+The root URL `/` has no route, so it answers `500 INTERNAL_ERROR` like any unknown path.
+
+Things to know about the free plan:
+
+- After ~15 minutes without requests the service sleeps; the next request
+  wakes it up and takes 30–60 s. Open the URL a couple of minutes before a demo.
+- Data still lives in memory: every restart or sleep resets it to the seed.
 
 ---
 

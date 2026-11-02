@@ -38,6 +38,7 @@ Two apps in one repo. Inside each one, folders are named after the **layer**.
 backend/
   app/
     main.py
+    config.py       # deploy settings read from the environment (CORS origins, dev routes)
     middleware/     # cross-cutting HTTP middleware (CORS, errors, simulation)
     models/         # data classes
     repositories/   # access to the in-memory data
