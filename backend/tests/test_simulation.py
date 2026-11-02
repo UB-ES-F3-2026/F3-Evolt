@@ -8,7 +8,8 @@ import logging
 
 from fastapi.testclient import TestClient
 
-from app.main import FRONTEND_ORIGIN, create_app
+from app.config import DEFAULT_FRONTEND_ORIGIN as FRONTEND_ORIGIN
+from app.main import create_app
 from app.middleware import load_simulation_settings
 from app.services.errors import ERROR_MESSAGES, INTERNAL_ERROR
 
