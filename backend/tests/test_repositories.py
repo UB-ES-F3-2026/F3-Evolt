@@ -3,7 +3,7 @@
 Executar des de backend/:  python -m pytest tests/
 """
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
@@ -116,7 +116,7 @@ def test_list_returns_newest_first(seed):
     account_id = seed.accounts[DEMO_USER_ID].id
     assert _page(movements, account_id, 0, 30) == [f"mov-{number:02d}" for number in range(30, 0, -1)]
     page = movements.list_by_account(account_id, 0, 30)
-    assert all(first.date >= second.date for first, second in zip(page, page[1:]))
+    assert all(first.date >= second.date for first, second in zip(page, page[1:], strict=False))
 
 
 def test_tie_on_date_puts_later_created_first(seed):
@@ -288,7 +288,7 @@ def test_sum_topups_handles_dst_and_foreign_offsets(seed):
     morning = datetime(2026, 10, 25, 0, 30, tzinfo=MADRID_TZ)
     evening = datetime(2026, 10, 25, 23, 30, tzinfo=MADRID_TZ)
     # 23:30 UTC = 26/10 00:30 a Madrid: un altre dia, malgrat la mateixa data UTC.
-    utc_instant = datetime(2026, 10, 25, 23, 30, tzinfo=timezone.utc)
+    utc_instant = datetime(2026, 10, 25, 23, 30, tzinfo=UTC)
     for moment in (morning, evening, utc_instant):
         movements.add(**_movement_kwargs(kind=KIND_TOPUP, icon="topup", type=TYPE_INCOME, date=moment))
     assert movements.sum_topups_on_day(account_id, date(2026, 10, 25)) == 2000

@@ -96,7 +96,7 @@ def test_ids_and_seq_are_unique(seed):
 
 def test_tie_on_date_is_broken_by_seq(seed):
     ordered = sorted(seed.movements, key=Movement.sort_key, reverse=True)
-    ties = [(a, b) for a, b in zip(ordered, ordered[1:]) if a.date == b.date]
+    ties = [(a, b) for a, b in zip(ordered, ordered[1:], strict=False) if a.date == b.date]
     assert ties, "el seed inclou un empat de dates a propòsit (P4)"
     for a, b in ties:
         assert a.seq > b.seq
