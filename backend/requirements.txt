@@ -6,3 +6,6 @@ fastapi
 uvicorn[standard]
 # El TestClient de Starlette parla per HTTP: necessita httpx.
 httpx
+# Hash de contrasenyes (T01.2, docs/api.md §8.4). Fixada a la 5: password_hashing.py
+# compta que una contrasenya de més de 72 bytes llança ValueError, i això canvia entre versions.
+bcrypt>=5,<6

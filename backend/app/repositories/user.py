@@ -1,0 +1,57 @@
+"""Repositori d'usuaris (T01.2).
+
+Llegeix i escriu les dades en memòria del SeedData. No decideix regles de
+negoci: normalitzar l'identificador, validar la contrasenya o rebutjar un
+duplicat és feina del servei.
+"""
+
+from app.data.seed import SeedData
+from app.models import User
+
+
+class UserRepository:
+    """Usuaris i les seves credencials (T01.2)."""
+
+    def __init__(self, seed: SeedData) -> None:
+        self._seed = seed
+
+    def get(self, user_id: int) -> User | None:
+        """Usuari amb aquest id, o None si no existeix."""
+        return self._seed.users.get(user_id)
+
+    def find_by_identifier(self, identifier: str) -> User | None:
+        """Usuari amb aquest identificador **ja normalitzat**, o None.
+
+        La comparació és exacta: qui crida ha de normalitzar abans
+        (`services/identifier.py`), perquè `ANA@x.com` trobi `ana@x.com`.
+        """
+        return next(
+            (user for user in self._seed.users.values() if user.identifier == identifier),
+            None,
+        )
+
+    def add(
+        self,
+        *,
+        name: str,
+        identifier: str,
+        identifier_type: str,
+        password_hash: str,
+        status: str,
+    ) -> User:
+        """Crea un usuari amb un id nou i el retorna.
+
+        L'id surt del comptador del seed, així que no es repeteix ni després
+        d'esborrar dades. Els camps els valida el model (`User.__post_init__`).
+        """
+        user = User(
+            id=self._seed.next_user_id,
+            name=name,
+            identifier=identifier,
+            identifier_type=identifier_type,
+            password_hash=password_hash,
+            status=status,
+        )
+        self._seed.users[user.id] = user
+        self._seed.next_user_id += 1
+        return user

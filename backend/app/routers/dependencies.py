@@ -7,7 +7,16 @@ aquest fitxer i `repositories/`.
 
 from fastapi import Request
 
-from app.repositories import AccountRepository, MovementRepository, PotRepository
+from app.repositories import (
+    AccountRepository,
+    MovementRepository,
+    PotRepository,
+    UserRepository,
+)
+
+
+def user_repository(request: Request) -> UserRepository:
+    return UserRepository(request.app.state.seed)
 
 
 def account_repository(request: Request) -> AccountRepository:
