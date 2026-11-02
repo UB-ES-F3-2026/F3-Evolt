@@ -28,7 +28,7 @@ export function useCreatePotViewModel(dependencies: CreatePotDependencies = defa
   // The backend's answer about one field, shown under that field until it changes.
   const serverNameError = ref<string | null>(null)
   const serverTargetError = ref<string | null>(null)
-  // An empty name only turns red once the person has written in it: nobody has made a mistake yet.
+  // An empty name only turns red once the person has written in it or left it: nobody has made a mistake yet.
   const isNameTouched = ref(false)
 
   const targetCents = computed(() => eurosToCents(target.value))
@@ -66,6 +66,11 @@ export function useCreatePotViewModel(dependencies: CreatePotDependencies = defa
     serverTargetError.value = null
     submitError.value = null
   })
+
+  /** Leaving the name empty is a mistake too (US-17, criterion 4), not only clearing it. */
+  function touchName(): void {
+    isNameTouched.value = true
+  }
 
   async function submit(): Promise<boolean> {
     isNameTouched.value = true
@@ -106,6 +111,7 @@ export function useCreatePotViewModel(dependencies: CreatePotDependencies = defa
     submitError,
     canSubmit,
     isSubmitting,
+    touchName,
     submit,
   }
 }

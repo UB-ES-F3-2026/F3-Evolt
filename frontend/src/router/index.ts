@@ -5,7 +5,9 @@ import HomeView from '@/views/HomeView.vue'
 import MovementsView from '@/views/MovementsView.vue'
 import PotView from '@/views/PotView.vue'
 import PotsView from '@/views/PotsView.vue'
+import RegisterView from '@/views/RegisterView.vue'
 import TopUpView from '@/views/TopUpView.vue'
+import VerifyView from '@/views/VerifyView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -18,6 +20,8 @@ const router = createRouter({
     // `props: true` hands the id to the View, so it does not read the route itself.
     { path: '/pots/:potId', name: 'pot', component: PotView, props: true },
     { path: '/pots/:potId/contribute', name: 'contribute', component: ContributeView, props: true },
+    { path: '/register', name: 'register', component: RegisterView },
+    { path: '/verify', name: 'verify', component: VerifyView },
   ],
 })
 

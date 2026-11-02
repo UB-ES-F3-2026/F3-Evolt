@@ -13,6 +13,7 @@ const {
   submitError,
   canSubmit,
   isSubmitting,
+  touchName,
   submit,
 } = useCreatePotViewModel()
 
@@ -36,6 +37,7 @@ onMounted(() => nameInput.value?.focus())
         :disabled="isSubmitting"
         :aria-invalid="nameError !== null"
         :aria-describedby="nameError ? 'pot-name-error' : undefined"
+        @blur="touchName"
       />
       <p v-if="nameError" id="pot-name-error" class="error" role="alert">{{ nameError }}</p>
 

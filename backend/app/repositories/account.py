@@ -38,3 +38,15 @@ class AccountRepository:
         if not isinstance(balance_cents, int) or isinstance(balance_cents, bool):
             raise TypeError("balance_cents ha de ser un enter en cèntims")
         self._seed.accounts[user_id].balance = balance_cents
+
+    def create_for_user(self, user_id: int) -> Account:
+        """Crea el compte principal d'un usuari nou, amb saldo 0 (T01.2, P19).
+
+        Com al seed, l'id del compte és el de l'usuari: cada usuari en té un.
+        Un usuari que ja té compte és un error de programació (ValueError).
+        """
+        if user_id in self._seed.accounts:
+            raise ValueError(f"L'usuari {user_id} ja té compte principal")
+        account = Account(id=user_id, user_id=user_id, balance=0)
+        self._seed.accounts[user_id] = account
+        return account
