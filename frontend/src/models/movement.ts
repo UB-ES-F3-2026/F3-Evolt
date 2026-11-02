@@ -6,7 +6,8 @@
  * - `icon` is a closed list; unknown values fall back to `other`.
  */
 
-const ICONS = ['topup', 'salary', 'transfer', 'shopping', 'food', 'transport', 'other'] as const
+// `savings` is the main-account movement of a contribution to a pot (docs/api.md §9.4).
+const ICONS = ['topup', 'salary', 'transfer', 'shopping', 'food', 'transport', 'savings', 'other'] as const
 const TYPES = ['income', 'expense'] as const
 
 export type MovementIcon = (typeof ICONS)[number]
