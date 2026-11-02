@@ -1127,9 +1127,9 @@ Camps nous del moviment, filtres i cerca al llistat, detall d'un moviment, infor
 | T11.1 (backend) | [10.3](#103-get-apimovementsmovementid) i [10.4](#104-post-apimovementsmovementidreports) |
 | T10.4, T11.2, T11.3 (frontend) | Les pantalles que fan servir aquestes rutes, i el justificant de [10.5](#105-justificant-pdf) |
 
-Totes les rutes d'aquest apartat resolen l'usuari igual que la resta ([apartat 2](#2-usuari-actual-i-estat-del-servei)): cada usuari només veu els seus moviments. Segueixen les convencions de l'[apartat 1](#1-convencions-generals).
+Totes les rutes d'aquest apartat són **rutes protegides** i resolen l'usuari igual que la resta: amb `X-User-Id` ([apartat 2](#2-usuari-actual-i-estat-del-servei)) mentre estigui permesa, i a partir de la T03.1 amb la sessió ([apartat 8.2](#82-sessió)). Cada usuari només veu els seus moviments. Segueixen les convencions de l'[apartat 1](#1-convencions-generals).
 
-Els exemples fan servir les dades de l'usuari 1 del seed, suposant que avui és el **3/11/2026**. Els ids són els del seed (`mov-01` és el més antic i `mov-30`, el més recent).
+Els exemples fan servir les dades de l'usuari 1 del seed, suposant que avui és el **3/11/2026**. Els ids són els del seed (`mov-01` és el més antic i `mov-30`, el més recent). En canvi, els exemples de l'[apartat 4](#4-endpoints) són fictícis i els seus ids no coincideixen amb el seed: per exemple, allà `mov-16` és una transferència i al seed és una recàrrega.
 
 ### 10.1 Camps nous de `Movement`
 
@@ -1318,7 +1318,7 @@ Informe d'un problema amb un moviment (US-11, criteri 3).
 
 - Si hi ha un error, no es desa res.
 - Es poden enviar diversos informes sobre el mateix moviment **[PROPOSTA — pendent de validar]**.
-- L'informe es desa en memòria i **no s'envia enlloc**. `POST /api/dev/reset` l'esborra.
+- L'informe es desa **en memòria**, com la resta de dades, i **no s'envia enlloc**. `POST /api/dev/reset` l'esborra. Si s'aprova la P20 i es fusiona la tasca de persistència (#106), es desarà a Firestore, igual que les sessions ([8.2](#82-sessió)).
 - En aquest sprint no hi ha cap ruta per consultar els informes: el frontend mostra la confirmació a partir de la resposta `201`.
 
 **Petició:**
@@ -1361,7 +1361,7 @@ Els codis són a la taula de l'[apartat 5](#taula-de-codis). Els missatges són 
 | `MOVEMENT_NOT_FOUND` | 404 **[PROPOSTA — pendent de validar]** | Les de `/api/movements/{movementId}…` | El moviment no existeix o és d'un altre usuari |
 | `INVALID_DESCRIPTION` | 422 **[PROPOSTA — pendent de validar]** | `POST /api/movements/{movementId}/reports` | La descripció és buida, només té espais o passa de 500 caràcters |
 
-- El `404` segueix la P11 de l'accés (PR #105) i el `POT_NOT_FOUND` de l'estalvi (PR #119). Si la P11 no s'aprova, l'estat el decideix l'equip.
+- El `404` segueix la P11 ([apartat 7](#7-punts-pendents-de-validar)), que ja el preveu per als recursos que no existeixen, igual que el `POT_NOT_FOUND` de l'estalvi (PR #119). Si la P11 no s'aprova, l'estat el decideix l'equip.
 - Un `MOVEMENT_NOT_FOUND` és un error de negoci amb el seu `code`. No té res a veure amb el `500 INTERNAL_ERROR` de les rutes que no existeixen ([apartat 5](#taula-de-codis)).
 
 `MOVEMENT_NOT_FOUND`:
@@ -1390,6 +1390,7 @@ Aquest apartat és per al backend. El frontend no en depèn.
 - **`reference`** la genera el repositori en crear el moviment, igual que l'`id` i el `seq`.
 - **Cerca de text:** la regla «sense distingir majúscules ni accents» viu en un sol lloc, una funció pura amb tests propis, que fan servir el servei o el repositori.
 - **Informes:** cada informe té `id`, el moviment, l'usuari, la descripció i la data de creació. Es desen en una col·lecció nova del seed, així que `POST /api/dev/reset` els esborra.
+- **Amb Firestore** (si s'aprova la P20, #106): els informes seran una col·lecció més, i la `reference` i l'`id` dels informes necessitaran un comptador propi, perquè Firestore no té autoincrement.
 - **Seed** **[PROPOSTA — pendent de validar]**. Els 30 moviments de l'usuari 1 no canvien d'import, de data, de concepte ni d'ordre, perquè en depenen els tests i els mocks del frontend. Guanyen:
   - `reference`: `EVT-000001` a `EVT-000030`, en l'ordre de creació (el mateix número que l'`id`);
   - `status`: `completed` a tots, excepte el més recent (`mov-30`, «Restaurant La Plaça»), que és `pending`;
