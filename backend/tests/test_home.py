@@ -12,7 +12,7 @@ from app.data.seed import DEMO_USER_ID, EMPTY_USER_ID, SeedData
 from app.models import Movement
 
 HOME_KEYS = {"balance", "totalSaved", "lastMovements"}
-MOVEMENT_KEYS = {"id", "amount", "concept", "date", "type", "icon"}
+MOVEMENT_KEYS = {"id", "amount", "concept", "date", "type", "icon", "counterparty", "status", "reference"}
 
 
 def _seed(client: TestClient) -> SeedData:
@@ -35,6 +35,9 @@ def _as_contract(movement: Movement) -> dict[str, object]:
         "date": movement.date.isoformat(),
         "type": movement.type,
         "icon": movement.icon,
+        "counterparty": movement.counterparty,
+        "status": movement.status,
+        "reference": movement.reference,
     }
 
 
