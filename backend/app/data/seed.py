@@ -33,6 +33,7 @@ from app.models import (
     Movement,
     Pot,
     PotMovement,
+    Session,
     User,
     now_madrid,
 )
@@ -112,6 +113,9 @@ class SeedData:
     next_movement_seq: int = field(default=1)
     # Comptador per als usuaris nous del registre (T01.2).
     next_user_id: int = field(default=1)
+    # Sessions obertes, per token (T03.1). El seed no en té cap: reiniciar les
+    # dades (arrencada o /api/dev/reset) tanca totes les sessions.
+    sessions: dict[str, Session] = field(default_factory=dict)
     # Comptador per a les guardioles noves (T17.2): pot-04, pot-05…
     next_pot_number: int = field(default=1)
     # Comptador per a les entrades noves de l'historial (T18.1): pmov-04, pmov-05…

@@ -27,6 +27,7 @@ from app.models.pot import (
     Pot,
     PotMovement,
 )
+from app.models.session import Session
 from app.models.user import (
     IDENTIFIER_EMAIL,
     IDENTIFIER_PHONE,
@@ -42,6 +43,7 @@ __all__ = [
     "Movement",
     "Pot",
     "PotMovement",
+    "Session",
     "User",
     "DEFAULT_POT_COLOR",
     "ICONS",

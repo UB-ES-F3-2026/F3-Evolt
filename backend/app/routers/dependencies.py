@@ -11,6 +11,7 @@ from app.repositories import (
     AccountRepository,
     MovementRepository,
     PotRepository,
+    SessionRepository,
     UserRepository,
 )
 
@@ -29,3 +30,7 @@ def pot_repository(request: Request) -> PotRepository:
 
 def movement_repository(request: Request) -> MovementRepository:
     return MovementRepository(request.app.state.seed)
+
+
+def session_repository(request: Request) -> SessionRepository:
+    return SessionRepository(request.app.state.seed)

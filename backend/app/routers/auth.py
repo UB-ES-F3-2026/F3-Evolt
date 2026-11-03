@@ -1,17 +1,19 @@
-"""Rutes d'accés (docs/api.md §8). De moment, el registre (T01.2 · US-01, §8.5).
+"""Rutes d'accés (docs/api.md §8): registre (T01.2, §8.5), login i logout (T03.1, §8.8 i §8.9).
 
 Les rutes `/api/auth/*` són públiques: no resolen l'usuari actual.
 """
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Header, status
 from pydantic import BaseModel, Field, StrictBool, StrictStr
 
 from app.models import User
-from app.repositories import AccountRepository, UserRepository
-from app.routers.dependencies import account_repository, user_repository
+from app.repositories import AccountRepository, SessionRepository, UserRepository
+from app.routers.current_user import bearer_token
+from app.routers.dependencies import account_repository, session_repository, user_repository
 from app.services.registration_service import register
+from app.services.session_service import login, logout
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -47,3 +49,40 @@ def create_account(
 ) -> RegisterResponse:
     user = register(body.identifier, body.password, body.accepted_terms, users, accounts)
     return RegisterResponse.from_user(user)
+
+
+class LoginRequest(BaseModel):
+    """Cos de la petició: `{ identifier, password }`. No es valida la política de contrasenya."""
+
+    identifier: StrictStr
+    password: StrictStr
+
+
+class SessionResponse(BaseModel):
+    """Cos de la resposta `200`: `{ token }`. La verificació (T02.1) també el farà servir."""
+
+    token: str
+
+
+class StatusResponse(BaseModel):
+    """Cos `{ status: "ok" }`. Sempre amb JSON: l'apiClient del frontend l'espera (§8.9)."""
+
+    status: str = "ok"
+
+
+@router.post("/login")
+def start_session(
+    body: LoginRequest,
+    users: Annotated[UserRepository, Depends(user_repository)],
+    sessions: Annotated[SessionRepository, Depends(session_repository)],
+) -> SessionResponse:
+    return SessionResponse(token=login(body.identifier, body.password, users, sessions))
+
+
+@router.post("/logout")
+def end_session(
+    sessions: Annotated[SessionRepository, Depends(session_repository)],
+    authorization: Annotated[str | None, Header()] = None,
+) -> StatusResponse:
+    logout(bearer_token(authorization), sessions)
+    return StatusResponse()
