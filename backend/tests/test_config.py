@@ -84,3 +84,27 @@ def test_dev_routes_disabled_are_not_registered(monkeypatch) -> None:
     assert "/api/dev/reset" not in app.openapi()["paths"]
     assert response.status_code == 500
     assert response.json()["code"] == INTERNAL_ERROR
+
+
+# --- ALLOW_X_USER_ID (T03.1, docs/api.md §8.2) ------------------------------------------
+
+
+def test_x_user_id_is_allowed_by_default() -> None:
+    # Fins a la T03.5 el frontend encara envia X-User-Id.
+    assert load_app_settings({}).allow_x_user_id
+
+
+def test_load_settings_allow_x_user_id_values() -> None:
+    for raw in ("true", "1", "YES"):
+        assert load_app_settings({"ALLOW_X_USER_ID": raw}).allow_x_user_id
+    for raw in ("false", "0", "No"):
+        assert not load_app_settings({"ALLOW_X_USER_ID": raw}).allow_x_user_id
+
+
+def test_load_settings_malformed_allow_x_user_id_disables_with_warning(caplog) -> None:
+    """Un valor mal escrit tanca la porta: sense token, cap ruta protegida."""
+    with caplog.at_level(logging.WARNING, logger="evolt"):
+        settings = load_app_settings({"ALLOW_X_USER_ID": "ture"})
+
+    assert not settings.allow_x_user_id
+    assert "ALLOW_X_USER_ID" in caplog.text

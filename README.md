@@ -187,6 +187,7 @@ runs exactly as in local development.
 |----------|---------|--------|--------|
 | `FRONTEND_ORIGINS` | `http://localhost:5173` | Comma-separated origins allowed by CORS (no trailing slash needed) | No |
 | `ENABLE_DEV_ROUTES` | `true` | `false` removes `/api/dev/*`; a misspelled value also disables them | No |
+| `ALLOW_X_USER_ID` | `true` | Protected routes without a session token may still use the `X-User-Id` header ([`docs/api.md` §8.2](docs/api.md#82-sessió)). Default `true` until T03.5, when the frontend stops sending it; a misspelled value disables it | No |
 | `SIMULATE_DELAY_MS` | off | See [Simulating delay and failure](#simulating-delay-and-failure-t082) | No |
 | `SIMULATE_ERROR_RATE` | off | See [Simulating delay and failure](#simulating-delay-and-failure-t082) | No |
 
@@ -216,6 +217,7 @@ The backend runs on [Render](https://render.com) (free plan) as a Web Service:
 |--------------------|-------|
 | `ENABLE_DEV_ROUTES` | `false` — nobody can reset the demo data |
 | `FRONTEND_ORIGINS` | `https://f3-evolt.onrender.com` (the deployed frontend, TR06.2) |
+| `ALLOW_X_USER_ID` | `true` until T03.5 (the deployed frontend still sends `X-User-Id`); `false` afterwards |
 
 Quick check: `curl https://evolt-api.onrender.com/api/health` → `{"status":"ok"}`.
 The root URL `/` has no route, so it answers `500 INTERNAL_ERROR` like any unknown path.

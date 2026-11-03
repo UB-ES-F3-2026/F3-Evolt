@@ -15,7 +15,13 @@ from app.data.seed import (
     build_seed,
 )
 from app.models import KIND_OTHER, KIND_TOPUP, TYPE_EXPENSE, TYPE_INCOME
-from app.repositories import AccountRepository, MovementRepository, PotRepository, UserRepository
+from app.repositories import (
+    AccountRepository,
+    MovementRepository,
+    PotRepository,
+    SessionRepository,
+    UserRepository,
+)
 
 # Data fixa perquè els tests no depenguin del dia en què s'executen.
 NOW = datetime(2026, 10, 13, 15, 0, 0, tzinfo=MADRID_TZ)
@@ -347,3 +353,34 @@ def test_create_account_for_new_user_starts_at_zero(seed):
 def test_user_cannot_get_a_second_account(seed):
     with pytest.raises(ValueError):
         AccountRepository(seed).create_for_user(DEMO_USER_ID)
+
+
+# --- SessionRepository (T03.1) ---------------------------------------------------------
+
+
+def test_create_session_gets_a_random_token(seed):
+    sessions = SessionRepository(seed)
+
+    first = sessions.create(DEMO_USER_ID, NOW)
+    second = sessions.create(DEMO_USER_ID, NOW)
+
+    assert first.token != second.token
+    assert len(first.token) >= 32
+    assert (first.user_id, first.last_activity) == (DEMO_USER_ID, NOW)
+    assert sessions.get(first.token) is first
+
+
+def test_touch_and_delete_session(seed):
+    sessions = SessionRepository(seed)
+    session = sessions.create(DEMO_USER_ID, NOW)
+
+    sessions.touch(session.token, NOW + timedelta(minutes=3))
+    assert sessions.get(session.token).last_activity == NOW + timedelta(minutes=3)
+
+    sessions.delete(session.token)
+    sessions.delete(session.token)  # tancar-la dues vegades no falla
+    assert sessions.get(session.token) is None
+
+
+def test_seed_has_no_sessions(seed):
+    assert seed.sessions == {}
