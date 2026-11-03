@@ -93,9 +93,10 @@ export function useMovementsViewModel(fetchPage: FetchPage = getMovements) {
   }
 
   // Ignored while another page is loading, after the last page, or after a failure
-  // (then only retry() asks again), so the same page is never loaded twice.
+  // (then only retry() asks again), so the same page is never loaded twice. Also
+  // ignored while the dates are the wrong way round, like the first page.
   async function loadMore(): Promise<void> {
-    if (isLoading.value || isLoadingMore.value || nextOffset.value === null || error.value) return
+    if (isLoading.value || isLoadingMore.value || nextOffset.value === null || error.value || dateError.value) return
     const current = generation
     isLoadingMore.value = true
     try {

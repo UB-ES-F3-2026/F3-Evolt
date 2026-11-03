@@ -311,6 +311,21 @@ describe('useMovementsViewModel filters (US-10)', () => {
     expect(fetchPage).toHaveBeenCalledTimes(2)
   })
 
+  it('does not ask for the next page while the dates are the wrong way round', async () => {
+    const fetchPage = fakeBackend(30)
+    const viewModel = useMovementsViewModel(fetchPage)
+    await viewModel.loadFirstPage()
+
+    viewModel.dateFrom.value = '2026-11-02'
+    viewModel.dateTo.value = '2026-11-01'
+    await flushPromises()
+    await viewModel.loadMore()
+
+    expect(fetchPage).toHaveBeenCalledTimes(1)
+    expect(viewModel.items.value).toHaveLength(20)
+    expect(viewModel.error.value).toBeNull()
+  })
+
   it('opens and closes the filters', () => {
     const viewModel = useMovementsViewModel(fakeBackend(0))
     expect(viewModel.areFiltersOpen.value).toBe(false)
