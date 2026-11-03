@@ -12,7 +12,8 @@ import type { MovementJson, MovementsPageJson, MovementsQuery } from '@/models/m
 import type { TopupJson } from '@/models/topup'
 import { madridDayKey, madridDaysAgoAt, toContractDate } from './madridTime'
 import { filterMovements } from './movementFilters'
-import { DEMO_MOVEMENTS, DEMO_TOTAL_SAVED, EMPTY_USER_ID } from './seed'
+import { mockTotalSaved } from './pots'
+import { DEMO_MOVEMENTS, IS_EMPTY_USER } from './seed'
 
 // Limits from docs/api.md §4.3, in cents.
 const MAX_TOPUP = 50000
@@ -27,12 +28,8 @@ interface StoredMovement {
   seq: number
 }
 
-// One user per `npm run dev` run, so a single in-memory state is enough.
-const isEmptyUser = (import.meta.env.VITE_DEMO_USER ?? '1') === EMPTY_USER_ID
-
-const movements: StoredMovement[] = isEmptyUser ? [] : buildDemoMovements(new Date())
+const movements: StoredMovement[] = IS_EMPTY_USER ? [] : buildDemoMovements(new Date())
 let balance = movements.reduce((sum, { json }) => sum + signedAmount(json), 0)
-const totalSaved = isEmptyUser ? 0 : DEMO_TOTAL_SAVED
 let nextNumber = DEMO_MOVEMENTS.length + 1
 
 export function useMocks(): boolean {
@@ -46,7 +43,7 @@ export function useMocks(): boolean {
 export function mockHome(): HomeJson {
   return {
     balance,
-    totalSaved,
+    totalSaved: mockTotalSaved(),
     lastMovements: sortedMovements().slice(0, LAST_MOVEMENTS),
   }
 }

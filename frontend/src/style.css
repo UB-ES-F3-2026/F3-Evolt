@@ -8,6 +8,13 @@
   --color-income: #16a34a;
   --color-expense: #dc2626;
   --color-error: #dc2626;
+  /* Pot colours (docs/api.md §9.1): never green or red, which mean income, expense and errors. */
+  --color-pot-purple: #4f46e5;
+  --color-pot-blue: #2563eb;
+  --color-pot-teal: #0d9488;
+  --color-pot-orange: #ea580c;
+  --color-pot-pink: #db2777;
+  --color-pot-yellow: #ca8a04;
   --radius: 0.75rem;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
