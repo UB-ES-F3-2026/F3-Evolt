@@ -18,6 +18,9 @@ INTERNAL_ERROR = "INTERNAL_ERROR"
 # Accés (docs/api.md §5 i §8.14). La resta de codis d'accés arriben amb les seves tasques.
 WEAK_PASSWORD = "WEAK_PASSWORD"
 ALREADY_REGISTERED = "ALREADY_REGISTERED"
+INVALID_CREDENTIALS = "INVALID_CREDENTIALS"
+ACCOUNT_NOT_VERIFIED = "ACCOUNT_NOT_VERIFIED"
+UNAUTHENTICATED = "UNAUTHENTICATED"
 
 # Codi d'error → estat HTTP de la resposta.
 ERROR_STATUS: dict[str, int] = {
@@ -28,6 +31,9 @@ ERROR_STATUS: dict[str, int] = {
     INTERNAL_ERROR: 500,
     WEAK_PASSWORD: 422,
     ALREADY_REGISTERED: 409,
+    INVALID_CREDENTIALS: 401,
+    ACCOUNT_NOT_VERIFIED: 403,
+    UNAUTHENTICATED: 401,
 }
 
 # Missatge per defecte de cada codi (docs/api.md §5). El contracte els marca
@@ -40,6 +46,9 @@ ERROR_MESSAGES: dict[str, str] = {
     INTERNAL_ERROR: "S'ha produït un error inesperat. Torna-ho a provar més tard.",
     WEAK_PASSWORD: "La contrasenya ha de tenir 8 caràcters, una majúscula i un número.",
     ALREADY_REGISTERED: "Aquest email o telèfon ja té un compte.",
+    INVALID_CREDENTIALS: "L'email, el telèfon o la contrasenya no són correctes.",
+    ACCOUNT_NOT_VERIFIED: "Has de verificar el compte abans d'iniciar sessió.",
+    UNAUTHENTICATED: "Cal iniciar sessió.",
 }
 
 

@@ -31,6 +31,7 @@ from app.models import (
     Account,
     Movement,
     Pot,
+    Session,
     User,
     now_madrid,
 )
@@ -106,6 +107,9 @@ class SeedData:
     next_movement_seq: int = field(default=1)
     # Comptador per als usuaris nous del registre (T01.2).
     next_user_id: int = field(default=1)
+    # Sessions obertes, per token (T03.1). El seed no en té cap: reiniciar les
+    # dades (arrencada o /api/dev/reset) tanca totes les sessions.
+    sessions: dict[str, Session] = field(default_factory=dict)
 
 
 def _days_ago_at(now: datetime, days_ago: int, hhmm: str) -> datetime:
