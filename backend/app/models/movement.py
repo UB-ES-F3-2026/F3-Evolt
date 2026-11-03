@@ -6,7 +6,7 @@ TYPE_EXPENSE = "expense"
 TYPES = frozenset({TYPE_INCOME, TYPE_EXPENSE})
 
 # Llista tancada d'icones (contracte, apartat 3).
-ICONS = frozenset({"topup", "salary", "transfer", "shopping", "food", "transport", "other"})
+ICONS = frozenset({"topup", "salary", "transfer", "shopping", "food", "transport", "savings", "other"})
 
 # Camp intern, no exposat a l'API (contracte, apartat 6).
 KIND_TOPUP = "topup"
@@ -16,6 +16,9 @@ KINDS = frozenset({KIND_TOPUP, KIND_OTHER})
 # Com es mostra sempre una recàrrega de prova (docs/api.md §4.3).
 TOPUP_CONCEPT = "Recàrrega"
 TOPUP_ICON = "topup"
+
+# Icona del moviment del compte que crea una aportació a una guardiola (docs/api.md §9.4).
+SAVINGS_ICON = "savings"
 
 
 @dataclass

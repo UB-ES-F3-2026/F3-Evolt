@@ -84,6 +84,17 @@ class MovementRepository:
         self._seed.movements.append(movement)
         return movement
 
+    def remove(self, movement: Movement) -> None:
+        """Treu un moviment acabat de crear, per desfer una operació que ha fallat (T18.1).
+
+        Si és l'últim que s'ha creat, els comptadors tornen enrere i no queda cap
+        forat a la numeració. No toca el saldo: això també ho desfà el servei.
+        """
+        self._seed.movements.remove(movement)
+        if movement.seq == self._seed.next_movement_seq - 1:
+            self._seed.next_movement_seq = movement.seq
+            self._seed.next_movement_number -= 1
+
     def sum_topups_on_day(self, account_id: int, day: date) -> int:
         """Suma de les recàrregues d'un compte en un dia natural de Madrid (T07.4).
 
