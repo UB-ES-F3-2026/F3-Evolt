@@ -8,9 +8,10 @@
 
 import type { ApiError } from '@/models/apiError'
 import type { HomeJson } from '@/models/home'
-import type { MovementJson, MovementsPageJson } from '@/models/movement'
+import type { MovementJson, MovementsPageJson, MovementsQuery } from '@/models/movement'
 import type { TopupJson } from '@/models/topup'
 import { madridDayKey, madridDaysAgoAt, toContractDate } from './madridTime'
+import { filterMovements } from './movementFilters'
 import { DEMO_MOVEMENTS, DEMO_TOTAL_SAVED, EMPTY_USER_ID } from './seed'
 
 // Limits from docs/api.md §4.3, in cents.
@@ -50,9 +51,9 @@ export function mockHome(): HomeJson {
   }
 }
 
-/** GET /api/movements?offset=&limit= */
-export function mockMovements(offset = 0, limit = 20): MovementsPageJson {
-  const all = sortedMovements()
+/** GET /api/movements?offset=&limit= plus the filters of docs/api.md §10.2, applied before paging. */
+export function mockMovements(offset = 0, limit = 20, query: MovementsQuery = {}): MovementsPageJson {
+  const all = filterMovements(sortedMovements(), query)
   const items = all.slice(offset, offset + limit)
   const nextOffset = offset + items.length < all.length ? offset + items.length : null
   return { items, nextOffset }
@@ -88,8 +89,8 @@ export function mockTopup(amountCents: number): TopupJson {
 }
 
 function buildDemoMovements(now: Date): StoredMovement[] {
-  return DEMO_MOVEMENTS.map(([daysAgo, hhmm, concept, type, icon, amount], index) =>
-    toStored(index + 1, madridDaysAgoAt(now, daysAgo, hhmm), concept, type, icon, amount),
+  return DEMO_MOVEMENTS.map(([daysAgo, hhmm, concept, type, icon, amount, counterparty], index) =>
+    toStored(index + 1, madridDaysAgoAt(now, daysAgo, hhmm), concept, type, icon, amount, counterparty),
   )
 }
 
@@ -100,11 +101,12 @@ function toStored(
   type: MovementJson['type'],
   icon: MovementJson['icon'],
   amount: number,
+  counterparty: string | null = null,
 ): StoredMovement {
   const date = toContractDate(at)
   return {
     // Same opaque id format as `movement_id()` in seed.py.
-    json: { id: `mov-${String(number).padStart(2, '0')}`, amount, concept, date, type, icon },
+    json: { id: `mov-${String(number).padStart(2, '0')}`, amount, concept, date, type, icon, counterparty },
     at: Date.parse(date),
     seq: number,
   }
