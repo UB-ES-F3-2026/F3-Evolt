@@ -6,6 +6,8 @@
  * - `color` is a closed list; an unknown value falls back to the default one.
  */
 
+import { fromApiMovement, type Movement, type MovementJson, type MovementType } from './movement'
+
 export const POT_COLORS = ['purple', 'blue', 'teal', 'orange', 'pink', 'yellow'] as const
 
 export type PotColor = (typeof POT_COLORS)[number]
@@ -52,6 +54,44 @@ export interface CreatePotRequest {
   color: PotColor
 }
 
+/**
+ * One entry of a pot's history (docs/api.md §9.5). `type` is seen from the pot:
+ * a contribution brings money in, so it is `income` here and `expense` in the main account.
+ */
+export interface PotMovement {
+  id: string
+  amount: number
+  concept: string
+  date: string
+  type: MovementType
+}
+
+export interface PotMovementJson {
+  id: string
+  amount: number
+  concept: string
+  date: string
+  type: string
+}
+
+/** GET /api/pots/{potId}/movements (docs/api.md §9.5). */
+export interface PotMovementsJson {
+  items: PotMovementJson[]
+}
+
+/** POST /api/pots/{potId}/contributions answer (docs/api.md §9.4): both new balances and the new movement. */
+export interface ContributionJson {
+  balance: number
+  pot: PotJson
+  movement: MovementJson
+}
+
+export interface Contribution {
+  balance: number
+  pot: Pot
+  movement: Movement
+}
+
 export function isPotColor(value: string): value is PotColor {
   return (POT_COLORS as readonly string[]).includes(value)
 }
@@ -68,4 +108,23 @@ export function fromApiPot(json: PotJson): Pot {
 
 export function fromApiPots(jsonList: PotJson[] | null | undefined): Pot[] {
   return (jsonList ?? []).map(fromApiPot)
+}
+
+export function fromApiPotMovements(jsonList: PotMovementJson[] | null | undefined): PotMovement[] {
+  return (jsonList ?? []).map((json) => ({
+    id: json.id,
+    amount: json.amount,
+    concept: json.concept,
+    date: json.date,
+    type: json.type === 'expense' ? 'expense' : 'income',
+  }))
+}
+
+export function fromApiContribution(json: ContributionJson): Contribution {
+  return { balance: json.balance, pot: fromApiPot(json.pot), movement: fromApiMovement(json.movement) }
+}
+
+/** A history entry drawn with the same row as the account movements, with the pot icon. */
+export function potMovementAsMovement(entry: PotMovement): Movement {
+  return { ...entry, icon: 'savings' }
 }

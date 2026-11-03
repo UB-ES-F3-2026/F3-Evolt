@@ -78,8 +78,27 @@ export function mockTopup(amountCents: number): TopupJson {
     )
   }
 
-  const stored = toStored(nextNumber++, now, 'Recàrrega', 'income', 'topup', amountCents)
-  balance += amountCents
+  return recordAccountMovement('Recàrrega', 'income', 'topup', amountCents, now)
+}
+
+/** Balance of the main account: what a contribution to a pot can spend (docs/api.md §9.4). */
+export function mockBalance(): number {
+  return balance
+}
+
+/**
+ * Adds a movement to the main account and moves its balance with it, so the balance stays
+ * the sum of the movements. The top-up and the pots mock (contributions) both go through here.
+ */
+export function recordAccountMovement(
+  concept: string,
+  type: MovementJson['type'],
+  icon: MovementJson['icon'],
+  amount: number,
+  at: Date = new Date(),
+): TopupJson {
+  const stored = toStored(nextNumber++, at, concept, type, icon, amount)
+  balance += signedAmount(stored.json)
   movements.push(stored)
   return { balance, movement: { ...stored.json } }
 }

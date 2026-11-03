@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { PiggyBank } from '@lucide/vue'
+import { ChevronRight, PiggyBank } from '@lucide/vue'
 import MoneyAmount from '@/components/MoneyAmount.vue'
 import type { Pot } from '@/models/pot'
 
-// The root element is an <li>: render rows inside a <ul>.
+// The root element is an <li>: render rows inside a <ul>. The whole row opens the pot.
 withDefaults(
   defineProps<{
     pot: Pot
@@ -15,22 +15,33 @@ withDefaults(
 </script>
 
 <template>
-  <li class="pot-row" :style="{ '--pot-color': `var(--color-pot-${pot.color})` }">
-    <span class="icon">
-      <PiggyBank :size="20" />
-    </span>
-    <span class="name">{{ pot.name }}</span>
-    <MoneyAmount class="balance" :cents="pot.balance" :hidden="hidden" />
+  <li class="pot-row-item">
+    <router-link
+      :to="{ name: 'pot', params: { potId: pot.id } }"
+      class="pot-row"
+      :style="{ '--pot-color': `var(--color-pot-${pot.color})` }"
+    >
+      <span class="icon">
+        <PiggyBank :size="20" />
+      </span>
+      <span class="name">{{ pot.name }}</span>
+      <MoneyAmount class="balance" :cents="pot.balance" :hidden="hidden" />
+      <ChevronRight class="chevron" :size="18" />
+    </router-link>
   </li>
 </template>
 
 <style scoped>
+.pot-row-item {
+  list-style: none;
+}
+
 .pot-row {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.625rem 0;
-  list-style: none;
+  color: var(--color-text);
 }
 
 .icon {
@@ -55,5 +66,10 @@ withDefaults(
 .balance {
   flex: none;
   font-weight: 600;
+}
+
+.chevron {
+  flex: none;
+  color: var(--color-muted);
 }
 </style>
