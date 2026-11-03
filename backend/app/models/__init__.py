@@ -18,7 +18,7 @@ from app.models.movement import (
     TYPES,
     Movement,
 )
-from app.models.pot import Pot
+from app.models.pot import DEFAULT_POT_COLOR, POT_COLORS, Pot
 from app.models.session import Session
 from app.models.user import (
     IDENTIFIER_EMAIL,
@@ -36,6 +36,7 @@ __all__ = [
     "Pot",
     "Session",
     "User",
+    "DEFAULT_POT_COLOR",
     "ICONS",
     "IDENTIFIER_EMAIL",
     "IDENTIFIER_PHONE",
@@ -47,6 +48,7 @@ __all__ = [
     "KIND_OTHER",
     "KIND_TOPUP",
     "MADRID_TZ",
+    "POT_COLORS",
     "TOPUP_CONCEPT",
     "TOPUP_ICON",
     "now_madrid",

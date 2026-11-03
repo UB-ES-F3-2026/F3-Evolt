@@ -8,9 +8,13 @@
  */
 
 import type { MovementIcon, MovementType } from '@/models/movement'
+import type { PotColor } from '@/models/pot'
 
 /** `X-User-Id` value of the user with an empty account (docs/api.md §2). */
 export const EMPTY_USER_ID = '2'
+
+// One user per `npm run dev` run, so every mock module can decide its data once.
+export const IS_EMPTY_USER = (import.meta.env.VITE_DEMO_USER ?? '1') === EMPTY_USER_ID
 
 /** [days ago, "HH:MM" in Madrid, concept, type, icon, amount in cents] */
 export type SeedMovement = readonly [number, string, string, MovementType, MovementIcon, number]
@@ -51,5 +55,13 @@ export const DEMO_MOVEMENTS: readonly SeedMovement[] = [
   [1, '21:15', 'Restaurant La Plaça', 'expense', 'food', 2350],
 ]
 
-/** Sum of the demo user's pots: Vacances 15000 + Emergències 10000 + Regal d'aniversari 5000. */
-export const DEMO_TOTAL_SAVED = 30000
+/** [name, balance, target or null, colour], all amounts in cents. */
+export type SeedPot = readonly [string, number, number | null, PotColor]
+
+// In creation order: the position gives the id (pot-01…). Targets and colours are the
+// ones docs/api.md §9.8 proposes for the backend seed. They add up to 30000 saved.
+export const DEMO_POTS: readonly SeedPot[] = [
+  ['Vacances', 15000, 100000, 'blue'],
+  ['Emergències', 10000, null, 'orange'],
+  ["Regal d'aniversari", 5000, 8000, 'pink'],
+]
