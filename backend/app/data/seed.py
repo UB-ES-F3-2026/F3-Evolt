@@ -30,9 +30,11 @@ from app.models import (
     TYPE_INCOME,
     Account,
     Movement,
+    OutboxMessage,
     Pot,
     Session,
     User,
+    VerificationCode,
     now_madrid,
 )
 
@@ -115,6 +117,10 @@ class SeedData:
     sessions: dict[str, Session] = field(default_factory=dict)
     # Comptador per a les guardioles noves (T17.2): pot-04, pot-05…
     next_pot_number: int = field(default=1)
+    # Codi de verificació vigent de cada usuari pendent, per user_id (T02.1).
+    verification_codes: dict[int, VerificationCode] = field(default_factory=dict)
+    # Bústia simulada: emails i SMS «enviats», en ordre d'enviament (T02.1, §8.12).
+    outbox: list[OutboxMessage] = field(default_factory=list)
 
 
 def _days_ago_at(now: datetime, days_ago: int, hhmm: str) -> datetime:

@@ -6,7 +6,7 @@ duplicat és feina del servei.
 """
 
 from app.data.seed import SeedData
-from app.models import User
+from app.models import USER_STATUSES, User
 
 
 class UserRepository:
@@ -55,3 +55,12 @@ class UserRepository:
         self._seed.users[user.id] = user
         self._seed.next_user_id += 1
         return user
+
+    def set_status(self, user_id: int, status: str) -> None:
+        """Canvia l'estat del compte (p. ex. `pending` → `active` en verificar, T02.1).
+
+        L'usuari ha d'existir (KeyError) i l'estat ha de ser de la llista (ValueError).
+        """
+        if status not in USER_STATUSES:
+            raise ValueError(f"status desconegut: {status!r}")
+        self._seed.users[user_id].status = status

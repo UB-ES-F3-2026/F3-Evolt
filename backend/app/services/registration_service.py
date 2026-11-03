@@ -7,12 +7,20 @@ Ordre de les validacions (s'aturen al primer error):
   2. Política de contrasenya → WEAK_PASSWORD.
   3. Identificador ja registrat, pendent o actiu → ALREADY_REGISTERED.
 Tot o res: primer es valida tot i només al final s'escriu.
+
+En acabar, l'usuari rep el codi de verificació a la bústia simulada (T02.1).
 """
 
 import threading
+from datetime import datetime
 
 from app.models import STATUS_PENDING, User
-from app.repositories import AccountRepository, UserRepository
+from app.repositories import (
+    AccountRepository,
+    OutboxRepository,
+    UserRepository,
+    VerificationCodeRepository,
+)
 from app.services.errors import (
     ALREADY_REGISTERED,
     VALIDATION_ERROR,
@@ -22,6 +30,7 @@ from app.services.errors import (
 from app.services.identifier import InvalidIdentifier, normalize_identifier
 from app.services.password_hashing import hash_password
 from app.services.password_policy import fits_password_hash, is_strong_password
+from app.services.verification_service import issue_code
 
 # El registre no demana nom (US-01). El camp existeix al model per a l'usuari del seed.
 NEW_USER_NAME = ""
@@ -39,10 +48,13 @@ def register(
     accepted_terms: bool,
     users: UserRepository,
     accounts: AccountRepository,
+    codes: VerificationCodeRepository,
+    outbox: OutboxRepository,
+    now: datetime | None = None,
 ) -> User:
-    """Crea l'usuari en estat «pendent» amb el seu compte principal a 0.
+    """Crea l'usuari en estat «pendent» amb el seu compte principal a 0, i li envia el codi.
 
-    No obre cap sessió (US-01). El codi de verificació l'afegeix la T02.1.
+    No obre cap sessió (US-01): la sessió s'obre en verificar el codi (US-02).
     """
     if accepted_terms is not True:
         raise ApiError(VALIDATION_ERROR)
@@ -78,4 +90,5 @@ def register(
             status=STATUS_PENDING,
         )
         accounts.create_for_user(user.id)
+    issue_code(user, codes, outbox, now)
     return user

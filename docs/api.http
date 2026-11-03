@@ -139,6 +139,73 @@ Content-Type: application/json
   "amount": 10000
 }
 
+### ---------------------------------------------------------------------------
+### Accés (US-01 a US-03, docs/api.md §8). Flux sencer: reinici → registre →
+### llegir el codi de la bústia → verificar → login → Home amb el token → logout.
+### Executa el reinici primer i les peticions en ordre.
+### ---------------------------------------------------------------------------
+
+### Registre (T01.2). Resposta esperada: 201  { "identifier": "ana@x.com", "status": "pending" }
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "identifier": "Ana@X.com",
+  "password": "Platja2026",
+  "acceptedTerms": true
+}
+
+### Bústia simulada (T02.1): el codi de 6 xifres és a "code" del primer missatge.
+### Al desplegament, cal afegir la capçalera  X-Dev-Key: <DEV_OUTBOX_KEY>  (§8.12).
+GET {{baseUrl}}/api/dev/outbox?to=ana@x.com
+
+### Verificar el codi (T02.1). Canvia 000000 pel codi de la bústia.
+### Resposta esperada: 200  { "token": "..." }  (incorrecte: 422 INVALID_CODE)
+POST {{baseUrl}}/api/auth/verify
+Content-Type: application/json
+
+{
+  "identifier": "ana@x.com",
+  "code": "000000"
+}
+
+### Envia'm un codi nou (T02.1). Sempre 200  { "status": "ok" }; l'anterior deixa de servir.
+POST {{baseUrl}}/api/auth/resend-code
+Content-Type: application/json
+
+{
+  "identifier": "ana@x.com"
+}
+
+### Login amb l'usuari del seed (T03.1). Resposta esperada: 200  { "token": "..." }
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "demo@evolt.test",
+  "password": "Evolt2026"
+}
+
+### Home amb el token del login anterior (sense X-User-Id).
+GET {{baseUrl}}/api/home
+Authorization: Bearer {{login.response.body.token}}
+
+### Login amb una contrasenya incorrecta.
+### Resposta esperada: 401  { "code": "INVALID_CREDENTIALS", ... }
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "demo@evolt.test",
+  "password": "Dolenta2026"
+}
+
+### Tancar sessió (T03.1). Sempre 200  { "status": "ok" }. Després, la Home amb
+### el mateix token respon 401 UNAUTHENTICATED.
+POST {{baseUrl}}/api/auth/logout
+Authorization: Bearer {{login.response.body.token}}
+
 ### Ruta inexistent: el contracte tracta qualsevol ruta no definida com a error
 ### inesperat (docs/api.md §5).
 ### Resposta esperada: 500  { "code": "INTERNAL_ERROR", ... }

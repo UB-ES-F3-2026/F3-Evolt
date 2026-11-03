@@ -14,13 +14,15 @@ from app.data.seed import (
     TOPUP_CONCEPT,
     build_seed,
 )
-from app.models import KIND_OTHER, KIND_TOPUP, TYPE_EXPENSE, TYPE_INCOME
+from app.models import KIND_OTHER, KIND_TOPUP, TYPE_EXPENSE, TYPE_INCOME, OutboxMessage
 from app.repositories import (
     AccountRepository,
     MovementRepository,
+    OutboxRepository,
     PotRepository,
     SessionRepository,
     UserRepository,
+    VerificationCodeRepository,
 )
 
 # Data fixa perquè els tests no depenguin del dia en què s'executen.
@@ -384,3 +386,48 @@ def test_touch_and_delete_session(seed):
 
 def test_seed_has_no_sessions(seed):
     assert seed.sessions == {}
+
+
+# --- Codis de verificació i bústia (T02.1) ---------------------------------------------
+
+
+def test_replace_code_invalidates_the_previous_one(seed):
+    codes = VerificationCodeRepository(seed)
+
+    codes.replace(DEMO_USER_ID, "111111", NOW)
+    codes.record_failure(DEMO_USER_ID)
+    codes.replace(DEMO_USER_ID, "222222", NOW + timedelta(minutes=1))
+
+    current = codes.get(DEMO_USER_ID)
+    assert (current.code, current.failed_attempts) == ("222222", 0)
+
+
+def test_record_failure_counts_and_delete_removes(seed):
+    codes = VerificationCodeRepository(seed)
+    codes.replace(DEMO_USER_ID, "111111", NOW)
+
+    assert [codes.record_failure(DEMO_USER_ID) for _ in range(3)] == [1, 2, 3]
+    codes.delete(DEMO_USER_ID)
+    codes.delete(DEMO_USER_ID)
+    assert codes.get(DEMO_USER_ID) is None
+
+
+def test_set_user_status(seed):
+    users = UserRepository(seed)
+    user = _new_user(users)
+
+    users.set_status(user.id, "active")
+
+    assert users.get(user.id).status == "active"
+    with pytest.raises(ValueError):
+        users.set_status(user.id, "blocked")
+
+
+def test_outbox_lists_newest_first_and_filters(seed):
+    outbox = OutboxRepository(seed)
+    for to in ("a@x.com", "b@x.com", "a@x.com"):
+        outbox.add(OutboxMessage(to=to, channel="email", type="verification_code", text="t", date=NOW))
+
+    assert [m.to for m in outbox.list()] == ["a@x.com", "b@x.com", "a@x.com"][::-1]
+    assert len(outbox.list("a@x.com")) == 2
+    assert outbox.list("ningu@x.com") == []
