@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import CreatePotView from '@/views/CreatePotView.vue'
 import HomeView from '@/views/HomeView.vue'
 import MovementsView from '@/views/MovementsView.vue'
 import PotsView from '@/views/PotsView.vue'
@@ -13,6 +14,7 @@ const router = createRouter({
     { path: '/movements', name: 'movements', component: MovementsView },
     { path: '/topup', name: 'topup', component: TopUpView },
     { path: '/pots', name: 'pots', component: PotsView },
+    { path: '/pots/new', name: 'create-pot', component: CreatePotView },
     { path: '/register', name: 'register', component: RegisterView },
     { path: '/verify', name: 'verify', component: VerifyView },
   ],

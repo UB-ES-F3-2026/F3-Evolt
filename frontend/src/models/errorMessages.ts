@@ -12,6 +12,8 @@ const MESSAGES: Record<ApiErrorCode, string> = {
   INVALID_AMOUNT: "L'import ha de ser més gran que 0.",
   AMOUNT_OVER_LIMIT: `L'import màxim per recàrrega és de ${formatCents(MAX_TOPUP_CENTS)}.`,
   DAILY_LIMIT_EXCEEDED: 'Has superat el límit diari de recàrrega.',
+  INVALID_POT_NAME: 'El nom de la guardiola no pot estar buit.',
+  INVALID_TARGET: "L'objectiu ha de ser més gran que 0.",
   VALIDATION_ERROR: 'Les dades no són vàlides. Revisa-les i torna-ho a provar.',
   INTERNAL_ERROR: "S'ha produït un error inesperat. Torna-ho a provar més tard.",
   NETWORK_ERROR: 'No hi ha connexió amb el servidor. Torna-ho a provar.',
@@ -34,3 +36,6 @@ export function messageForCode(code: ApiErrorCode, details?: ApiError['details']
 export function toUserMessage(failure: unknown): string {
   return isApiError(failure) ? messageForCode(failure.code, failure.details) : MESSAGES.INTERNAL_ERROR
 }
+
+/** An amount typed in euros that is not a number with at most 2 decimals (top-up, pot target). */
+export const AMOUNT_FORMAT_MESSAGE = 'Escriu un import en euros, amb 2 decimals com a màxim.'
