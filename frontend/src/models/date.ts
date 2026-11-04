@@ -7,6 +7,12 @@
 const TIME_ZONE = 'Europe/Madrid'
 
 const DAY = new Intl.DateTimeFormat('ca-ES', { timeZone: TIME_ZONE, day: 'numeric', month: 'short' })
+const FULL_DAY = new Intl.DateTimeFormat('ca-ES', {
+  timeZone: TIME_ZONE,
+  day: 'numeric',
+  month: 'numeric',
+  year: 'numeric',
+})
 const TIME = new Intl.DateTimeFormat('ca-ES', {
   timeZone: TIME_ZONE,
   hour: '2-digit',
@@ -20,4 +26,11 @@ export function formatDateTime(isoDate: string): string {
   // Intl throws on an invalid date; one bad value must not break a whole list.
   if (Number.isNaN(instant.getTime())) return isoDate
   return `${DAY.format(instant)} · ${TIME.format(instant)}`
+}
+
+/** With the year, for the detail of a movement: `"2026-10-11T21:15:00+02:00"` → `"11/10/2026, 21:15"` */
+export function formatFullDateTime(isoDate: string): string {
+  const instant = new Date(isoDate)
+  if (Number.isNaN(instant.getTime())) return isoDate
+  return `${FULL_DAY.format(instant)}, ${TIME.format(instant)}`
 }
