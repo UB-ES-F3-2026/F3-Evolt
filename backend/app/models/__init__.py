@@ -31,6 +31,7 @@ from app.models.outbox import (
     MESSAGE_VERIFICATION_CODE,
     OutboxMessage,
 )
+from app.models.password_reset import PasswordResetToken
 from app.models.pot import (
     DEFAULT_POT_COLOR,
     POT_COLORS,
@@ -58,6 +59,7 @@ __all__ = [
     "MovementFilters",
     "Pot",
     "OutboxMessage",
+    "PasswordResetToken",
     "PotMovement",
     "Session",
     "User",

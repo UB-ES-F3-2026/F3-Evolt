@@ -3,6 +3,7 @@
 from app.repositories.account import AccountRepository
 from app.repositories.movement import MovementRepository
 from app.repositories.outbox import OutboxRepository
+from app.repositories.password_reset import PasswordResetTokenRepository
 from app.repositories.pot import PotRepository
 from app.repositories.session import SessionRepository
 from app.repositories.user import UserRepository
@@ -12,6 +13,7 @@ __all__ = [
     "AccountRepository",
     "MovementRepository",
     "OutboxRepository",
+    "PasswordResetTokenRepository",
     "PotRepository",
     "SessionRepository",
     "UserRepository",

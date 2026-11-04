@@ -19,6 +19,7 @@ from app.repositories import (
     AccountRepository,
     MovementRepository,
     OutboxRepository,
+    PasswordResetTokenRepository,
     PotRepository,
     SessionRepository,
     UserRepository,
@@ -436,6 +437,45 @@ def test_set_login_state(seed):
     assert (users.get(DEMO_USER_ID).failed_logins, users.get(DEMO_USER_ID).locked_until) == (0, None)
     with pytest.raises(KeyError):
         users.set_login_state(999, failed_logins=0, locked_until=None)
+
+
+def test_password_reset_token_replace_get_and_use(seed):
+    # T04.1: un token nou per usuari esborra l'anterior.
+    tokens = PasswordResetTokenRepository(seed)
+    first = tokens.replace(DEMO_USER_ID, NOW)
+    other_user = tokens.replace(2, NOW)
+    second = tokens.replace(DEMO_USER_ID, NOW + timedelta(minutes=1))
+
+    assert len(second.token) >= 32
+    assert first.token != second.token
+    assert tokens.get(first.token) is None
+    assert tokens.get(second.token) is second
+    assert tokens.get(other_user.token) is other_user
+    assert not second.used
+
+    tokens.mark_used(second.token)
+    assert tokens.get(second.token).used
+
+
+def test_set_password_hash(seed):
+    users = UserRepository(seed)
+
+    users.set_password_hash(DEMO_USER_ID, "$2b$12$nou")
+
+    assert users.get(DEMO_USER_ID).password_hash == "$2b$12$nou"
+    with pytest.raises(ValueError):
+        users.set_password_hash(DEMO_USER_ID, "")
+
+
+def test_delete_sessions_of_a_user(seed):
+    sessions = SessionRepository(seed)
+    mine = [sessions.create(DEMO_USER_ID, NOW).token for _ in range(2)]
+    other = sessions.create(2, NOW).token
+
+    sessions.delete_for_user(DEMO_USER_ID)
+
+    assert [sessions.get(t) for t in mine] == [None, None]
+    assert sessions.get(other) is not None
 
 
 def test_outbox_lists_newest_first_and_filters(seed):

@@ -76,3 +76,9 @@ class UserRepository:
         user = self._seed.users[user_id]
         user.failed_logins = failed_logins
         user.locked_until = locked_until
+
+    def set_password_hash(self, user_id: int, password_hash: str) -> None:
+        """Desa el hash de la contrasenya nova (T04.1). L'usuari ha d'existir (KeyError)."""
+        if not password_hash:
+            raise ValueError("password_hash no pot ser buit")
+        self._seed.users[user_id].password_hash = password_hash

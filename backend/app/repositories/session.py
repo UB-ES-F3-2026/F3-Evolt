@@ -40,3 +40,9 @@ class SessionRepository:
     def delete(self, token: str) -> None:
         """Tanca la sessió. Si ja no existia, no fa res."""
         self._seed.sessions.pop(token, None)
+
+    def delete_for_user(self, user_id: int) -> None:
+        """Tanca totes les sessions de l'usuari, a tots els dispositius (T04.1)."""
+        sessions = self._seed.sessions
+        for token in [t for t, session in sessions.items() if session.user_id == user_id]:
+            del sessions[token]

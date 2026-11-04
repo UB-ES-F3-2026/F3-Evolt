@@ -1,7 +1,8 @@
 """Rutes d'accés (docs/api.md §8).
 
 Registre (T01.2, §8.5), verificació i reenviament del codi (T02.1, §8.6 i §8.7),
-login i logout (T03.1, §8.8 i §8.9), bloqueig als 5 errors (T03.2).
+login i logout (T03.1, §8.8 i §8.9), bloqueig als 5 errors (T03.2) i
+recuperació de la contrasenya (T04.1, §8.10 i §8.11).
 
 Les rutes `/api/auth/*` són públiques: no resolen l'usuari actual.
 """
@@ -15,6 +16,7 @@ from app.models import User
 from app.repositories import (
     AccountRepository,
     OutboxRepository,
+    PasswordResetTokenRepository,
     SessionRepository,
     UserRepository,
     VerificationCodeRepository,
@@ -22,11 +24,14 @@ from app.repositories import (
 from app.routers.current_user import bearer_token
 from app.routers.dependencies import (
     account_repository,
+    frontend_url,
     outbox_repository,
+    password_reset_token_repository,
     session_repository,
     user_repository,
     verification_code_repository,
 )
+from app.services.password_reset_service import forgot_password, reset_password
 from app.services.registration_service import register
 from app.services.session_service import login, logout
 from app.services.verification_service import resend, verify
@@ -141,4 +146,42 @@ def resend_code(
 ) -> StatusResponse:
     """Sempre la mateixa resposta, existeixi o no el compte (§8.7)."""
     resend(body.identifier, users, codes, outbox)
+    return StatusResponse()
+
+
+class ForgotPasswordRequest(BaseModel):
+    """Cos de la petició: `{ identifier }`, email o telèfon."""
+
+    identifier: StrictStr
+
+
+class ResetPasswordRequest(BaseModel):
+    """Cos de la petició: `{ token, password }`. El `token` ve de l'URL de l'enllaç."""
+
+    token: StrictStr
+    password: StrictStr
+
+
+@router.post("/forgot-password")
+def request_password_reset(
+    body: ForgotPasswordRequest,
+    users: Annotated[UserRepository, Depends(user_repository)],
+    tokens: Annotated[PasswordResetTokenRepository, Depends(password_reset_token_repository)],
+    outbox: Annotated[OutboxRepository, Depends(outbox_repository)],
+    base_url: Annotated[str, Depends(frontend_url)],
+) -> StatusResponse:
+    """Sempre la mateixa resposta, existeixi o no el compte (§8.10)."""
+    forgot_password(body.identifier, users, tokens, outbox, base_url)
+    return StatusResponse()
+
+
+@router.post("/reset-password")
+def change_password(
+    body: ResetPasswordRequest,
+    users: Annotated[UserRepository, Depends(user_repository)],
+    tokens: Annotated[PasswordResetTokenRepository, Depends(password_reset_token_repository)],
+    sessions: Annotated[SessionRepository, Depends(session_repository)],
+) -> StatusResponse:
+    """Contrasenya nova i totes les sessions tancades. No obre cap sessió (§8.11)."""
+    reset_password(body.token, body.password, users, tokens, sessions)
     return StatusResponse()
