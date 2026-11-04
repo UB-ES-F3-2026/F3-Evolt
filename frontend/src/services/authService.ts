@@ -2,8 +2,9 @@
 
 import { apiPost } from './apiClient'
 import { useMocks } from '@/mocks'
-import { mockRegister, mockResendCode, mockVerify } from '@/mocks/auth'
+import { mockLogin, mockLogout, mockRegister, mockResendCode, mockVerify } from '@/mocks/auth'
 import type {
+  LoginRequest,
   RegisterJson,
   RegisterRequest,
   SessionJson,
@@ -23,4 +24,12 @@ export async function resendCode(identifier: string): Promise<StatusJson> {
   return useMocks()
     ? mockResendCode(identifier)
     : apiPost<StatusJson>('/api/auth/resend-code', { identifier })
+}
+
+export async function login(request: LoginRequest): Promise<SessionJson> {
+  return useMocks() ? mockLogin(request) : apiPost<SessionJson>('/api/auth/login', request)
+}
+
+export async function logout(): Promise<StatusJson> {
+  return useMocks() ? mockLogout() : apiPost<StatusJson>('/api/auth/logout', undefined)
 }
