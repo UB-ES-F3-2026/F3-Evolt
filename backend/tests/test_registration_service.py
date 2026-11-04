@@ -9,7 +9,12 @@ from datetime import datetime
 import pytest
 
 from app.data.seed import MADRID_TZ, build_seed
-from app.repositories import AccountRepository, UserRepository
+from app.repositories import (
+    AccountRepository,
+    OutboxRepository,
+    UserRepository,
+    VerificationCodeRepository,
+)
 from app.services.errors import (
     ALREADY_REGISTERED,
     VALIDATION_ERROR,
@@ -28,11 +33,20 @@ def seed():
 
 
 def _register(seed, identifier="ana@x.com", password="Platja2026", accepted_terms=True):
-    return register(identifier, password, accepted_terms, UserRepository(seed), AccountRepository(seed))
+    return register(
+        identifier,
+        password,
+        accepted_terms,
+        UserRepository(seed),
+        AccountRepository(seed),
+        VerificationCodeRepository(seed),
+        OutboxRepository(seed),
+        now=NOW,
+    )
 
 
 def _snapshot(seed):
-    return (sorted(seed.users), sorted(seed.accounts), seed.next_user_id)
+    return (sorted(seed.users), sorted(seed.accounts), seed.next_user_id, len(seed.outbox))
 
 
 def test_register_returns_the_pending_user_with_a_hash(seed):
@@ -90,3 +104,15 @@ def test_simultaneous_registrations_with_the_same_email_create_one_user(seed):
     assert results.count(ALREADY_REGISTERED) == threads_count - 1
     assert [u.identifier for u in seed.users.values()].count("ana@x.com") == 1
     assert seed.next_user_id == 4
+
+
+def test_register_sends_a_verification_code(seed):
+    # R-03 (T02.1): el codi arriba a la bústia i queda desat com a codi vigent.
+    user = _register(seed)
+
+    [message] = seed.outbox
+    assert message.to == "ana@x.com"
+    assert message.channel == "email"
+    assert message.type == "verification_code"
+    assert message.date == NOW
+    assert seed.verification_codes[user.id].code == message.code

@@ -2,13 +2,14 @@
 
 L'ordre (data descendent, desempat per `seq`) i el tall per `offset`/`limit` els fa
 el repositori; aquest servei resol el compte de l'usuari i decideix si hi ha una
-pàgina següent.
+pàgina següent. Els filtres (T10.3, §10.2) els aplica el repositori, abans de paginar.
 """
 
 from dataclasses import dataclass
 
-from app.models import Movement
+from app.models import Movement, MovementFilters
 from app.repositories import AccountRepository, MovementRepository
+from app.services.errors import VALIDATION_ERROR, ApiError
 
 DEFAULT_LIMIT = 20
 MAX_LIMIT = 50
@@ -29,6 +30,7 @@ def list_movements(
     movements: MovementRepository,
     offset: int = 0,
     limit: int = DEFAULT_LIMIT,
+    filters: MovementFilters | None = None,
 ) -> MovementsPage:
     """Moviments d'un usuari, del més recent al més antic, en pàgines."""
     # El router ja valida el rang i respon VALIDATION_ERROR; això només protegeix
@@ -36,14 +38,17 @@ def list_movements(
     if offset < 0 or not 1 <= limit <= MAX_LIMIT:
         raise ValueError(f"offset={offset} o limit={limit} fora de rang")
 
+    if filters and filters.date_from and filters.date_to and filters.date_from > filters.date_to:
+        raise ApiError(VALIDATION_ERROR)
+
     account = accounts.get_by_user(user_id)
     if account is None:
         # `current_user_id` ja rebutja els usuaris inexistents amb un 422: arribar
         # aquí és un error de programació i ha d'acabar en INTERNAL_ERROR.
         raise LookupError(f"L'usuari {user_id} no té compte principal")
 
-    items = movements.list_by_account(account.id, offset, limit)
+    items = movements.list_by_account(account.id, offset, limit, filters)
     end = offset + len(items)
     # Un offset >= total no és un error (P3): pàgina buida i nextOffset null.
-    has_more = end < movements.count_by_account(account.id)
+    has_more = end < movements.count_by_account(account.id, filters)
     return MovementsPage(items=items, next_offset=end if has_more else None)

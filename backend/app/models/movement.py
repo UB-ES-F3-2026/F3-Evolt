@@ -1,5 +1,8 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
+
+from app.models.clock import MADRID_TZ
+from app.models.text import fold_text
 
 TYPE_INCOME = "income"
 TYPE_EXPENSE = "expense"
@@ -90,3 +93,31 @@ class Movement:
     def sort_key(self) -> tuple[datetime, int]:
         """Clau d'ordenació. Fes servir reverse=True: més recent primer."""
         return (self.date, self.seq)
+
+
+@dataclass(frozen=True)
+class MovementFilters:
+    """Filtres de `GET /api/movements` (T10.3, docs/api.md §10.2). Sense valor, no filtren."""
+
+    date_from: date | None = None
+    date_to: date | None = None
+    type: str | None = None
+    text: str | None = None
+
+    def matches(self, movement: Movement) -> bool:
+        """Si el moviment compleix tots els filtres.
+
+        Les dates són dies de Madrid, amb els dos extrems inclosos. El text es busca
+        com a part del concepte o de la contrapart; un text només amb espais no filtra.
+        """
+        day = movement.date.astimezone(MADRID_TZ).date()
+        if self.date_from is not None and day < self.date_from:
+            return False
+        if self.date_to is not None and day > self.date_to:
+            return False
+        if self.type is not None and movement.type != self.type:
+            return False
+        text = fold_text(self.text.strip()) if self.text else ""
+        if not text:
+            return True
+        return any(text in fold_text(field) for field in (movement.concept, movement.counterparty or ""))
