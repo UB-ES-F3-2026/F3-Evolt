@@ -45,6 +45,15 @@ describe('the session token', () => {
 
     expect(sentHeaders()).not.toHaveProperty('Authorization')
   })
+
+  it('is the only way to say who the user is: no request sends X-User-Id (SP-07)', async () => {
+    saveToken('token-1')
+    answer(200, { ok: true })
+
+    await apiGet('/api/home')
+
+    expect(sentHeaders()).not.toHaveProperty('X-User-Id')
+  })
 })
 
 describe('an answer saying the session is gone', () => {
