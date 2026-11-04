@@ -12,6 +12,8 @@ export interface NewPasswordDependencies {
   token: string | null
   resetPassword: (request: ResetPasswordRequest) => Promise<StatusJson>
   closeSession: () => void
+  /** Takes the used token out of the address bar and the history. */
+  removeTokenFromAddress: () => void
 }
 
 /** "Nova contrasenya" screen (US-04): the new password, with the same checks as the register. */
@@ -40,6 +42,7 @@ export function useNewPasswordViewModel(dependencies: NewPasswordDependencies = 
       await dependencies.resetPassword({ token, password: password.value })
       // The backend has just closed every session of this person (docs/api.md §8.11), this one too.
       dependencies.closeSession()
+      dependencies.removeTokenFromAddress()
       isChanged.value = true
       return true
     } catch (failure) {
@@ -75,5 +78,7 @@ function defaultDependencies(): NewPasswordDependencies {
     token: typeof token === 'string' ? token : null,
     resetPassword,
     closeSession,
+    // Straight to the browser history: the screen must stay as it is, only the address changes.
+    removeTokenFromAddress: () => window.history.replaceState(window.history.state, '', window.location.pathname),
   }
 }

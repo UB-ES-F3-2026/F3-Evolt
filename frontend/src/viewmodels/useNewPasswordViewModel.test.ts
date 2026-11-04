@@ -7,6 +7,7 @@ function fakeDependencies(overrides: Partial<NewPasswordDependencies> = {}) {
     token: 'token-1',
     resetPassword: vi.fn(() => Promise.resolve({ status: 'ok' as const })),
     closeSession: vi.fn(),
+    removeTokenFromAddress: vi.fn(),
     ...overrides,
   }
 }
@@ -42,6 +43,15 @@ describe('useNewPasswordViewModel', () => {
     expect(dependencies.closeSession).toHaveBeenCalledTimes(1)
     expect(viewModel.isChanged.value).toBe(true)
     expect(viewModel.isSubmitting.value).toBe(false)
+  })
+
+  it('takes the used token out of the address once the password is changed', async () => {
+    const dependencies = fakeDependencies()
+    const viewModel = filledViewModel(dependencies)
+
+    await viewModel.submit()
+
+    expect(dependencies.removeTokenFromAddress).toHaveBeenCalledTimes(1)
   })
 
   it('says the link expired and offers a new one', async () => {
