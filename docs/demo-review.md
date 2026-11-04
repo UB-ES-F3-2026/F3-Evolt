@@ -23,7 +23,7 @@ Open `FRONTEND_URL` (the deployed frontend, e.g.
 | 2 | Balance visibility toggle | Eye button hides/reveals the balance amount |
 | 3 | Movements list | Paging/`loadMore` works if there are more than one page |
 | 4 | Loading state | Spinner/skeleton visible while the API answers; if the UI looks instant, load is too fast — see "demo knobs" below |
-| 5 | Empty state | The seed's second user (no movements) shows the empty message. The deployed build always sends `X-User-Id: 1`, so verify this locally against the public API: `cd frontend && VITE_USE_MOCKS=false VITE_DEMO_USER=2 npm run dev` |
+| 5 | Empty state | The seed's empty account shows the empty message. Log out and log in as `buit@evolt.test` (fictitious seed accounts, [`api.md` §8.13](api.md)) |
 | 6 | Error state | UI shows a user-safe error message, not a raw red screen |
 | 7 | Top-up — happy path | Valid amount (e.g. 50 €) increases balance, new movement appears in the list |
 | 8 | Top-up — invalid amount | `0`, negative or non-numeric → inline validation, no request sent |

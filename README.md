@@ -143,7 +143,6 @@ The frontend runs on [Render](https://render.com) as a free **Static Site**
 |--------------------|-------|
 | `VITE_API_URL` | `https://evolt-api.onrender.com` (no trailing slash) |
 | `VITE_USE_MOCKS` | `false` — without it the site shows the mocks, not the backend |
-| `VITE_DEMO_USER` | `1` |
 
 `VITE_*` values are baked into the build: after changing one on Render,
 **redeploy** for it to take effect. The backend must list this URL in its
@@ -214,7 +213,7 @@ runs exactly as in local development.
 |----------|---------|--------|--------|
 | `FRONTEND_ORIGINS` | `http://localhost:5173` | Comma-separated origins allowed by CORS (no trailing slash needed) | No |
 | `ENABLE_DEV_ROUTES` | `true` | `false` removes `/api/dev/*`; a misspelled value also disables them | No |
-| `ALLOW_X_USER_ID` | `true` | Protected routes without a session token may still use the `X-User-Id` header ([`docs/api.md` §8.2](docs/api.md#82-sessió)). Default `true` until T03.5, when the frontend stops sending it; a misspelled value disables it | No |
+| `ALLOW_X_USER_ID` | `true` | Protected routes without a session token may still use the `X-User-Id` header ([`docs/api.md` §8.2](docs/api.md#82-sessió)). Default `true`, for local tools and the tests; since T03.5 the frontend only sends the session token. A misspelled value disables it | No |
 | `ENABLE_DEV_OUTBOX` | same as `ENABLE_DEV_ROUTES` | Exposes `GET /api/dev/outbox`, the simulated mailbox with verification codes ([`docs/api.md` §8.12](docs/api.md#812-get-apidevoutbox)). With `ENABLE_DEV_ROUTES=false` it only opens if `DEV_OUTBOX_KEY` is set too | No |
 | `DEV_OUTBOX_KEY` | unset | If set, `GET /api/dev/outbox` needs the header `X-Dev-Key` with this value | **Yes** |
 | `SIMULATE_DELAY_MS` | off | See [Simulating delay and failure](#simulating-delay-and-failure-t082) | No |
@@ -246,7 +245,7 @@ The backend runs on [Render](https://render.com) (free plan) as a Web Service:
 |--------------------|-------|
 | `ENABLE_DEV_ROUTES` | `false` — nobody can reset the demo data |
 | `FRONTEND_ORIGINS` | `https://f3-evolt.onrender.com` (the deployed frontend, TR06.2) |
-| `ALLOW_X_USER_ID` | `true` until T03.5 (the deployed frontend still sends `X-User-Id`); `false` afterwards |
+| `ALLOW_X_USER_ID` | `false` — since T03.5 the frontend only sends the session token |
 | `ENABLE_DEV_OUTBOX` | `true` only for the demo, so the presenter can read the verification code |
 | `DEV_OUTBOX_KEY` | Secret, shared only inside the team (Render dashboard, never in the repo). Required if `ENABLE_DEV_OUTBOX=true` |
 
