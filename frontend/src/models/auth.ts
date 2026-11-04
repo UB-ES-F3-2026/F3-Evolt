@@ -32,4 +32,10 @@ export interface LoginRequest {
   password: string
 }
 
+export interface ResetPasswordRequest {
+  /** The one in the recovery link. */
+  token: string
+  password: string
+}
+
 export const CODE_LENGTH = 6
