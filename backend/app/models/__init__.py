@@ -21,6 +21,7 @@ from app.models.movement import (
     TYPE_INCOME,
     TYPES,
     Movement,
+    MovementFilters,
 )
 from app.models.outbox import (
     CHANNEL_EMAIL,
@@ -39,6 +40,7 @@ from app.models.pot import (
     PotMovement,
 )
 from app.models.session import Session
+from app.models.text import fold_text
 from app.models.user import (
     IDENTIFIER_EMAIL,
     IDENTIFIER_PHONE,
@@ -53,6 +55,7 @@ from app.models.verification import CODE_LENGTH, VerificationCode
 __all__ = [
     "Account",
     "Movement",
+    "MovementFilters",
     "Pot",
     "OutboxMessage",
     "PotMovement",
@@ -86,6 +89,7 @@ __all__ = [
     "SAVINGS_ICON",
     "TOPUP_CONCEPT",
     "TOPUP_ICON",
+    "fold_text",
     "now_madrid",
     "TYPES",
     "TYPE_EXPENSE",

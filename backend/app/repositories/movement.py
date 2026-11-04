@@ -7,7 +7,7 @@ negoci: això és feina dels serveis.
 from datetime import date, datetime
 
 from app.data.seed import MADRID_TZ, SeedData, movement_id, movement_reference
-from app.models import KIND_TOPUP, MOVEMENT_STATUS_COMPLETED, Movement
+from app.models import KIND_TOPUP, MOVEMENT_STATUS_COMPLETED, Movement, MovementFilters
 
 
 class MovementRepository:
@@ -16,7 +16,13 @@ class MovementRepository:
     def __init__(self, seed: SeedData) -> None:
         self._seed = seed
 
-    def list_by_account(self, account_id: int, offset: int, limit: int) -> list[Movement]:
+    def list_by_account(
+        self,
+        account_id: int,
+        offset: int,
+        limit: int,
+        filters: MovementFilters | None = None,
+    ) -> list[Movement]:
         """Moviments d'un compte en pàgina, del més recent al més antic (T07.4).
 
         Ordena per `date` descendent i, si dues dates coincideixen, va primer
@@ -30,19 +36,21 @@ class MovementRepository:
         (T08.1, §4.2). S'ordenen els moviments en llegir, no en escriure.
         El filtre és l'`account_id` (els moviments el porten): resoldre
         usuari → compte és feina d'AccountRepository.
+        Amb `filters`, s'apliquen abans de paginar (T10.3, §10.2).
         """
         if offset < 0 or limit < 1:
             raise ValueError("paginació invàlida: offset ha de ser ≥ 0 i limit ha de ser ≥ 1")
-        ordered = sorted(self._by_account(account_id), key=Movement.sort_key, reverse=True)
+        ordered = sorted(self._filtered(account_id, filters), key=Movement.sort_key, reverse=True)
         return ordered[offset : offset + limit]
 
-    def count_by_account(self, account_id: int) -> int:
+    def count_by_account(self, account_id: int, filters: MovementFilters | None = None) -> int:
         """Nombre de moviments d'un compte (T07.4).
 
         Existeix perquè T08.1 pugui calcular `nextOffset` (§4.2) sense
-        carregar tots els moviments.
+        carregar tots els moviments. Amb `filters`, només compta els que els
+        compleixen: `nextOffset` es calcula sobre el resultat filtrat (T10.3, §10.2).
         """
-        return len(self._by_account(account_id))
+        return len(self._filtered(account_id, filters))
 
     def add(
         self,
@@ -117,6 +125,13 @@ class MovementRepository:
             if movement.kind == KIND_TOPUP
             and movement.date.astimezone(MADRID_TZ).date() == day
         )
+
+    def _filtered(self, account_id: int, filters: MovementFilters | None) -> list[Movement]:
+        """Moviments d'un compte que compleixen els filtres (ajudant intern) (T10.3)."""
+        movements = self._by_account(account_id)
+        if filters is None:
+            return movements
+        return [movement for movement in movements if filters.matches(movement)]
 
     def _by_account(self, account_id: int) -> list[Movement]:
         """Còpia filtrada dels moviments d'un compte (ajudant intern) (T07.4)."""
