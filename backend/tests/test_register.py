@@ -1,7 +1,7 @@
 """Tests de T01.2: POST /api/auth/register (docs/api.md §8.5).
 
 Proves R-01 a R-17 de docs/proves-acces.md. R-03 (el codi a la bústia) i el
-canal `sms` de R-12 arriben amb la T02.1.
+canal `sms` de R-12 són de la T02.1.
 
 Executar des de backend/:  python -m pytest tests/test_register.py
 """
@@ -236,3 +236,35 @@ def test_dev_reset_removes_registered_users(client: TestClient) -> None:
     client.post("/api/dev/reset")
 
     assert _register(client, "ana@x.com").status_code == 201
+
+
+# --- Codi de verificació (T02.1) ----------------------------------------------------
+
+
+def test_register_leaves_a_6_digit_code_in_the_outbox(client: TestClient) -> None:
+    # R-03
+    _register(client, "ana@x.com")
+
+    messages = client.get("/api/dev/outbox", params={"to": "ana@x.com"}).json()["messages"]
+
+    assert len(messages) == 1
+    assert messages[0]["channel"] == "email"
+    assert messages[0]["type"] == "verification_code"
+    assert len(messages[0]["code"]) == 6
+    assert messages[0]["code"].isdigit()
+    assert messages[0]["code"] in messages[0]["text"]
+
+
+def test_register_with_a_phone_sends_an_sms(client: TestClient) -> None:
+    # R-12
+    _register(client, "612 34 56 78")
+
+    messages = client.get("/api/dev/outbox", params={"to": "+34612345678"}).json()["messages"]
+
+    assert [m["channel"] for m in messages] == ["sms"]
+
+
+def test_failed_register_sends_nothing(client: TestClient) -> None:
+    _register(client, "ana@x.com", password="feble")
+
+    assert client.get("/api/dev/outbox").json() == {"messages": []}

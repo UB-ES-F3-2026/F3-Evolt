@@ -84,3 +84,67 @@ def test_dev_routes_disabled_are_not_registered(monkeypatch) -> None:
     assert "/api/dev/reset" not in app.openapi()["paths"]
     assert response.status_code == 500
     assert response.json()["code"] == INTERNAL_ERROR
+
+
+# --- ALLOW_X_USER_ID (T03.1, docs/api.md §8.2) ------------------------------------------
+
+
+def test_x_user_id_is_allowed_by_default() -> None:
+    # Fins a la T03.5 el frontend encara envia X-User-Id.
+    assert load_app_settings({}).allow_x_user_id
+
+
+def test_load_settings_allow_x_user_id_values() -> None:
+    for raw in ("true", "1", "YES"):
+        assert load_app_settings({"ALLOW_X_USER_ID": raw}).allow_x_user_id
+    for raw in ("false", "0", "No"):
+        assert not load_app_settings({"ALLOW_X_USER_ID": raw}).allow_x_user_id
+
+
+def test_load_settings_malformed_allow_x_user_id_disables_with_warning(caplog) -> None:
+    """Un valor mal escrit tanca la porta: sense token, cap ruta protegida."""
+    with caplog.at_level(logging.WARNING, logger="evolt"):
+        settings = load_app_settings({"ALLOW_X_USER_ID": "ture"})
+
+    assert not settings.allow_x_user_id
+    assert "ALLOW_X_USER_ID" in caplog.text
+
+
+# --- Bústia simulada (T02.1, docs/api.md §8.12, P46) ------------------------------------
+
+
+def test_outbox_follows_dev_routes_when_not_set() -> None:
+    assert load_app_settings({}).dev_outbox_enabled
+    assert not load_app_settings({"ENABLE_DEV_ROUTES": "false"}).dev_outbox_enabled
+
+
+def test_outbox_can_be_enabled_on_deploy_with_a_key() -> None:
+    settings = load_app_settings(
+        {"ENABLE_DEV_ROUTES": "false", "ENABLE_DEV_OUTBOX": "true", "DEV_OUTBOX_KEY": " secreta "}
+    )
+
+    assert settings.dev_outbox_enabled
+    assert settings.dev_outbox_key == "secreta"
+
+
+def test_outbox_without_key_on_deploy_stays_closed_with_warning(caplog) -> None:
+    with caplog.at_level(logging.WARNING, logger="evolt"):
+        settings = load_app_settings({"ENABLE_DEV_ROUTES": "false", "ENABLE_DEV_OUTBOX": "true"})
+
+    assert not settings.dev_outbox_enabled
+    assert "DEV_OUTBOX_KEY" in caplog.text
+
+
+def test_outbox_can_be_disabled_locally() -> None:
+    assert not load_app_settings({"ENABLE_DEV_OUTBOX": "false"}).dev_outbox_enabled
+
+
+def test_empty_key_means_no_key() -> None:
+    assert load_app_settings({"DEV_OUTBOX_KEY": "   "}).dev_outbox_key is None
+
+
+def test_key_is_never_logged(caplog) -> None:
+    with caplog.at_level(logging.DEBUG, logger="evolt"):
+        load_app_settings({"ENABLE_DEV_ROUTES": "nope", "DEV_OUTBOX_KEY": "molt-secreta"})
+
+    assert "molt-secreta" not in caplog.text
