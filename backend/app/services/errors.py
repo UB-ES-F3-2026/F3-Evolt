@@ -18,6 +18,14 @@ INTERNAL_ERROR = "INTERNAL_ERROR"
 # Accés (docs/api.md §5 i §8.14). La resta de codis d'accés arriben amb les seves tasques.
 WEAK_PASSWORD = "WEAK_PASSWORD"
 ALREADY_REGISTERED = "ALREADY_REGISTERED"
+INVALID_CREDENTIALS = "INVALID_CREDENTIALS"
+ACCOUNT_NOT_VERIFIED = "ACCOUNT_NOT_VERIFIED"
+UNAUTHENTICATED = "UNAUTHENTICATED"
+# Estalvi (docs/api.md §5 i §9.7).
+INVALID_POT_NAME = "INVALID_POT_NAME"
+INVALID_TARGET = "INVALID_TARGET"
+INSUFFICIENT_BALANCE = "INSUFFICIENT_BALANCE"
+POT_NOT_FOUND = "POT_NOT_FOUND"
 
 # Codi d'error → estat HTTP de la resposta.
 ERROR_STATUS: dict[str, int] = {
@@ -28,6 +36,13 @@ ERROR_STATUS: dict[str, int] = {
     INTERNAL_ERROR: 500,
     WEAK_PASSWORD: 422,
     ALREADY_REGISTERED: 409,
+    INVALID_CREDENTIALS: 401,
+    ACCOUNT_NOT_VERIFIED: 403,
+    UNAUTHENTICATED: 401,
+    INVALID_POT_NAME: 422,
+    INVALID_TARGET: 422,
+    INSUFFICIENT_BALANCE: 422,
+    POT_NOT_FOUND: 404,
 }
 
 # Missatge per defecte de cada codi (docs/api.md §5). El contracte els marca
@@ -40,6 +55,13 @@ ERROR_MESSAGES: dict[str, str] = {
     INTERNAL_ERROR: "S'ha produït un error inesperat. Torna-ho a provar més tard.",
     WEAK_PASSWORD: "La contrasenya ha de tenir 8 caràcters, una majúscula i un número.",
     ALREADY_REGISTERED: "Aquest email o telèfon ja té un compte.",
+    INVALID_CREDENTIALS: "L'email, el telèfon o la contrasenya no són correctes.",
+    ACCOUNT_NOT_VERIFIED: "Has de verificar el compte abans d'iniciar sessió.",
+    UNAUTHENTICATED: "Cal iniciar sessió.",
+    INVALID_POT_NAME: "El nom de la guardiola no pot estar buit.",
+    INVALID_TARGET: "L'objectiu ha de ser més gran que 0.",
+    INSUFFICIENT_BALANCE: "No tens prou saldo per fer aquesta aportació.",
+    POT_NOT_FOUND: "No s'ha trobat la guardiola.",
 }
 
 

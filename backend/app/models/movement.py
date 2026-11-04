@@ -6,7 +6,7 @@ TYPE_EXPENSE = "expense"
 TYPES = frozenset({TYPE_INCOME, TYPE_EXPENSE})
 
 # Llista tancada d'icones (contracte, apartat 3).
-ICONS = frozenset({"topup", "salary", "transfer", "shopping", "food", "transport", "other"})
+ICONS = frozenset({"topup", "salary", "transfer", "shopping", "food", "transport", "savings", "other"})
 
 # Camp intern, no exposat a l'API (contracte, apartat 6).
 KIND_TOPUP = "topup"
@@ -17,12 +17,22 @@ KINDS = frozenset({KIND_TOPUP, KIND_OTHER})
 TOPUP_CONCEPT = "Recàrrega"
 TOPUP_ICON = "topup"
 
+# Icona del moviment del compte que crea una aportació a una guardiola (docs/api.md §9.4).
+SAVINGS_ICON = "savings"
+
+# Llista tancada d'estats (docs/api.md §10.1). Només canvia l'etiqueta: un moviment
+# pendent ja compta al saldo.
+MOVEMENT_STATUS_COMPLETED = "completed"
+MOVEMENT_STATUS_PENDING = "pending"
+MOVEMENT_STATUSES = frozenset({MOVEMENT_STATUS_COMPLETED, MOVEMENT_STATUS_PENDING})
+
 
 @dataclass
 class Movement:
     """Moviment del compte principal.
 
-    Camps de l'API: id, amount, concept, date, type, icon.
+    Camps de l'API: id, amount, concept, date, type, icon, counterparty, status,
+    reference.
     Camps interns (mai a les respostes):
       - account_id: compte al qual pertany.
       - kind: "topup" a les recàrregues, "other" a la resta. Serveix per sumar
@@ -40,6 +50,9 @@ class Movement:
     icon: str
     kind: str
     seq: int
+    counterparty: str | None
+    status: str
+    reference: str
 
     def __post_init__(self) -> None:
         if not isinstance(self.id, str) or not self.id:
@@ -60,6 +73,14 @@ class Movement:
             raise ValueError("date ha de tenir precisió de segons (P7)")
         if self.kind == KIND_TOPUP and self.type != TYPE_INCOME:
             raise ValueError("una recàrrega sempre és income")
+        if self.counterparty is not None and (
+            not isinstance(self.counterparty, str) or not self.counterparty.strip()
+        ):
+            raise ValueError("counterparty ha de ser None o un text no buit")
+        if self.status not in MOVEMENT_STATUSES:
+            raise ValueError(f"status no vàlid: {self.status!r}")
+        if not isinstance(self.reference, str) or not self.reference:
+            raise TypeError("reference ha de ser un string no buit")
 
     @property
     def signed_amount(self) -> int:

@@ -6,8 +6,8 @@ negoci: això és feina dels serveis.
 
 from datetime import date, datetime
 
-from app.data.seed import MADRID_TZ, SeedData, movement_id
-from app.models import KIND_TOPUP, Movement
+from app.data.seed import MADRID_TZ, SeedData, movement_id, movement_reference
+from app.models import KIND_TOPUP, MOVEMENT_STATUS_COMPLETED, Movement
 
 
 class MovementRepository:
@@ -54,6 +54,8 @@ class MovementRepository:
         type: str,
         icon: str,
         kind: str,
+        counterparty: str | None = None,
+        status: str = MOVEMENT_STATUS_COMPLETED,
     ) -> Movement:
         """Crea i desa un moviment, i retorna l'objecte desat (T07.4).
 
@@ -61,10 +63,11 @@ class MovementRepository:
         signed_amount el manté el servei, que canvia el compte i afegeix el
         moviment. Tot o res: si la construcció del Movement falla
         (__post_init__), no s'emmagatzema res i els comptadors no avancen.
+        Els moviments nous neixen completats i sense contrapart (§10.1, P38).
         """
         number = self._seed.next_movement_number
         seq = self._seed.next_movement_seq
-        # id i seq són mecànica d'emmagatzematge (com un autoincrement), no
+        # id, seq i reference són mecànica d'emmagatzematge (com un autoincrement), no
         # una regla de negoci: els decideix el repositori.
         movement = Movement(
             id=movement_id(number),
@@ -76,6 +79,9 @@ class MovementRepository:
             icon=icon,
             kind=kind,
             seq=seq,
+            counterparty=counterparty,
+            status=status,
+            reference=movement_reference(number),
         )
         # Només després de construir-lo correctament es consumeixen els
         # comptadors i es desa: així una entrada invàlida no deixa forats.
@@ -83,6 +89,17 @@ class MovementRepository:
         self._seed.next_movement_seq = seq + 1
         self._seed.movements.append(movement)
         return movement
+
+    def remove(self, movement: Movement) -> None:
+        """Treu un moviment acabat de crear, per desfer una operació que ha fallat (T18.1).
+
+        Si és l'últim que s'ha creat, els comptadors tornen enrere i no queda cap
+        forat a la numeració. No toca el saldo: això també ho desfà el servei.
+        """
+        self._seed.movements.remove(movement)
+        if movement.seq == self._seed.next_movement_seq - 1:
+            self._seed.next_movement_seq = movement.seq
+            self._seed.next_movement_number -= 1
 
     def sum_topups_on_day(self, account_id: int, day: date) -> int:
         """Suma de les recàrregues d'un compte en un dia natural de Madrid (T07.4).

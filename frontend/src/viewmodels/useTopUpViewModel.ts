@@ -1,11 +1,9 @@
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { messageForCode, toUserMessage } from '@/models/errorMessages'
+import { AMOUNT_FORMAT_MESSAGE, messageForCode, toUserMessage } from '@/models/errorMessages'
 import { eurosToCents, formatCents } from '@/models/money'
 import { MAX_TOPUP_CENTS, type TopupResult } from '@/models/topup'
 import { createTopup } from '@/services/topupService'
-
-const FORMAT_ERROR = 'Escriu un import en euros, amb 2 decimals com a màxim.'
 
 // Long enough to read the confirmation before going back to Home.
 const CONFIRMATION_MS = 1500
@@ -28,7 +26,7 @@ export function useTopUpViewModel(dependencies: TopUpDependencies = defaultDepen
   // Same limits as the backend, checked here only to answer before sending.
   const amountError = computed(() => {
     if (amount.value.trim() === '') return null
-    if (cents.value === null) return FORMAT_ERROR
+    if (cents.value === null) return AMOUNT_FORMAT_MESSAGE
     if (cents.value <= 0) return messageForCode('INVALID_AMOUNT')
     if (cents.value > MAX_TOPUP_CENTS) return messageForCode('AMOUNT_OVER_LIMIT')
     return null

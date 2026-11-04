@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from app.data.seed import DEMO_USER_ID, EMPTY_USER_ID, SeedData
 
 FRONTEND_ORIGIN = "http://localhost:5173"
-MOVEMENT_KEYS = {"id", "amount", "concept", "date", "type", "icon"}
+MOVEMENT_KEYS = {"id", "amount", "concept", "date", "type", "icon", "counterparty", "status", "reference"}
 
 
 def _seed(client: TestClient) -> SeedData:
