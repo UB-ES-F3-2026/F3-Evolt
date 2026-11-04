@@ -22,6 +22,14 @@ from app.models.movement import (
     TYPES,
     Movement,
 )
+from app.models.outbox import (
+    CHANNEL_EMAIL,
+    CHANNEL_SMS,
+    MESSAGE_ACCOUNT_LOCKED,
+    MESSAGE_PASSWORD_RESET,
+    MESSAGE_VERIFICATION_CODE,
+    OutboxMessage,
+)
 from app.models.pot import (
     DEFAULT_POT_COLOR,
     POT_COLORS,
@@ -40,15 +48,24 @@ from app.models.user import (
     USER_STATUSES,
     User,
 )
+from app.models.verification import CODE_LENGTH, VerificationCode
 
 __all__ = [
     "Account",
     "Movement",
     "Pot",
+    "OutboxMessage",
     "PotMovement",
     "Session",
     "User",
     "DEFAULT_POT_COLOR",
+    "VerificationCode",
+    "CHANNEL_EMAIL",
+    "CHANNEL_SMS",
+    "CODE_LENGTH",
+    "MESSAGE_ACCOUNT_LOCKED",
+    "MESSAGE_PASSWORD_RESET",
+    "MESSAGE_VERIFICATION_CODE",
     "ICONS",
     "IDENTIFIER_EMAIL",
     "IDENTIFIER_PHONE",

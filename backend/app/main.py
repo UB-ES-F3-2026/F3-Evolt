@@ -179,6 +179,9 @@ def create_app() -> FastAPI:
     # Eines de desenvolupament: fora quan ENABLE_DEV_ROUTES=false (desplegament).
     if app_settings.dev_routes_enabled:
         app.include_router(dev.router, prefix="/api")
+    # La bústia té el seu interruptor (ENABLE_DEV_OUTBOX) i, al desplegament, clau (§8.12).
+    if app_settings.dev_outbox_enabled:
+        app.include_router(dev.outbox_router, prefix="/api")
     _register_error_handlers(app)
     return app
 

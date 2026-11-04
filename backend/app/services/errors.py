@@ -21,6 +21,9 @@ ALREADY_REGISTERED = "ALREADY_REGISTERED"
 INVALID_CREDENTIALS = "INVALID_CREDENTIALS"
 ACCOUNT_NOT_VERIFIED = "ACCOUNT_NOT_VERIFIED"
 UNAUTHENTICATED = "UNAUTHENTICATED"
+INVALID_CODE = "INVALID_CODE"
+CODE_EXPIRED = "CODE_EXPIRED"
+TOO_MANY_ATTEMPTS = "TOO_MANY_ATTEMPTS"
 # Estalvi (docs/api.md §5 i §9.7).
 INVALID_POT_NAME = "INVALID_POT_NAME"
 INVALID_TARGET = "INVALID_TARGET"
@@ -39,6 +42,9 @@ ERROR_STATUS: dict[str, int] = {
     INVALID_CREDENTIALS: 401,
     ACCOUNT_NOT_VERIFIED: 403,
     UNAUTHENTICATED: 401,
+    INVALID_CODE: 422,
+    CODE_EXPIRED: 422,
+    TOO_MANY_ATTEMPTS: 429,
     INVALID_POT_NAME: 422,
     INVALID_TARGET: 422,
     INSUFFICIENT_BALANCE: 422,
@@ -58,6 +64,10 @@ ERROR_MESSAGES: dict[str, str] = {
     INVALID_CREDENTIALS: "L'email, el telèfon o la contrasenya no són correctes.",
     ACCOUNT_NOT_VERIFIED: "Has de verificar el compte abans d'iniciar sessió.",
     UNAUTHENTICATED: "Cal iniciar sessió.",
+    # El mateix text per a incorrecte i caducat: la US-02 no els distingeix.
+    INVALID_CODE: "El codi no és correcte o ha caducat.",
+    CODE_EXPIRED: "El codi no és correcte o ha caducat.",
+    TOO_MANY_ATTEMPTS: "Has fet massa intents. Demana un codi nou.",
     INVALID_POT_NAME: "El nom de la guardiola no pot estar buit.",
     INVALID_TARGET: "L'objectiu ha de ser més gran que 0.",
     INSUFFICIENT_BALANCE: "No tens prou saldo per fer aquesta aportació.",
