@@ -10,8 +10,11 @@ from fastapi import Request
 from app.repositories import (
     AccountRepository,
     MovementRepository,
+    OutboxRepository,
     PotRepository,
+    SessionRepository,
     UserRepository,
+    VerificationCodeRepository,
 )
 
 
@@ -29,3 +32,15 @@ def pot_repository(request: Request) -> PotRepository:
 
 def movement_repository(request: Request) -> MovementRepository:
     return MovementRepository(request.app.state.seed)
+
+
+def session_repository(request: Request) -> SessionRepository:
+    return SessionRepository(request.app.state.seed)
+
+
+def verification_code_repository(request: Request) -> VerificationCodeRepository:
+    return VerificationCodeRepository(request.app.state.seed)
+
+
+def outbox_repository(request: Request) -> OutboxRepository:
+    return OutboxRepository(request.app.state.seed)

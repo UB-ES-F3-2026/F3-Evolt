@@ -141,6 +141,9 @@ def _movement(**overrides):
         icon="other",
         kind=KIND_OTHER,
         seq=99,
+        counterparty=None,
+        status="completed",
+        reference="EVT-000099",
     )
     data.update(overrides)
     return Movement(**data)

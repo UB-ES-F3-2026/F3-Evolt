@@ -4,6 +4,7 @@ import {
   ArrowLeftRight,
   Briefcase,
   Bus,
+  PiggyBank,
   Receipt,
   ShoppingBag,
   Utensils,
@@ -32,6 +33,7 @@ const ICON_COMPONENTS: Record<MovementIcon, LucideIcon> = {
   shopping: ShoppingBag,
   food: Utensils,
   transport: Bus,
+  savings: PiggyBank,
   other: Receipt,
 }
 

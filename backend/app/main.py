@@ -20,7 +20,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.config import load_app_settings
 from app.data.seed import build_seed
 from app.middleware import SimulationMiddleware, load_simulation_settings
-from app.routers import auth, dev, health, home, movements, topups
+from app.routers import auth, dev, health, home, movements, pots, topups
 from app.services.errors import (
     ERROR_MESSAGES,
     ERROR_STATUS,
@@ -142,6 +142,8 @@ def create_app() -> FastAPI:
     rutes de proves sense tocar la instància de producció."""
     app = FastAPI(title="F3-Evolt API", lifespan=lifespan)
     app_settings = load_app_settings()
+    # `current_user_id` hi llegeix `allow_x_user_id` (docs/api.md §8.2).
+    app.state.settings = app_settings
     # Ordre de middleware (afegits de dins cap a fora; el darrer afegit és el
     # més extern):
     #   1. ContractExceptionMiddleware (intern): captura excepcions i les
@@ -159,12 +161,12 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=list(app_settings.frontend_origins),
         # Mètodes i capçaleres explícits = autodocumentats contra l'apiClient
-        # del frontend; sense credencials perquè a l'Sprint 0 no hi ha cookies.
-        # Si el frontend comença a enviar una capçalera nova (p. ex.
-        # `Authorization` amb el login), s'ha d'afegir aquí o el navegador la
+        # del frontend; sense credencials perquè el token viatja a la capçalera
+        # `Authorization` (T03.1), no en una cookie. Si el frontend comença a
+        # enviar una capçalera nova, s'ha d'afegir aquí o el navegador la
         # bloquejarà.
         allow_methods=["GET", "POST"],
-        allow_headers=["Content-Type", "X-User-Id"],
+        allow_headers=["Content-Type", "Authorization", "X-User-Id"],
     )
     # El prefix /api es declara un sol cop aquí; els routers declaren rutes
     # relatives (docs/api.md §4).
@@ -173,9 +175,13 @@ def create_app() -> FastAPI:
     app.include_router(movements.router, prefix="/api")
     app.include_router(topups.router, prefix="/api")
     app.include_router(auth.router, prefix="/api")
+    app.include_router(pots.router, prefix="/api")
     # Eines de desenvolupament: fora quan ENABLE_DEV_ROUTES=false (desplegament).
     if app_settings.dev_routes_enabled:
         app.include_router(dev.router, prefix="/api")
+    # La bústia té el seu interruptor (ENABLE_DEV_OUTBOX) i, al desplegament, clau (§8.12).
+    if app_settings.dev_outbox_enabled:
+        app.include_router(dev.outbox_router, prefix="/api")
     _register_error_handlers(app)
     return app
 

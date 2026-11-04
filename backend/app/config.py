@@ -1,7 +1,9 @@
 """Configuració de desplegament llegida de l'entorn (TR06.1).
 
-Decideix des de quins orígens es pot cridar l'API (CORS) i si les eines de
-desenvolupament (`/api/dev/*`) estan actives. Sense cap variable definida, el
+Decideix des de quins orígens es pot cridar l'API (CORS), si les eines de
+desenvolupament (`/api/dev/*`) estan actives, si encara s'accepta la capçalera
+`X-User-Id` sense sessió (T03.1, docs/api.md §8.2) i si la bústia simulada és
+visible i amb quina clau (T02.1, §8.12, P46). Sense cap variable definida, el
 backend es comporta exactament igual que en local: accepta el Vite dev server
 i exposa `/api/dev/reset`. Al desplegament es fixen totes dues explícitament
 (vegeu el README, secció «Deploy»).
@@ -27,11 +29,18 @@ class AppSettings:
     """Configuració de desplegament, ja validada.
 
     `frontend_origins` són els orígens que el CORS accepta;
-    `dev_routes_enabled` indica si es registra el router `/api/dev`.
+    `dev_routes_enabled` indica si es registra el router `/api/dev`;
+    `allow_x_user_id` indica si una ruta protegida sense token encara es pot
+    resoldre amb `X-User-Id` (docs/api.md §8.2, transició fins a la T03.5);
+    `dev_outbox_enabled` indica si es registra `GET /api/dev/outbox`, i
+    `dev_outbox_key`, si n'hi ha, és la clau que ha de portar `X-Dev-Key`.
     """
 
     frontend_origins: tuple[str, ...] = (DEFAULT_FRONTEND_ORIGIN,)
     dev_routes_enabled: bool = True
+    allow_x_user_id: bool = True
+    dev_outbox_enabled: bool = True
+    dev_outbox_key: str | None = None
 
 
 def _parse_origins(raw: str) -> tuple[str, ...]:
@@ -49,26 +58,29 @@ def _parse_origins(raw: str) -> tuple[str, ...]:
     return tuple(origins)
 
 
-def _parse_dev_routes(raw: str) -> bool:
-    value = raw.lower()
+def _parse_flag(name: str, raw: str, default: bool) -> bool:
+    """Llegeix un interruptor `true`/`false`. Buit o sense definir → `default`.
+
+    Un valor mal escrit es tracta com a desactivat: és més segur no exposar
+    una eina de desenvolupament (el reinici de dades, o entrar sense sessió
+    amb `X-User-Id`) que exposar-la per error.
+    """
+    value = raw.strip().lower()
+    if not value:
+        return default
     if value in _TRUE_VALUES:
         return True
     if value not in _FALSE_VALUES:
-        # Un valor mal escrit es tracta com a desactivat: és més segur no
-        # exposar el reinici de dades que exposar-lo per error.
-        logger.warning(
-            "ENABLE_DEV_ROUTES invàlid (%r): les rutes /api/dev queden desactivades",
-            raw,
-        )
+        logger.warning("%s invàlid (%r): queda desactivada", name, raw)
     return False
 
 
 def load_app_settings(env: Mapping[str, str] | None = None) -> AppSettings:
-    """Llegeix `FRONTEND_ORIGINS` i `ENABLE_DEV_ROUTES` de l'entorn.
+    """Llegeix `FRONTEND_ORIGINS`, `ENABLE_DEV_ROUTES` i `ALLOW_X_USER_ID` de l'entorn.
 
     `FRONTEND_ORIGINS` és una llista separada per comes; si queda buida, es fa
-    servir l'origen de Vite. `ENABLE_DEV_ROUTES` buida o sense definir activa
-    les rutes de desenvolupament. Mai no llença.
+    servir l'origen de Vite. `ENABLE_DEV_ROUTES` i `ALLOW_X_USER_ID` buides o
+    sense definir queden activades (la segona, fins a la T03.5). Mai no llença.
     """
     source = os.environ if env is None else env
 
@@ -76,7 +88,34 @@ def load_app_settings(env: Mapping[str, str] | None = None) -> AppSettings:
     if not origins:
         origins = (DEFAULT_FRONTEND_ORIGIN,)
 
-    dev_raw = source.get("ENABLE_DEV_ROUTES", "").strip()
-    dev_routes_enabled = _parse_dev_routes(dev_raw) if dev_raw else True
+    dev_routes_enabled = _parse_flag("ENABLE_DEV_ROUTES", source.get("ENABLE_DEV_ROUTES", ""), True)
+    allow_x_user_id = _parse_flag("ALLOW_X_USER_ID", source.get("ALLOW_X_USER_ID", ""), True)
+    dev_outbox_key = source.get("DEV_OUTBOX_KEY", "").strip() or None
+    dev_outbox_enabled = _outbox_enabled(
+        source.get("ENABLE_DEV_OUTBOX", ""), dev_routes_enabled, dev_outbox_key
+    )
 
-    return AppSettings(frontend_origins=origins, dev_routes_enabled=dev_routes_enabled)
+    return AppSettings(
+        frontend_origins=origins,
+        dev_routes_enabled=dev_routes_enabled,
+        allow_x_user_id=allow_x_user_id,
+        dev_outbox_enabled=dev_outbox_enabled,
+        dev_outbox_key=dev_outbox_key,
+    )
+
+
+def _outbox_enabled(raw: str, dev_routes_enabled: bool, key: str | None) -> bool:
+    """`ENABLE_DEV_OUTBOX`: per defecte, el mateix que `ENABLE_DEV_ROUTES` (§8.12).
+
+    Al desplegament (`ENABLE_DEV_ROUTES=false`) la bústia només s'obre amb clau:
+    conté codis i enllaços de recuperació de qualsevol compte, i sense clau
+    qualsevol persona podria canviar la contrasenya de l'usuari de la demo. Si
+    algú l'activa allà i s'oblida la clau, queda tancada i surt un avís.
+    """
+    enabled = _parse_flag("ENABLE_DEV_OUTBOX", raw, dev_routes_enabled)
+    if enabled and not dev_routes_enabled and key is None:
+        logger.warning(
+            "ENABLE_DEV_OUTBOX=true sense DEV_OUTBOX_KEY al desplegament: la bústia queda desactivada"
+        )
+        return False
+    return enabled

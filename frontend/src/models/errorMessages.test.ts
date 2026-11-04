@@ -8,6 +8,8 @@ describe('toUserMessage', () => {
     expect(toUserMessage({ code: 'VALIDATION_ERROR', message: 'x' })).toMatch(/no són vàlides/)
     expect(toUserMessage({ code: 'NETWORK_ERROR', message: 'x' })).toMatch(/connexió/)
     expect(toUserMessage({ code: 'INTERNAL_ERROR', message: 'x' })).toMatch(/error inesperat/)
+    expect(toUserMessage({ code: 'INVALID_POT_NAME', message: 'x' })).toBe('El nom de la guardiola no pot estar buit.')
+    expect(toUserMessage({ code: 'INVALID_TARGET', message: 'x' })).toBe("L'objectiu ha de ser més gran que 0.")
   })
 
   it.each([

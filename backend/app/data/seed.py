@@ -9,7 +9,8 @@ Regles del contracte que es compleixen aquí:
 - Dates relatives a avui (avui - N dies, N ≥ 1): el llistat sempre sembla recent
   i cap moviment, ni cap recàrrega, cau avui. Així el límit diari comença a zero.
 - Dates a Europe/Madrid, amb precisió de segons.
-- El saldo del compte és exactament la suma dels moviments.
+- El saldo del compte és exactament la suma dels moviments, també del pendent
+  (docs/api.md §10.1).
 
 `build_seed()` retorna sempre una còpia nova i independent. Els repositoris (T07.4),
 els tests (T09.5) i POST /api/dev/reset (T09.6) l'han de fer servir per reiniciar dades.
@@ -23,6 +24,9 @@ from app.models import (
     KIND_OTHER,
     KIND_TOPUP,
     MADRID_TZ,
+    MOVEMENT_STATUS_COMPLETED,
+    MOVEMENT_STATUS_PENDING,
+    POT_INITIAL_CONCEPT,
     STATUS_ACTIVE,
     TOPUP_CONCEPT,
     TOPUP_ICON,
@@ -30,8 +34,12 @@ from app.models import (
     TYPE_INCOME,
     Account,
     Movement,
+    OutboxMessage,
     Pot,
+    PotMovement,
+    Session,
     User,
+    VerificationCode,
     now_madrid,
 )
 
@@ -88,10 +96,28 @@ _USER1_MOVEMENTS: list[tuple[int, str, str, str, str, int]] = [
     (1, "21:15", "Restaurant La Plaça", TYPE_EXPENSE, "food", 2350),
 ]
 
-_USER1_POTS: list[tuple[str, int]] = [
-    ("Vacances", 15000),
-    ("Emergències", 10000),
-    ("Regal d'aniversari", 5000),
+# Contrapart dels moviments que en tenen, per número de moviment (docs/api.md §10.7).
+# Noms inventats: el contacte a les transferències i els Bizum, l'empresa a les nòmines.
+_USER1_COUNTERPARTIES: dict[int, str] = {
+    3: "Empresa Demo SL",
+    9: "Marta Puig",
+    10: "Jordi Serra",
+    17: "Empresa Demo SL",
+    18: "Laia Vidal",
+    24: "Pau Ferrer",
+    29: "Núria Soler",
+}
+
+# L'únic moviment pendent del seed és el més recent (docs/api.md §10.7).
+_USER1_PENDING_MOVEMENT = len(_USER1_MOVEMENTS)
+
+# Guardioles de l'usuari 1 (docs/api.md §9.8). El nom i el saldo no canvien des de
+# l'Sprint 0: els fan servir els tests i frontend/src/mocks/seed.ts.
+# (nom, saldo en cèntims, objectiu en cèntims o None, color)
+_USER1_POTS: list[tuple[str, int, int | None, str]] = [
+    ("Vacances", 15000, 100000, "blue"),
+    ("Emergències", 10000, None, "orange"),
+    ("Regal d'aniversari", 5000, 8000, "pink"),
 ]
 
 
@@ -101,11 +127,23 @@ class SeedData:
     accounts: dict[int, Account]  # clau: user_id (un compte principal per usuari)
     pots: list[Pot]
     movements: list[Movement]
+    pot_movements: list[PotMovement]  # historial de totes les guardioles (T18.1)
     # Comptadors per crear moviments nous (recàrregues) sense repetir id ni seq.
     next_movement_number: int = field(default=1)
     next_movement_seq: int = field(default=1)
     # Comptador per als usuaris nous del registre (T01.2).
     next_user_id: int = field(default=1)
+    # Sessions obertes, per token (T03.1). El seed no en té cap: reiniciar les
+    # dades (arrencada o /api/dev/reset) tanca totes les sessions.
+    sessions: dict[str, Session] = field(default_factory=dict)
+    # Comptador per a les guardioles noves (T17.2): pot-04, pot-05…
+    next_pot_number: int = field(default=1)
+    # Codi de verificació vigent de cada usuari pendent, per user_id (T02.1).
+    verification_codes: dict[int, VerificationCode] = field(default_factory=dict)
+    # Bústia simulada: emails i SMS «enviats», en ordre d'enviament (T02.1, §8.12).
+    outbox: list[OutboxMessage] = field(default_factory=list)
+    # Comptador per a les entrades noves de l'historial (T18.1): pmov-04, pmov-05…
+    next_pot_movement_number: int = field(default=1)
 
 
 def _days_ago_at(now: datetime, days_ago: int, hhmm: str) -> datetime:
@@ -122,6 +160,21 @@ def _days_ago_at(now: datetime, days_ago: int, hhmm: str) -> datetime:
 def movement_id(number: int) -> str:
     """Id opac dels moviments (P1). El frontend no l'ha d'interpretar."""
     return f"mov-{number:02d}"
+
+
+def movement_reference(number: int) -> str:
+    """Referència opaca dels moviments (docs/api.md §10.1, P37). El frontend no l'ha d'interpretar."""
+    return f"EVT-{number:06d}"
+
+
+def pot_id(number: int) -> str:
+    """Id opac de les guardioles (docs/api.md §9.1, P21). El frontend no l'ha d'interpretar."""
+    return f"pot-{number:02d}"
+
+
+def pot_movement_id(number: int) -> str:
+    """Id opac de les entrades de l'historial (docs/api.md §9.5). El frontend no l'ha d'interpretar."""
+    return f"pmov-{number:02d}"
 
 
 def build_seed(now: datetime | None = None) -> SeedData:
@@ -164,6 +217,13 @@ def build_seed(now: datetime | None = None) -> SeedData:
                 icon=icon,
                 kind=KIND_TOPUP if icon == TOPUP_ICON else KIND_OTHER,
                 seq=number,
+                counterparty=_USER1_COUNTERPARTIES.get(number),
+                status=(
+                    MOVEMENT_STATUS_PENDING
+                    if number == _USER1_PENDING_MOVEMENT
+                    else MOVEMENT_STATUS_COMPLETED
+                ),
+                reference=movement_reference(number),
             )
         )
 
@@ -176,8 +236,30 @@ def build_seed(now: datetime | None = None) -> SeedData:
     }
 
     pots = [
-        Pot(id=index, user_id=DEMO_USER_ID, name=name, balance=balance)
-        for index, (name, balance) in enumerate(_USER1_POTS, start=1)
+        Pot(
+            id=pot_id(number),
+            user_id=DEMO_USER_ID,
+            name=name,
+            balance=balance,
+            target=target,
+            color=color,
+        )
+        for number, (name, balance, target, color) in enumerate(_USER1_POTS, start=1)
+    ]
+
+    # El saldo de cada guardiola és la suma del seu historial: l'entrada inicial és tot
+    # el saldo, amb una data anterior a avui (docs/api.md §9.8, P32).
+    pot_movements = [
+        PotMovement(
+            id=pot_movement_id(number),
+            pot_id=pot.id,
+            amount=pot.balance,
+            concept=POT_INITIAL_CONCEPT,
+            date=_days_ago_at(now, 30, "10:00"),
+            type=TYPE_INCOME,
+            seq=number,
+        )
+        for number, pot in enumerate(pots, start=1)
     ]
 
     next_number = len(movements) + 1
@@ -186,7 +268,10 @@ def build_seed(now: datetime | None = None) -> SeedData:
         accounts=accounts,
         pots=pots,
         movements=movements,
+        pot_movements=pot_movements,
         next_movement_number=next_number,
         next_movement_seq=next_number,
         next_user_id=max(users) + 1,
+        next_pot_number=len(pots) + 1,
+        next_pot_movement_number=len(pot_movements) + 1,
     )
