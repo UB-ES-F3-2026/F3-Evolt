@@ -13,7 +13,7 @@ from app.data.seed import DEMO_USER_ID, EMPTY_USER_ID, SeedData
 from app.models import Movement
 
 PAGE_KEYS = {"items", "nextOffset"}
-MOVEMENT_KEYS = {"id", "amount", "concept", "date", "type", "icon"}
+MOVEMENT_KEYS = {"id", "amount", "concept", "date", "type", "icon", "counterparty", "status", "reference"}
 
 
 def _seed(client: TestClient) -> SeedData:
