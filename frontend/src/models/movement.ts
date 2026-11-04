@@ -30,6 +30,8 @@ export interface MovementJson {
   date: string
   type: string
   icon: string
+  /** Who pays or gets paid (docs/api.md §10.1). Optional until the backend sends it (T10.2). */
+  counterparty?: string | null
 }
 
 /** GET /api/movements page (docs/api.md §4.2). */
@@ -41,6 +43,51 @@ export interface MovementsPageJson {
 export interface MovementsPage {
   items: Movement[]
   nextOffset: number | null
+}
+
+/** «Tots» in the filters: no `type` sent, so every movement comes back. */
+export type MovementTypeFilter = MovementType | 'all'
+
+export const MOVEMENT_TYPE_FILTER_LABELS: Record<MovementTypeFilter, string> = {
+  all: 'Tots',
+  income: 'Ingressos',
+  expense: 'Despeses',
+}
+
+/**
+ * The filters of «Moviments» (US-10). An empty string means «not chosen», which is
+ * what an empty date picker or search box gives. Days are `YYYY-MM-DD`.
+ */
+export interface MovementFilters {
+  dateFrom: string
+  dateTo: string
+  type: MovementTypeFilter
+  search: string
+}
+
+export const NO_FILTERS: Readonly<MovementFilters> = { dateFrom: '', dateTo: '', type: 'all', search: '' }
+
+/** Query parameters of GET /api/movements (docs/api.md §10.2). */
+export interface MovementsQuery {
+  dateFrom?: string
+  dateTo?: string
+  type?: MovementType
+  q?: string
+}
+
+/** Only the filters in use are sent; a search of only spaces does not filter (§10.2). */
+export function toMovementsQuery(filters: MovementFilters): MovementsQuery {
+  const query: MovementsQuery = {}
+  if (filters.dateFrom) query.dateFrom = filters.dateFrom
+  if (filters.dateTo) query.dateTo = filters.dateTo
+  if (filters.type !== 'all') query.type = filters.type
+  const text = filters.search.trim()
+  if (text) query.q = text
+  return query
+}
+
+export function hasFilters(filters: MovementFilters): boolean {
+  return Object.keys(toMovementsQuery(filters)).length > 0
 }
 
 function isOneOf<T extends string>(list: readonly T[], value: string): value is T {
