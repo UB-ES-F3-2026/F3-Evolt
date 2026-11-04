@@ -1,7 +1,7 @@
 """Rutes d'accés (docs/api.md §8).
 
 Registre (T01.2, §8.5), verificació i reenviament del codi (T02.1, §8.6 i §8.7),
-login i logout (T03.1, §8.8 i §8.9).
+login i logout (T03.1, §8.8 i §8.9), bloqueig als 5 errors (T03.2).
 
 Les rutes `/api/auth/*` són públiques: no resolen l'usuari actual.
 """
@@ -93,8 +93,10 @@ def start_session(
     body: LoginRequest,
     users: Annotated[UserRepository, Depends(user_repository)],
     sessions: Annotated[SessionRepository, Depends(session_repository)],
+    outbox: Annotated[OutboxRepository, Depends(outbox_repository)],
 ) -> SessionResponse:
-    return SessionResponse(token=login(body.identifier, body.password, users, sessions))
+    """El 5è error seguit bloqueja el compte i deixa l'avís a la bústia (T03.2)."""
+    return SessionResponse(token=login(body.identifier, body.password, users, sessions, outbox))
 
 
 @router.post("/logout")

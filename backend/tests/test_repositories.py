@@ -423,6 +423,21 @@ def test_set_user_status(seed):
         users.set_status(user.id, "blocked")
 
 
+def test_set_login_state(seed):
+    # T03.2: el servei decideix els valors; el repositori només els desa.
+    users = UserRepository(seed)
+    user = users.get(DEMO_USER_ID)
+    assert (user.failed_logins, user.locked_until) == (0, None)
+
+    users.set_login_state(DEMO_USER_ID, failed_logins=3, locked_until=NOW)
+    assert (users.get(DEMO_USER_ID).failed_logins, users.get(DEMO_USER_ID).locked_until) == (3, NOW)
+
+    users.set_login_state(DEMO_USER_ID, failed_logins=0, locked_until=None)
+    assert (users.get(DEMO_USER_ID).failed_logins, users.get(DEMO_USER_ID).locked_until) == (0, None)
+    with pytest.raises(KeyError):
+        users.set_login_state(999, failed_logins=0, locked_until=None)
+
+
 def test_outbox_lists_newest_first_and_filters(seed):
     outbox = OutboxRepository(seed)
     for to in ("a@x.com", "b@x.com", "a@x.com"):
