@@ -3,13 +3,16 @@ withDefaults(
   defineProps<{
     id: string
     label: string
-    type?: 'text' | 'password'
+    type?: 'text' | 'password' | 'date'
     autocomplete?: string
     /** Text for the user, already in Catalan. It turns the field red. */
     error?: string | null
     disabled?: boolean
+    /** Limits of a date field, as `YYYY-MM-DD`. */
+    min?: string
+    max?: string
   }>(),
-  { type: 'text', autocomplete: 'off', error: null, disabled: false },
+  { type: 'text', autocomplete: 'off', error: null, disabled: false, min: undefined, max: undefined },
 )
 
 const value = defineModel<string>({ required: true })
@@ -26,6 +29,8 @@ const value = defineModel<string>({ required: true })
       :type="type"
       :autocomplete="autocomplete"
       :disabled="disabled"
+      :min="min"
+      :max="max"
       :aria-invalid="error !== null"
       :aria-describedby="error ? `${id}-error` : undefined"
     />
