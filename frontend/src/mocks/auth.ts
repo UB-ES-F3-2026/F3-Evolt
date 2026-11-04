@@ -17,6 +17,7 @@ import type {
 import { messageForCode } from '@/models/errorMessages'
 import { isPasswordStrong } from '@/models/password'
 import { mockError } from './index'
+import { setMockCurrentUser } from './mockUser'
 
 const STORAGE_KEY = 'evolt.mock.auth'
 const MAX_PASSWORD_BYTES = 72
@@ -89,6 +90,7 @@ export function mockVerify({ identifier, code }: VerifyRequest): SessionJson {
   user.status = 'active'
   state.codes = state.codes.filter((one) => one !== current)
   saveState(state)
+  setMockCurrentUser(user.identifier)
   return { token: newToken() }
 }
 
@@ -133,11 +135,13 @@ export function mockLogin({ identifier, password }: LoginRequest): SessionJson {
   user.failedLogins = 0
   saveState(state)
   if (user.status === 'pending') throw failure('ACCOUNT_NOT_VERIFIED')
+  setMockCurrentUser(user.identifier)
   return { token: newToken() }
 }
 
 /** POST /api/auth/logout — always `ok`, whatever the token (docs/api.md §8.9). */
 export function mockLogout(): StatusJson {
+  setMockCurrentUser(null)
   return { status: 'ok' }
 }
 

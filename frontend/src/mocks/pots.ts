@@ -1,6 +1,6 @@
 /**
  * In-memory pots, shaped exactly like docs/api.md §9. The demo user starts with
- * the 3 pots of ./seed.ts and the empty user with none, as with the backend.
+ * the 3 pots of ./seed.ts and any other account with none, as with the backend.
  */
 
 import {
@@ -15,7 +15,8 @@ import {
 } from '@/models/pot'
 import { mockBalance, mockError, recordAccountMovement } from './index'
 import { madridDaysAgoAt, toContractDate } from './madridTime'
-import { DEMO_POTS, IS_EMPTY_USER } from './seed'
+import { mockCurrentUser, onMockUserChange } from './mockUser'
+import { DEMO_POTS, hasDemoData } from './seed'
 
 interface StoredPotMovement {
   potId: string
@@ -25,23 +26,31 @@ interface StoredPotMovement {
   seq: number
 }
 
-const pots: PotJson[] = IS_EMPTY_USER
-  ? []
-  : DEMO_POTS.map(([name, balance, target, color], index) => ({
-      id: potId(index + 1),
-      name,
-      balance,
-      target,
-      color,
-    }))
+let pots: PotJson[] = []
+let nextNumber = 0
+let history: StoredPotMovement[] = []
+let nextEntryNumber = 0
+startPots()
+onMockUserChange(startPots)
 
-let nextNumber = DEMO_POTS.length + 1
-
-// Each seed pot starts with one «Saldo inicial» entry for its balance, before today (P32).
-const history: StoredPotMovement[] = pots.map((pot, index) =>
-  toStoredEntry(index + 1, pot.id, madridDaysAgoAt(new Date(), 30, '10:00'), 'Saldo inicial', pot.balance),
-)
-let nextEntryNumber = history.length + 1
+/** The pots of whoever is logged in: the seed ones for the demo user, none for anyone else. */
+function startPots(): void {
+  pots = hasDemoData(mockCurrentUser())
+    ? DEMO_POTS.map(([name, balance, target, color], index) => ({
+        id: potId(index + 1),
+        name,
+        balance,
+        target,
+        color,
+      }))
+    : []
+  nextNumber = DEMO_POTS.length + 1
+  // Each seed pot starts with one «Saldo inicial» entry for its balance, before today (P32).
+  history = pots.map((pot, index) =>
+    toStoredEntry(index + 1, pot.id, madridDaysAgoAt(new Date(), 30, '10:00'), 'Saldo inicial', pot.balance),
+  )
+  nextEntryNumber = history.length + 1
+}
 
 /** GET /api/pots — in creation order (P23). Copies, so callers cannot change the state. */
 export function mockPots(): PotsJson {

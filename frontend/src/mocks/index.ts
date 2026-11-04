@@ -1,7 +1,7 @@
 /**
  * In-memory mock data, shaped exactly like the API responses in docs/api.md.
- * The data copies the backend seed (see ./seed.ts) and `VITE_DEMO_USER=2`
- * gives the empty user, like the `X-User-Id` header does with the backend.
+ * The data copies the backend seed (see ./seed.ts), and each account logged in
+ * to the mocks sees its own (see ./mockUser.ts), as with the backend.
  * On by default so the UI works before the backend exists; only an explicit
  * VITE_USE_MOCKS=false turns them off (so no .env copy is needed to run dev).
  */
@@ -11,9 +11,10 @@ import type { HomeJson } from '@/models/home'
 import type { MovementJson, MovementsPageJson, MovementsQuery } from '@/models/movement'
 import type { TopupJson } from '@/models/topup'
 import { madridDayKey, madridDaysAgoAt, toContractDate } from './madridTime'
+import { mockCurrentUser, onMockUserChange } from './mockUser'
 import { filterMovements } from './movementFilters'
 import { mockTotalSaved } from './pots'
-import { DEMO_MOVEMENTS, IS_EMPTY_USER } from './seed'
+import { DEMO_MOVEMENTS, hasDemoData } from './seed'
 
 // Limits from docs/api.md §4.3, in cents.
 const MAX_TOPUP = 50000
@@ -28,9 +29,11 @@ interface StoredMovement {
   seq: number
 }
 
-const movements: StoredMovement[] = IS_EMPTY_USER ? [] : buildDemoMovements(new Date())
-let balance = movements.reduce((sum, { json }) => sum + signedAmount(json), 0)
-let nextNumber = DEMO_MOVEMENTS.length + 1
+let movements: StoredMovement[] = []
+let balance = 0
+let nextNumber = 0
+startAccount()
+onMockUserChange(startAccount)
 
 export function useMocks(): boolean {
   const value = import.meta.env.VITE_USE_MOCKS
@@ -102,6 +105,13 @@ export function recordAccountMovement(
   balance += signedAmount(stored.json)
   movements.push(stored)
   return { balance, movement: { ...stored.json } }
+}
+
+/** The main account of whoever is logged in: the seed for the demo user, empty for anyone else. */
+function startAccount(): void {
+  movements = hasDemoData(mockCurrentUser()) ? buildDemoMovements(new Date()) : []
+  balance = movements.reduce((sum, { json }) => sum + signedAmount(json), 0)
+  nextNumber = DEMO_MOVEMENTS.length + 1
 }
 
 function buildDemoMovements(now: Date): StoredMovement[] {
