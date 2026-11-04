@@ -23,6 +23,7 @@ from app.models import (
     KIND_OTHER,
     KIND_TOPUP,
     MADRID_TZ,
+    POT_INITIAL_CONCEPT,
     STATUS_ACTIVE,
     TOPUP_CONCEPT,
     TOPUP_ICON,
@@ -32,6 +33,7 @@ from app.models import (
     Movement,
     OutboxMessage,
     Pot,
+    PotMovement,
     Session,
     User,
     VerificationCode,
@@ -107,6 +109,7 @@ class SeedData:
     accounts: dict[int, Account]  # clau: user_id (un compte principal per usuari)
     pots: list[Pot]
     movements: list[Movement]
+    pot_movements: list[PotMovement]  # historial de totes les guardioles (T18.1)
     # Comptadors per crear moviments nous (recàrregues) sense repetir id ni seq.
     next_movement_number: int = field(default=1)
     next_movement_seq: int = field(default=1)
@@ -121,6 +124,8 @@ class SeedData:
     verification_codes: dict[int, VerificationCode] = field(default_factory=dict)
     # Bústia simulada: emails i SMS «enviats», en ordre d'enviament (T02.1, §8.12).
     outbox: list[OutboxMessage] = field(default_factory=list)
+    # Comptador per a les entrades noves de l'historial (T18.1): pmov-04, pmov-05…
+    next_pot_movement_number: int = field(default=1)
 
 
 def _days_ago_at(now: datetime, days_ago: int, hhmm: str) -> datetime:
@@ -142,6 +147,11 @@ def movement_id(number: int) -> str:
 def pot_id(number: int) -> str:
     """Id opac de les guardioles (docs/api.md §9.1, P21). El frontend no l'ha d'interpretar."""
     return f"pot-{number:02d}"
+
+
+def pot_movement_id(number: int) -> str:
+    """Id opac de les entrades de l'historial (docs/api.md §9.5). El frontend no l'ha d'interpretar."""
+    return f"pmov-{number:02d}"
 
 
 def build_seed(now: datetime | None = None) -> SeedData:
@@ -207,14 +217,31 @@ def build_seed(now: datetime | None = None) -> SeedData:
         for number, (name, balance, target, color) in enumerate(_USER1_POTS, start=1)
     ]
 
+    # El saldo de cada guardiola és la suma del seu historial: l'entrada inicial és tot
+    # el saldo, amb una data anterior a avui (docs/api.md §9.8, P32).
+    pot_movements = [
+        PotMovement(
+            id=pot_movement_id(number),
+            pot_id=pot.id,
+            amount=pot.balance,
+            concept=POT_INITIAL_CONCEPT,
+            date=_days_ago_at(now, 30, "10:00"),
+            type=TYPE_INCOME,
+            seq=number,
+        )
+        for number, pot in enumerate(pots, start=1)
+    ]
+
     next_number = len(movements) + 1
     return SeedData(
         users=users,
         accounts=accounts,
         pots=pots,
         movements=movements,
+        pot_movements=pot_movements,
         next_movement_number=next_number,
         next_movement_seq=next_number,
         next_user_id=max(users) + 1,
         next_pot_number=len(pots) + 1,
+        next_pot_movement_number=len(pot_movements) + 1,
     )

@@ -24,9 +24,11 @@ UNAUTHENTICATED = "UNAUTHENTICATED"
 INVALID_CODE = "INVALID_CODE"
 CODE_EXPIRED = "CODE_EXPIRED"
 TOO_MANY_ATTEMPTS = "TOO_MANY_ATTEMPTS"
-# Estalvi (docs/api.md §5 i §9.7). Els codis de l'aportació arriben amb la T18.1.
+# Estalvi (docs/api.md §5 i §9.7).
 INVALID_POT_NAME = "INVALID_POT_NAME"
 INVALID_TARGET = "INVALID_TARGET"
+INSUFFICIENT_BALANCE = "INSUFFICIENT_BALANCE"
+POT_NOT_FOUND = "POT_NOT_FOUND"
 
 # Codi d'error → estat HTTP de la resposta.
 ERROR_STATUS: dict[str, int] = {
@@ -45,6 +47,8 @@ ERROR_STATUS: dict[str, int] = {
     TOO_MANY_ATTEMPTS: 429,
     INVALID_POT_NAME: 422,
     INVALID_TARGET: 422,
+    INSUFFICIENT_BALANCE: 422,
+    POT_NOT_FOUND: 404,
 }
 
 # Missatge per defecte de cada codi (docs/api.md §5). El contracte els marca
@@ -66,6 +70,8 @@ ERROR_MESSAGES: dict[str, str] = {
     TOO_MANY_ATTEMPTS: "Has fet massa intents. Demana un codi nou.",
     INVALID_POT_NAME: "El nom de la guardiola no pot estar buit.",
     INVALID_TARGET: "L'objectiu ha de ser més gran que 0.",
+    INSUFFICIENT_BALANCE: "No tens prou saldo per fer aquesta aportació.",
+    POT_NOT_FOUND: "No s'ha trobat la guardiola.",
 }
 
 
