@@ -1,4 +1,5 @@
 import { ref, watch } from 'vue'
+import { isApiError } from '@/models/apiError'
 import { messageForCode, toUserMessage } from '@/models/errorMessages'
 import type { MovementDetail } from '@/models/movement'
 import { isValidReportDescription } from '@/models/movementReport'
@@ -9,6 +10,7 @@ export function useReportProblemViewModel(movementId: string) {
   const movement = ref<MovementDetail | null>(null)
   const isLoading = ref(true)
   const loadError = ref<string | null>(null)
+  const canRetry = ref(true)
 
   const description = ref('')
   const error = ref<string | null>(null)
@@ -27,6 +29,8 @@ export function useReportProblemViewModel(movementId: string) {
       movement.value = await getMovement(movementId)
     } catch (failure) {
       loadError.value = toUserMessage(failure)
+      // A movement that does not exist will not appear on a second try.
+      canRetry.value = !(isApiError(failure) && failure.code === 'MOVEMENT_NOT_FOUND')
     } finally {
       isLoading.value = false
     }
@@ -54,5 +58,5 @@ export function useReportProblemViewModel(movementId: string) {
     }
   }
 
-  return { movement, isLoading, loadError, description, error, isSubmitting, isSent, load, submit }
+  return { movement, isLoading, loadError, canRetry, description, error, isSubmitting, isSent, load, submit }
 }

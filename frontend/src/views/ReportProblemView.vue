@@ -7,13 +7,17 @@ import LoadingIndicator from '@/components/LoadingIndicator.vue'
 import MovementRow from '@/components/MovementRow.vue'
 import PrimaryButton from '@/components/PrimaryButton.vue'
 import { useBalanceVisibility } from '@/viewmodels/useBalanceVisibility'
+import { useGoBack } from '@/viewmodels/useGoBack'
 import { useReportProblemViewModel } from '@/viewmodels/useReportProblemViewModel'
 
 const props = defineProps<{ movementId: string }>()
 
-const { movement, isLoading, loadError, description, error, isSubmitting, isSent, load, submit } =
+const { movement, isLoading, loadError, canRetry, description, error, isSubmitting, isSent, load, submit } =
   useReportProblemViewModel(props.movementId)
 const { isHidden } = useBalanceVisibility()
+// Back and not a link: a link would add this screen's way out on top of it, and «← Tornar»
+// on the detail would then return here instead of to the list.
+const goBack = useGoBack({ name: 'movement', params: { movementId: props.movementId } })
 
 onMounted(load)
 </script>
@@ -23,13 +27,14 @@ onMounted(load)
     <LoadingIndicator v-if="isLoading" />
 
     <section v-else-if="loadError" class="card">
-      <ErrorState :message="loadError" @retry="load" />
+      <ErrorState :message="loadError" :retryable="canRetry" @retry="load" />
+      <button type="button" class="link-button" @click="goBack">Tornar</button>
     </section>
 
     <section v-else-if="isSent" class="card success" role="status">
       <CircleCheck class="success-icon" :size="40" />
       <p class="success-text">Hem rebut el teu informe</p>
-      <router-link :to="{ name: 'movement', params: { movementId } }">Tornar al moviment</router-link>
+      <button type="button" class="link-button" @click="goBack">Tornar al moviment</button>
     </section>
 
     <form v-else-if="movement" class="card" novalidate @submit.prevent="submit">
@@ -51,7 +56,7 @@ onMounted(load)
       <p v-if="error" id="report-error" class="error" role="alert">{{ error }}</p>
 
       <PrimaryButton :disabled="isSubmitting">{{ isSubmitting ? 'Enviant…' : 'Enviar' }}</PrimaryButton>
-      <router-link :to="{ name: 'movement', params: { movementId } }" class="cancel">Cancel·lar</router-link>
+      <button type="button" class="link-button cancel" @click="goBack">Cancel·lar</button>
     </form>
   </AppShell>
 </template>
@@ -108,10 +113,18 @@ onMounted(load)
   color: var(--color-error);
 }
 
+.link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
 .cancel {
   margin-top: 0.75rem;
-  font-size: 0.875rem;
-  text-align: center;
 }
 
 .success {

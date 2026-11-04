@@ -44,13 +44,24 @@ describe('useReportProblemViewModel', () => {
     expect(viewModel.isLoading.value).toBe(false)
   })
 
-  it('says the movement does not exist', async () => {
+  it('says the movement does not exist, and does not offer to try again', async () => {
     vi.mocked(getMovement).mockRejectedValue({ code: 'MOVEMENT_NOT_FOUND', message: 'x' })
     const viewModel = useReportProblemViewModel('mov-99')
 
     await viewModel.load()
 
     expect(viewModel.loadError.value).toBe(messageForCode('MOVEMENT_NOT_FOUND'))
+    expect(viewModel.canRetry.value).toBe(false)
+  })
+
+  it('offers to try again after any other failure', async () => {
+    vi.mocked(getMovement).mockRejectedValue({ code: 'NETWORK_ERROR', message: 'x' })
+    const viewModel = useReportProblemViewModel('mov-30')
+
+    await viewModel.load()
+
+    expect(viewModel.loadError.value).toBe(messageForCode('NETWORK_ERROR'))
+    expect(viewModel.canRetry.value).toBe(true)
   })
 
   it.each([

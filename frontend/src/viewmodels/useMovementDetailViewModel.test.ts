@@ -66,15 +66,26 @@ describe('useMovementDetailViewModel', () => {
     expect(viewModel.isIncome.value).toBe(true)
   })
 
-  it('says the movement does not exist, and a retry can recover', async () => {
-    vi.mocked(getMovement).mockRejectedValueOnce({ code: 'MOVEMENT_NOT_FOUND', message: 'x' })
+  it('says the movement does not exist, and does not offer to try again', async () => {
+    vi.mocked(getMovement).mockRejectedValue({ code: 'MOVEMENT_NOT_FOUND', message: 'x' })
     const viewModel = useMovementDetailViewModel('mov-99')
 
     await viewModel.load()
 
     expect(viewModel.error.value).toBe(messageForCode('MOVEMENT_NOT_FOUND'))
+    expect(viewModel.canRetry.value).toBe(false)
     expect(viewModel.movement.value).toBeNull()
     expect(viewModel.isLoading.value).toBe(false)
+  })
+
+  it('offers to try again after any other failure, and a retry can recover', async () => {
+    vi.mocked(getMovement).mockRejectedValueOnce({ code: 'NETWORK_ERROR', message: 'x' })
+    const viewModel = useMovementDetailViewModel('mov-29')
+
+    await viewModel.load()
+
+    expect(viewModel.error.value).toBe(messageForCode('NETWORK_ERROR'))
+    expect(viewModel.canRetry.value).toBe(true)
 
     vi.mocked(getMovement).mockResolvedValueOnce(bizum)
     await viewModel.load()

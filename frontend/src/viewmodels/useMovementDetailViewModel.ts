@@ -1,4 +1,5 @@
 import { computed, ref } from 'vue'
+import { isApiError } from '@/models/apiError'
 import { formatFullDateTime } from '@/models/date'
 import { toUserMessage } from '@/models/errorMessages'
 import { MOVEMENT_STATUS_LABELS, type MovementDetail } from '@/models/movement'
@@ -12,6 +13,7 @@ export function useMovementDetailViewModel(movementId: string) {
   // Starts true so the screen never shows an empty detail before the first answer.
   const isLoading = ref(true)
   const error = ref<string | null>(null)
+  const canRetry = ref(true)
 
   const isIncome = computed(() => movement.value?.type === 'income')
   const rows = computed(() => {
@@ -32,10 +34,12 @@ export function useMovementDetailViewModel(movementId: string) {
       movement.value = await getMovement(movementId)
     } catch (failure) {
       error.value = toUserMessage(failure)
+      // A movement that does not exist will not appear on a second try.
+      canRetry.value = !(isApiError(failure) && failure.code === 'MOVEMENT_NOT_FOUND')
     } finally {
       isLoading.value = false
     }
   }
 
-  return { movement, rows, isIncome, isLoading, error, load }
+  return { movement, rows, isIncome, isLoading, error, canRetry, load }
 }

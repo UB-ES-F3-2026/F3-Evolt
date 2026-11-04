@@ -5,24 +5,26 @@ import ErrorState from '@/components/ErrorState.vue'
 import LoadingIndicator from '@/components/LoadingIndicator.vue'
 import MoneyAmount from '@/components/MoneyAmount.vue'
 import { useBalanceVisibility } from '@/viewmodels/useBalanceVisibility'
+import { useGoBack } from '@/viewmodels/useGoBack'
 import { useMovementDetailViewModel } from '@/viewmodels/useMovementDetailViewModel'
 
 const props = defineProps<{ movementId: string }>()
 
-const { movement, rows, isIncome, isLoading, error, load } = useMovementDetailViewModel(props.movementId)
+const { movement, rows, isIncome, isLoading, error, canRetry, load } = useMovementDetailViewModel(props.movementId)
 const { isHidden } = useBalanceVisibility()
+const goBack = useGoBack({ name: 'movements' })
 
 onMounted(load)
 </script>
 
 <template>
   <AppShell title="Detall del moviment">
-    <router-link :to="{ name: 'movements' }" class="back-link">← Moviments</router-link>
+    <button type="button" class="back-link" @click="goBack">← Tornar</button>
 
     <LoadingIndicator v-if="isLoading" />
 
     <section v-else-if="error" class="card">
-      <ErrorState :message="error" @retry="load" />
+      <ErrorState :message="error" :retryable="canRetry" @retry="load" />
     </section>
 
     <template v-else-if="movement">
@@ -57,7 +59,13 @@ onMounted(load)
 .back-link {
   display: inline-block;
   margin-bottom: 0.75rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
   font-size: 0.875rem;
+  cursor: pointer;
 }
 
 .card {
