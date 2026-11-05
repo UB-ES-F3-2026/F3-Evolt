@@ -43,6 +43,17 @@ class MovementRepository:
         ordered = sorted(self._filtered(account_id, filters), key=Movement.sort_key, reverse=True)
         return ordered[offset : offset + limit]
 
+    def get_by_account(self, account_id: int, movement_id: str) -> Movement | None:
+        """Moviment amb aquest id si és d'aquest compte, o None (T11.1).
+
+        Dona None tant si no existeix com si és d'un altre compte: el contracte no
+        distingeix els dos casos (§10.3). Retorna l'objecte viu del seed.
+        """
+        return next(
+            (movement for movement in self._by_account(account_id) if movement.id == movement_id),
+            None,
+        )
+
     def count_by_account(self, account_id: int, filters: MovementFilters | None = None) -> int:
         """Nombre de moviments d'un compte (T07.4).
 

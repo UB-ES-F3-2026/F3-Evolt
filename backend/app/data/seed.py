@@ -34,6 +34,7 @@ from app.models import (
     TYPE_INCOME,
     Account,
     Movement,
+    MovementReport,
     OutboxMessage,
     Pot,
     PotMovement,
@@ -144,6 +145,10 @@ class SeedData:
     outbox: list[OutboxMessage] = field(default_factory=list)
     # Comptador per a les entrades noves de l'historial (T18.1): pmov-04, pmov-05…
     next_pot_movement_number: int = field(default=1)
+    # Informes de problema dels moviments (T11.1). El seed no en té cap: reiniciar les
+    # dades els esborra (docs/api.md §10.4).
+    movement_reports: list[MovementReport] = field(default_factory=list)
+    next_report_number: int = field(default=1)
 
 
 def _days_ago_at(now: datetime, days_ago: int, hhmm: str) -> datetime:
@@ -165,6 +170,11 @@ def movement_id(number: int) -> str:
 def movement_reference(number: int) -> str:
     """Referència opaca dels moviments (docs/api.md §10.1, P37). El frontend no l'ha d'interpretar."""
     return f"EVT-{number:06d}"
+
+
+def report_id(number: int) -> str:
+    """Id opac dels informes de problema (docs/api.md §10.4, P42). El frontend no l'ha d'interpretar."""
+    return f"rep-{number:02d}"
 
 
 def pot_id(number: int) -> str:

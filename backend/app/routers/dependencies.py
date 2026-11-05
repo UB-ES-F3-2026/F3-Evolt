@@ -9,6 +9,7 @@ from fastapi import Request
 
 from app.repositories import (
     AccountRepository,
+    MovementReportRepository,
     MovementRepository,
     OutboxRepository,
     PotRepository,
@@ -44,3 +45,7 @@ def verification_code_repository(request: Request) -> VerificationCodeRepository
 
 def outbox_repository(request: Request) -> OutboxRepository:
     return OutboxRepository(request.app.state.seed)
+
+
+def movement_report_repository(request: Request) -> MovementReportRepository:
+    return MovementReportRepository(request.app.state.seed)
