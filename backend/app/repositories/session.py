@@ -42,7 +42,12 @@ class SessionRepository:
         self._seed.sessions.pop(token, None)
 
     def delete_for_user(self, user_id: int) -> None:
-        """Tanca totes les sessions de l'usuari, a tots els dispositius (T04.1)."""
+        """Tanca totes les sessions de l'usuari, a tots els dispositius (T04.1).
+
+        Es recorre una còpia: un login alhora (un altre fil del pool) pot afegir
+        una sessió mentre es recorre, i el diccionari no es pot canviar a mig
+        recórrer. `pop` i no `del`: un logout alhora pot haver tancat la mateixa.
+        """
         sessions = self._seed.sessions
-        for token in [t for t, session in sessions.items() if session.user_id == user_id]:
-            del sessions[token]
+        for token in [t for t, session in list(sessions.items()) if session.user_id == user_id]:
+            sessions.pop(token, None)

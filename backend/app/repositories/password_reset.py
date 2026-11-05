@@ -26,8 +26,10 @@ class PasswordResetTokenRepository:
         `secrets` i no `random`: el token és una credencial.
         """
         tokens = self._seed.password_reset_tokens
-        for old in [t for t, reset in tokens.items() if reset.user_id == user_id]:
-            del tokens[old]
+        # Còpia i `pop`, com a `SessionRepository.delete_for_user`: dos «He oblidat
+        # la contrasenya» alhora poden canviar el diccionari mentre es recorre.
+        for old in [t for t, reset in list(tokens.items()) if reset.user_id == user_id]:
+            tokens.pop(old, None)
         reset = PasswordResetToken(token=secrets.token_urlsafe(_TOKEN_BYTES), user_id=user_id, created_at=now)
         tokens[reset.token] = reset
         return reset
