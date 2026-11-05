@@ -1,5 +1,31 @@
 import { describe, expect, it } from 'vitest'
-import { hasFilters, NO_FILTERS, toMovementsQuery } from './movement'
+import { fromApiMovementDetail, hasFilters, NO_FILTERS, toMovementsQuery, type MovementJson } from './movement'
+
+const BIZUM: MovementJson = {
+  id: 'mov-29',
+  amount: 1000,
+  concept: 'Bizum enviat',
+  date: '2026-11-01T18:42:00+01:00',
+  type: 'expense',
+  icon: 'transfer',
+  counterparty: 'Núria Soler',
+  status: 'completed',
+  reference: 'EVT-000029',
+}
+
+describe('fromApiMovementDetail', () => {
+  it('keeps the fields of the detail (docs/api.md §10.1)', () => {
+    expect(fromApiMovementDetail(BIZUM)).toEqual(BIZUM)
+  })
+
+  it('keeps a movement without counterparty', () => {
+    expect(fromApiMovementDetail({ ...BIZUM, counterparty: null }).counterparty).toBeNull()
+  })
+
+  it('reads an unknown status as pending, never as done', () => {
+    expect(fromApiMovementDetail({ ...BIZUM, status: 'lost' }).status).toBe('pending')
+  })
+})
 
 describe('toMovementsQuery', () => {
   it('sends nothing when no filter is chosen («Tots» included)', () => {

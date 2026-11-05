@@ -68,6 +68,7 @@ onMounted(load)
             :key="movement.id"
             :movement="movement"
             :hidden="isHidden"
+            :to="{ name: 'movement', params: { movementId: movement.id } }"
           />
         </ul>
         <EmptyState v-else />

@@ -9,6 +9,7 @@
 import type { ApiError } from '@/models/apiError'
 import type { HomeJson } from '@/models/home'
 import type { MovementJson, MovementsPageJson, MovementsQuery } from '@/models/movement'
+import { isValidReportDescription, type MovementReport } from '@/models/movementReport'
 import type { TopupJson } from '@/models/topup'
 import { madridDayKey, madridDaysAgoAt, toContractDate } from './madridTime'
 import { filterMovements } from './movementFilters'
@@ -31,6 +32,7 @@ interface StoredMovement {
 const movements: StoredMovement[] = IS_EMPTY_USER ? [] : buildDemoMovements(new Date())
 let balance = movements.reduce((sum, { json }) => sum + signedAmount(json), 0)
 let nextNumber = DEMO_MOVEMENTS.length + 1
+let nextReportNumber = 1
 
 export function useMocks(): boolean {
   const value = import.meta.env.VITE_USE_MOCKS
@@ -54,6 +56,28 @@ export function mockMovements(offset = 0, limit = 20, query: MovementsQuery = {}
   const items = all.slice(offset, offset + limit)
   const nextOffset = offset + items.length < all.length ? offset + items.length : null
   return { items, nextOffset }
+}
+
+/** GET /api/movements/{movementId} (docs/api.md §10.3). */
+export function mockMovement(movementId: string): MovementJson {
+  const found = movements.find(({ json }) => json.id === movementId)
+  if (found === undefined) throw mockError('MOVEMENT_NOT_FOUND', "No s'ha trobat el moviment.")
+  return { ...found.json }
+}
+
+/** POST /api/movements/{movementId}/reports — the movement is checked before the description (§10.4). */
+export function mockReportMovement(movementId: string, description: string): MovementReport {
+  mockMovement(movementId)
+  if (!isValidReportDescription(description)) {
+    throw mockError('INVALID_DESCRIPTION', 'Explica què passa amb el moviment (com a màxim 500 caràcters).')
+  }
+  return {
+    // Same opaque id format as the contract: `rep-01`, `rep-02`…
+    id: `rep-${String(nextReportNumber++).padStart(2, '0')}`,
+    movementId,
+    description: description.trim(),
+    createdAt: toContractDate(new Date()),
+  }
 }
 
 /** POST /api/topups — same validations, order and errors as docs/api.md §4.3. */
@@ -121,8 +145,19 @@ function toStored(
 ): StoredMovement {
   const date = toContractDate(at)
   return {
-    // Same opaque id format as `movement_id()` in seed.py.
-    json: { id: `mov-${String(number).padStart(2, '0')}`, amount, concept, date, type, icon, counterparty },
+    json: {
+      // Same opaque id and reference formats as `movement_id()` and `movement_reference()` in seed.py.
+      id: `mov-${String(number).padStart(2, '0')}`,
+      amount,
+      concept,
+      date,
+      type,
+      icon,
+      counterparty,
+      // Only the newest movement of the seed is pending (docs/api.md §10.7).
+      status: number === DEMO_MOVEMENTS.length ? 'pending' : 'completed',
+      reference: `EVT-${String(number).padStart(6, '0')}`,
+    },
     at: Date.parse(date),
     seq: number,
   }
