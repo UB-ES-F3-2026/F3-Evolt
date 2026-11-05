@@ -93,7 +93,7 @@ host with a deploy hook works.
 1. New → *Static Site* → connect this repo, root directory `frontend/`.
 2. Build command: `npm ci && npm run build`, publish directory `dist`.
 3. Environment: `VITE_API_URL=https://evolt-api.onrender.com`,
-   `VITE_USE_MOCKS=false`, `VITE_DEMO_USER=1` (see #93).
+   `VITE_USE_MOCKS=false`. Since T03.5 the user comes from the login, not from a variable.
 4. Add a **Rewrite** `/*` → `/index.html` so Vue Router deep links and
    refreshes do not 404.
 5. Set the branch to `main` once the release PR lands, then Settings →

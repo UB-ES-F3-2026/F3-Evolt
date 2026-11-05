@@ -2,19 +2,21 @@
  * Mock copy of backend/app/data/seed.py (T07.3). Keep both files in sync, so
  * the app looks the same with mocks on and with the real backend.
  *
- * - Demo user (1): 30 movements and 3 pots. The balance is the signed sum of
- *   the movements, as in the seed.
- * - Empty user (2): no movements, no pots, balance 0.
+ * - Demo user (`demo@evolt.test`): 30 movements and 3 pots. The balance is the
+ *   signed sum of the movements, as in the seed.
+ * - Any other account (`buit@evolt.test` or a new one): no movements, no pots, balance 0.
  */
 
 import type { MovementIcon, MovementType } from '@/models/movement'
 import type { PotColor } from '@/models/pot'
 
-/** `X-User-Id` value of the user with an empty account (docs/api.md §2). */
-export const EMPTY_USER_ID = '2'
+/** The only seed account with data (docs/api.md §8.13). */
+export const DEMO_IDENTIFIER = 'demo@evolt.test'
 
-// One user per `npm run dev` run, so every mock module can decide its data once.
-export const IS_EMPTY_USER = (import.meta.env.VITE_DEMO_USER ?? '1') === EMPTY_USER_ID
+/** Nobody logged in counts as the demo user, so the mock tests need no login. */
+export function hasDemoData(identifier: string | null): boolean {
+  return identifier === null || identifier === DEMO_IDENTIFIER
+}
 
 /** [days ago, "HH:MM" in Madrid, concept, type, icon, amount in cents, counterparty if any] */
 export type SeedMovement = readonly [number, string, string, MovementType, MovementIcon, number, string?]

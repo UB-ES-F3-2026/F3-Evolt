@@ -8,14 +8,14 @@
  * empty) becomes `VALIDATION_ERROR` on 422 and `INTERNAL_ERROR` otherwise.
  *
  * It also carries the session: the token goes in `Authorization` (docs/api.md §8.2),
- * and an answer saying the session is gone ends it, whatever screen asked.
+ * and an answer saying the session is gone ends it, whatever screen asked. The token
+ * is the only way the backend knows the user: no request sends `X-User-Id` (T03.5).
  */
 
 import { isApiError, type ApiError } from '@/models/apiError'
 import { endSession, getToken, touchSession } from './session'
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
-const USER_ID = import.meta.env.VITE_DEMO_USER ?? '1'
 
 interface RequestOptions {
   method?: 'GET' | 'POST'
@@ -33,8 +33,6 @@ async function request<T>(path: string, { method = 'GET', body }: RequestOptions
       method,
       headers: {
         'Content-Type': 'application/json',
-        // T03.5 removes X-User-Id. With a token the backend ignores it (docs/api.md §8.2).
-        'X-User-Id': USER_ID,
         ...(token === null ? {} : { Authorization: `Bearer ${token}` }),
       },
       body: body === undefined ? undefined : JSON.stringify(body),
