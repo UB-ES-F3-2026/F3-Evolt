@@ -219,6 +219,7 @@ def test_user_is_pending_by_default():
     user = User(id=9, name="", identifier="ana@x.com", identifier_type="email", password_hash="h")
     assert user.status == "pending"
     assert user.xp == 0
+    assert (user.failed_logins, user.locked_until) == (0, None)
 
 
 @pytest.mark.parametrize(
@@ -229,6 +230,8 @@ def test_user_is_pending_by_default():
         {"password_hash": ""},
         {"status": "blocked"},
         {"xp": -1},
+        {"failed_logins": -1},
+        {"locked_until": datetime(2026, 11, 3, 10, 15)},  # sense zona horària
     ],
 )
 def test_user_rejects_invalid_data(overrides):

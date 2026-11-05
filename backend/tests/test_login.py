@@ -1,7 +1,7 @@
 """Tests de T03.1: POST /api/auth/login i /api/auth/logout (docs/api.md §8.8 i §8.9).
 
 Proves S-01 a S-11 de docs/proves-acces.md. El bloqueig (S-12 a S-17) i la
-inactivitat (S-18 a S-22) són de la T03.2.
+inactivitat (S-18 a S-22) són a test_lockout_inactivity.py (T03.2).
 
 Executar des de backend/:  python -m pytest tests/test_login.py
 """

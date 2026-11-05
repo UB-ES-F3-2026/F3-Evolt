@@ -148,3 +148,21 @@ def test_key_is_never_logged(caplog) -> None:
         load_app_settings({"ENABLE_DEV_ROUTES": "nope", "DEV_OUTBOX_KEY": "molt-secreta"})
 
     assert "molt-secreta" not in caplog.text
+
+
+def test_frontend_url_defaults_to_vite() -> None:
+    # T04.1 (§8.10): base de l'enllaç de recuperació.
+    assert load_app_settings({}).frontend_url == DEFAULT_FRONTEND_ORIGIN
+
+
+def test_frontend_url_drops_the_trailing_slash() -> None:
+    settings = load_app_settings({"FRONTEND_URL": " https://f3-evolt.onrender.com/ "})
+    assert settings.frontend_url == "https://f3-evolt.onrender.com"
+
+
+def test_invalid_frontend_url_falls_back_to_vite(caplog) -> None:
+    with caplog.at_level(logging.WARNING, logger="evolt"):
+        settings = load_app_settings({"FRONTEND_URL": "f3-evolt.onrender.com"})
+
+    assert settings.frontend_url == DEFAULT_FRONTEND_ORIGIN
+    assert "FRONTEND_URL" in caplog.text
