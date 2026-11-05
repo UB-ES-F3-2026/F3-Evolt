@@ -35,6 +35,7 @@ from app.models import (
     Account,
     Movement,
     OutboxMessage,
+    PasswordResetToken,
     Pot,
     PotMovement,
     Session,
@@ -144,6 +145,8 @@ class SeedData:
     outbox: list[OutboxMessage] = field(default_factory=list)
     # Comptador per a les entrades noves de l'historial (T18.1): pmov-04, pmov-05…
     next_pot_movement_number: int = field(default=1)
+    # Enllaços de recuperació de la contrasenya, per token (T04.1, §8.13).
+    password_reset_tokens: dict[str, PasswordResetToken] = field(default_factory=dict)
 
 
 def _days_ago_at(now: datetime, days_ago: int, hhmm: str) -> datetime:

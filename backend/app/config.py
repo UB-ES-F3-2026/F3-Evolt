@@ -2,8 +2,9 @@
 
 Decideix des de quins orígens es pot cridar l'API (CORS), si les eines de
 desenvolupament (`/api/dev/*`) estan actives, si encara s'accepta la capçalera
-`X-User-Id` sense sessió (T03.1, docs/api.md §8.2) i si la bústia simulada és
-visible i amb quina clau (T02.1, §8.12, P46). Sense cap variable definida, el
+`X-User-Id` sense sessió (T03.1, docs/api.md §8.2), si la bústia simulada és
+visible i amb quina clau (T02.1, §8.12, P46) i la base de l'enllaç de
+recuperació de la contrasenya (T04.1, §8.10). Sense cap variable definida, el
 backend es comporta exactament igual que en local: accepta el Vite dev server
 i exposa `/api/dev/reset`. Al desplegament es fixen totes dues explícitament
 (vegeu el README, secció «Deploy»).
@@ -33,7 +34,8 @@ class AppSettings:
     `allow_x_user_id` indica si una ruta protegida sense token encara es pot
     resoldre amb `X-User-Id` (docs/api.md §8.2, transició fins a la T03.5);
     `dev_outbox_enabled` indica si es registra `GET /api/dev/outbox`, i
-    `dev_outbox_key`, si n'hi ha, és la clau que ha de portar `X-Dev-Key`.
+    `dev_outbox_key`, si n'hi ha, és la clau que ha de portar `X-Dev-Key`;
+    `frontend_url` és la base de l'enllaç de recuperació (`FRONTEND_URL`, §8.10).
     """
 
     frontend_origins: tuple[str, ...] = (DEFAULT_FRONTEND_ORIGIN,)
@@ -41,6 +43,7 @@ class AppSettings:
     allow_x_user_id: bool = True
     dev_outbox_enabled: bool = True
     dev_outbox_key: str | None = None
+    frontend_url: str = DEFAULT_FRONTEND_ORIGIN
 
 
 def _parse_origins(raw: str) -> tuple[str, ...]:
@@ -96,12 +99,27 @@ def load_app_settings(env: Mapping[str, str] | None = None) -> AppSettings:
     )
 
     return AppSettings(
+        frontend_url=_parse_frontend_url(source.get("FRONTEND_URL", "")),
         frontend_origins=origins,
         dev_routes_enabled=dev_routes_enabled,
         allow_x_user_id=allow_x_user_id,
         dev_outbox_enabled=dev_outbox_enabled,
         dev_outbox_key=dev_outbox_key,
     )
+
+
+def _parse_frontend_url(raw: str) -> str:
+    """`FRONTEND_URL`: sense barra final, perquè l'enllaç no surti amb `//nova-contrasenya`.
+
+    Buida o sense `http(s)://` → la de Vite, amb un avís si n'hi havia una de mal escrita.
+    """
+    url = raw.strip().rstrip("/")
+    if not url:
+        return DEFAULT_FRONTEND_ORIGIN
+    if not url.startswith(("http://", "https://")):
+        logger.warning("FRONTEND_URL invàlida (%r): es fa servir %s", raw, DEFAULT_FRONTEND_ORIGIN)
+        return DEFAULT_FRONTEND_ORIGIN
+    return url
 
 
 def _outbox_enabled(raw: str, dev_routes_enabled: bool, key: str | None) -> bool:

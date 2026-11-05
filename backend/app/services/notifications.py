@@ -12,6 +12,7 @@ from app.models import (
     CHANNEL_SMS,
     IDENTIFIER_EMAIL,
     MESSAGE_ACCOUNT_LOCKED,
+    MESSAGE_PASSWORD_RESET,
     MESSAGE_VERIFICATION_CODE,
     OutboxMessage,
     User,
@@ -51,6 +52,20 @@ def send_account_locked(user: User, now: datetime, outbox: OutboxRepository) -> 
                 "fallits. Si no has estat tu, canvia la contrasenya."
             ),
             date=now,
+        )
+    )
+
+
+def send_password_reset(user: User, link: str, now: datetime, outbox: OutboxRepository) -> None:
+    """Enllaç «He oblidat la contrasenya» (US-04, T04.1). Caduca en 30 minuts."""
+    outbox.add(
+        OutboxMessage(
+            to=user.identifier,
+            channel=_channel(user),
+            type=MESSAGE_PASSWORD_RESET,
+            text=f"Per canviar la contrasenya d'Evolt, obre aquest enllaç. Caduca en 30 minuts: {link}",
+            date=now,
+            link=link,
         )
     )
 

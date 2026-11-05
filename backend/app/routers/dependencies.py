@@ -11,6 +11,7 @@ from app.repositories import (
     AccountRepository,
     MovementRepository,
     OutboxRepository,
+    PasswordResetTokenRepository,
     PotRepository,
     SessionRepository,
     UserRepository,
@@ -44,3 +45,12 @@ def verification_code_repository(request: Request) -> VerificationCodeRepository
 
 def outbox_repository(request: Request) -> OutboxRepository:
     return OutboxRepository(request.app.state.seed)
+
+
+def password_reset_token_repository(request: Request) -> PasswordResetTokenRepository:
+    return PasswordResetTokenRepository(request.app.state.seed)
+
+
+def frontend_url(request: Request) -> str:
+    """Base de l'enllaç de recuperació (`FRONTEND_URL`, docs/api.md §8.10)."""
+    return request.app.state.settings.frontend_url
