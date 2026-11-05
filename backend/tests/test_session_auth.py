@@ -175,7 +175,7 @@ def test_bearer_token(header, expected) -> None:
 
 
 def test_each_request_records_the_last_activity() -> None:
-    # La T03.2 farà servir aquesta hora per tancar la sessió als 5 minuts.
+    # La T03.2 fa servir aquesta hora per tancar la sessió als 5 minuts.
     seed = build_seed()
     sessions = SessionRepository(seed)
     opened = datetime(2026, 11, 3, 10, 0, tzinfo=MADRID_TZ)

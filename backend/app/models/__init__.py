@@ -23,6 +23,7 @@ from app.models.movement import (
     Movement,
     MovementFilters,
 )
+from app.models.movement_report import MAX_REPORT_DESCRIPTION, MovementReport
 from app.models.outbox import (
     CHANNEL_EMAIL,
     CHANNEL_SMS,
@@ -31,6 +32,7 @@ from app.models.outbox import (
     MESSAGE_VERIFICATION_CODE,
     OutboxMessage,
 )
+from app.models.password_reset import PasswordResetToken
 from app.models.pot import (
     DEFAULT_POT_COLOR,
     POT_COLORS,
@@ -56,8 +58,10 @@ __all__ = [
     "Account",
     "Movement",
     "MovementFilters",
+    "MovementReport",
     "Pot",
     "OutboxMessage",
+    "PasswordResetToken",
     "PotMovement",
     "Session",
     "User",
@@ -80,6 +84,7 @@ __all__ = [
     "KIND_OTHER",
     "KIND_TOPUP",
     "MADRID_TZ",
+    "MAX_REPORT_DESCRIPTION",
     "MOVEMENT_STATUS_COMPLETED",
     "MOVEMENT_STATUS_PENDING",
     "MOVEMENT_STATUSES",

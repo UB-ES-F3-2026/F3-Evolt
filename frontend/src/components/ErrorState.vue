@@ -7,8 +7,10 @@ withDefaults(
     message: string
     /** Compact, without the big icon: at the end of a list that keeps what it already loaded. */
     inline?: boolean
+    /** Without the button, for an error that trying again cannot fix. */
+    retryable?: boolean
   }>(),
-  { inline: false },
+  { inline: false, retryable: true },
 )
 
 const emit = defineEmits<{ retry: [] }>()
@@ -18,7 +20,7 @@ const emit = defineEmits<{ retry: [] }>()
   <div class="error-state" :class="{ inline }">
     <CircleAlert v-if="!inline" class="icon" :size="32" />
     <p class="message" role="alert">{{ message }}</p>
-    <button type="button" class="retry" @click="emit('retry')">
+    <button v-if="retryable" type="button" class="retry" @click="emit('retry')">
       <RotateCw :size="16" />
       Reintentar
     </button>

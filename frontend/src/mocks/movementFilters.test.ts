@@ -14,6 +14,8 @@ const SEED: MovementJson[] = DEMO_MOVEMENTS.map(([daysAgo, hhmm, concept, type, 
   type,
   icon,
   counterparty: counterparty ?? null,
+  status: 'completed',
+  reference: `EVT-${String(i + 1).padStart(6, '0')}`,
 })).reverse()
 
 const ids = (list: MovementJson[]) => list.map((movement) => movement.id)

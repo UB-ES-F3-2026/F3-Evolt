@@ -140,7 +140,13 @@ onBeforeUnmount(() => observer?.disconnect())
 
     <section v-else class="card">
       <ul class="movements">
-        <MovementRow v-for="movement in items" :key="movement.id" :movement="movement" :hidden="isHidden" />
+        <MovementRow
+          v-for="movement in items"
+          :key="movement.id"
+          :movement="movement"
+          :hidden="isHidden"
+          :to="{ name: 'movement', params: { movementId: movement.id } }"
+        />
       </ul>
 
       <!-- A failed next page keeps the rows already loaded; the error goes after them. -->

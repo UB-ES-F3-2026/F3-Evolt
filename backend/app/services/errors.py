@@ -21,6 +21,9 @@ ALREADY_REGISTERED = "ALREADY_REGISTERED"
 INVALID_CREDENTIALS = "INVALID_CREDENTIALS"
 ACCOUNT_NOT_VERIFIED = "ACCOUNT_NOT_VERIFIED"
 UNAUTHENTICATED = "UNAUTHENTICATED"
+ACCOUNT_LOCKED = "ACCOUNT_LOCKED"
+SESSION_EXPIRED = "SESSION_EXPIRED"
+RESET_LINK_EXPIRED = "RESET_LINK_EXPIRED"
 INVALID_CODE = "INVALID_CODE"
 CODE_EXPIRED = "CODE_EXPIRED"
 TOO_MANY_ATTEMPTS = "TOO_MANY_ATTEMPTS"
@@ -29,6 +32,9 @@ INVALID_POT_NAME = "INVALID_POT_NAME"
 INVALID_TARGET = "INVALID_TARGET"
 INSUFFICIENT_BALANCE = "INSUFFICIENT_BALANCE"
 POT_NOT_FOUND = "POT_NOT_FOUND"
+# Moviments (docs/api.md §5 i §10.6).
+MOVEMENT_NOT_FOUND = "MOVEMENT_NOT_FOUND"
+INVALID_DESCRIPTION = "INVALID_DESCRIPTION"
 
 # Codi d'error → estat HTTP de la resposta.
 ERROR_STATUS: dict[str, int] = {
@@ -42,6 +48,9 @@ ERROR_STATUS: dict[str, int] = {
     INVALID_CREDENTIALS: 401,
     ACCOUNT_NOT_VERIFIED: 403,
     UNAUTHENTICATED: 401,
+    ACCOUNT_LOCKED: 423,
+    SESSION_EXPIRED: 401,
+    RESET_LINK_EXPIRED: 422,
     INVALID_CODE: 422,
     CODE_EXPIRED: 422,
     TOO_MANY_ATTEMPTS: 429,
@@ -49,6 +58,8 @@ ERROR_STATUS: dict[str, int] = {
     INVALID_TARGET: 422,
     INSUFFICIENT_BALANCE: 422,
     POT_NOT_FOUND: 404,
+    MOVEMENT_NOT_FOUND: 404,
+    INVALID_DESCRIPTION: 422,
 }
 
 # Missatge per defecte de cada codi (docs/api.md §5). El contracte els marca
@@ -64,6 +75,9 @@ ERROR_MESSAGES: dict[str, str] = {
     INVALID_CREDENTIALS: "L'email, el telèfon o la contrasenya no són correctes.",
     ACCOUNT_NOT_VERIFIED: "Has de verificar el compte abans d'iniciar sessió.",
     UNAUTHENTICATED: "Cal iniciar sessió.",
+    ACCOUNT_LOCKED: "Compte bloquejat durant 15 minuts.",
+    SESSION_EXPIRED: "La sessió s'ha tancat per inactivitat.",
+    RESET_LINK_EXPIRED: "Aquest enllaç ha caducat.",
     # El mateix text per a incorrecte i caducat: la US-02 no els distingeix.
     INVALID_CODE: "El codi no és correcte o ha caducat.",
     CODE_EXPIRED: "El codi no és correcte o ha caducat.",
@@ -72,6 +86,8 @@ ERROR_MESSAGES: dict[str, str] = {
     INVALID_TARGET: "L'objectiu ha de ser més gran que 0.",
     INSUFFICIENT_BALANCE: "No tens prou saldo per fer aquesta aportació.",
     POT_NOT_FOUND: "No s'ha trobat la guardiola.",
+    MOVEMENT_NOT_FOUND: "No s'ha trobat el moviment.",
+    INVALID_DESCRIPTION: "Explica què passa amb el moviment (com a màxim 500 caràcters).",
 }
 
 

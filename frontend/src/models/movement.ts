@@ -4,14 +4,22 @@
  * Contract invariants worth remembering:
  * - `amount` is always a positive integer in cents; direction comes from `type`.
  * - `icon` is a closed list; unknown values fall back to `other`.
+ * - `status` is a closed list; an unknown value reads as `pending`, never as done.
  */
 
 // `savings` is the main-account movement of a contribution to a pot (docs/api.md §9.4).
 const ICONS = ['topup', 'salary', 'transfer', 'shopping', 'food', 'transport', 'savings', 'other'] as const
 const TYPES = ['income', 'expense'] as const
+const STATUSES = ['completed', 'pending'] as const
 
 export type MovementIcon = (typeof ICONS)[number]
 export type MovementType = (typeof TYPES)[number]
+export type MovementStatus = (typeof STATUSES)[number]
+
+export const MOVEMENT_STATUS_LABELS: Record<MovementStatus, string> = {
+  completed: 'Completat',
+  pending: 'Pendent',
+}
 
 export interface Movement {
   id: string
@@ -22,7 +30,16 @@ export interface Movement {
   icon: MovementIcon
 }
 
-/** A movement as the API sends it, before `type` and `icon` are checked. */
+/** What the «Detall del moviment» screen adds to a row of the list (US-11, docs/api.md §10.1). */
+export interface MovementDetail extends Movement {
+  /** Who pays or gets paid; null when the concept already says it. */
+  counterparty: string | null
+  status: MovementStatus
+  /** Opaque: shown as it comes, never interpreted. */
+  reference: string
+}
+
+/** A movement as the API sends it, before `type`, `icon` and `status` are checked. */
 export interface MovementJson {
   id: string
   amount: number
@@ -30,8 +47,9 @@ export interface MovementJson {
   date: string
   type: string
   icon: string
-  /** Who pays or gets paid (docs/api.md §10.1). Optional until the backend sends it (T10.2). */
-  counterparty?: string | null
+  counterparty: string | null
+  status: string
+  reference: string
 }
 
 /** GET /api/movements page (docs/api.md §4.2). */
@@ -102,6 +120,15 @@ export function fromApiMovement(json: MovementJson): Movement {
     date: json.date,
     type: isOneOf(TYPES, json.type) ? json.type : 'expense',
     icon: isOneOf(ICONS, json.icon) ? json.icon : 'other',
+  }
+}
+
+export function fromApiMovementDetail(json: MovementJson): MovementDetail {
+  return {
+    ...fromApiMovement(json),
+    counterparty: json.counterparty,
+    status: isOneOf(STATUSES, json.status) ? json.status : 'pending',
+    reference: json.reference,
   }
 }
 

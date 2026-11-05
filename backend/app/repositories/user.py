@@ -5,6 +5,8 @@ negoci: normalitzar l'identificador, validar la contrasenya o rebutjar un
 duplicat és feina del servei.
 """
 
+from datetime import datetime
+
 from app.data.seed import SeedData
 from app.models import USER_STATUSES, User
 
@@ -64,3 +66,19 @@ class UserRepository:
         if status not in USER_STATUSES:
             raise ValueError(f"status desconegut: {status!r}")
         self._seed.users[user_id].status = status
+
+    def set_login_state(self, user_id: int, *, failed_logins: int, locked_until: datetime | None) -> None:
+        """Desa els errors de login seguits i el bloqueig (T03.2).
+
+        És un SET: quan sumar, bloquejar o tornar a zero ho decideix el servei.
+        L'usuari ha d'existir (KeyError).
+        """
+        user = self._seed.users[user_id]
+        user.failed_logins = failed_logins
+        user.locked_until = locked_until
+
+    def set_password_hash(self, user_id: int, password_hash: str) -> None:
+        """Desa el hash de la contrasenya nova (T04.1). L'usuari ha d'existir (KeyError)."""
+        if not password_hash:
+            raise ValueError("password_hash no pot ser buit")
+        self._seed.users[user_id].password_hash = password_hash
