@@ -11,6 +11,7 @@ from app.models import (
     CHANNEL_EMAIL,
     CHANNEL_SMS,
     IDENTIFIER_EMAIL,
+    MESSAGE_ACCOUNT_LOCKED,
     MESSAGE_VERIFICATION_CODE,
     OutboxMessage,
     User,
@@ -34,6 +35,22 @@ def send_verification_code(user: User, code: str, now: datetime, outbox: OutboxR
             text=f"El teu codi d'Evolt és {code}. Caduca en 10 minuts.",
             date=now,
             code=code,
+        )
+    )
+
+
+def send_account_locked(user: User, now: datetime, outbox: OutboxRepository) -> None:
+    """Avís de bloqueig després de 5 errors de login seguits (US-03, T03.2)."""
+    outbox.add(
+        OutboxMessage(
+            to=user.identifier,
+            channel=_channel(user),
+            type=MESSAGE_ACCOUNT_LOCKED,
+            text=(
+                "Hem bloquejat el teu compte d'Evolt durant 15 minuts després de 5 intents "
+                "fallits. Si no has estat tu, canvia la contrasenya."
+            ),
+            date=now,
         )
     )
 

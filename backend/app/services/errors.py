@@ -21,6 +21,8 @@ ALREADY_REGISTERED = "ALREADY_REGISTERED"
 INVALID_CREDENTIALS = "INVALID_CREDENTIALS"
 ACCOUNT_NOT_VERIFIED = "ACCOUNT_NOT_VERIFIED"
 UNAUTHENTICATED = "UNAUTHENTICATED"
+ACCOUNT_LOCKED = "ACCOUNT_LOCKED"
+SESSION_EXPIRED = "SESSION_EXPIRED"
 INVALID_CODE = "INVALID_CODE"
 CODE_EXPIRED = "CODE_EXPIRED"
 TOO_MANY_ATTEMPTS = "TOO_MANY_ATTEMPTS"
@@ -42,6 +44,8 @@ ERROR_STATUS: dict[str, int] = {
     INVALID_CREDENTIALS: 401,
     ACCOUNT_NOT_VERIFIED: 403,
     UNAUTHENTICATED: 401,
+    ACCOUNT_LOCKED: 423,
+    SESSION_EXPIRED: 401,
     INVALID_CODE: 422,
     CODE_EXPIRED: 422,
     TOO_MANY_ATTEMPTS: 429,
@@ -64,6 +68,8 @@ ERROR_MESSAGES: dict[str, str] = {
     INVALID_CREDENTIALS: "L'email, el telèfon o la contrasenya no són correctes.",
     ACCOUNT_NOT_VERIFIED: "Has de verificar el compte abans d'iniciar sessió.",
     UNAUTHENTICATED: "Cal iniciar sessió.",
+    ACCOUNT_LOCKED: "Compte bloquejat durant 15 minuts.",
+    SESSION_EXPIRED: "La sessió s'ha tancat per inactivitat.",
     # El mateix text per a incorrecte i caducat: la US-02 no els distingeix.
     INVALID_CODE: "El codi no és correcte o ha caducat.",
     CODE_EXPIRED: "El codi no és correcte o ha caducat.",
