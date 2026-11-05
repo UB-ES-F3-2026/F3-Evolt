@@ -60,6 +60,7 @@ def _state(seed: SeedData):
 # --- Aportació correcta (§9.4) ----------------------------------------------------------
 
 
+@pytest.mark.memory_only
 def test_contribution_moves_money_from_the_account_to_the_pot(client: TestClient) -> None:
     # A-01: 30 € a «Vacances» (150 €) la deixen a 180 €, i el saldo baixa 30 €.
     before = _balance(client)
@@ -81,6 +82,7 @@ def test_contribution_moves_money_from_the_account_to_the_pot(client: TestClient
     assert _pot_balance(client, "pot-01") == 18000
 
 
+@pytest.mark.memory_only
 def test_contribution_creates_the_main_account_movement(client: TestClient) -> None:
     # A-01: el moviment del compte principal (P29).
     movement = _contribute(client, "pot-01", 3000).json()["movement"]
@@ -126,6 +128,7 @@ def test_response_keeps_the_balance_of_this_contribution() -> None:
     assert first.pot.balance == 15100
 
 
+@pytest.mark.memory_only
 def test_contributing_the_whole_balance_leaves_the_account_at_zero(client: TestClient) -> None:
     # A-06
     before = _balance(client)
@@ -171,6 +174,7 @@ def test_movement_is_the_first_one_at_home_and_in_the_list(client: TestClient) -
     assert client.get("/api/movements").json()["items"][0] == movement
 
 
+@pytest.mark.memory_only
 def test_balance_is_still_the_sum_of_the_movements(client: TestClient) -> None:
     # A-19
     _contribute(client, "pot-01", 3000)
@@ -180,6 +184,7 @@ def test_balance_is_still_the_sum_of_the_movements(client: TestClient) -> None:
     assert sum(m.signed_amount for m in movements) == _balance(client)
 
 
+@pytest.mark.memory_only
 def test_contribution_gives_no_xp(client: TestClient) -> None:
     # A-20
     before = {user_id: user.xp for user_id, user in _seed(client).users.items()}
@@ -197,6 +202,7 @@ def test_contribution_does_not_count_for_the_daily_topup_limit(client: TestClien
     assert client.post("/api/topups", json={"amount": 50000}).status_code == 201
 
 
+@pytest.mark.memory_only
 def test_reset_restores_pots_history_and_counters(client: TestClient) -> None:
     # A-22
     before = _state(_seed(client))
@@ -212,6 +218,7 @@ def test_reset_restores_pots_history_and_counters(client: TestClient) -> None:
 # --- Historial (§9.5) -------------------------------------------------------------------
 
 
+@pytest.mark.memory_only
 def test_contribution_is_the_first_entry_of_the_history(client: TestClient) -> None:
     # A-04
     _contribute(client, "pot-01", 3000)
@@ -277,6 +284,7 @@ def test_seed_pot_balance_is_the_sum_of_its_history() -> None:
 # --- Errors de negoci (§9.7) ------------------------------------------------------------
 
 
+@pytest.mark.memory_only
 def test_more_than_the_balance_changes_nothing(client: TestClient) -> None:
     # A-07
     before = _state(_seed(client))
@@ -291,6 +299,7 @@ def test_more_than_the_balance_changes_nothing(client: TestClient) -> None:
     assert _state(_seed(client)) == before
 
 
+@pytest.mark.memory_only
 @pytest.mark.parametrize("amount", [0, -100])
 def test_zero_or_negative_amount_changes_nothing(client: TestClient, amount: int) -> None:
     # A-08
@@ -306,6 +315,7 @@ def test_zero_or_negative_amount_changes_nothing(client: TestClient, amount: int
     assert _state(_seed(client)) == before
 
 
+@pytest.mark.memory_only
 @pytest.mark.parametrize(
     "body",
     [{"amount": "30"}, {"amount": 30.0}, {"amount": 30.5}, {"amount": True}, {"amount": None}, {}],
@@ -328,6 +338,7 @@ def test_format_is_checked_before_the_pot(client: TestClient) -> None:
     assert response.json()["code"] == "VALIDATION_ERROR"
 
 
+@pytest.mark.memory_only
 @pytest.mark.parametrize("pot_id", ["pot-99", "abc"])
 def test_unknown_pot_is_not_found(client: TestClient, pot_id: str) -> None:
     # A-10: també un id amb un format qualsevol.
@@ -340,6 +351,7 @@ def test_unknown_pot_is_not_found(client: TestClient, pot_id: str) -> None:
     assert _state(_seed(client)) == before
 
 
+@pytest.mark.memory_only
 def test_pot_of_another_user_looks_like_an_unknown_one(client: TestClient) -> None:
     # A-11: el mateix cos que A-10, i la guardiola no canvia.
     before = _state(_seed(client))
@@ -381,6 +393,7 @@ def test_amount_is_checked_before_the_balance(client: TestClient) -> None:
 # --- Tot o res --------------------------------------------------------------------------
 
 
+@pytest.mark.memory_only
 def test_simulated_error_changes_nothing(monkeypatch: pytest.MonkeyPatch) -> None:
     # A-16: la simulació de T08.2 falla abans d'arribar a la ruta.
     monkeypatch.setenv("SIMULATE_ERROR_RATE", "100")
@@ -395,6 +408,7 @@ def test_simulated_error_changes_nothing(monkeypatch: pytest.MonkeyPatch) -> Non
         assert _state(_seed(client)) == before
 
 
+@pytest.mark.memory_only
 @pytest.mark.parametrize(
     "repository, write",
     [

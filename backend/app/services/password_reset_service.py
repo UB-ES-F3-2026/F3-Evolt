@@ -16,6 +16,7 @@ from app.repositories import (
     SessionRepository,
     UserRepository,
 )
+from app.repositories.atomic import DIRECT, Atomic
 from app.services.errors import RESET_LINK_EXPIRED, VALIDATION_ERROR, WEAK_PASSWORD, ApiError
 from app.services.identifier import InvalidIdentifier, normalize_identifier
 from app.services.notifications import send_password_reset
@@ -66,6 +67,7 @@ def reset_password(
     tokens: PasswordResetTokenRepository,
     sessions: SessionRepository,
     now: datetime | None = None,
+    atomic: Atomic = DIRECT,
 ) -> None:
     """«Nova contrasenya» amb el token de l'enllaç (§8.11).
 
@@ -77,6 +79,7 @@ def reset_password(
     Si tot és correcte: contrasenya nova, token gastat, totes les sessions
     tancades i compte desbloquejat. L'estat (pendent o actiu) no canvia, i no
     s'obre cap sessió: cal iniciar-la amb la contrasenya nova.
+    El hash es fa fora de l'`atomic` (TR01.1): només les escriptures hi van a dins.
     """
     now = now or now_madrid()
     if not fits_password_hash(password):
@@ -87,16 +90,19 @@ def reset_password(
 
     password_hash = hash_password(password)
 
-    with _RESET_LOCK:
-        # Es torna a comprovar dins del pany: una altra petició pot haver gastat
-        # el token, o n'hi pot haver un de nou, mentre es feia el hash.
-        user_id = _check_link(token, tokens, now)
-        # Primer les sessions: tancar-les llegeix quines hi ha, i en una
-        # transacció de Firestore (TR01.1) les lectures van abans de les escriptures.
-        sessions.delete_for_user(user_id)
-        tokens.mark_used(token)
-        users.set_password_hash(user_id, password_hash)
-        users.set_login_state(user_id, failed_logins=0, locked_until=None)
+    def write() -> None:
+        with _RESET_LOCK:
+            # Es torna a comprovar a dins: una altra petició pot haver gastat el
+            # token, o n'hi pot haver un de nou, mentre es feia el hash.
+            user_id = _check_link(token, tokens, now)
+            # Primer les sessions: tancar-les llegeix quines hi ha, i en una
+            # transacció de Firestore les lectures van abans de les escriptures.
+            sessions.delete_for_user(user_id)
+            tokens.mark_used(token)
+            users.set_password_hash(user_id, password_hash)
+            users.set_login_state(user_id, failed_logins=0, locked_until=None)
+
+    atomic.run(write)
 
 
 def _check_link(token: str, tokens: PasswordResetTokenRepository, now: datetime) -> int:

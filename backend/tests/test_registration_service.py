@@ -15,6 +15,7 @@ from app.repositories import (
     UserRepository,
     VerificationCodeRepository,
 )
+from app.services import registration_service
 from app.services.errors import (
     ALREADY_REGISTERED,
     VALIDATION_ERROR,
@@ -116,3 +117,45 @@ def test_register_sends_a_verification_code(seed):
     assert message.type == "verification_code"
     assert message.date == NOW
     assert seed.verification_codes[user.id].code == message.code
+
+
+class _RecordingAtomic:
+    """`atomic` de prova: apunta si el hash de bcrypt s'ha fet a dins (revisió de la #137)."""
+
+    def __init__(self) -> None:
+        self.inside = False
+        self.runs = 0
+
+    def run(self, operation):
+        self.inside, self.runs = True, self.runs + 1
+        try:
+            return operation()
+        finally:
+            self.inside = False
+
+
+def test_password_is_hashed_outside_the_atomic_operation(seed, monkeypatch):
+    # Mentre un registre calcula el hash, les altres escriptures no s'han d'aturar.
+    atomic = _RecordingAtomic()
+    original = registration_service.hash_password
+
+    def hash_outside(password: str) -> str:
+        assert not atomic.inside
+        return original(password)
+
+    monkeypatch.setattr(registration_service, "hash_password", hash_outside)
+
+    user = register(
+        "ana@x.com",
+        "Platja2026",
+        True,
+        UserRepository(seed),
+        AccountRepository(seed),
+        VerificationCodeRepository(seed),
+        OutboxRepository(seed),
+        now=NOW,
+        atomic=atomic,
+    )
+
+    assert atomic.runs == 1
+    assert seed.users[user.id] is user

@@ -252,7 +252,15 @@ PowerShell: `$env:STORAGE="firestore"; $env:FIRESTORE_EMULATOR_HOST="127.0.0.1:8
 - Operations that write several things run all-or-nothing (`app/repositories/atomic.py`):
   sign-up, verification, top-up, new pot, contribution, movement report, forgot/reset password.
   In memory that is a lock; with Firestore, a transaction.
-- Tokens (sessions and reset links) are stored only as SHA-256 hashes.
+- Tokens (sessions and reset links) are stored only as SHA-256 hashes. The simulated
+  mailbox is the exception: when it is open (`ENABLE_DEV_OUTBOX`, e.g. for the demo),
+  verification codes and reset links are stored in the `outbox` collection in clear.
+  When it is closed, nothing is written there.
+- With real Firestore (no `FIRESTORE_EMULATOR_HOST`), `/api/dev/reset` never exists,
+  even if `ENABLE_DEV_ROUTES` is missing or `true`: it would delete every collection.
+- `firestore.rules` denies all reads and writes from outside: only the backend talks to
+  Firestore, with the service account, which is not subject to the rules. Deploy them
+  before using the real project: `firebase deploy --only firestore:rules`.
 
 **Tests:** `tests/test_firestore.py` runs only when `FIRESTORE_EMULATOR_HOST` is set
 (each test uses its own emulator project); otherwise it is skipped, so CI and the
@@ -263,6 +271,17 @@ are skipped then.
 ```bash
 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 TEST_STORAGE=firestore python -m pytest
 ```
+
+PowerShell (Windows), in the same terminal:
+
+```powershell
+$env:FIRESTORE_EMULATOR_HOST="127.0.0.1:8080"
+$env:TEST_STORAGE="firestore"
+python -m pytest
+```
+
+Install the new dependency first (`pip install -r requirements.txt`) and keep the
+emulator running in another terminal.
 
 **Real project:** the queries only filter by one field, so no composite index is
 needed (`firestore.indexes.json` is empty on purpose). The service-account key goes

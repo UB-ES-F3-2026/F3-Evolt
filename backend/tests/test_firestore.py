@@ -148,7 +148,7 @@ def test_pots_and_history_match_memory(db, seed) -> None:
     assert pots.list_movements("pot-01") == memory.list_movements("pot-01")
 
 
-@pytest.mark.parametrize("pot_id", ["pot-99", "a/b", "..", "__x__", ""])
+@pytest.mark.parametrize("pot_id", ["pot-99", "a/b", "..", "__x__", "", "x" * 1501, "é" * 751])
 def test_unknown_or_unsafe_pot_id_is_not_found(db, pot_id: str) -> None:
     # Un id de l'URL amb `/` no pot convertir-se en un altre camí de Firestore.
     assert FirestorePotRepository(db).get_by_user(DEMO_USER_ID, pot_id) is None
@@ -439,3 +439,14 @@ def test_lockout_is_stored(app_client) -> None:
     assert "lockedUntil" in last.json()["details"]
     again = app_client.post("/api/auth/login", json={"identifier": DEMO_IDENTIFIER, "password": SEED_PASSWORD})
     assert again.status_code == 423
+
+
+def test_closed_outbox_writes_nothing_to_firestore(project, monkeypatch) -> None:
+    # Revisió de la #137: amb la bústia tancada, el codi i l'enllaç no queden a la base de dades.
+    monkeypatch.setenv("ENABLE_DEV_OUTBOX", "false")
+    with TestClient(create_app()) as client:
+        body = {"identifier": "ana@x.com", "password": "Platja2026", "acceptedTerms": True}
+        assert client.post("/api/auth/register", json=body).status_code == 201
+        client.post("/api/auth/forgot-password", json={"identifier": DEMO_IDENTIFIER})
+
+    assert list(firestore.Client(project=project).collection("outbox").list_documents()) == []

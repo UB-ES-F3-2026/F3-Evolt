@@ -104,14 +104,16 @@ def load_app_settings(env: Mapping[str, str] | None = None) -> AppSettings:
     if not origins:
         origins = (DEFAULT_FRONTEND_ORIGIN,)
 
-    dev_routes_enabled = _parse_flag("ENABLE_DEV_ROUTES", source.get("ENABLE_DEV_ROUTES", ""), True)
+    storage = _parse_storage(source.get("STORAGE", ""))
+    project_id = source.get("FIRESTORE_PROJECT_ID", "").strip() or DEFAULT_FIRESTORE_PROJECT_ID
+    dev_routes_enabled = _dev_routes_enabled(
+        source.get("ENABLE_DEV_ROUTES", ""), storage, source.get("FIRESTORE_EMULATOR_HOST", "")
+    )
     allow_x_user_id = _parse_flag("ALLOW_X_USER_ID", source.get("ALLOW_X_USER_ID", ""), True)
     dev_outbox_key = source.get("DEV_OUTBOX_KEY", "").strip() or None
     dev_outbox_enabled = _outbox_enabled(
         source.get("ENABLE_DEV_OUTBOX", ""), dev_routes_enabled, dev_outbox_key
     )
-    storage = _parse_storage(source.get("STORAGE", ""))
-    project_id = source.get("FIRESTORE_PROJECT_ID", "").strip() or DEFAULT_FIRESTORE_PROJECT_ID
 
     return AppSettings(
         frontend_url=_parse_frontend_url(source.get("FRONTEND_URL", "")),
@@ -152,6 +154,21 @@ def _outbox_enabled(raw: str, dev_routes_enabled: bool, key: str | None) -> bool
         logger.warning(
             "ENABLE_DEV_OUTBOX=true sense DEV_OUTBOX_KEY al desplegament: la bústia queda desactivada"
         )
+        return False
+    return enabled
+
+
+def _dev_routes_enabled(raw: str, storage: str, emulator_host: str) -> bool:
+    """`ENABLE_DEV_ROUTES`, però mai amb el Firestore de veritat (revisió de la #137).
+
+    `POST /api/dev/reset` esborra totes les col·leccions. Amb Firestore només
+    s'activa contra l'emulador (`FIRESTORE_EMULATOR_HOST`): així, si a un
+    desplegament amb Firestore s'oblida `ENABLE_DEV_ROUTES=false`, la ruta no hi és.
+    """
+    enabled = _parse_flag("ENABLE_DEV_ROUTES", raw, True)
+    if enabled and storage == STORAGE_FIRESTORE and not emulator_host.strip():
+        if raw.strip():
+            logger.warning("ENABLE_DEV_ROUTES ignorada: amb Firestore real, /api/dev/reset no existeix")
         return False
     return enabled
 

@@ -27,7 +27,7 @@ Junior developers with real knowledge of patterns. We want:
 | Part | Technology |
 |------|------------|
 | **Frontend** | Vue 3 + TypeScript (strict), Vite, Vue Router, Vitest. No Pinia. |
-| **Backend** | Python + FastAPI, pytest. Data lives in memory (seeded at start-up) during Sprint 0. |
+| **Backend** | Python + FastAPI, pytest. Data lives in memory (seeded at start-up) by default, or in Cloud Firestore with `STORAGE=firestore` (TR01.1). |
 | **Contract** | `docs/api.md`. It changes only through a PR reviewed by backend and frontend. |
 
 ### 2.2 Project layout
@@ -41,7 +41,7 @@ backend/
     config.py       # deploy settings read from the environment (CORS origins, dev routes)
     middleware/     # cross-cutting HTTP middleware (CORS, errors, simulation)
     models/         # data classes
-    repositories/   # access to the in-memory data
+    repositories/   # access to the data (in memory; Firestore in repositories/firestore/)
     services/       # business logic
     routers/        # endpoints
     data/seed.py    # hardcoded data
@@ -88,7 +88,7 @@ Router  →  Service  →  Repository  →  Models / data
 |-------|--------|------|----------|
 | **Router** | `routers/` | Read the request, call one service, return the contract's JSON | Hold business rules |
 | **Service** | `services/` | Business rules: validations, limits, what changes | Read `data/seed.py` directly |
-| **Repository** | `repositories/` | Read and write the in-memory data | Decide business rules |
+| **Repository** | `repositories/` | Read and write the data (in memory or Firestore, same methods) | Decide business rules |
 | **Model** | `models/` | Data classes with the contract's fields | Import FastAPI |
 
 Services reach the data **only** through repositories, so moving to a real database later means rewriting one folder.

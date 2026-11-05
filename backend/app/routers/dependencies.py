@@ -16,6 +16,7 @@ from fastapi import Request
 from app.config import STORAGE_FIRESTORE
 from app.repositories import (
     AccountRepository,
+    ClosedOutboxRepository,
     MovementReportRepository,
     MovementRepository,
     OutboxRepository,
@@ -84,6 +85,9 @@ def verification_code_repository(request: Request) -> VerificationCodeRepository
 
 
 def outbox_repository(request: Request) -> OutboxRepository:
+    if not request.app.state.settings.dev_outbox_enabled:
+        # Ningú no la pot llegir: no s'hi desa res, ni en memòria ni a Firestore.
+        return ClosedOutboxRepository()
     if client := _firestore(request):
         from app.repositories.firestore import FirestoreOutboxRepository
 

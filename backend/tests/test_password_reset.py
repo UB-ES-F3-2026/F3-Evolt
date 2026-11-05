@@ -358,3 +358,37 @@ def test_simultaneous_resets_with_the_same_link_change_the_password_once(repos) 
 
     assert results.count("ok") == 1
     assert results.count(RESET_LINK_EXPIRED) == threads_count - 1
+
+
+class _RecordingAtomic:
+    """`atomic` de prova: apunta si el hash de bcrypt s'ha fet a dins (revisió de la #137)."""
+
+    def __init__(self) -> None:
+        self.inside = False
+        self.runs = 0
+
+    def run(self, operation):
+        self.inside, self.runs = True, self.runs + 1
+        try:
+            return operation()
+        finally:
+            self.inside = False
+
+
+def test_new_password_is_hashed_outside_the_atomic_operation(repos, monkeypatch) -> None:
+    seed, users, tokens, sessions, outbox = repos
+    forgot_password(DEMO_IDENTIFIER, users, tokens, outbox, "http://localhost:5173", now=T0)
+    [token] = seed.password_reset_tokens
+    atomic = _RecordingAtomic()
+    original = password_reset_service.hash_password
+
+    def hash_outside(password: str) -> str:
+        assert not atomic.inside
+        return original(password)
+
+    monkeypatch.setattr(password_reset_service, "hash_password", hash_outside)
+
+    reset_password(token, NEW_PASSWORD, users, tokens, sessions, now=T0, atomic=atomic)
+
+    assert atomic.runs == 1
+    assert seed.password_reset_tokens[token].used

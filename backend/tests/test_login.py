@@ -70,6 +70,7 @@ def test_each_login_opens_a_new_session(client: TestClient) -> None:
     assert _token(client) != _token(client)
 
 
+@pytest.mark.memory_only
 def test_registered_phone_account_can_log_in_once_active(client: TestClient) -> None:
     # Login amb telèfon. El compte s'activa a mà: verificar el codi és de la T02.1.
     client.post(
@@ -85,6 +86,7 @@ def test_registered_phone_account_can_log_in_once_active(client: TestClient) -> 
 # --- Credencials incorrectes: sempre el mateix error --------------------------------
 
 
+@pytest.mark.memory_only
 @pytest.mark.parametrize(
     "identifier, password",
     [
@@ -120,6 +122,7 @@ def _register_pending(client: TestClient) -> None:
     )
 
 
+@pytest.mark.memory_only
 def test_pending_account_with_the_right_password_is_not_verified(client: TestClient) -> None:
     # S-07
     _register_pending(client)

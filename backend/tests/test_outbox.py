@@ -130,3 +130,14 @@ def test_right_key_reads_the_messages(make_client) -> None:
 
 def test_local_development_needs_no_key(client: TestClient) -> None:
     assert client.get("/api/dev/outbox").status_code == 200
+
+
+@pytest.mark.memory_only
+def test_closed_outbox_stores_nothing(make_client) -> None:
+    # Revisió de la #137: amb la bústia tancada, el codi i l'enllaç no queden enlloc.
+    client = make_client(ENABLE_DEV_ROUTES="false")
+
+    client.post("/api/auth/register", json={"identifier": "ana@x.com", "password": "Platja2026", "acceptedTerms": True})
+    client.post("/api/auth/forgot-password", json={"identifier": "demo@evolt.test"})
+
+    assert client.app.state.seed.outbox == []

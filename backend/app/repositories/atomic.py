@@ -22,6 +22,10 @@ ja validen abans d'escriure, i el que escriuen abans d'un `ApiError` ha de queda
 (p. ex. el codi de verificació incorrecte que compta com a intent, T02.1).
 
 Una operació dins d'una altra fa servir la mateixa transacció (o el mateix pany).
+
+Dins de l'`atomic` només hi va el que llegeix i escriu les dades. La feina lenta
+que no en depèn, com el hash de bcrypt, es fa abans i fora: si no, mentre un
+registre calcula el hash, cap altra recàrrega podria avançar (revisió de la #137).
 """
 
 import threading
@@ -33,6 +37,16 @@ T = TypeVar("T")
 
 class Atomic(Protocol):
     def run(self, operation: Callable[[], T]) -> T: ...
+
+
+class DirectAtomic:
+    """Sense pany ni transacció: per als serveis cridats directament (tests de servei)."""
+
+    def run(self, operation: Callable[[], T]) -> T:
+        return operation()
+
+
+DIRECT = DirectAtomic()
 
 
 class MemoryAtomic:

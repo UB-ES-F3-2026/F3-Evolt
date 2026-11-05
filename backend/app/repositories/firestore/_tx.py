@@ -114,12 +114,24 @@ def allocate(client: firestore.Client, name: str) -> int:
     return bump(client.transaction())
 
 
-def safe_doc_id(value: str) -> bool:
-    """Un id que ve de l'URL només és un id de document si no té `/` ni és `.`/`..`.
+# Firestore admet ids de document de com a màxim 1.500 bytes.
+_MAX_DOC_ID_BYTES = 1500
 
-    Firestore el llegiria com un altre camí: aquests ids no existeixen mai.
+
+def safe_doc_id(value: str) -> bool:
+    """Un id que ve de l'URL només és un id de document vàlid si no té `/`, no és
+    `.`/`..`, no comença per `__` i no passa de 1.500 bytes.
+
+    Si no, Firestore el llegiria com un altre camí o donaria un error (un 500):
+    aquests ids no existeixen mai, i es responen com un id desconegut.
     """
-    return bool(value) and "/" not in value and value not in {".", ".."} and not value.startswith("__")
+    return (
+        bool(value)
+        and len(value.encode("utf-8")) <= _MAX_DOC_ID_BYTES
+        and "/" not in value
+        and value not in {".", ".."}
+        and not value.startswith("__")
+    )
 
 
 def to_madrid(value: datetime | None) -> datetime | None:

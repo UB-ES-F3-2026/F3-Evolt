@@ -1,7 +1,12 @@
 """Enllaços de recuperació a Firestore (TR01.1). Mateixos mètodes que `repositories/password_reset.py`.
 
 Col·lecció `password_reset_tokens`. Com a les sessions, l'id del document és el
-**hash** del token: qui llegís la base de dades no podria canviar cap contrasenya.
+**hash** del token, no el token.
+
+Atenció: si la bústia simulada està oberta (`ENABLE_DEV_OUTBOX`, per a la demo),
+l'enllaç sencer també es desa a la col·lecció `outbox`, i qui llegís la base de
+dades el podria fer servir. Amb la bústia tancada no s'hi desa res
+(`ClosedOutboxRepository`).
 """
 
 import secrets

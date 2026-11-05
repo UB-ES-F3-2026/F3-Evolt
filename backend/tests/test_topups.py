@@ -32,6 +32,7 @@ def _state(client: TestClient):
 # --- Recàrrega correcta -----------------------------------------------------------------
 
 
+@pytest.mark.memory_only
 def test_topup_returns_201_with_new_balance_and_movement(client: TestClient) -> None:
     before = _balance(client)
 
@@ -93,6 +94,7 @@ def test_limits_of_a_single_topup_are_allowed(client: TestClient, amount: int) -
 # --- Límits per recàrrega ------------------------------------------------------------------
 
 
+@pytest.mark.memory_only
 @pytest.mark.parametrize(
     "amount, code, message",
     [
@@ -118,6 +120,7 @@ def test_amount_out_of_limits_is_rejected(
 # --- Format del cos (P5) -------------------------------------------------------------------
 
 
+@pytest.mark.memory_only
 @pytest.mark.parametrize(
     "body",
     [
@@ -161,6 +164,7 @@ def test_format_is_checked_before_limits(client: TestClient) -> None:
 # --- Usuari i navegador ----------------------------------------------------------------------
 
 
+@pytest.mark.memory_only
 def test_unknown_user_header_is_a_validation_error(client: TestClient) -> None:
     before = _state(client)
 

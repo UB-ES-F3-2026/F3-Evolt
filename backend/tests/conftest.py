@@ -49,9 +49,10 @@ def _add_probes(app: FastAPI) -> None:
 # l'emulador. Cada test té el seu projecte de l'emulador, amb el seed net, com la
 # memòria. Sense la variable (la CI i el `pytest` de sempre), les dades són en memòria.
 #
-# Els tests que llegeixen o canvien les dades en memòria directament
-# (`app.state.seed`, el fixture `seed` o un repositori de memòria apedaçat) no tenen
-# sentit amb Firestore i se salten.
+# Els tests que llegeixen o canvien les dades en memòria directament no tenen sentit
+# amb Firestore i se salten: els de l'API que fan servir el fixture `seed` (el posen
+# a `app.state.seed`) i els marcats amb `@pytest.mark.memory_only` (llegeixen
+# `app.state.seed` o apedacen un repositori de memòria).
 
 _MEMORY_ONLY = "llegeix o canvia les dades en memòria directament"
 
@@ -73,22 +74,6 @@ def pytest_collection_modifyitems(config, items) -> None:
         # `app.state.seed`; els tests de serveis i repositoris són de memòria igualment.
         if ("seed" in fixtures and "client" in fixtures) or item.get_closest_marker("memory_only"):
             item.add_marker(pytest.mark.skip(reason=_MEMORY_ONLY))
-
-
-@pytest.hookimpl(hookwrapper=True)
-def pytest_runtest_makereport(item, call):
-    outcome = yield
-    report = outcome.get_result()
-    if (
-        _firestore_run()
-        and report.when == "call"
-        and report.failed
-        and call.excinfo is not None
-        and call.excinfo.errisinstance(AttributeError)
-        and "'seed'" in str(call.excinfo.value)
-    ):
-        report.outcome = "skipped"
-        report.longrepr = (str(item.path), item.location[1] or 0, f"Skipped: {_MEMORY_ONLY}")
 
 
 @pytest.fixture(autouse=True)

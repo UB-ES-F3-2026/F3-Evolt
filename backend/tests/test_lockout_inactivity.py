@@ -84,6 +84,7 @@ def test_fifth_wrong_password_locks_the_account(client: TestClient, clock: Clock
     assert response.json() == LOCKED_BODY
 
 
+@pytest.mark.memory_only
 def test_right_password_is_locked_too(client: TestClient, clock: Clock) -> None:
     # S-13
     _fail(client, 5)

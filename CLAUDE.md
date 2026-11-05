@@ -13,7 +13,7 @@ Read **[`AGENTS.md`](AGENTS.md)** — it is the source of truth for architecture
 ## Stack
 
 - **Frontend:** Vue 3 + TypeScript (SFC `<script setup lang="ts">`), Vite, Vue Router, Vitest — in `frontend/`
-- **Backend:** Python + FastAPI, pytest, data in memory — in `backend/`
+- **Backend:** Python + FastAPI, pytest, data in memory or Cloud Firestore (`STORAGE`) — in `backend/`
 - **MVVM:** Model · ViewModel (composable `useXxxViewModel`) · View, in folders by layer
 
 ## Skills index

@@ -90,6 +90,7 @@ def test_only_the_most_recent_movement_is_pending(client: TestClient) -> None:
     assert sum(item["status"] == MOVEMENT_STATUS_COMPLETED for item in items) == 29
 
 
+@pytest.mark.memory_only
 def test_a_pending_movement_already_counts_for_the_balance(client: TestClient) -> None:
     # F-07
     seed = _seed(client)

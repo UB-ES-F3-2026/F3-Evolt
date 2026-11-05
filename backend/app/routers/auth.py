@@ -73,10 +73,9 @@ def create_account(
     outbox: Annotated[OutboxRepository, Depends(outbox_repository)],
     run: Annotated[Atomic, Depends(atomic)],
 ) -> RegisterResponse:
-    # Tot o res: el duplicat, l'usuari, el compte i el codi (TR01.1).
-    user = run.run(
-        lambda: register(body.identifier, body.password, body.accepted_terms, users, accounts, codes, outbox)
-    )
+    # Tot o res: el duplicat, l'usuari, el compte i el codi (TR01.1). El servei fa
+    # el hash fora de l'`atomic`.
+    user = register(body.identifier, body.password, body.accepted_terms, users, accounts, codes, outbox, atomic=run)
     return RegisterResponse.from_user(user)
 
 
@@ -200,6 +199,7 @@ def change_password(
     """Contrasenya nova i totes les sessions tancades. No obre cap sessió (§8.11).
 
     Tot o res (TR01.1): el token, la contrasenya, el desbloqueig i les sessions.
+    El servei fa el hash fora de l'`atomic`.
     """
-    run.run(lambda: reset_password(body.token, body.password, users, tokens, sessions))
+    reset_password(body.token, body.password, users, tokens, sessions, atomic=run)
     return StatusResponse()

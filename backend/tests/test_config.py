@@ -166,3 +166,17 @@ def test_invalid_frontend_url_falls_back_to_vite(caplog) -> None:
 
     assert settings.frontend_url == DEFAULT_FRONTEND_ORIGIN
     assert "FRONTEND_URL" in caplog.text
+
+
+def test_dev_routes_never_exist_with_real_firestore(caplog) -> None:
+    # Revisió de la #137: /api/dev/reset esborraria totes les col·leccions.
+    assert not load_app_settings({"STORAGE": "firestore"}).dev_routes_enabled
+    with caplog.at_level(logging.WARNING, logger="evolt"):
+        assert not load_app_settings({"STORAGE": "firestore", "ENABLE_DEV_ROUTES": "true"}).dev_routes_enabled
+    assert "ENABLE_DEV_ROUTES" in caplog.text
+
+
+def test_dev_routes_work_with_the_firestore_emulator() -> None:
+    settings = load_app_settings({"STORAGE": "firestore", "FIRESTORE_EMULATOR_HOST": "127.0.0.1:8080"})
+    assert settings.dev_routes_enabled
+    assert load_app_settings({}).dev_routes_enabled
