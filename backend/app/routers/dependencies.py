@@ -16,6 +16,7 @@ from fastapi import Request
 from app.config import STORAGE_FIRESTORE
 from app.repositories import (
     AccountRepository,
+    MovementReportRepository,
     MovementRepository,
     OutboxRepository,
     PasswordResetTokenRepository,
@@ -106,3 +107,7 @@ def atomic(request: Request) -> Atomic:
 def frontend_url(request: Request) -> str:
     """Base de l'enllaç de recuperació (`FRONTEND_URL`, docs/api.md §8.10)."""
     return request.app.state.settings.frontend_url
+
+
+def movement_report_repository(request: Request) -> MovementReportRepository:
+    return MovementReportRepository(request.app.state.seed)

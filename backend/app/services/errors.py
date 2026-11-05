@@ -32,6 +32,9 @@ INVALID_POT_NAME = "INVALID_POT_NAME"
 INVALID_TARGET = "INVALID_TARGET"
 INSUFFICIENT_BALANCE = "INSUFFICIENT_BALANCE"
 POT_NOT_FOUND = "POT_NOT_FOUND"
+# Moviments (docs/api.md §5 i §10.6).
+MOVEMENT_NOT_FOUND = "MOVEMENT_NOT_FOUND"
+INVALID_DESCRIPTION = "INVALID_DESCRIPTION"
 
 # Codi d'error → estat HTTP de la resposta.
 ERROR_STATUS: dict[str, int] = {
@@ -55,6 +58,8 @@ ERROR_STATUS: dict[str, int] = {
     INVALID_TARGET: 422,
     INSUFFICIENT_BALANCE: 422,
     POT_NOT_FOUND: 404,
+    MOVEMENT_NOT_FOUND: 404,
+    INVALID_DESCRIPTION: 422,
 }
 
 # Missatge per defecte de cada codi (docs/api.md §5). El contracte els marca
@@ -81,6 +86,8 @@ ERROR_MESSAGES: dict[str, str] = {
     INVALID_TARGET: "L'objectiu ha de ser més gran que 0.",
     INSUFFICIENT_BALANCE: "No tens prou saldo per fer aquesta aportació.",
     POT_NOT_FOUND: "No s'ha trobat la guardiola.",
+    MOVEMENT_NOT_FOUND: "No s'ha trobat el moviment.",
+    INVALID_DESCRIPTION: "Explica què passa amb el moviment (com a màxim 500 caràcters).",
 }
 
 
