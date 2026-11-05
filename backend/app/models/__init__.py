@@ -23,6 +23,7 @@ from app.models.movement import (
     Movement,
     MovementFilters,
 )
+from app.models.movement_report import MAX_REPORT_DESCRIPTION, MovementReport
 from app.models.outbox import (
     CHANNEL_EMAIL,
     CHANNEL_SMS,
@@ -57,6 +58,7 @@ __all__ = [
     "Account",
     "Movement",
     "MovementFilters",
+    "MovementReport",
     "Pot",
     "OutboxMessage",
     "PasswordResetToken",
@@ -82,6 +84,7 @@ __all__ = [
     "KIND_OTHER",
     "KIND_TOPUP",
     "MADRID_TZ",
+    "MAX_REPORT_DESCRIPTION",
     "MOVEMENT_STATUS_COMPLETED",
     "MOVEMENT_STATUS_PENDING",
     "MOVEMENT_STATUSES",
