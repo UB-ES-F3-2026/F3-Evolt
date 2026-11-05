@@ -251,7 +251,7 @@ PowerShell: `$env:STORAGE="firestore"; $env:FIRESTORE_EMULATOR_HOST="127.0.0.1:8
 - On start, the seed is written only if the database is empty: data now survives restarts.
 - `POST /api/dev/reset` deletes **every** collection and writes the seed again. Never point it at real data.
 - Operations that write several things run all-or-nothing (`app/repositories/atomic.py`):
-  sign-up, verification, top-up, new pot, contribution, forgot/reset password.
+  sign-up, verification, top-up, new pot, contribution, movement report, forgot/reset password.
   In memory that is a lock; with Firestore, a transaction.
 - Tokens (sessions and reset links) are stored only as SHA-256 hashes.
 

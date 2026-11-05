@@ -42,6 +42,15 @@ class FirestoreMovementRepository:
         ordered = sorted(self._filtered(account_id, filters), key=Movement.sort_key, reverse=True)
         return ordered[offset : offset + limit]
 
+    def get_by_account(self, account_id: int, movement_id: str) -> Movement | None:
+        """None si no existeix o és d'un altre compte, com a la memòria (§10.3)."""
+        if not _tx.safe_doc_id(movement_id):
+            return None
+        snapshot = _tx.get(self._movements.document(movement_id))
+        if not snapshot.exists or snapshot.to_dict()["account_id"] != account_id:
+            return None
+        return movement_from_dict(snapshot.id, snapshot.to_dict())
+
     def count_by_account(self, account_id: int, filters: MovementFilters | None = None) -> int:
         return len(self._filtered(account_id, filters))
 

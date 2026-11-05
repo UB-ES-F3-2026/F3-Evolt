@@ -15,6 +15,7 @@ from app.data.seed import SeedData, build_seed
 from app.repositories.firestore import _tx
 from app.repositories.firestore.account import ACCOUNTS, account_to_dict
 from app.repositories.firestore.movement import MOVEMENTS, NUMBER_COUNTER, SEQ_COUNTER, movement_to_dict
+from app.repositories.firestore.movement_report import MOVEMENT_REPORTS, REPORT_COUNTER
 from app.repositories.firestore.outbox import OUTBOX, OUTBOX_COUNTER
 from app.repositories.firestore.password_reset import PASSWORD_RESET_TOKENS
 from app.repositories.firestore.pot import (
@@ -36,6 +37,7 @@ COLLECTIONS = (
     POTS,
     POT_MOVEMENTS,
     MOVEMENTS,
+    MOVEMENT_REPORTS,
     SESSIONS,
     VERIFICATION_CODES,
     OUTBOX,
@@ -64,7 +66,7 @@ def reset(client: firestore.Client) -> None:
 def write_seed(client: firestore.Client, seed: SeedData) -> None:
     """Escriu tot el seed en un sol lot: o hi és tot, o no hi és res.
 
-    El seed no té sessions, codis, missatges ni enllaços: neixen buits.
+    El seed no té sessions, codis, missatges, enllaços ni informes: neixen buits.
     """
     batch = client.batch()
     for user in seed.users.values():
@@ -90,6 +92,7 @@ def write_seed(client: firestore.Client, seed: SeedData) -> None:
             POT_COUNTER: seed.next_pot_number,
             POT_MOVEMENT_COUNTER: seed.next_pot_movement_number,
             OUTBOX_COUNTER: 1,
+            REPORT_COUNTER: seed.next_report_number,
         },
     )
     batch.commit()

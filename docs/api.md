@@ -1102,13 +1102,13 @@ Aquest apartat és per al backend. El frontend no en depèn.
 
 | Col·lecció | Contingut |
 |---|---|
-| `users`, `accounts`, `pots`, `pot_movements`, `movements` | Les dades de l'Sprint 0 i l'estalvi (seed, saldos, historials, moviments). |
+| `users`, `accounts`, `pots`, `pot_movements`, `movements`, `movement_reports` | Les dades de l'Sprint 0, l'estalvi i els informes (seed, saldos, historials, moviments). |
 | `user_identifiers` | Un document per email o telèfon (amb el hash com a id): impedeix dos registres amb el mateix identificador encara que arribin alhora. |
 | `sessions`, `verification_codes`, `password_reset_tokens` | Les dades de l'accés (taula següent). Les sessions i els enllaços es desen pel **hash** del token. |
 | `outbox` | La bústia simulada ([8.12](#812-get-apidevoutbox)). |
-| `counters` | Un sol document amb els comptadors dels ids nous (`mov-NN`, `EVT-NNNNNN`, `pot-NN`, `pmov-NN`, usuaris i bústia): Firestore no té autoincrement. |
+| `counters` | Un sol document amb els comptadors dels ids nous (`mov-NN`, `EVT-NNNNNN`, `pot-NN`, `pmov-NN`, `rep-NN`, usuaris i bústia): Firestore no té autoincrement. |
 
-Les dates es desen com a `Timestamp` de Firestore (UTC) i el backend les converteix a `Europe/Madrid` en llegir-les, de manera que l'API continua donant-les com a l'[apartat 1](#dates). Les operacions que escriuen més d'una cosa es fan dins d'una **transacció** de Firestore, perquè siguin tot o res: el registre, la verificació, la recàrrega, crear una guardiola, l'aportació, «He oblidat la contrasenya» i la contrasenya nova. En memòria, el mateix codi les fa amb un pany. Un error de negoci (p. ex. un codi incorrecte que compta com a intent) no desfà el que el servei ja ha escrit, igual que en memòria.
+Les dates es desen com a `Timestamp` de Firestore (UTC) i el backend les converteix a `Europe/Madrid` en llegir-les, de manera que l'API continua donant-les com a l'[apartat 1](#dates). Les operacions que escriuen més d'una cosa es fan dins d'una **transacció** de Firestore, perquè siguin tot o res: el registre, la verificació, la recàrrega, crear una guardiola, l'aportació, l'informe d'un moviment, «He oblidat la contrasenya» i la contrasenya nova. En memòria, el mateix codi les fa amb un pany. Un error de negoci (p. ex. un codi incorrecte que compta com a intent) no desfà el que el servei ja ha escrit, igual que en memòria.
 
 | Model | Camps nous | Notes |
 |---|---|---|
@@ -1750,7 +1750,7 @@ Informe d'un problema amb un moviment (US-11, criteri 3).
 
 - Si hi ha un error, no es desa res.
 - Es poden enviar diversos informes sobre el mateix moviment **[PROPOSTA — pendent de validar]**.
-- L'informe es desa **en memòria**, com la resta de dades, i **no s'envia enlloc**. `POST /api/dev/reset` l'esborra. Si s'aprova la P20 i es fusiona la tasca de persistència (#106), es desarà a Firestore, igual que les sessions ([8.2](#82-sessió)).
+- L'informe es desa on diu `STORAGE`, com la resta de dades: en memòria, o a la col·lecció `movement_reports` de Firestore (TR01.1, [8.13](#813-model-intern-de-laccés)). **No s'envia enlloc**. `POST /api/dev/reset` l'esborra.
 - En aquest sprint no hi ha cap ruta per consultar els informes: el frontend mostra la confirmació a partir de la resposta `201`.
 
 **Petició:**
@@ -1824,7 +1824,7 @@ Aquest apartat és per al backend. El frontend no en depèn.
 - **`reference`** la genera el repositori en crear el moviment, igual que l'`id` i el `seq`.
 - **Cerca de text:** la regla «sense distingir majúscules ni accents» viu en un sol lloc, una funció pura amb tests propis, que fan servir el servei o el repositori.
 - **Informes:** cada informe té `id`, el moviment, l'usuari, la descripció i la data de creació. Es desen en una col·lecció nova del seed, així que `POST /api/dev/reset` els esborra.
-- **Amb Firestore** (si s'aprova la P20, #106): els informes seran una col·lecció més, i la `reference` i l'`id` dels informes necessitaran un comptador propi, perquè Firestore no té autoincrement.
+- **Amb Firestore** (TR01.1, #106): els informes són la col·lecció `movement_reports`, i la `reference` dels moviments i l'`id` dels informes surten dels comptadors, perquè Firestore no té autoincrement. Crear un informe va dins d'una transacció.
 - **Seed** **[PROPOSTA — pendent de validar]**. Els 30 moviments de l'usuari 1 no canvien d'import, de data, de concepte ni d'ordre, perquè en depenen els tests i els mocks del frontend. Guanyen:
   - `reference`: `EVT-000001` a `EVT-000030`, en l'ordre de creació (el mateix número que l'`id`);
   - `status`: `completed` a tots, excepte el més recent (`mov-30`, «Restaurant La Plaça»), que és `pending`;

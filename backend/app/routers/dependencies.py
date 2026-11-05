@@ -99,6 +99,14 @@ def password_reset_token_repository(request: Request) -> PasswordResetTokenRepos
     return PasswordResetTokenRepository(request.app.state.seed)
 
 
+def movement_report_repository(request: Request) -> MovementReportRepository:
+    if client := _firestore(request):
+        from app.repositories.firestore import FirestoreMovementReportRepository
+
+        return FirestoreMovementReportRepository(client)
+    return MovementReportRepository(request.app.state.seed)
+
+
 def atomic(request: Request) -> Atomic:
     """Executa una operació tot o res: pany en memòria, transacció a Firestore."""
     return request.app.state.atomic
@@ -107,7 +115,3 @@ def atomic(request: Request) -> Atomic:
 def frontend_url(request: Request) -> str:
     """Base de l'enllaç de recuperació (`FRONTEND_URL`, docs/api.md §8.10)."""
     return request.app.state.settings.frontend_url
-
-
-def movement_report_repository(request: Request) -> MovementReportRepository:
-    return MovementReportRepository(request.app.state.seed)

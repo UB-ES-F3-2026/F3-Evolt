@@ -48,6 +48,7 @@ from app.repositories import (  # noqa: E402
 from app.repositories.atomic import FirestoreAtomic  # noqa: E402
 from app.repositories.firestore import (  # noqa: E402
     FirestoreAccountRepository,
+    FirestoreMovementReportRepository,
     FirestoreMovementRepository,
     FirestoreOutboxRepository,
     FirestorePasswordResetTokenRepository,
@@ -302,6 +303,28 @@ def test_verification_failures_are_counted(db) -> None:
     assert codes.get(EMPTY_USER_ID) is None
 
 
+def test_movement_detail_matches_memory(db, seed) -> None:
+    movements, memory = FirestoreMovementRepository(db), MovementRepository(seed)
+
+    for movement_id in ("mov-29", "mov-30", "mov-99", "a/b", ".."):
+        assert movements.get_by_account(DEMO_USER_ID, movement_id) == memory.get_by_account(DEMO_USER_ID, movement_id)
+    assert movements.get_by_account(EMPTY_USER_ID, "mov-29") is None
+
+
+def test_report_ids_continue_from_the_counter(db) -> None:
+    atomic, reports = FirestoreAtomic(db), FirestoreMovementReportRepository(db)
+
+    first, second = (
+        atomic.run(
+            lambda: reports.add(movement_id="mov-30", user_id=DEMO_USER_ID, description="No el reconec", created_at=NOW)
+        )
+        for _ in range(2)
+    )
+
+    assert (first.id, second.id) == ("rep-01", "rep-02")
+    assert db.collection("movement_reports").document("rep-01").get().to_dict()["user_id"] == DEMO_USER_ID
+
+
 # --- L'app sencera amb STORAGE=firestore --------------------------------------------
 
 
@@ -392,6 +415,20 @@ def test_register_verify_and_reset_password(app_client) -> None:
     assert app_client.get("/api/home", headers=headers).json()["code"] == "UNAUTHENTICATED"
     login = app_client.post("/api/auth/login", json={"identifier": "ana@x.com", "password": "NovaClau2026"})
     assert login.status_code == 200
+
+
+def test_movement_detail_and_report(app_client) -> None:
+    headers = _login(app_client)
+
+    detail = app_client.get("/api/movements/mov-29", headers=headers).json()
+    report = app_client.post(
+        "/api/movements/mov-30/reports", json={"description": "  No el reconec  "}, headers=headers
+    )
+
+    assert (detail["counterparty"], detail["reference"]) == ("Núria Soler", "EVT-000029")
+    assert report.status_code == 201
+    assert (report.json()["id"], report.json()["description"]) == ("rep-01", "No el reconec")
+    assert app_client.get("/api/movements/mov-99", headers=headers).json()["code"] == "MOVEMENT_NOT_FOUND"
 
 
 def test_lockout_is_stored(app_client) -> None:
