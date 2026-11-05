@@ -7,8 +7,9 @@ from pydantic import BaseModel, StrictInt, StrictStr, field_validator
 
 from app.models import POT_COLORS, Pot, PotMovement
 from app.repositories import AccountRepository, MovementRepository, PotRepository
+from app.repositories.atomic import Atomic
 from app.routers.current_user import current_user_id
-from app.routers.dependencies import account_repository, movement_repository, pot_repository
+from app.routers.dependencies import account_repository, atomic, movement_repository, pot_repository
 from app.routers.schemas import MovementResponse
 from app.services.pot_service import (
     ContributionResult,
@@ -133,8 +134,10 @@ def post_pot(
     body: CreatePotRequest,
     user_id: Annotated[int, Depends(current_user_id)],
     pots: Annotated[PotRepository, Depends(pot_repository)],
+    run: Annotated[Atomic, Depends(atomic)],
 ) -> PotResponse:
-    pot = create_pot(user_id, body.name, body.target, body.color, pots)
+    # Amb Firestore, el comptador dels ids i la guardiola nova van junts (TR01.1).
+    pot = run.run(lambda: create_pot(user_id, body.name, body.target, body.color, pots))
     return PotResponse.from_pot(pot)
 
 
@@ -146,8 +149,10 @@ def post_contribution(
     accounts: Annotated[AccountRepository, Depends(account_repository)],
     pots: Annotated[PotRepository, Depends(pot_repository)],
     movements: Annotated[MovementRepository, Depends(movement_repository)],
+    run: Annotated[Atomic, Depends(atomic)],
 ) -> ContributionResponse:
-    result = contribute(user_id, pot_id, body.amount, accounts, pots, movements)
+    # Les quatre escriptures de l'aportació, tot o res (TR01.1).
+    result = run.run(lambda: contribute(user_id, pot_id, body.amount, accounts, pots, movements))
     return ContributionResponse.from_result(result)
 
 

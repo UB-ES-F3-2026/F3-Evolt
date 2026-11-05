@@ -468,7 +468,7 @@ L'Sprint 0 manté les dades **en memòria** i les carrega del seed a l'arrencada
 
 Només existeix si la variable d'entorn `ENABLE_DEV_ROUTES` no és `false` (per defecte, sí). Al desplegament (TR06.1) està desactivada: la ruta no es registra i respon com qualsevol ruta inexistent, `500 INTERNAL_ERROR` (§5).
 
-> **Sprint 1.** Si s'aprova la P20 i es fusiona la tasca de persistència (#106), les dades passen a Firestore ([apartat 8.13](#813-model-intern-de-laccés)) i aquest endpoint esborrarà les col·leccions i hi tornarà a escriure el seed. Llavors només es podrà fer servir amb l'**emulador de Firebase** o el projecte de desenvolupament, **mai** amb les dades del desplegament.
+> **Sprint 1.** Amb `STORAGE=firestore` (P20, [apartat 8.13](#813-model-intern-de-laccés)), aquest endpoint esborra les col·leccions de Firestore i hi torna a escriure el seed. Per això només es pot fer servir amb l'**emulador de Firebase** o el projecte de desenvolupament, **mai** amb les dades del desplegament.
 
 - **Cos de la petició:** cap.
 - **Resposta `200`:** `{ status }`
@@ -661,7 +661,7 @@ Propostes de l'accés (T01.1), per validar a la revisió de la PR de l'Sprint 1:
 | P17 | [8.10](#810-post-apiauthforgot-password) | L'enllaç de recuperació és `<FRONTEND_URL>/nova-contrasenya?token=<token>`, amb `FRONTEND_URL` per defecte `http://localhost:5173` i, a Render, l'URL del frontend desplegat. |
 | P18 | [8.7](#87-post-apiauthresend-code), [8.10](#810-post-apiauthforgot-password) | Demanar un codi o un enllaç nou invalida l'anterior. |
 | P19 | [8.5](#85-post-apiauthregister) | El registre crea també el compte principal amb saldo `0`, sense moviments ni guardioles. |
-| P20 | [8.13](#813-model-intern-de-laccés) | Les dades es guarden a Cloud Firestore amb l'Admin SDK des del backend. El login és propi (no Firebase Auth) i el frontend no parla amb Firebase. |
+| P20 | [8.13](#813-model-intern-de-laccés) | **Acceptada** (TR01.1, #106). Les dades es guarden a Cloud Firestore des del backend. El login és propi (no Firebase Auth) i el frontend no parla amb Firebase. |
 | P46 | [8.12](#812-get-apidevoutbox) | La bústia simulada es pot activar al desplegament amb `ENABLE_DEV_OUTBOX`, independent d'`ENABLE_DEV_ROUTES`, però protegida amb la clau `DEV_OUTBOX_KEY` (capçalera `X-Dev-Key`). El número salta a P46 perquè P21–P33 són del contracte de guardioles (§9) i P34–P45, del de moviments (§10). |
 
 Propostes de l'estalvi (T17.1), per validar a la revisió de la PR de l'Sprint 1:
@@ -755,7 +755,7 @@ Authorization: Bearer 9fJx2sQ0b7Wm4LrT1vYc8NnK3pZa6HdE5gUiOeRkXwA
 - **Inactivitat:** cada petició a una ruta protegida amb un token vàlid compta com a activitat, encara que acabi en error de negoci (p. ex. `AMOUNT_OVER_LIMIT`). Si han passat 5 minuts o més des de l'última activitat, la petició respon `401 SESSION_EXPIRED` i el token deixa de ser vàlid.
 - Sense capçalera `Authorization`, o amb un token desconegut o ja tancat → `401 UNAUTHENTICATED`.
 - Un usuari pot tenir **diverses sessions** obertes alhora (un dispositiu per sessió). El logout tanca només la seva; canviar la contrasenya les tanca totes ([8.11](#811-post-apiauthreset-password)).
-- Les sessions es guarden **en memòria**: reiniciar el backend o cridar `POST /api/dev/reset` les tanca totes. Si s'aprova la P20 i es fusiona la tasca de persistència (#106), passaran a Firestore ([8.13](#813-model-intern-de-laccés)) i sobreviuran als reinicis; `POST /api/dev/reset` les continuarà tancant.
+- Les sessions es guarden on diu `STORAGE` ([8.13](#813-model-intern-de-laccés)): en memòria, reiniciar el backend les tanca totes; a Firestore, **sobreviuen als reinicis**. En tots dos casos, `POST /api/dev/reset` les tanca totes.
 - Com guarda el token el frontend i si també té un temporitzador propi d'inactivitat ho decideix la T03.3. La referència sempre és la resposta del backend.
 
 #### Transició des d'`X-User-Id`
@@ -1092,21 +1092,23 @@ Textos dels altres dos tipus:
 
 Aquest apartat és per al backend. El frontend no en depèn.
 
-**Emmagatzematge.** Si s'aprova la P20, les dades passen de la memòria a **Cloud Firestore** amb la tasca de persistència (#106) **[PROPOSTA — pendent de validar]**:
+**Emmagatzematge** (P20, acceptada). Amb `STORAGE=firestore`, les dades es guarden a **Cloud Firestore** (TR01.1, #106); sense, en memòria com a l'Sprint 0:
 
-- Només el backend parla amb Firestore, amb l'Admin SDK de Python (`firebase-admin`). El frontend **no** usa Firebase: continua cridant només aquesta API.
+- Només el backend parla amb Firestore, amb la llibreria de Google `google-cloud-firestore` (la mateixa que fa servir l'Admin SDK, `firebase-admin`). El frontend **no** usa Firebase: continua cridant només aquesta API.
 - El login el fa el nostre backend tal com descriu aquest apartat. **No** es fa servir Firebase Auth.
 - Les credencials del compte de servei es llegeixen d'una variable d'entorn i **mai** es pugen al repositori.
 - En local i als tests s'usa l'**emulador de Firestore** o els repositoris en memòria; una variable d'entorn tria quin. Els serveis no canvien: només canvien els repositoris.
-- Mentre no estigui fusionada la tasca de persistència, les dades d'aquest apartat viuen en memòria com a l'Sprint 0. El contracte de les rutes és el mateix en tots dos casos.
+- El contracte de les rutes és el mateix en tots dos casos. Les sessions es desen pel hash del token, no pel token.
 
 | Col·lecció | Contingut |
 |---|---|
-| `users`, `accounts`, `pots`, `movements` | Les dades de l'Sprint 0 (seed, saldos, moviments). |
-| `sessions`, `verification_codes`, `password_reset_tokens` | Les dades de l'accés (taula següent). |
+| `users`, `accounts`, `pots`, `pot_movements`, `movements` | Les dades de l'Sprint 0 i l'estalvi (seed, saldos, historials, moviments). |
+| `user_identifiers` | Un document per email o telèfon (amb el hash com a id): impedeix dos registres amb el mateix identificador encara que arribin alhora. |
+| `sessions`, `verification_codes`, `password_reset_tokens` | Les dades de l'accés (taula següent). Les sessions i els enllaços es desen pel **hash** del token. |
 | `outbox` | La bústia simulada ([8.12](#812-get-apidevoutbox)). |
+| `counters` | Un sol document amb els comptadors dels ids nous (`mov-NN`, `EVT-NNNNNN`, `pot-NN`, `pmov-NN`, usuaris i bústia): Firestore no té autoincrement. |
 
-Les dates es desen com a `Timestamp` de Firestore (UTC) i el backend les converteix a `Europe/Madrid` en llegir-les, de manera que l'API continua donant-les com a l'[apartat 1](#dates). La recàrrega (`POST /api/topups`) es fa dins d'una **transacció** de Firestore, perquè la comprovació del límit diari, el moviment nou i el saldo nou siguin tot o res.
+Les dates es desen com a `Timestamp` de Firestore (UTC) i el backend les converteix a `Europe/Madrid` en llegir-les, de manera que l'API continua donant-les com a l'[apartat 1](#dates). Les operacions que escriuen més d'una cosa es fan dins d'una **transacció** de Firestore, perquè siguin tot o res: el registre, la verificació, la recàrrega, crear una guardiola, l'aportació, «He oblidat la contrasenya» i la contrasenya nova. En memòria, el mateix codi les fa amb un pany. Un error de negoci (p. ex. un codi incorrecte que compta com a intent) no desfà el que el servei ja ha escrit, igual que en memòria.
 
 | Model | Camps nous | Notes |
 |---|---|---|
@@ -1531,7 +1533,7 @@ Aquest apartat és per al backend. El frontend no en depèn.
   - el saldo del compte és la suma dels `signed_amount` dels seus moviments;
   - el saldo d'una guardiola és la suma del seu historial;
   - `balance + totalSaved` és igual abans i després d'aportar.
-- **Amb Firestore** (si s'aprova la P20, #106): les guardioles i el seu historial seran col·leccions més, els ids necessitaran un comptador propi perquè Firestore no té autoincrement, i l'aportació haurà d'anar dins d'una **transacció**, com la recàrrega ([8.13](#813-model-intern-de-laccés)).
+- **Amb Firestore** (TR01.1, #106): les guardioles i el seu historial són les col·leccions `pots` i `pot_movements`, els ids surten dels comptadors i l'aportació va dins d'una **transacció**, com la recàrrega ([8.13](#813-model-intern-de-laccés)).
 - **Seed** **[PROPOSTA — pendent de validar]**. Les tres guardioles de l'usuari 1 no canvien de nom ni de saldo, perquè en depenen els tests i els mocks del frontend. Guanyen:
 
   | `id` | `name` | `balance` | `target` | `color` | Entrada inicial de l'historial |

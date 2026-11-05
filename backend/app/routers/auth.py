@@ -21,9 +21,11 @@ from app.repositories import (
     UserRepository,
     VerificationCodeRepository,
 )
+from app.repositories.atomic import Atomic
 from app.routers.current_user import bearer_token
 from app.routers.dependencies import (
     account_repository,
+    atomic,
     frontend_url,
     outbox_repository,
     password_reset_token_repository,
@@ -69,8 +71,12 @@ def create_account(
     accounts: Annotated[AccountRepository, Depends(account_repository)],
     codes: Annotated[VerificationCodeRepository, Depends(verification_code_repository)],
     outbox: Annotated[OutboxRepository, Depends(outbox_repository)],
+    run: Annotated[Atomic, Depends(atomic)],
 ) -> RegisterResponse:
-    user = register(body.identifier, body.password, body.accepted_terms, users, accounts, codes, outbox)
+    # Tot o res: el duplicat, l'usuari, el compte i el codi (TR01.1).
+    user = run.run(
+        lambda: register(body.identifier, body.password, body.accepted_terms, users, accounts, codes, outbox)
+    )
     return RegisterResponse.from_user(user)
 
 
@@ -132,9 +138,13 @@ def verify_account(
     users: Annotated[UserRepository, Depends(user_repository)],
     codes: Annotated[VerificationCodeRepository, Depends(verification_code_repository)],
     sessions: Annotated[SessionRepository, Depends(session_repository)],
+    run: Annotated[Atomic, Depends(atomic)],
 ) -> SessionResponse:
-    """Codi correcte → compte actiu i sessió oberta: la mateixa resposta que el login (P9)."""
-    return SessionResponse(token=verify(body.identifier, body.code, users, codes, sessions))
+    """Codi correcte → compte actiu i sessió oberta: la mateixa resposta que el login (P9).
+
+    Tot o res (TR01.1): dos codis incorrectes alhora compten com a dos intents.
+    """
+    return SessionResponse(token=run.run(lambda: verify(body.identifier, body.code, users, codes, sessions)))
 
 
 @router.post("/resend-code")
@@ -169,9 +179,13 @@ def request_password_reset(
     tokens: Annotated[PasswordResetTokenRepository, Depends(password_reset_token_repository)],
     outbox: Annotated[OutboxRepository, Depends(outbox_repository)],
     base_url: Annotated[str, Depends(frontend_url)],
+    run: Annotated[Atomic, Depends(atomic)],
 ) -> StatusResponse:
-    """Sempre la mateixa resposta, existeixi o no el compte (§8.10)."""
-    forgot_password(body.identifier, users, tokens, outbox, base_url)
+    """Sempre la mateixa resposta, existeixi o no el compte (§8.10).
+
+    Tot o res (TR01.1): mai no queden dos enllaços vàlids per al mateix usuari.
+    """
+    run.run(lambda: forgot_password(body.identifier, users, tokens, outbox, base_url))
     return StatusResponse()
 
 
@@ -181,7 +195,11 @@ def change_password(
     users: Annotated[UserRepository, Depends(user_repository)],
     tokens: Annotated[PasswordResetTokenRepository, Depends(password_reset_token_repository)],
     sessions: Annotated[SessionRepository, Depends(session_repository)],
+    run: Annotated[Atomic, Depends(atomic)],
 ) -> StatusResponse:
-    """Contrasenya nova i totes les sessions tancades. No obre cap sessió (§8.11)."""
-    reset_password(body.token, body.password, users, tokens, sessions)
+    """Contrasenya nova i totes les sessions tancades. No obre cap sessió (§8.11).
+
+    Tot o res (TR01.1): el token, la contrasenya, el desbloqueig i les sessions.
+    """
+    run.run(lambda: reset_password(body.token, body.password, users, tokens, sessions))
     return StatusResponse()

@@ -166,6 +166,7 @@ def test_rejected_topup_does_not_spend_a_reference(client: TestClient) -> None:
     assert client.post("/api/topups", json={"amount": 1000}).json()["movement"]["reference"] == "EVT-000031"
 
 
+@pytest.mark.memory_only
 def test_contribution_that_fails_halfway_does_not_spend_a_reference(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:

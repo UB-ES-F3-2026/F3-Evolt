@@ -17,9 +17,10 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.config import load_app_settings
+from app.config import STORAGE_FIRESTORE, load_app_settings
 from app.data.seed import build_seed
 from app.middleware import SimulationMiddleware, load_simulation_settings
+from app.repositories.atomic import MemoryAtomic
 from app.routers import auth, dev, health, home, movements, pots, topups
 from app.services.errors import (
     ERROR_MESSAGES,
@@ -35,9 +36,23 @@ logger = logging.getLogger("evolt")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    # Es reconstrueix a cada arrencada: així cada `with TestClient(...)` rep un
-    # seed net i els tests no depenen de l'ordre en què s'executen.
-    app.state.seed = build_seed()
+    if app.state.settings.storage == STORAGE_FIRESTORE:
+        # Firestore (TR01.1): les dades es conserven entre reinicis; el seed
+        # només s'escriu si la base de dades és buida. Importat aquí perquè amb
+        # STORAGE=memory l'app no carregui cap llibreria de Google.
+        from app.data.firestore import create_client
+        from app.data.firestore_seed import ensure_seeded
+        from app.repositories.atomic import FirestoreAtomic
+
+        client = create_client(app.state.settings.firestore_project_id)
+        ensure_seeded(client)
+        app.state.firestore = client
+        app.state.atomic = FirestoreAtomic(client)
+    else:
+        # Es reconstrueix a cada arrencada: així cada `with TestClient(...)` rep un
+        # seed net i els tests no depenen de l'ordre en què s'executen.
+        app.state.seed = build_seed()
+        app.state.atomic = MemoryAtomic()
     yield
 
 

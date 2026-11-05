@@ -218,6 +218,10 @@ runs exactly as in local development.
 | `ALLOW_X_USER_ID` | `true` | Protected routes without a session token may still use the `X-User-Id` header ([`docs/api.md` §8.2](docs/api.md#82-sessió)). Default `true` until T03.5, when the frontend stops sending it; a misspelled value disables it | No |
 | `ENABLE_DEV_OUTBOX` | same as `ENABLE_DEV_ROUTES` | Exposes `GET /api/dev/outbox`, the simulated mailbox with verification codes and password-reset links ([`docs/api.md` §8.12](docs/api.md#812-get-apidevoutbox)). With `ENABLE_DEV_ROUTES=false` it only opens if `DEV_OUTBOX_KEY` is set too | No |
 | `DEV_OUTBOX_KEY` | unset | If set, `GET /api/dev/outbox` needs the header `X-Dev-Key` with this value | **Yes** |
+| `STORAGE` | `memory` | Where data lives: `memory` (lost on restart, as in Sprint 0) or `firestore` (see [Firestore](#firestore-tr011)). A misspelled value stays in memory with a warning | No |
+| `FIRESTORE_PROJECT_ID` | `evolt-dev-67e22` | Firebase project used with `STORAGE=firestore` | No |
+| `FIRESTORE_EMULATOR_HOST` | unset | e.g. `127.0.0.1:8080`: talk to the local Firestore emulator instead of the real project (no credentials needed) | No |
+| `GOOGLE_APPLICATION_CREDENTIALS` | unset | Path to the service-account JSON key, only for the real project. The file never goes in the repo | **Yes** |
 | `SIMULATE_DELAY_MS` | off | See [Simulating delay and failure](#simulating-delay-and-failure-t082) | No |
 | `SIMULATE_ERROR_RATE` | off | See [Simulating delay and failure](#simulating-delay-and-failure-t082) | No |
 
@@ -226,6 +230,44 @@ person in charge of the deploy, so it is set on Render too. Secrets go only in
 the Render dashboard, never in the repo. **Adding a request header** in the
 frontend (e.g. `Authorization`)? Add it to `allow_headers` in
 `backend/app/main.py`, or the browser will block the request.
+
+### Firestore (TR01.1)
+
+By default the backend keeps data in memory. With `STORAGE=firestore` it uses
+Cloud Firestore through the same repositories (`app/repositories/firestore/`),
+so services and routers do not change ([`docs/api.md` §8.13](docs/api.md#813-model-intern-de-laccés)).
+
+**Local, with the emulator** (no Firebase account needed): install Java 21+ and
+the Firebase CLI (`npm install -g firebase-tools`), then from the repo root:
+
+```bash
+firebase emulators:start --only firestore        # terminal 1 (UI: http://localhost:4000)
+cd backend                                       # terminal 2
+STORAGE=firestore FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 uvicorn app.main:app --reload
+```
+
+PowerShell: `$env:STORAGE="firestore"; $env:FIRESTORE_EMULATOR_HOST="127.0.0.1:8080"; uvicorn app.main:app --reload`
+
+- On start, the seed is written only if the database is empty: data now survives restarts.
+- `POST /api/dev/reset` deletes **every** collection and writes the seed again. Never point it at real data.
+- Operations that write several things run all-or-nothing (`app/repositories/atomic.py`):
+  sign-up, verification, top-up, new pot, contribution, forgot/reset password.
+  In memory that is a lock; with Firestore, a transaction.
+- Tokens (sessions and reset links) are stored only as SHA-256 hashes.
+
+**Tests:** `tests/test_firestore.py` runs only when `FIRESTORE_EMULATOR_HOST` is set
+(each test uses its own emulator project); otherwise it is skipped, so CI and the
+normal `pytest` run stay in memory. To run **the whole API suite** against the
+emulator, add `TEST_STORAGE=firestore`; tests that read the in-memory data directly
+are skipped then.
+
+```bash
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 TEST_STORAGE=firestore python -m pytest
+```
+
+**Real project:** the queries only filter by one field, so no composite index is
+needed (`firestore.indexes.json` is empty on purpose). The service-account key goes
+in `GOOGLE_APPLICATION_CREDENTIALS`, outside the repo.
 
 ### Deploy (TR06.1)
 
@@ -251,6 +293,8 @@ The backend runs on [Render](https://render.com) (free plan) as a Web Service:
 | `ALLOW_X_USER_ID` | `true` until T03.5 (the deployed frontend still sends `X-User-Id`); `false` afterwards |
 | `ENABLE_DEV_OUTBOX` | `true` only for the demo, so the presenter can read the verification code |
 | `DEV_OUTBOX_KEY` | Secret, shared only inside the team (Render dashboard, never in the repo). Required if `ENABLE_DEV_OUTBOX=true` |
+| `STORAGE` | `firestore` once the team switches the demo to Firestore; until then, unset (memory) |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Path of a Render *Secret File* with the service-account key (only with `STORAGE=firestore`) |
 
 Quick check: `curl https://evolt-api.onrender.com/api/health` → `{"status":"ok"}`.
 The root URL `/` has no route, so it answers `500 INTERNAL_ERROR` like any unknown path.

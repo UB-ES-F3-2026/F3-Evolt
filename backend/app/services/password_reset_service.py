@@ -91,10 +91,12 @@ def reset_password(
         # Es torna a comprovar dins del pany: una altra petició pot haver gastat
         # el token, o n'hi pot haver un de nou, mentre es feia el hash.
         user_id = _check_link(token, tokens, now)
+        # Primer les sessions: tancar-les llegeix quines hi ha, i en una
+        # transacció de Firestore (TR01.1) les lectures van abans de les escriptures.
+        sessions.delete_for_user(user_id)
         tokens.mark_used(token)
         users.set_password_hash(user_id, password_hash)
         users.set_login_state(user_id, failed_logins=0, locked_until=None)
-        sessions.delete_for_user(user_id)
 
 
 def _check_link(token: str, tokens: PasswordResetTokenRepository, now: datetime) -> int:
