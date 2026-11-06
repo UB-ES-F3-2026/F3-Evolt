@@ -144,6 +144,8 @@ Totes les peticions són de l'usuari 1, llevat que es digui el contrari.
 | **DP-05** | Toca l'enllaç «Reportar un problema». | S'obre un formulari amb el moviment ja indicat i una casella per explicar què passa. |
 | **DP-06** | Intenta enviar-lo amb la casella buida. | No s'envia: surt el motiu en vermell. |
 | **DP-07** | Escriu què passa i envia'l. | Surt una confirmació que l'informe s'ha enviat. |
+| **DP-08** | Crea una guardiola amb un nom molt llarg, aporta-hi diners i baixa el justificant de l'aportació. | El concepte surt sencer al PDF, en diverses línies. |
+| **DP-09** | Amb la pantalla oberta, sense connexió i sense haver baixat cap justificant abans, toca «Descarregar justificant». | Mentre prova, el botó diu «Generant…». Després surt en vermell «No s'ha pogut generar el justificant. Recarrega la pàgina i torna-ho a provar.», i el detall continua a la pantalla. Amb connexió i la pàgina recarregada, el botó torna a funcionar. |
 
 ---
 
@@ -157,7 +159,7 @@ Totes les peticions són de l'usuari 1, llevat que es digui el contrari.
 | US-10 · Les dates, el tipus i la cerca es poden fer servir alhora, i el botó «Esborrar filtres» els treu tots i torna a mostrar la llista completa | M-13, M-14, M-18, MP-04, MP-06, MP-07 |
 | US-10 · Si cap moviment compleix els filtres, surt el missatge gris «No hi ha resultats» amb el botó «Esborrar filtres» | M-15, M-17, M-19, MP-05 |
 | US-11 · En tocar un moviment de la llista s'obre la pantalla «Detall del moviment»: a dalt l'import en gran (en verd amb «+» si és un ingrés, en vermell amb «−» si és una despesa) i a sota, en files, la data i l'hora, l'estat («Completat» o «Pendent»), la contrapart (qui paga o qui cobra) i la referència | F-01, F-02, F-03, F-04, D-01, D-02, D-06, DP-01, DP-02, DP-03 |
-| US-11 · Hi ha el botó «Descarregar justificant», que baixa un PDF amb aquestes mateixes dades | D-01, DP-04 |
+| US-11 · Hi ha el botó «Descarregar justificant», que baixa un PDF amb aquestes mateixes dades | D-01, DP-04, DP-08 |
 | US-11 · Hi ha l'enllaç «Reportar un problema», que obre un formulari amb el moviment ja indicat i una casella per explicar què passa | I-01, I-02, I-03, I-04, I-08, DP-05, DP-06, DP-07 |
 
-Proves que no surten d'un criteri, sinó del contracte: F-05 a F-07 (els camps nous a totes les respostes i el saldo amb pendents), M-20 (la Home sense filtres), D-03 a D-05 i D-07 (moviments inexistents, d'altres usuaris i nous), i I-05 a I-07, I-09 i I-10 (format, ordre de les validacions i reinici).
+Proves que no surten d'un criteri, sinó del contracte: F-05 a F-07 (els camps nous a totes les respostes i el saldo amb pendents), M-20 (la Home sense filtres), D-03 a D-05 i D-07 (moviments inexistents, d'altres usuaris i nous), I-05 a I-07, I-09 i I-10 (format, ordre de les validacions i reinici), i DP-09 (el botó quan no es pot generar el PDF).

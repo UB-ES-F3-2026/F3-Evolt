@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { formatCents } from '@/models/money'
+import { formatCents, formatSignedCents, type AmountSign } from '@/models/money'
 
 const props = withDefaults(
   defineProps<{
@@ -9,14 +9,12 @@ const props = withDefaults(
     /** Shows a mask instead of the amount (balance visibility, T07.10). */
     hidden?: boolean
     /** Adds `+` or `−` in front, for amounts with a direction (income / expense). */
-    sign?: 'positive' | 'negative'
+    sign?: AmountSign
   }>(),
   { hidden: false, sign: undefined },
 )
 
-const SIGN_TEXT = { positive: '+', negative: '−' } as const
-
-const text = computed(() => `${props.sign ? SIGN_TEXT[props.sign] : ''}${formatCents(props.cents)}`)
+const text = computed(() => (props.sign ? formatSignedCents(props.cents, props.sign) : formatCents(props.cents)))
 </script>
 
 <template>

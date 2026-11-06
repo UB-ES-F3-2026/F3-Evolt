@@ -1,10 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { messageForCode } from '@/models/errorMessages'
+import { formatSignedCents } from '@/models/money'
 import type { MovementDetail } from '@/models/movement'
+import { saveFile } from '@/services/fileDownload'
 import { getMovement } from '@/services/movementsService'
+import { makeReceiptPdf } from '@/services/receiptPdf'
 import { useMovementDetailViewModel } from './useMovementDetailViewModel'
 
 vi.mock('@/services/movementsService', () => ({ getMovement: vi.fn() }))
+vi.mock('@/services/receiptPdf', () => ({ makeReceiptPdf: vi.fn() }))
+vi.mock('@/services/fileDownload', () => ({ saveFile: vi.fn() }))
 
 const bizum: MovementDetail = {
   id: 'mov-29',
@@ -20,6 +25,8 @@ const bizum: MovementDetail = {
 
 beforeEach(() => {
   vi.mocked(getMovement).mockReset()
+  vi.mocked(makeReceiptPdf).mockReset()
+  vi.mocked(saveFile).mockReset()
 })
 
 describe('useMovementDetailViewModel', () => {
@@ -92,5 +99,81 @@ describe('useMovementDetailViewModel', () => {
 
     expect(viewModel.error.value).toBeNull()
     expect(viewModel.movement.value).toEqual(bizum)
+  })
+})
+
+describe('the receipt (DP-04, DP-09)', () => {
+  const pdf = new Blob(['%PDF-'], { type: 'application/pdf' })
+
+  async function loaded(movement: MovementDetail = bizum) {
+    vi.mocked(getMovement).mockResolvedValue(movement)
+    const viewModel = useMovementDetailViewModel(movement.id)
+    await viewModel.load()
+    return viewModel
+  }
+
+  it('says exactly what the screen says, and saves the file with the reference in its name', async () => {
+    vi.mocked(makeReceiptPdf).mockResolvedValue(pdf)
+    const viewModel = await loaded()
+
+    await viewModel.downloadReceipt()
+
+    expect(vi.mocked(makeReceiptPdf)).toHaveBeenCalledWith({
+      amount: formatSignedCents(1000, 'negative'),
+      isIncome: false,
+      concept: 'Bizum enviat',
+      rows: viewModel.rows.value,
+    })
+    expect(vi.mocked(saveFile)).toHaveBeenCalledWith(pdf, 'justificant-EVT-000029.pdf')
+    expect(viewModel.isMakingReceipt.value).toBe(false)
+    expect(viewModel.receiptError.value).toBeNull()
+  })
+
+  it('puts «+» on the amount of an income', async () => {
+    vi.mocked(makeReceiptPdf).mockResolvedValue(pdf)
+    const viewModel = await loaded({ ...bizum, type: 'income' })
+
+    await viewModel.downloadReceipt()
+
+    expect(vi.mocked(makeReceiptPdf)).toHaveBeenCalledWith(
+      expect.objectContaining({ amount: formatSignedCents(1000, 'positive'), isIncome: true }),
+    )
+  })
+
+  it('does not make two at once', async () => {
+    vi.mocked(makeReceiptPdf).mockResolvedValue(pdf)
+    const viewModel = await loaded()
+
+    const first = viewModel.downloadReceipt()
+    expect(viewModel.isMakingReceipt.value).toBe(true)
+    await viewModel.downloadReceipt()
+    await first
+
+    expect(vi.mocked(makeReceiptPdf)).toHaveBeenCalledOnce()
+  })
+
+  it('says it failed and leaves the detail on screen; another try clears the error', async () => {
+    vi.mocked(makeReceiptPdf).mockRejectedValueOnce(new TypeError('Failed to fetch dynamically imported module'))
+    const viewModel = await loaded()
+
+    await viewModel.downloadReceipt()
+
+    expect(viewModel.receiptError.value).toBe(
+      "No s'ha pogut generar el justificant. Recarrega la pàgina i torna-ho a provar.",
+    )
+    expect(viewModel.error.value).toBeNull()
+    expect(viewModel.movement.value).toEqual(bizum)
+    expect(vi.mocked(saveFile)).not.toHaveBeenCalled()
+
+    vi.mocked(makeReceiptPdf).mockResolvedValueOnce(pdf)
+    await viewModel.downloadReceipt()
+
+    expect(viewModel.receiptError.value).toBeNull()
+  })
+
+  it('does nothing before the movement has loaded', async () => {
+    await useMovementDetailViewModel('mov-29').downloadReceipt()
+
+    expect(vi.mocked(makeReceiptPdf)).not.toHaveBeenCalled()
   })
 })

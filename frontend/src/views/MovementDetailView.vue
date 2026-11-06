@@ -10,7 +10,8 @@ import { useMovementDetailViewModel } from '@/viewmodels/useMovementDetailViewMo
 
 const props = defineProps<{ movementId: string }>()
 
-const { movement, rows, isIncome, isLoading, error, canRetry, load } = useMovementDetailViewModel(props.movementId)
+const { movement, rows, isIncome, isLoading, error, canRetry, isMakingReceipt, receiptError, load, downloadReceipt } =
+  useMovementDetailViewModel(props.movementId)
 const { isHidden } = useBalanceVisibility()
 const goBack = useGoBack({ name: 'movements' })
 
@@ -47,6 +48,11 @@ onMounted(load)
           </div>
         </dl>
       </section>
+
+      <button type="button" class="receipt-button" :disabled="isMakingReceipt" @click="downloadReceipt">
+        {{ isMakingReceipt ? 'Generant…' : 'Descarregar justificant' }}
+      </button>
+      <p v-if="receiptError" class="receipt-error" role="alert">{{ receiptError }}</p>
 
       <router-link :to="{ name: 'report-movement', params: { movementId } }" class="report-link">
         Reportar un problema
@@ -120,6 +126,30 @@ onMounted(load)
   font-weight: 600;
   text-align: right;
   overflow-wrap: anywhere;
+}
+
+.receipt-button {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.receipt-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.receipt-error {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  color: var(--color-error);
 }
 
 .report-link {
