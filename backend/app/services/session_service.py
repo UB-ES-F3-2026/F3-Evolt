@@ -76,7 +76,7 @@ def login(
         raise ApiError(INVALID_CREDENTIALS)
 
     if _is_locked(user, now):
-        raise _locked_error(user)
+        raise _locked_error(user.locked_until)
 
     # bcrypt no admet més de 72 bytes; una contrasenya així no pot ser la bona.
     if not (fits_password_hash(password) and verify_password(password, user.password_hash)):
@@ -93,23 +93,27 @@ def _is_locked(user: User, now: datetime) -> bool:
     return user.locked_until is not None and now < user.locked_until
 
 
-def _locked_error(user: User) -> ApiError:
-    return ApiError(ACCOUNT_LOCKED, details={"lockedUntil": user.locked_until.isoformat()})
+def _locked_error(locked_until: datetime) -> ApiError:
+    return ApiError(ACCOUNT_LOCKED, details={"lockedUntil": locked_until.isoformat()})
 
 
 def _count_failed_login(user: User, users: UserRepository, outbox: OutboxRepository, now: datetime) -> None:
     """Suma un error de login. Sempre llança: INVALID_CREDENTIALS o, al 5è, ACCOUNT_LOCKED."""
     with _LOGIN_STATE_LOCK:
-        # Un altre login pot haver bloquejat el compte mentre es feia el bcrypt.
-        if _is_locked(user, now):
-            raise _locked_error(user)
-        failed_logins = user.failed_logins + 1
+        # Es torna a llegir: un altre login pot haver comptat un error o bloquejat
+        # el compte mentre es feia el bcrypt. Amb Firestore (TR01.1), `user` és
+        # una còpia d'abans i no veuria aquests canvis.
+        current = users.get(user.id) or user
+        if _is_locked(current, now):
+            raise _locked_error(current.locked_until)
+        failed_logins = current.failed_logins + 1
         if failed_logins < MAX_FAILED_LOGINS:
             users.set_login_state(user.id, failed_logins=failed_logins, locked_until=None)
             raise ApiError(INVALID_CREDENTIALS)
-        users.set_login_state(user.id, failed_logins=0, locked_until=now + LOCK_DURATION)
+        locked_until = now + LOCK_DURATION
+        users.set_login_state(user.id, failed_logins=0, locked_until=locked_until)
     send_account_locked(user, now, outbox)
-    raise _locked_error(user)
+    raise _locked_error(locked_until)
 
 
 def logout(token: str | None, sessions: SessionRepository) -> None:

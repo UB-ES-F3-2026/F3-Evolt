@@ -90,6 +90,7 @@ def test_only_the_most_recent_movement_is_pending(client: TestClient) -> None:
     assert sum(item["status"] == MOVEMENT_STATUS_COMPLETED for item in items) == 29
 
 
+@pytest.mark.memory_only
 def test_a_pending_movement_already_counts_for_the_balance(client: TestClient) -> None:
     # F-07
     seed = _seed(client)
@@ -166,6 +167,7 @@ def test_rejected_topup_does_not_spend_a_reference(client: TestClient) -> None:
     assert client.post("/api/topups", json={"amount": 1000}).json()["movement"]["reference"] == "EVT-000031"
 
 
+@pytest.mark.memory_only
 def test_contribution_that_fails_halfway_does_not_spend_a_reference(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:

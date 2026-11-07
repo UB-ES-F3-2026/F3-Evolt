@@ -155,11 +155,12 @@ def contribute(
                 undo_write()
             raise
 
-        # Una còpia: la resposta ha de dir el saldo d'aquesta aportació, encara que
-        # tot seguit n'arribi una altra a la mateixa guardiola.
+        # Una còpia amb el saldo nou: la resposta ha de dir el saldo d'aquesta
+        # aportació, encara que tot seguit n'arribi una altra a la mateixa guardiola.
+        # No es llegeix de `pot`: amb Firestore (TR01.1) és una lectura d'abans.
         return ContributionResult(
             balance=previous_balance - amount,
-            pot=replace(pot),
+            pot=replace(pot, balance=previous_pot_balance + amount),
             movement=movement,
         )
 

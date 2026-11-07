@@ -49,6 +49,7 @@ def _create(client: TestClient, body: dict[str, object], headers: dict[str, str]
 # --- Llistar (§9.2) -----------------------------------------------------------------
 
 
+@pytest.mark.memory_only
 def test_list_returns_the_demo_user_pots_in_creation_order(client: TestClient) -> None:
     # P-01
     response = client.get("/api/pots")
@@ -120,6 +121,7 @@ def test_null_color_is_the_default(client: TestClient) -> None:
     assert response.json()["color"] == DEFAULT_POT_COLOR
 
 
+@pytest.mark.memory_only
 def test_name_is_stored_without_surrounding_spaces(client: TestClient) -> None:
     # P-16
     response = _create(client, {"name": "  Viatge  "})
@@ -163,6 +165,7 @@ def test_creating_a_pot_does_not_move_money(client: TestClient) -> None:
 # --- Errors de negoci (§9.7) ----------------------------------------------------------
 
 
+@pytest.mark.memory_only
 @pytest.mark.parametrize("name", ["", "   ", "\t\n"])
 def test_blank_name_is_rejected(client: TestClient, name: str) -> None:
     # P-07 i P-08
@@ -179,6 +182,7 @@ def test_blank_name_is_rejected(client: TestClient, name: str) -> None:
     assert len(client.get("/api/pots").json()["items"]) == len(_seed_pots(client))
 
 
+@pytest.mark.memory_only
 @pytest.mark.parametrize("target", [0, -500])
 def test_target_zero_or_negative_is_rejected(client: TestClient, target: int) -> None:
     # P-09 i P-10
@@ -205,6 +209,7 @@ def test_name_is_checked_before_target(client: TestClient) -> None:
 # --- Format del cos (P5) ----------------------------------------------------------------
 
 
+@pytest.mark.memory_only
 @pytest.mark.parametrize(
     "body",
     [

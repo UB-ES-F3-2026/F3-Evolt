@@ -40,6 +40,7 @@ def _user_by_identifier(client: TestClient, identifier: str):
 # --- Registre correcte --------------------------------------------------------------
 
 
+@pytest.mark.memory_only
 def test_register_creates_a_pending_user(client: TestClient) -> None:
     # R-01
     response = _register(client, "ana@x.com")
@@ -51,6 +52,7 @@ def test_register_creates_a_pending_user(client: TestClient) -> None:
     assert user.identifier_type == "email"
 
 
+@pytest.mark.memory_only
 def test_register_creates_the_main_account_with_zero_balance(client: TestClient) -> None:
     # R-01 i P19: compte principal a 0, sense moviments ni guardioles.
     _register(client, "ana@x.com")
@@ -69,6 +71,7 @@ def test_register_does_not_open_a_session(client: TestClient) -> None:
     assert set(_register(client, "ana@x.com").json()) == {"identifier", "status"}
 
 
+@pytest.mark.memory_only
 def test_each_new_user_gets_a_new_id(client: TestClient) -> None:
     _register(client, "ana@x.com")
     _register(client, "pau@x.com")
@@ -84,6 +87,7 @@ def test_response_returns_the_normalized_identifier(client: TestClient) -> None:
     assert _register(client, " Ana@X.com ").json()["identifier"] == "ana@x.com"
 
 
+@pytest.mark.memory_only
 def test_register_with_a_phone(client: TestClient) -> None:
     # R-12
     response = _register(client, "612 34 56 78")
@@ -98,6 +102,7 @@ def test_accented_uppercase_counts(client: TestClient) -> None:
     assert _register(client, "ana@x.com", password="Àlgebra26").status_code == 201
 
 
+@pytest.mark.memory_only
 def test_password_is_stored_only_as_a_hash(client: TestClient, caplog) -> None:
     # R-17
     with caplog.at_level(logging.DEBUG):
@@ -124,6 +129,7 @@ def test_password_is_not_logged_when_the_body_is_invalid(client: TestClient, cap
 # --- Duplicats ----------------------------------------------------------------------
 
 
+@pytest.mark.memory_only
 @pytest.mark.parametrize("duplicate", ["ana@x.com", "ANA@x.com", "  ana@X.COM "])
 def test_same_email_is_already_registered(client: TestClient, duplicate: str) -> None:
     # R-04 i R-05: també amb el compte encara pendent i una altra contrasenya.
@@ -158,6 +164,7 @@ def test_seed_user_is_already_registered(client: TestClient) -> None:
 # --- Contrasenya feble --------------------------------------------------------------
 
 
+@pytest.mark.memory_only
 @pytest.mark.parametrize("password", ["curta1A", "platja2026", "PlatjaNova"])
 def test_weak_password_is_rejected(client: TestClient, password: str) -> None:
     # R-06, R-07 i R-08
@@ -176,6 +183,7 @@ def test_weak_password_is_rejected(client: TestClient, password: str) -> None:
 # --- Format del cos -----------------------------------------------------------------
 
 
+@pytest.mark.memory_only
 @pytest.mark.parametrize(
     "body",
     [

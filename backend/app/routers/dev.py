@@ -1,10 +1,11 @@
 """Eines de desenvolupament: reinici de dades (T09.6, docs/api.md §4.4) i bústia
 simulada (T02.1, §8.12).
 
-L'Sprint 0 manté les dades **en memòria**: el `lifespan` de `app.main` les
-construeix amb `build_seed()` a cada arrencada. Aquest endpoint replica
-exactament aquesta operació sense reiniciar el servidor, perquè les seqüències
-amb estat (p. ex. el límit diari de recàrrega) es puguin reproduir a demanda.
+En memòria, el `lifespan` de `app.main` construeix les dades amb `build_seed()`
+a cada arrencada, i aquest endpoint replica exactament aquesta operació sense
+reiniciar el servidor, perquè les seqüències amb estat (p. ex. el límit diari de
+recàrrega) es puguin reproduir a demanda. Amb `STORAGE=firestore` (TR01.1),
+esborra les col·leccions i hi torna a escriure el seed.
 
 No és una regla de negoci ni toca cap servei ni repositori: és una eina de
 desenvolupament (com la capçalera `X-User-Id`) i per això viu només al router.
@@ -15,6 +16,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, Request
 
+from app.config import STORAGE_FIRESTORE
 from app.data.seed import build_seed
 from app.models import OutboxMessage
 from app.repositories import OutboxRepository
@@ -29,7 +31,14 @@ outbox_router = APIRouter(tags=["dev"])
 
 @router.post("/dev/reset", status_code=200)
 def reset_seed(request: Request) -> dict[str, str]:
-    request.app.state.seed = build_seed()
+    if request.app.state.settings.storage == STORAGE_FIRESTORE:
+        # Esborra totes les col·leccions: per això, al desplegament, aquesta
+        # ruta no existeix (ENABLE_DEV_ROUTES=false, §4.4).
+        from app.data.firestore_seed import reset
+
+        reset(request.app.state.firestore)
+    else:
+        request.app.state.seed = build_seed()
     return {"status": "ok"}
 
 

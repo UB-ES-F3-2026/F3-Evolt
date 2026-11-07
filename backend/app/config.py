@@ -4,7 +4,8 @@ Decideix des de quins orígens es pot cridar l'API (CORS), si les eines de
 desenvolupament (`/api/dev/*`) estan actives, si encara s'accepta la capçalera
 `X-User-Id` sense sessió (T03.1, docs/api.md §8.2), si la bústia simulada és
 visible i amb quina clau (T02.1, §8.12, P46) i la base de l'enllaç de
-recuperació de la contrasenya (T04.1, §8.10). Sense cap variable definida, el
+recuperació de la contrasenya (T04.1, §8.10), i on es guarden les dades
+(memòria o Firestore, TR01.1, §8.13). Sense cap variable definida, el
 backend es comporta exactament igual que en local: accepta el Vite dev server
 i exposa `/api/dev/reset`. Al desplegament es fixen totes dues explícitament
 (vegeu el README, secció «Deploy»).
@@ -16,6 +17,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 logger = logging.getLogger("evolt")
+
+# On es guarden les dades (TR01.1, docs/api.md §8.13). Sense res definit, en memòria,
+# com a l'Sprint 0: els tests i el desenvolupament local no necessiten Firebase.
+STORAGE_MEMORY = "memory"
+STORAGE_FIRESTORE = "firestore"
+_STORAGES = {STORAGE_MEMORY, STORAGE_FIRESTORE}
+# Projecte de Firebase de desenvolupament de l'equip. No és un secret: les
+# credencials van a GOOGLE_APPLICATION_CREDENTIALS, mai al repositori.
+DEFAULT_FIRESTORE_PROJECT_ID = "evolt-dev-67e22"
 
 # Origen del Vite dev server: casa amb el BASE_URL per defecte de l'apiClient
 # del frontend (localhost:8000 ↔ localhost:5173).
@@ -35,7 +45,8 @@ class AppSettings:
     resoldre amb `X-User-Id` (docs/api.md §8.2, transició fins a la T03.5);
     `dev_outbox_enabled` indica si es registra `GET /api/dev/outbox`, i
     `dev_outbox_key`, si n'hi ha, és la clau que ha de portar `X-Dev-Key`;
-    `frontend_url` és la base de l'enllaç de recuperació (`FRONTEND_URL`, §8.10).
+    `frontend_url` és la base de l'enllaç de recuperació (`FRONTEND_URL`, §8.10);
+    `storage` és `memory` o `firestore`, i `firestore_project_id` el projecte.
     """
 
     frontend_origins: tuple[str, ...] = (DEFAULT_FRONTEND_ORIGIN,)
@@ -44,6 +55,8 @@ class AppSettings:
     dev_outbox_enabled: bool = True
     dev_outbox_key: str | None = None
     frontend_url: str = DEFAULT_FRONTEND_ORIGIN
+    storage: str = STORAGE_MEMORY
+    firestore_project_id: str = DEFAULT_FIRESTORE_PROJECT_ID
 
 
 def _parse_origins(raw: str) -> tuple[str, ...]:
@@ -91,7 +104,11 @@ def load_app_settings(env: Mapping[str, str] | None = None) -> AppSettings:
     if not origins:
         origins = (DEFAULT_FRONTEND_ORIGIN,)
 
-    dev_routes_enabled = _parse_flag("ENABLE_DEV_ROUTES", source.get("ENABLE_DEV_ROUTES", ""), True)
+    storage = _parse_storage(source.get("STORAGE", ""))
+    project_id = source.get("FIRESTORE_PROJECT_ID", "").strip() or DEFAULT_FIRESTORE_PROJECT_ID
+    dev_routes_enabled = _dev_routes_enabled(
+        source.get("ENABLE_DEV_ROUTES", ""), storage, source.get("FIRESTORE_EMULATOR_HOST", "")
+    )
     allow_x_user_id = _parse_flag("ALLOW_X_USER_ID", source.get("ALLOW_X_USER_ID", ""), True)
     dev_outbox_key = source.get("DEV_OUTBOX_KEY", "").strip() or None
     dev_outbox_enabled = _outbox_enabled(
@@ -105,6 +122,8 @@ def load_app_settings(env: Mapping[str, str] | None = None) -> AppSettings:
         allow_x_user_id=allow_x_user_id,
         dev_outbox_enabled=dev_outbox_enabled,
         dev_outbox_key=dev_outbox_key,
+        storage=storage,
+        firestore_project_id=project_id,
     )
 
 
@@ -137,3 +156,33 @@ def _outbox_enabled(raw: str, dev_routes_enabled: bool, key: str | None) -> bool
         )
         return False
     return enabled
+
+
+def _dev_routes_enabled(raw: str, storage: str, emulator_host: str) -> bool:
+    """`ENABLE_DEV_ROUTES`, però mai amb el Firestore de veritat (revisió de la #137).
+
+    `POST /api/dev/reset` esborra totes les col·leccions. Amb Firestore només
+    s'activa contra l'emulador (`FIRESTORE_EMULATOR_HOST`): així, si a un
+    desplegament amb Firestore s'oblida `ENABLE_DEV_ROUTES=false`, la ruta no hi és.
+    """
+    enabled = _parse_flag("ENABLE_DEV_ROUTES", raw, True)
+    if enabled and storage == STORAGE_FIRESTORE and not emulator_host.strip():
+        if raw.strip():
+            logger.warning("ENABLE_DEV_ROUTES ignorada: amb Firestore real, /api/dev/reset no existeix")
+        return False
+    return enabled
+
+
+def _parse_storage(raw: str) -> str:
+    """`STORAGE`: `memory` (per defecte) o `firestore`.
+
+    Un valor mal escrit es queda en memòria amb un avís: l'app arrenca igual,
+    però el log diu clarament que les dades no es guardaran.
+    """
+    value = raw.strip().lower()
+    if not value:
+        return STORAGE_MEMORY
+    if value not in _STORAGES:
+        logger.warning("STORAGE invàlid (%r): les dades es guarden en memòria", raw)
+        return STORAGE_MEMORY
+    return value

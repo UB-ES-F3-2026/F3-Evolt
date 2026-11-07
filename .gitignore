@@ -8,12 +8,19 @@ venv/
 .ruff_cache/
 
 # Firebase build and deployment files
+# firebase.json (emulador i índexs) i .firebaserc (projecte de l'equip) SÍ que es
+# pugen: no porten cap secret (TR01.1).
 /firebase-debug.log
 /firebase-debug.*.log
-.firebaserc
+/firestore-debug.log
+
+# Credencials de Firebase / Google Cloud: MAI al repositori (TR01.1).
+*-firebase-adminsdk-*.json
+serviceAccount*.json
+service-account*.json
+credentials*.json
 
 # Firebase Hosting
-/firebase.json
 *.cache
 hosting/.cache
 

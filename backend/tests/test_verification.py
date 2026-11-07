@@ -135,6 +135,7 @@ def _verify_api(client: TestClient, code: str, identifier: str = IDENTIFIER):
     return client.post("/api/auth/verify", json={"identifier": identifier, "code": code})
 
 
+@pytest.mark.memory_only
 def test_right_code_activates_the_account_and_returns_a_token(client: TestClient) -> None:
     # V-01
     code = _register_api(client)

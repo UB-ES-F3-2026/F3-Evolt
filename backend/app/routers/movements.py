@@ -12,9 +12,11 @@ from pydantic.alias_generators import to_camel
 
 from app.models import TYPE_EXPENSE, TYPE_INCOME, MovementFilters, MovementReport
 from app.repositories import AccountRepository, MovementReportRepository, MovementRepository
+from app.repositories.atomic import Atomic
 from app.routers.current_user import current_user_id
 from app.routers.dependencies import (
     account_repository,
+    atomic,
     movement_report_repository,
     movement_repository,
 )
@@ -130,6 +132,8 @@ def post_movement_report(
     accounts: Annotated[AccountRepository, Depends(account_repository)],
     movements: Annotated[MovementRepository, Depends(movement_repository)],
     reports: Annotated[MovementReportRepository, Depends(movement_report_repository)],
+    run: Annotated[Atomic, Depends(atomic)],
 ) -> MovementReportResponse:
-    report = report_movement(user_id, movement_id, body.description, accounts, movements, reports)
+    # Amb Firestore, el comptador dels ids i l'informe nou van junts (TR01.1).
+    report = run.run(lambda: report_movement(user_id, movement_id, body.description, accounts, movements, reports))
     return MovementReportResponse.from_report(report)

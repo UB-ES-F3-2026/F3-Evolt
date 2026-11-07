@@ -265,6 +265,7 @@ def test_rejected_report_does_not_spend_an_id(client: TestClient, seed: SeedData
     assert _report(client, "mov-30", "No el reconec").json()["id"] == "rep-01"
 
 
+@pytest.mark.memory_only
 def test_reset_deletes_the_reports(client: TestClient) -> None:
     # I-10
     _report(client, "mov-30", "No reconec aquest pagament")
@@ -288,6 +289,7 @@ def test_report_does_not_change_the_movement_or_the_money(client: TestClient, se
 # --- Rutes protegides -------------------------------------------------------------------
 
 
+@pytest.mark.memory_only
 def test_routes_need_a_session_without_x_user_id(monkeypatch: pytest.MonkeyPatch) -> None:
     # §8.2: són rutes protegides, com la resta de dades de l'usuari.
     monkeypatch.setenv("ALLOW_X_USER_ID", "false")

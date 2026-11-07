@@ -9,6 +9,8 @@ Ordre de les validacions (s'aturen al primer error):
 Tot o res: primer es valida tot i només al final s'escriu.
 
 En acabar, l'usuari rep el codi de verificació a la bústia simulada (T02.1).
+El hash es fa fora de l'`atomic` (TR01.1): només la comprovació del duplicat i
+les escriptures hi van a dins.
 """
 
 import threading
@@ -21,6 +23,7 @@ from app.repositories import (
     UserRepository,
     VerificationCodeRepository,
 )
+from app.repositories.atomic import DIRECT, Atomic
 from app.services.errors import (
     ALREADY_REGISTERED,
     VALIDATION_ERROR,
@@ -51,6 +54,7 @@ def register(
     codes: VerificationCodeRepository,
     outbox: OutboxRepository,
     now: datetime | None = None,
+    atomic: Atomic = DIRECT,
 ) -> User:
     """Crea l'usuari en estat «pendent» amb el seu compte principal a 0, i li envia el codi.
 
@@ -71,24 +75,27 @@ def register(
     if users.find_by_identifier(identifier.value) is not None:
         raise ApiError(ALREADY_REGISTERED)
 
-    # bcrypt és lent a propòsit: el hash es fa fora del pany perquè dos registres
-    # d'emails diferents no s'esperin l'un a l'altre.
+    # bcrypt és lent a propòsit: el hash es fa fora del pany i de l'`atomic`, perquè
+    # els registres no aturin les altres escriptures mentre es calcula.
     password_hash = hash_password(password)
 
-    with _REGISTRATION_LOCK:
-        # Es torna a comprovar dins del pany: un altre registre amb el mateix
-        # email pot haver acabat mentre es feia el hash.
-        if users.find_by_identifier(identifier.value) is not None:
-            raise ApiError(ALREADY_REGISTERED)
-        # Dues escriptures que han d'anar juntes: amb Firestore (#106), a la
-        # mateixa transacció, perquè no quedi mai un usuari sense compte.
-        user = users.add(
-            name=NEW_USER_NAME,
-            identifier=identifier.value,
-            identifier_type=identifier.type,
-            password_hash=password_hash,
-            status=STATUS_PENDING,
-        )
-        accounts.create_for_user(user.id)
-    issue_code(user, codes, outbox, now)
-    return user
+    def write() -> User:
+        with _REGISTRATION_LOCK:
+            # Es torna a comprovar a dins: un altre registre amb el mateix email pot
+            # haver acabat mentre es feia el hash.
+            if users.find_by_identifier(identifier.value) is not None:
+                raise ApiError(ALREADY_REGISTERED)
+            # Escriptures que han d'anar juntes (a Firestore, a la mateixa
+            # transacció): no ha de quedar mai un usuari sense compte o sense codi.
+            user = users.add(
+                name=NEW_USER_NAME,
+                identifier=identifier.value,
+                identifier_type=identifier.type,
+                password_hash=password_hash,
+                status=STATUS_PENDING,
+            )
+            accounts.create_for_user(user.id)
+            issue_code(user, codes, outbox, now)
+            return user
+
+    return atomic.run(write)
