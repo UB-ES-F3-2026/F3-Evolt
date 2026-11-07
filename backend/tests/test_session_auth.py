@@ -29,7 +29,7 @@ UNAUTHENTICATED_BODY = {"code": "UNAUTHENTICATED", "message": "Cal iniciar sessi
 
 @pytest.fixture
 def strict_client(monkeypatch) -> Iterator[TestClient]:
-    """App amb ALLOW_X_USER_ID=0, com quedarà després de la T03.5."""
+    """App amb ALLOW_X_USER_ID=0, com al desplegament des de la T03.5."""
     monkeypatch.setenv("ALLOW_X_USER_ID", "0")
     with TestClient(create_app()) as client:
         yield client
@@ -190,3 +190,18 @@ def test_unknown_token_raises_unauthenticated() -> None:
     with pytest.raises(ApiError) as error:
         user_id_for_token("inventat", SessionRepository(build_seed()))
     assert error.value.code == UNAUTHENTICATED
+
+
+def test_x_user_id_is_rejected_when_the_variable_is_missing(monkeypatch) -> None:
+    # T03.5 (§8.2): sense la variable, X-User-Id ja no serveix. Si un desplegament
+    # se l'oblida, cap petició sense token no entra com l'usuari 1.
+    monkeypatch.delenv("ALLOW_X_USER_ID", raising=False)
+
+    with TestClient(create_app()) as client:
+        for method, path in PROTECTED:
+            for headers in ({}, {"X-User-Id": "1"}):
+                response = _call(client, method, path, headers)
+                assert response.status_code == 401, (method, path, headers)
+                assert response.json() == UNAUTHENTICATED_BODY
+        token = _token(client)
+        assert client.get("/api/home", headers={"Authorization": f"Bearer {token}"}).status_code == 200

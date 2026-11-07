@@ -77,6 +77,17 @@ def pytest_collection_modifyitems(config, items) -> None:
 
 
 @pytest.fixture(autouse=True)
+def _allow_x_user_id(monkeypatch) -> None:
+    """Els tests de l'Sprint 0 encara fan servir `X-User-Id` (§8.2, T03.5).
+
+    Des de la T03.5 la variable és desactivada per defecte, així que els tests
+    l'activen. Els que proven el comportament sense la capçalera la tornen a
+    desactivar o la treuen (`monkeypatch.setenv` / `delenv` dins del test).
+    """
+    monkeypatch.setenv("ALLOW_X_USER_ID", "true")
+
+
+@pytest.fixture(autouse=True)
 def _storage(monkeypatch) -> None:
     if _firestore_run():
         monkeypatch.setenv("STORAGE", "firestore")

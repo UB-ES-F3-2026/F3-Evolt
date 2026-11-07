@@ -735,7 +735,7 @@ Es llegeixen amb la resta de la configuració del backend (`ENABLE_DEV_ROUTES`, 
 
 | Variable | Per defecte | Què fa | Apartat |
 |---|---|---|---|
-| `ALLOW_X_USER_ID` | `1` fins a la T03.5; `0` després | Accepta la capçalera `X-User-Id` quan no hi ha token. | [8.2](#transició-des-dx-user-id) |
+| `ALLOW_X_USER_ID` | `0` (des de la T03.5; abans, `1`) | Accepta la capçalera `X-User-Id` quan no hi ha token. Només per als tests i les eines locals. | [8.2](#transició-des-dx-user-id) |
 | `FRONTEND_URL` | `http://localhost:5173` | Base de l'enllaç de recuperació. A Render, `https://f3-evolt.onrender.com`. | [8.10](#810-post-apiauthforgot-password) |
 | `ENABLE_DEV_OUTBOX` | El mateix valor que `ENABLE_DEV_ROUTES` | Activa `GET /api/dev/outbox` encara que les altres rutes `/api/dev` estiguin desactivades. | [8.12](#812-get-apidevoutbox) |
 | `DEV_OUTBOX_KEY` | Sense definir | Si està definida, `GET /api/dev/outbox` demana la capçalera `X-Dev-Key` amb aquest valor. A Render va com a secret. | [8.12](#812-get-apidevoutbox) |
@@ -760,7 +760,7 @@ Authorization: Bearer 9fJx2sQ0b7Wm4LrT1vYc8NnK3pZa6HdE5gUiOeRkXwA
 
 #### Transició des d'`X-User-Id`
 
-Perquè la resta de blocs (guardioles, filtres, detall) no quedin bloquejats mentre es fa el login, `X-User-Id` es manté darrere de la variable d'entorn **`ALLOW_X_USER_ID`** (`1` activada, `0` desactivada). **[PROPOSTA — pendent de validar]**
+Perquè la resta de blocs (guardioles, filtres, detall) no quedessin bloquejats mentre es feia el login, `X-User-Id` es va mantenir darrere de la variable d'entorn **`ALLOW_X_USER_ID`** (`1` activada, `0` desactivada). Des de la T03.5 és **desactivada per defecte**: només s'activa a propòsit, per als tests i les eines locals.
 
 El backend resol l'usuari de cada ruta protegida en aquest ordre:
 
@@ -771,7 +771,7 @@ El backend resol l'usuari de cada ruta protegida en aquest ordre:
 | Moment | Valor per defecte d'`ALLOW_X_USER_ID` |
 |---|---|
 | Des de la T03.1 fins a la T03.5 | `1`: el frontend actual continua funcionant sense login. |
-| Des de la T03.5 | `0`: el frontend ja no envia `X-User-Id`. Els tests de pytest que la fan servir activen la variable. |
+| Des de la T03.5 (actual) | `0`: el frontend ja no envia `X-User-Id`. Els tests de pytest l'activen a `tests/conftest.py`, i els que proven el comportament sense la capçalera la desactiven. |
 
 El CORS ha d'acceptar la capçalera `Authorization` (T03.1).
 

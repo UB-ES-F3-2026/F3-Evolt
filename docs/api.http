@@ -3,6 +3,11 @@
 // (extensió "REST Client") i amb l'HTTP Client d'IntelliJ / JetBrains.
 //
 // Cal tenir el backend en marxa: des de backend/,  uvicorn app.main:app --reload
+//
+// Moltes peticions fan servir la capçalera X-User-Id de l'Sprint 0. Des de la
+// T03.5 només funciona si el backend s'engega amb ALLOW_X_USER_ID=true
+// (PowerShell: $env:ALLOW_X_USER_ID="true"; bash: ALLOW_X_USER_ID=true uvicorn ...).
+// Sense, aquestes peticions donen 401: feu servir el token del login (§8.2).
 
 @baseUrl = http://localhost:8000
 
