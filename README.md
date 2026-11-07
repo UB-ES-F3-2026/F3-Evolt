@@ -18,6 +18,16 @@ We use AI as a **co-pilot** (AI-SDLC). Humans own architecture, product and fina
 4. Human reviews structure and trade-offs — not only “does it work”.
 5. Commit + PR with our conventions.
 
+### Board
+
+- **Product backlog (user stories):** [Trello](https://trello.com/b/LxXzo6NC/kanban).
+- **Sprint tasks (issues):** [GitHub Project](https://github.com/users/IzanFarreny47/projects/2) —
+  `Backlog` · `To do` · `In progress` · `Review` · `Done`. **Review holds at most
+  3 cards**: before opening a new PR, review someone else's.
+- New issues: **New issue → Tasca**. The template carries estimated hours and,
+  under «En tancar-la», real hours and «Com s'ha usat la IA» (Definition of
+  Done) — fill them in before closing the issue.
+
 ### Architecture in one screen
 
 | Concept | What it means for us |
@@ -55,6 +65,7 @@ Skills live in the repo and load only when the task matches:
 | `gitflow` | branches, develop/main, hotfix, PR base |
 | `pr-conventions` | pull request format and checklist |
 | `commit-conventions` | Conventional Commits + US reference |
+| `ci-cd` | GitHub Actions, lint, branch protection, deploy |
 
 Locations (same content, for different tools):
 
@@ -100,8 +111,10 @@ cd frontend
 cp .env.example .env      # optional: VITE_* vars are read from frontend/.env
 npm install
 npm run dev               # dev server on http://localhost:5173
+npm run lint              # ESLint (flat config)
 npm run type-check        # TypeScript check (vue-tsc)
 npm run build             # type-check + production build
+npm run check             # lint + type-check + tests + build (what CI runs)
 npm run preview           # serve the production build
 ```
 
@@ -109,11 +122,38 @@ Copying `.env.example` is optional for a first run: the in-memory mocks are
 **on by default**. Set `VITE_USE_MOCKS=false` in `frontend/.env` to call the
 real API (and `VITE_API_URL` to point at it).
 
+### Deploy (TR06.2)
+
+The frontend runs on [Render](https://render.com) as a free **Static Site**
+(it never sleeps) and talks to the deployed backend:
+
+- **Public URL:** https://f3-evolt.onrender.com
+- **Branch:** `main` (the demo line); redeploy manually from the Render
+  dashboard until automatic deploys exist (TR06.3)
+
+| Render setting | Value |
+|----------------|-------|
+| Root directory | `frontend` |
+| Node version | pinned in `frontend/.node-version` |
+| Build command | `npm ci && npm run build` (exact versions from the lock file) |
+| Publish directory | `dist` |
+| Rewrite rule | `/*` → `/index.html` (action **Rewrite**), so reloading `/movements` does not 404 |
+
+| Variable on Render | Value |
+|--------------------|-------|
+| `VITE_API_URL` | `https://evolt-api.onrender.com` (no trailing slash) |
+| `VITE_USE_MOCKS` | `false` — without it the site shows the mocks, not the backend |
+
+`VITE_*` values are baked into the build: after changing one on Render,
+**redeploy** for it to take effect. The backend must list this URL in its
+`FRONTEND_ORIGINS`, or the browser blocks every request (CORS).
+
 ---
 
 ## Backend
 
 Python + FastAPI, in [`backend/`](backend/). Data lives in memory (seed). Run every command from `backend/`.
+Backend-specific setup, Ruff and troubleshooting: [`backend/README.md`](backend/README.md).
 
 ```bash
 cd backend
@@ -161,6 +201,165 @@ server. Run it before any stateful sequence — e.g. the daily-limit chain in th
 collection — so the results are reproducible. The collection can be combined
 with the T08.2 simulation env vars (set them when starting uvicorn).
 
+When `ENABLE_DEV_ROUTES=false` (see [Deploy](#deploy-tr061)) this endpoint does
+not exist.
+
+### Environment variables
+
+Every backend setting comes from the environment. With nothing set, the backend
+runs exactly as in local development.
+
+| Variable | Default | Effect | Secret |
+|----------|---------|--------|--------|
+| `FRONTEND_ORIGINS` | `http://localhost:5173` | Comma-separated origins allowed by CORS (no trailing slash needed) | No |
+| `FRONTEND_URL` | `http://localhost:5173` | Base of the password-reset link sent to the outbox: `<FRONTEND_URL>/nova-contrasenya?token=…` ([`docs/api.md` §8.10](docs/api.md#810-post-apiauthforgot-password)). Trailing slash is removed; a value without `http(s)://` falls back to the default | No |
+| `ENABLE_DEV_ROUTES` | `true` | `false` removes `/api/dev/*`; a misspelled value also disables them | No |
+| `ALLOW_X_USER_ID` | `false` | Protected routes without a session token may still use the `X-User-Id` header ([`docs/api.md` §8.2](docs/api.md#82-sessió)). Default `false` since T03.5: the frontend only sends the session token. Set it to `true` only for local tools (e.g. trying routes at `/docs` without logging in); the tests turn it on in `tests/conftest.py`. A misspelled value disables it | No |
+| `ENABLE_DEV_OUTBOX` | same as `ENABLE_DEV_ROUTES` | Exposes `GET /api/dev/outbox`, the simulated mailbox with verification codes and password-reset links ([`docs/api.md` §8.12](docs/api.md#812-get-apidevoutbox)). With `ENABLE_DEV_ROUTES=false` it only opens if `DEV_OUTBOX_KEY` is set too | No |
+| `DEV_OUTBOX_KEY` | unset | If set, `GET /api/dev/outbox` needs the header `X-Dev-Key` with this value | **Yes** |
+| `STORAGE` | `memory` | Where data lives: `memory` (lost on restart, as in Sprint 0) or `firestore` (see [Firestore](#firestore-tr011)). A misspelled value stays in memory with a warning | No |
+| `FIRESTORE_PROJECT_ID` | `evolt-dev-67e22` | Firebase project used with `STORAGE=firestore` | No |
+| `FIRESTORE_EMULATOR_HOST` | unset | e.g. `127.0.0.1:8080`: talk to the local Firestore emulator instead of the real project (no credentials needed) | No |
+| `GOOGLE_APPLICATION_CREDENTIALS` | unset | Path to the service-account JSON key, only for the real project. The file never goes in the repo | **Yes** |
+| `SIMULATE_DELAY_MS` | off | See [Simulating delay and failure](#simulating-delay-and-failure-t082) | No |
+| `SIMULATE_ERROR_RATE` | off | See [Simulating delay and failure](#simulating-delay-and-failure-t082) | No |
+
+**Adding a variable or a secret?** Add a row here in the same PR and tell the
+person in charge of the deploy, so it is set on Render too. Secrets go only in
+the Render dashboard, never in the repo. **Adding a request header** in the
+frontend (e.g. `Authorization`)? Add it to `allow_headers` in
+`backend/app/main.py`, or the browser will block the request.
+
+### Firestore (TR01.1)
+
+By default the backend keeps data in memory. With `STORAGE=firestore` it uses
+Cloud Firestore through the same repositories (`app/repositories/firestore/`),
+so services and routers do not change ([`docs/api.md` §8.13](docs/api.md#813-model-intern-de-laccés)).
+
+**Local, with the emulator** (no Firebase account needed): install Java 21+ and
+the Firebase CLI (`npm install -g firebase-tools`), then from the repo root:
+
+```bash
+firebase emulators:start --only firestore        # terminal 1 (UI: http://localhost:4000)
+cd backend                                       # terminal 2
+STORAGE=firestore FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 uvicorn app.main:app --reload
+```
+
+PowerShell: `$env:STORAGE="firestore"; $env:FIRESTORE_EMULATOR_HOST="127.0.0.1:8080"; uvicorn app.main:app --reload`
+
+- On start, the seed is written only if the database is empty: data now survives restarts.
+- `POST /api/dev/reset` deletes **every** collection and writes the seed again. Never point it at real data.
+- Operations that write several things run all-or-nothing (`app/repositories/atomic.py`):
+  sign-up, verification, top-up, new pot, contribution, movement report, forgot/reset password.
+  In memory that is a lock; with Firestore, a transaction.
+- Tokens (sessions and reset links) are stored only as SHA-256 hashes. The simulated
+  mailbox is the exception: when it is open (`ENABLE_DEV_OUTBOX`, e.g. for the demo),
+  verification codes and reset links are stored in the `outbox` collection in clear.
+  When it is closed, nothing is written there.
+- With real Firestore (no `FIRESTORE_EMULATOR_HOST`), `/api/dev/reset` never exists,
+  even if `ENABLE_DEV_ROUTES` is missing or `true`: it would delete every collection.
+- `firestore.rules` denies all reads and writes from outside: only the backend talks to
+  Firestore, with the service account, which is not subject to the rules. Deploy them
+  before using the real project: `firebase deploy --only firestore:rules`.
+
+**Tests:** `tests/test_firestore.py` runs only when `FIRESTORE_EMULATOR_HOST` is set
+(each test uses its own emulator project); otherwise it is skipped, so CI and the
+normal `pytest` run stay in memory. To run **the whole API suite** against the
+emulator, add `TEST_STORAGE=firestore`; tests that read the in-memory data directly
+are skipped then.
+
+```bash
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 TEST_STORAGE=firestore python -m pytest
+```
+
+PowerShell (Windows), in the same terminal:
+
+```powershell
+$env:FIRESTORE_EMULATOR_HOST="127.0.0.1:8080"
+$env:TEST_STORAGE="firestore"
+python -m pytest
+```
+
+Install the new dependency first (`pip install -r requirements.txt`) and keep the
+emulator running in another terminal.
+
+**Real project:** the queries only filter by one field, so no composite index is
+needed (`firestore.indexes.json` is empty on purpose). The service-account key goes
+in `GOOGLE_APPLICATION_CREDENTIALS`, outside the repo.
+
+### Deploy (TR06.1)
+
+The backend runs on [Render](https://render.com) (free plan) as a Web Service:
+
+- **Public URL:** https://evolt-api.onrender.com (e.g. [`/api/health`](https://evolt-api.onrender.com/api/health))
+- **Branch:** `main` (the demo line); redeploy manually from the Render
+  dashboard until automatic deploys exist (TR06.3)
+
+| Render setting | Value |
+|----------------|-------|
+| Root directory | `backend` |
+| Runtime | Python (version pinned in `backend/.python-version`) |
+| Build command | `pip install -r requirements.txt` |
+| Start command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
+| Health check path | `/api/health` |
+
+| Variable on Render | Value |
+|--------------------|-------|
+| `ENABLE_DEV_ROUTES` | `false` — nobody can reset the demo data |
+| `FRONTEND_ORIGINS` | `https://f3-evolt.onrender.com` (the deployed frontend, TR06.2) |
+| `FRONTEND_URL` | `https://f3-evolt.onrender.com`, so the password-reset link opens the deployed frontend |
+| `ALLOW_X_USER_ID` | `false` (also the default since T03.5: leaving it out is safe) |
+| `ENABLE_DEV_OUTBOX` | `true` only for the demo, so the presenter can read the verification code |
+| `DEV_OUTBOX_KEY` | Secret, shared only inside the team (Render dashboard, never in the repo). Required if `ENABLE_DEV_OUTBOX=true` |
+| `STORAGE` | `firestore` once the team switches the demo to Firestore; until then, unset (memory) |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Path of a Render *Secret File* with the service-account key (only with `STORAGE=firestore`) |
+
+Quick check: `curl https://evolt-api.onrender.com/api/health` → `{"status":"ok"}`.
+The root URL `/` has no route, so it answers `500 INTERNAL_ERROR` like any unknown path.
+
+Things to know about the free plan:
+
+- After ~15 minutes without requests the service sleeps; the next request
+  wakes it up and takes 30–60 s. Open the URL a couple of minutes before a demo.
+- Data still lives in memory: every restart or sleep resets it to the seed.
+
+---
+
+## CI/CD
+
+![CI](https://github.com/UB-ES-F3-2026/F3-Evolt/actions/workflows/ci.yml/badge.svg)
+
+GitHub Actions pipeline in [`.github/workflows/ci.yml`](.github/workflows/ci.yml): every PR (and push) to `develop` or `main` runs two parallel jobs and a gate:
+
+| Job | Runs | Version |
+|-----|------|---------|
+| `backend` | Ruff + compile check + pytest | Python 3.12 |
+| `frontend` | ESLint + type-check + Vitest + build | Node 22 |
+| `ci` | gate: both jobs must succeed | — |
+
+**`ci` is the required status check: a PR can only merge when it is green.**
+
+### Triggers
+
+`ci.yml` listens to four events. Several triggers are **OR**; the filters inside
+one trigger are **AND**.
+
+| Trigger | When it runs | Notes |
+|---------|--------------|-------|
+| `pull_request` → `develop`, `main` | PR opened, updated (new push) or reopened | Default types: `opened`, `synchronize`, `reopened`. Runs on the synthetic merge commit. Merging does not re-run it (`closed` is not included). |
+| `push` → `develop`, `main` | A commit lands on the branch (e.g. a merge) | It does not allow direct pushes; branch protection blocks those. Feature-branch pushes are covered by the PR's `synchronize` event. |
+| `workflow_dispatch` | Manual run from *Actions* → *Run workflow*, or `gh workflow run ci.yml --ref develop` | Dormant until the workflow exists on the default branch (`main`). `pull_request`/`push` already work from `develop`. |
+| `workflow_call` | Another workflow calls this one | `deploy.yml` calls it so deploy reuses this CI instead of duplicating it. |
+
+No `paths:` filters on purpose: a required check that is skipped (e.g. a
+docs-only PR) stays pending and blocks the PR forever.
+
+How to read green/red: `gh pr checks` in a PR, or the repo's *Actions* tab →
+click the failing job → read the red step's logs. Locally, run the same
+commands (frontend: `npm run check`; backend: Ruff + compile check + pytest).
+
+Full guide: [`docs/ci-cd.md`](docs/ci-cd.md).
+
 ---
 
 ## Docs map
@@ -172,9 +371,14 @@ The only complete list of documents; the others link here.
 | `README.md` | Project + AI workflow overview (this file) |
 | `AGENTS.md` | Engineering + AI standards (source of truth for code style) |
 | `CLAUDE.md` | Entry point for Claude Code; points to `AGENTS.md` |
-| `.claude/skills/` · `.opencode/skills/` | The 10 lazy AI skills (same content in both) |
+| `.claude/skills/` · `.opencode/skills/` | The 11 lazy AI skills (same content in both) |
 | `docs/api.md` | API contract shared by backend and frontend |
 | `docs/api.http` | Example request collection for manual API testing (T09.6) |
+| `docs/ci-cd.md` | CI/CD pipeline: jobs, how to read runs, how to edit |
+| `backend/README.md` | Backend setup, Ruff config/commands and troubleshooting |
+| `docs/branch-protection.md` | Rules on develop/main, how to apply/roll back |
+| `docs/deploy.md` | Auto-deploy from main: gate, secrets/variables, Render example |
+| `docs/demo-review.md` | Post-deploy demo script and secret audit (#95) |
 | `docs/P1/AGENTS.md` | Course context, Scrum, roles, backlog rules |
 | `docs/P1/MEMORY.md` | Team decisions, US and epic index |
 | `docs/P1/Team Specification.md` | Product catalog + team |

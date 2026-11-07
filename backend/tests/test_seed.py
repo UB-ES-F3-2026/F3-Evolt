@@ -7,8 +7,17 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from app.data.seed import DEMO_USER_ID, EMPTY_USER_ID, MADRID_TZ, build_seed
-from app.models import ICONS, KIND_OTHER, KIND_TOPUP, Movement
+from app.data.seed import (
+    DEMO_IDENTIFIER,
+    DEMO_USER_ID,
+    EMPTY_IDENTIFIER,
+    EMPTY_USER_ID,
+    MADRID_TZ,
+    SEED_PASSWORD,
+    build_seed,
+)
+from app.models import ICONS, KIND_OTHER, KIND_TOPUP, Movement, User
+from app.services.password_hashing import verify_password
 
 # Data fixa perquè els tests no depenguin del dia en què s'executen.
 NOW = datetime(2026, 10, 13, 15, 0, 0, tzinfo=MADRID_TZ)
@@ -96,7 +105,7 @@ def test_ids_and_seq_are_unique(seed):
 
 def test_tie_on_date_is_broken_by_seq(seed):
     ordered = sorted(seed.movements, key=Movement.sort_key, reverse=True)
-    ties = [(a, b) for a, b in zip(ordered, ordered[1:]) if a.date == b.date]
+    ties = [(a, b) for a, b in zip(ordered, ordered[1:], strict=False) if a.date == b.date]
     assert ties, "el seed inclou un empat de dates a propòsit (P4)"
     for a, b in ties:
         assert a.seq > b.seq
@@ -132,6 +141,9 @@ def _movement(**overrides):
         icon="other",
         kind=KIND_OTHER,
         seq=99,
+        counterparty=None,
+        status="completed",
+        reference="EVT-000099",
     )
     data.update(overrides)
     return Movement(**data)
@@ -161,3 +173,67 @@ def test_movement_rejects_invalid_data(overrides):
 def test_signed_amount():
     assert _movement(type="income").signed_amount == 100
     assert _movement(type="expense").signed_amount == -100
+
+
+# --- Credencials del seed (T01.2, docs/api.md §8.13) -----------------------------------
+
+
+def test_seed_users_have_their_fictitious_credentials(seed):
+    assert seed.users[DEMO_USER_ID].identifier == DEMO_IDENTIFIER == "demo@evolt.test"
+    assert seed.users[EMPTY_USER_ID].identifier == EMPTY_IDENTIFIER == "buit@evolt.test"
+    for user in seed.users.values():
+        assert user.identifier_type == "email"
+        assert user.status == "active"
+
+
+def test_seed_password_hash_matches_the_seed_password(seed):
+    # El hash és una constant precalculada: si algú canvia SEED_PASSWORD i no el
+    # hash (o al revés), aquest test ho detecta.
+    assert SEED_PASSWORD == "Evolt2026"
+    for user in seed.users.values():
+        assert user.password_hash != SEED_PASSWORD
+        assert verify_password(SEED_PASSWORD, user.password_hash)
+
+
+def test_new_users_start_after_the_seed_users(seed):
+    assert seed.next_user_id == max(seed.users) + 1 == 3
+
+
+# --- Model User -------------------------------------------------------------------------
+
+
+def _user(**overrides):
+    data = dict(
+        id=9,
+        name="",
+        identifier="ana@x.com",
+        identifier_type="email",
+        password_hash="$2b$12$hash",
+        status="pending",
+    )
+    data.update(overrides)
+    return User(**data)
+
+
+def test_user_is_pending_by_default():
+    user = User(id=9, name="", identifier="ana@x.com", identifier_type="email", password_hash="h")
+    assert user.status == "pending"
+    assert user.xp == 0
+    assert (user.failed_logins, user.locked_until) == (0, None)
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"identifier": ""},
+        {"identifier_type": "fax"},
+        {"password_hash": ""},
+        {"status": "blocked"},
+        {"xp": -1},
+        {"failed_logins": -1},
+        {"locked_until": datetime(2026, 11, 3, 10, 15)},  # sense zona horària
+    ],
+)
+def test_user_rejects_invalid_data(overrides):
+    with pytest.raises(ValueError):
+        _user(**overrides)

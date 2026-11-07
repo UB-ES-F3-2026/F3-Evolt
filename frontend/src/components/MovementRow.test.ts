@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { mount } from '@vue/test-utils'
+import { mount, RouterLinkStub } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import type { Movement } from '@/models/movement'
 import MovementRow from './MovementRow.vue'
@@ -41,6 +41,18 @@ describe('MovementRow', () => {
     expect(row.find('.amount').text()).toBe('••••')
     expect(row.text()).not.toContain('1.800')
     expect(row.find('.amount').classes()).toContain('expense')
+  })
+
+  it('is a link only when it has somewhere to go', () => {
+    const to = { name: 'movement', params: { movementId: 'mov-1' } }
+    const stubs = { RouterLink: RouterLinkStub }
+
+    const linked = mount(MovementRow, { props: { movement: movement(), to }, global: { stubs } })
+    expect(linked.getComponent(RouterLinkStub).props('to')).toEqual(to)
+    expect(linked.text()).toContain("Nòmina d'octubre")
+
+    const plain = mount(MovementRow, { props: { movement: movement() }, global: { stubs } })
+    expect(plain.findComponent(RouterLinkStub).exists()).toBe(false)
   })
 
   it('still renders with an icon outside the closed list', () => {

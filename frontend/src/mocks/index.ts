@@ -1,17 +1,21 @@
 /**
  * In-memory mock data, shaped exactly like the API responses in docs/api.md.
- * The data copies the backend seed (see ./seed.ts) and `VITE_DEMO_USER=2`
- * gives the empty user, like the `X-User-Id` header does with the backend.
+ * The data copies the backend seed (see ./seed.ts), and each account logged in
+ * to the mocks sees its own (see ./mockUser.ts), as with the backend.
  * On by default so the UI works before the backend exists; only an explicit
  * VITE_USE_MOCKS=false turns them off (so no .env copy is needed to run dev).
  */
 
 import type { ApiError } from '@/models/apiError'
 import type { HomeJson } from '@/models/home'
-import type { MovementJson, MovementsPageJson } from '@/models/movement'
+import type { MovementJson, MovementsPageJson, MovementsQuery } from '@/models/movement'
+import { isValidReportDescription, type MovementReport } from '@/models/movementReport'
 import type { TopupJson } from '@/models/topup'
 import { madridDayKey, madridDaysAgoAt, toContractDate } from './madridTime'
-import { DEMO_MOVEMENTS, DEMO_TOTAL_SAVED, EMPTY_USER_ID } from './seed'
+import { mockCurrentUser, onMockUserChange } from './mockUser'
+import { filterMovements } from './movementFilters'
+import { mockTotalSaved } from './pots'
+import { DEMO_MOVEMENTS, hasDemoData } from './seed'
 
 // Limits from docs/api.md §4.3, in cents.
 const MAX_TOPUP = 50000
@@ -26,13 +30,12 @@ interface StoredMovement {
   seq: number
 }
 
-// One user per `npm run dev` run, so a single in-memory state is enough.
-const isEmptyUser = (import.meta.env.VITE_DEMO_USER ?? '1') === EMPTY_USER_ID
-
-const movements: StoredMovement[] = isEmptyUser ? [] : buildDemoMovements(new Date())
-let balance = movements.reduce((sum, { json }) => sum + signedAmount(json), 0)
-const totalSaved = isEmptyUser ? 0 : DEMO_TOTAL_SAVED
-let nextNumber = DEMO_MOVEMENTS.length + 1
+let movements: StoredMovement[] = []
+let balance = 0
+let nextNumber = 0
+let nextReportNumber = 1
+startAccount()
+onMockUserChange(startAccount)
 
 export function useMocks(): boolean {
   const value = import.meta.env.VITE_USE_MOCKS
@@ -45,17 +48,39 @@ export function useMocks(): boolean {
 export function mockHome(): HomeJson {
   return {
     balance,
-    totalSaved,
+    totalSaved: mockTotalSaved(),
     lastMovements: sortedMovements().slice(0, LAST_MOVEMENTS),
   }
 }
 
-/** GET /api/movements?offset=&limit= */
-export function mockMovements(offset = 0, limit = 20): MovementsPageJson {
-  const all = sortedMovements()
+/** GET /api/movements?offset=&limit= plus the filters of docs/api.md §10.2, applied before paging. */
+export function mockMovements(offset = 0, limit = 20, query: MovementsQuery = {}): MovementsPageJson {
+  const all = filterMovements(sortedMovements(), query)
   const items = all.slice(offset, offset + limit)
   const nextOffset = offset + items.length < all.length ? offset + items.length : null
   return { items, nextOffset }
+}
+
+/** GET /api/movements/{movementId} (docs/api.md §10.3). */
+export function mockMovement(movementId: string): MovementJson {
+  const found = movements.find(({ json }) => json.id === movementId)
+  if (found === undefined) throw mockError('MOVEMENT_NOT_FOUND', "No s'ha trobat el moviment.")
+  return { ...found.json }
+}
+
+/** POST /api/movements/{movementId}/reports — the movement is checked before the description (§10.4). */
+export function mockReportMovement(movementId: string, description: string): MovementReport {
+  mockMovement(movementId)
+  if (!isValidReportDescription(description)) {
+    throw mockError('INVALID_DESCRIPTION', 'Explica què passa amb el moviment (com a màxim 500 caràcters).')
+  }
+  return {
+    // Same opaque id format as the contract: `rep-01`, `rep-02`…
+    id: `rep-${String(nextReportNumber++).padStart(2, '0')}`,
+    movementId,
+    description: description.trim(),
+    createdAt: toContractDate(new Date()),
+  }
 }
 
 /** POST /api/topups — same validations, order and errors as docs/api.md §4.3. */
@@ -81,15 +106,41 @@ export function mockTopup(amountCents: number): TopupJson {
     )
   }
 
-  const stored = toStored(nextNumber++, now, 'Recàrrega', 'income', 'topup', amountCents)
-  balance += amountCents
+  return recordAccountMovement('Recàrrega', 'income', 'topup', amountCents, now)
+}
+
+/** Balance of the main account: what a contribution to a pot can spend (docs/api.md §9.4). */
+export function mockBalance(): number {
+  return balance
+}
+
+/**
+ * Adds a movement to the main account and moves its balance with it, so the balance stays
+ * the sum of the movements. The top-up and the pots mock (contributions) both go through here.
+ */
+export function recordAccountMovement(
+  concept: string,
+  type: MovementJson['type'],
+  icon: MovementJson['icon'],
+  amount: number,
+  at: Date = new Date(),
+): TopupJson {
+  const stored = toStored(nextNumber++, at, concept, type, icon, amount)
+  balance += signedAmount(stored.json)
   movements.push(stored)
   return { balance, movement: { ...stored.json } }
 }
 
+/** The main account of whoever is logged in: the seed for the demo user, empty for anyone else. */
+function startAccount(): void {
+  movements = hasDemoData(mockCurrentUser()) ? buildDemoMovements(new Date()) : []
+  balance = movements.reduce((sum, { json }) => sum + signedAmount(json), 0)
+  nextNumber = DEMO_MOVEMENTS.length + 1
+}
+
 function buildDemoMovements(now: Date): StoredMovement[] {
-  return DEMO_MOVEMENTS.map(([daysAgo, hhmm, concept, type, icon, amount], index) =>
-    toStored(index + 1, madridDaysAgoAt(now, daysAgo, hhmm), concept, type, icon, amount),
+  return DEMO_MOVEMENTS.map(([daysAgo, hhmm, concept, type, icon, amount, counterparty], index) =>
+    toStored(index + 1, madridDaysAgoAt(now, daysAgo, hhmm), concept, type, icon, amount, counterparty),
   )
 }
 
@@ -100,11 +151,23 @@ function toStored(
   type: MovementJson['type'],
   icon: MovementJson['icon'],
   amount: number,
+  counterparty: string | null = null,
 ): StoredMovement {
   const date = toContractDate(at)
   return {
-    // Same opaque id format as `movement_id()` in seed.py.
-    json: { id: `mov-${String(number).padStart(2, '0')}`, amount, concept, date, type, icon },
+    json: {
+      // Same opaque id and reference formats as `movement_id()` and `movement_reference()` in seed.py.
+      id: `mov-${String(number).padStart(2, '0')}`,
+      amount,
+      concept,
+      date,
+      type,
+      icon,
+      counterparty,
+      // Only the newest movement of the seed is pending (docs/api.md §10.7).
+      status: number === DEMO_MOVEMENTS.length ? 'pending' : 'completed',
+      reference: `EVT-${String(number).padStart(6, '0')}`,
+    },
     at: Date.parse(date),
     seq: number,
   }
@@ -128,6 +191,6 @@ function signedAmount(movement: MovementJson): number {
   return movement.type === 'income' ? movement.amount : -movement.amount
 }
 
-function mockError(code: ApiError['code'], message: string, details?: ApiError['details']): ApiError {
+export function mockError(code: ApiError['code'], message: string, details?: ApiError['details']): ApiError {
   return details === undefined ? { code, message } : { code, message, details }
 }

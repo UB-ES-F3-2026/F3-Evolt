@@ -6,13 +6,14 @@ Els valors esperats surten de les dades en memòria de l'app del test, no de
 números escrits a mà: així els tests no s'han de tocar si canvia el seed.
 """
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.data.seed import DEMO_USER_ID, EMPTY_USER_ID, SeedData
 from app.models import Movement
 
 HOME_KEYS = {"balance", "totalSaved", "lastMovements"}
-MOVEMENT_KEYS = {"id", "amount", "concept", "date", "type", "icon"}
+MOVEMENT_KEYS = {"id", "amount", "concept", "date", "type", "icon", "counterparty", "status", "reference"}
 
 
 def _seed(client: TestClient) -> SeedData:
@@ -35,12 +36,16 @@ def _as_contract(movement: Movement) -> dict[str, object]:
         "date": movement.date.isoformat(),
         "type": movement.type,
         "icon": movement.icon,
+        "counterparty": movement.counterparty,
+        "status": movement.status,
+        "reference": movement.reference,
     }
 
 
 # --- Usuari 1 -------------------------------------------------------------------
 
 
+@pytest.mark.memory_only
 def test_demo_user_balance_matches_seed(client: TestClient) -> None:
     response = client.get("/api/home")
 
@@ -48,6 +53,7 @@ def test_demo_user_balance_matches_seed(client: TestClient) -> None:
     assert response.json()["balance"] == _seed(client).accounts[DEMO_USER_ID].balance
 
 
+@pytest.mark.memory_only
 def test_demo_user_total_saved_is_the_sum_of_all_pots(client: TestClient) -> None:
     seed = _seed(client)
     expected = sum(pot.balance for pot in seed.pots if pot.user_id == DEMO_USER_ID)
@@ -58,6 +64,7 @@ def test_demo_user_total_saved_is_the_sum_of_all_pots(client: TestClient) -> Non
     assert response.json()["totalSaved"] == expected
 
 
+@pytest.mark.memory_only
 def test_demo_user_gets_the_five_most_recent_movements_newest_first(
     client: TestClient,
 ) -> None:
@@ -69,6 +76,7 @@ def test_demo_user_gets_the_five_most_recent_movements_newest_first(
     assert last_movements == expected
 
 
+@pytest.mark.memory_only
 def test_last_movements_can_be_fewer_than_five(client: TestClient) -> None:
     # Deixa l'usuari 1 amb només els seus 3 moviments més recents.
     seed = _seed(client)
@@ -83,6 +91,7 @@ def test_last_movements_can_be_fewer_than_five(client: TestClient) -> None:
 # --- Usuari 2 -------------------------------------------------------------------
 
 
+@pytest.mark.memory_only
 def test_empty_user_has_no_savings_and_no_movements(client: TestClient) -> None:
     response = client.get("/api/home", headers={"X-User-Id": str(EMPTY_USER_ID)})
 

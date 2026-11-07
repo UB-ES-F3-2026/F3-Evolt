@@ -8,6 +8,24 @@ describe('toUserMessage', () => {
     expect(toUserMessage({ code: 'VALIDATION_ERROR', message: 'x' })).toMatch(/no són vàlides/)
     expect(toUserMessage({ code: 'NETWORK_ERROR', message: 'x' })).toMatch(/connexió/)
     expect(toUserMessage({ code: 'INTERNAL_ERROR', message: 'x' })).toMatch(/error inesperat/)
+    expect(toUserMessage({ code: 'INVALID_POT_NAME', message: 'x' })).toBe('El nom de la guardiola no pot estar buit.')
+    expect(toUserMessage({ code: 'INVALID_TARGET', message: 'x' })).toBe("L'objectiu ha de ser més gran que 0.")
+  })
+
+  it.each([
+    ['WEAK_PASSWORD', 'La contrasenya ha de tenir 8 caràcters, una majúscula i un número.'],
+    ['ALREADY_REGISTERED', 'Aquest email o telèfon ja té un compte.'],
+    ['INVALID_CODE', 'El codi no és correcte o ha caducat.'],
+    ['CODE_EXPIRED', 'El codi no és correcte o ha caducat.'],
+    ['TOO_MANY_ATTEMPTS', 'Has fet massa intents. Demana un codi nou.'],
+    ['INVALID_CREDENTIALS', "L'email, el telèfon o la contrasenya no són correctes."],
+    ['ACCOUNT_LOCKED', 'Compte bloquejat durant 15 minuts.'],
+    ['ACCOUNT_NOT_VERIFIED', "Has de verificar el compte abans d'iniciar sessió."],
+    ['UNAUTHENTICATED', 'Cal iniciar sessió.'],
+    ['SESSION_EXPIRED', "La sessió s'ha tancat per inactivitat."],
+    ['RESET_LINK_EXPIRED', 'Aquest enllaç ha caducat.'],
+  ])('gives the access code %s the text of docs/api.md §8.14', (code, text) => {
+    expect(toUserMessage({ code, message: 'x' })).toBe(text)
   })
 
   it('says how much can still be topped up today, from details', () => {
