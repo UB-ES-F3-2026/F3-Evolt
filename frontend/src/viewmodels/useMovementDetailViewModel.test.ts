@@ -5,6 +5,7 @@ import type { MovementDetail } from '@/models/movement'
 import { saveFile } from '@/services/fileDownload'
 import { getMovement } from '@/services/movementsService'
 import { makeReceiptPdf } from '@/services/receiptPdf'
+import { useBalanceVisibility } from './useBalanceVisibility'
 import { useMovementDetailViewModel } from './useMovementDetailViewModel'
 
 vi.mock('@/services/movementsService', () => ({ getMovement: vi.fn() }))
@@ -102,7 +103,7 @@ describe('useMovementDetailViewModel', () => {
   })
 })
 
-describe('the receipt (DP-04, DP-09)', () => {
+describe('the receipt (DP-04, DP-09, DP-10)', () => {
   const pdf = new Blob(['%PDF-'], { type: 'application/pdf' })
 
   async function loaded(movement: MovementDetail = bizum) {
@@ -138,6 +139,25 @@ describe('the receipt (DP-04, DP-09)', () => {
     expect(vi.mocked(makeReceiptPdf)).toHaveBeenCalledWith(
       expect.objectContaining({ amount: formatSignedCents(1000, 'positive'), isIncome: true }),
     )
+  })
+
+  it('keeps the real amount with the amounts hidden on screen', async () => {
+    // PO decision: a receipt without the amount is no use, so the eye only masks the screen.
+    const { isHidden, toggle } = useBalanceVisibility()
+    toggle()
+    expect(isHidden.value).toBe(true)
+    try {
+      vi.mocked(makeReceiptPdf).mockResolvedValue(pdf)
+      const viewModel = await loaded()
+
+      await viewModel.downloadReceipt()
+
+      expect(vi.mocked(makeReceiptPdf)).toHaveBeenCalledWith(
+        expect.objectContaining({ amount: formatSignedCents(1000, 'negative') }),
+      )
+    } finally {
+      toggle()
+    }
   })
 
   it('does not make two at once', async () => {
