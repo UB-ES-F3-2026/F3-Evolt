@@ -5,7 +5,7 @@ Executar des de backend/:  python -m pytest tests/test_cors.py
 
 from fastapi.testclient import TestClient
 
-from app.main import FRONTEND_ORIGIN
+from app.config import DEFAULT_FRONTEND_ORIGIN as FRONTEND_ORIGIN
 
 
 def test_preflight_from_frontend_origin_is_allowed(client: TestClient) -> None:

@@ -6,8 +6,9 @@ from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, StrictInt
 
 from app.repositories import AccountRepository, MovementRepository
+from app.repositories.atomic import Atomic
 from app.routers.current_user import current_user_id
-from app.routers.dependencies import account_repository, movement_repository
+from app.routers.dependencies import account_repository, atomic, movement_repository
 from app.routers.schemas import MovementResponse
 from app.services.topup_service import TopupResult, top_up
 
@@ -44,6 +45,8 @@ def create_topup(
     user_id: Annotated[int, Depends(current_user_id)],
     accounts: Annotated[AccountRepository, Depends(account_repository)],
     movements: Annotated[MovementRepository, Depends(movement_repository)],
+    run: Annotated[Atomic, Depends(atomic)],
 ) -> TopupResponse:
-    result = top_up(user_id, body.amount, accounts, movements)
+    # Tot o res: el límit diari, el moviment nou i el saldo nou (TR01.1, #128).
+    result = run.run(lambda: top_up(user_id, body.amount, accounts, movements))
     return TopupResponse.from_result(result)

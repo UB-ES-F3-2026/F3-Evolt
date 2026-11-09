@@ -13,7 +13,7 @@ from app.data.seed import DEMO_USER_ID, EMPTY_USER_ID, SeedData
 from app.models import Movement
 
 PAGE_KEYS = {"items", "nextOffset"}
-MOVEMENT_KEYS = {"id", "amount", "concept", "date", "type", "icon"}
+MOVEMENT_KEYS = {"id", "amount", "concept", "date", "type", "icon", "counterparty", "status", "reference"}
 
 
 def _seed(client: TestClient) -> SeedData:
@@ -31,6 +31,7 @@ def _expected_ids(client: TestClient, user_id: int) -> list[str]:
 # --- Criteris de fet de T08.1 ----------------------------------------------------------
 
 
+@pytest.mark.memory_only
 def test_demo_user_pages_all_movements_in_two_pages(client: TestClient) -> None:
     first = client.get("/api/movements")
     assert first.status_code == 200
@@ -82,6 +83,7 @@ def test_first_five_match_home_last_movements(client: TestClient) -> None:
 # --- Paginació -----------------------------------------------------------------------------
 
 
+@pytest.mark.memory_only
 def test_custom_limit_and_offset(client: TestClient) -> None:
     body = client.get("/api/movements", params={"offset": 5, "limit": 5}).json()
 

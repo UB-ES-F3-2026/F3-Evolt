@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { Eye, EyeOff, Plus } from '@lucide/vue'
+import { Eye, EyeOff, PiggyBank, Plus } from '@lucide/vue'
 import AppShell from '@/components/AppShell.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ErrorState from '@/components/ErrorState.vue'
@@ -45,10 +45,16 @@ onMounted(load)
           Total estalviat a guardioles:
           <MoneyAmount class="saved-amount" :cents="totalSaved" :hidden="isHidden" />
         </p>
-        <router-link :to="{ name: 'topup' }" class="add-money">
-          <Plus :size="18" />
-          Afegir diners
-        </router-link>
+        <div class="actions">
+          <router-link :to="{ name: 'topup' }" class="add-money">
+            <Plus :size="18" />
+            Afegir diners
+          </router-link>
+          <router-link :to="{ name: 'pots' }" class="pots-link">
+            <PiggyBank :size="18" />
+            Guardioles
+          </router-link>
+        </div>
       </section>
 
       <section class="card">
@@ -62,6 +68,7 @@ onMounted(load)
             :key="movement.id"
             :movement="movement"
             :hidden="isHidden"
+            :to="{ name: 'movement', params: { movementId: movement.id } }"
           />
         </ul>
         <EmptyState v-else />
@@ -124,16 +131,32 @@ onMounted(load)
   font-weight: 600;
 }
 
-.add-money {
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.add-money,
+.pots-link {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  margin-top: 1rem;
   padding: 0.625rem 1rem;
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius);
+  font-weight: 600;
+}
+
+.add-money {
   background: var(--color-primary);
   color: var(--color-surface);
-  font-weight: 600;
+}
+
+.pots-link {
+  background: var(--color-surface);
+  color: var(--color-primary);
 }
 
 .see-all {

@@ -3,7 +3,7 @@
 Executar des de backend/:  python -m pytest tests/
 """
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
@@ -14,8 +14,17 @@ from app.data.seed import (
     TOPUP_CONCEPT,
     build_seed,
 )
-from app.models import KIND_OTHER, KIND_TOPUP, TYPE_EXPENSE, TYPE_INCOME
-from app.repositories import AccountRepository, MovementRepository, PotRepository
+from app.models import KIND_OTHER, KIND_TOPUP, TYPE_EXPENSE, TYPE_INCOME, OutboxMessage
+from app.repositories import (
+    AccountRepository,
+    MovementRepository,
+    OutboxRepository,
+    PasswordResetTokenRepository,
+    PotRepository,
+    SessionRepository,
+    UserRepository,
+    VerificationCodeRepository,
+)
 
 # Data fixa perquè els tests no depenguin del dia en què s'executen.
 NOW = datetime(2026, 10, 13, 15, 0, 0, tzinfo=MADRID_TZ)
@@ -116,7 +125,7 @@ def test_list_returns_newest_first(seed):
     account_id = seed.accounts[DEMO_USER_ID].id
     assert _page(movements, account_id, 0, 30) == [f"mov-{number:02d}" for number in range(30, 0, -1)]
     page = movements.list_by_account(account_id, 0, 30)
-    assert all(first.date >= second.date for first, second in zip(page, page[1:]))
+    assert all(first.date >= second.date for first, second in zip(page, page[1:], strict=False))
 
 
 def test_tie_on_date_puts_later_created_first(seed):
@@ -288,8 +297,192 @@ def test_sum_topups_handles_dst_and_foreign_offsets(seed):
     morning = datetime(2026, 10, 25, 0, 30, tzinfo=MADRID_TZ)
     evening = datetime(2026, 10, 25, 23, 30, tzinfo=MADRID_TZ)
     # 23:30 UTC = 26/10 00:30 a Madrid: un altre dia, malgrat la mateixa data UTC.
-    utc_instant = datetime(2026, 10, 25, 23, 30, tzinfo=timezone.utc)
+    utc_instant = datetime(2026, 10, 25, 23, 30, tzinfo=UTC)
     for moment in (morning, evening, utc_instant):
         movements.add(**_movement_kwargs(kind=KIND_TOPUP, icon="topup", type=TYPE_INCOME, date=moment))
     assert movements.sum_topups_on_day(account_id, date(2026, 10, 25)) == 2000
     assert movements.sum_topups_on_day(account_id, date(2026, 10, 26)) == 1000
+
+
+# --- UserRepository i compte nou (T01.2) -----------------------------------------------
+
+
+def _new_user(users, identifier="ana@x.com"):
+    return users.add(
+        name="",
+        identifier=identifier,
+        identifier_type="email",
+        password_hash="$2b$12$hash",
+        status="pending",
+    )
+
+
+def test_find_by_identifier_is_exact(seed):
+    users = UserRepository(seed)
+
+    assert users.find_by_identifier("demo@evolt.test").id == DEMO_USER_ID
+    assert users.find_by_identifier("buit@evolt.test").id == EMPTY_USER_ID
+    # Normalitzar és feina del servei: el repositori compara tal qual.
+    assert users.find_by_identifier("DEMO@evolt.test") is None
+    assert users.find_by_identifier("ningu@x.com") is None
+
+
+def test_add_user_gets_a_new_id_and_is_findable(seed):
+    users = UserRepository(seed)
+
+    ana = _new_user(users)
+    pau = _new_user(users, "pau@x.com")
+
+    assert (ana.id, pau.id) == (3, 4)
+    assert users.get(ana.id) is ana
+    assert users.find_by_identifier("pau@x.com") is pau
+    assert seed.next_user_id == 5
+
+
+def test_get_unknown_user_is_none(seed):
+    assert UserRepository(seed).get(99) is None
+
+
+def test_create_account_for_new_user_starts_at_zero(seed):
+    user = _new_user(UserRepository(seed))
+    accounts = AccountRepository(seed)
+
+    account = accounts.create_for_user(user.id)
+
+    assert account.balance == 0
+    assert accounts.get_by_user(user.id) is account
+
+
+def test_user_cannot_get_a_second_account(seed):
+    with pytest.raises(ValueError):
+        AccountRepository(seed).create_for_user(DEMO_USER_ID)
+
+
+# --- SessionRepository (T03.1) ---------------------------------------------------------
+
+
+def test_create_session_gets_a_random_token(seed):
+    sessions = SessionRepository(seed)
+
+    first = sessions.create(DEMO_USER_ID, NOW)
+    second = sessions.create(DEMO_USER_ID, NOW)
+
+    assert first.token != second.token
+    assert len(first.token) >= 32
+    assert (first.user_id, first.last_activity) == (DEMO_USER_ID, NOW)
+    assert sessions.get(first.token) is first
+
+
+def test_touch_and_delete_session(seed):
+    sessions = SessionRepository(seed)
+    session = sessions.create(DEMO_USER_ID, NOW)
+
+    sessions.touch(session.token, NOW + timedelta(minutes=3))
+    assert sessions.get(session.token).last_activity == NOW + timedelta(minutes=3)
+
+    sessions.delete(session.token)
+    sessions.delete(session.token)  # tancar-la dues vegades no falla
+    assert sessions.get(session.token) is None
+
+
+def test_seed_has_no_sessions(seed):
+    assert seed.sessions == {}
+
+
+# --- Codis de verificació i bústia (T02.1) ---------------------------------------------
+
+
+def test_replace_code_invalidates_the_previous_one(seed):
+    codes = VerificationCodeRepository(seed)
+
+    codes.replace(DEMO_USER_ID, "111111", NOW)
+    codes.record_failure(DEMO_USER_ID)
+    codes.replace(DEMO_USER_ID, "222222", NOW + timedelta(minutes=1))
+
+    current = codes.get(DEMO_USER_ID)
+    assert (current.code, current.failed_attempts) == ("222222", 0)
+
+
+def test_record_failure_counts_and_delete_removes(seed):
+    codes = VerificationCodeRepository(seed)
+    codes.replace(DEMO_USER_ID, "111111", NOW)
+
+    assert [codes.record_failure(DEMO_USER_ID) for _ in range(3)] == [1, 2, 3]
+    codes.delete(DEMO_USER_ID)
+    codes.delete(DEMO_USER_ID)
+    assert codes.get(DEMO_USER_ID) is None
+
+
+def test_set_user_status(seed):
+    users = UserRepository(seed)
+    user = _new_user(users)
+
+    users.set_status(user.id, "active")
+
+    assert users.get(user.id).status == "active"
+    with pytest.raises(ValueError):
+        users.set_status(user.id, "blocked")
+
+
+def test_set_login_state(seed):
+    # T03.2: el servei decideix els valors; el repositori només els desa.
+    users = UserRepository(seed)
+    user = users.get(DEMO_USER_ID)
+    assert (user.failed_logins, user.locked_until) == (0, None)
+
+    users.set_login_state(DEMO_USER_ID, failed_logins=3, locked_until=NOW)
+    assert (users.get(DEMO_USER_ID).failed_logins, users.get(DEMO_USER_ID).locked_until) == (3, NOW)
+
+    users.set_login_state(DEMO_USER_ID, failed_logins=0, locked_until=None)
+    assert (users.get(DEMO_USER_ID).failed_logins, users.get(DEMO_USER_ID).locked_until) == (0, None)
+    with pytest.raises(KeyError):
+        users.set_login_state(999, failed_logins=0, locked_until=None)
+
+
+def test_password_reset_token_replace_get_and_use(seed):
+    # T04.1: un token nou per usuari esborra l'anterior.
+    tokens = PasswordResetTokenRepository(seed)
+    first = tokens.replace(DEMO_USER_ID, NOW)
+    other_user = tokens.replace(2, NOW)
+    second = tokens.replace(DEMO_USER_ID, NOW + timedelta(minutes=1))
+
+    assert len(second.token) >= 32
+    assert first.token != second.token
+    assert tokens.get(first.token) is None
+    assert tokens.get(second.token) is second
+    assert tokens.get(other_user.token) is other_user
+    assert not second.used
+
+    tokens.mark_used(second.token)
+    assert tokens.get(second.token).used
+
+
+def test_set_password_hash(seed):
+    users = UserRepository(seed)
+
+    users.set_password_hash(DEMO_USER_ID, "$2b$12$nou")
+
+    assert users.get(DEMO_USER_ID).password_hash == "$2b$12$nou"
+    with pytest.raises(ValueError):
+        users.set_password_hash(DEMO_USER_ID, "")
+
+
+def test_delete_sessions_of_a_user(seed):
+    sessions = SessionRepository(seed)
+    mine = [sessions.create(DEMO_USER_ID, NOW).token for _ in range(2)]
+    other = sessions.create(2, NOW).token
+
+    sessions.delete_for_user(DEMO_USER_ID)
+
+    assert [sessions.get(t) for t in mine] == [None, None]
+    assert sessions.get(other) is not None
+
+
+def test_outbox_lists_newest_first_and_filters(seed):
+    outbox = OutboxRepository(seed)
+    for to in ("a@x.com", "b@x.com", "a@x.com"):
+        outbox.add(OutboxMessage(to=to, channel="email", type="verification_code", text="t", date=NOW))
+
+    assert [m.to for m in outbox.list()] == ["a@x.com", "b@x.com", "a@x.com"][::-1]
+    assert len(outbox.list("a@x.com")) == 2
+    assert outbox.list("ningu@x.com") == []

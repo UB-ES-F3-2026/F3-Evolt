@@ -18,6 +18,9 @@ class MovementResponse(BaseModel):
     date: str
     type: str
     icon: str
+    counterparty: str | None
+    status: str
+    reference: str
 
     @classmethod
     def from_movement(cls, movement: Movement) -> "MovementResponse":
@@ -29,4 +32,7 @@ class MovementResponse(BaseModel):
             date=movement.date.isoformat(),
             type=movement.type,
             icon=movement.icon,
+            counterparty=movement.counterparty,
+            status=movement.status,
+            reference=movement.reference,
         )

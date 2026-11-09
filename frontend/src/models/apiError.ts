@@ -8,9 +8,26 @@ const API_ERROR_CODES = [
   'INVALID_AMOUNT',
   'AMOUNT_OVER_LIMIT',
   'DAILY_LIMIT_EXCEEDED',
+  'INVALID_POT_NAME',
+  'INVALID_TARGET',
+  'INSUFFICIENT_BALANCE',
+  'POT_NOT_FOUND',
+  'MOVEMENT_NOT_FOUND',
+  'INVALID_DESCRIPTION',
   'VALIDATION_ERROR',
   'INTERNAL_ERROR',
   'NETWORK_ERROR',
+  'WEAK_PASSWORD',
+  'ALREADY_REGISTERED',
+  'INVALID_CODE',
+  'CODE_EXPIRED',
+  'TOO_MANY_ATTEMPTS',
+  'INVALID_CREDENTIALS',
+  'ACCOUNT_LOCKED',
+  'ACCOUNT_NOT_VERIFIED',
+  'UNAUTHENTICATED',
+  'SESSION_EXPIRED',
+  'RESET_LINK_EXPIRED',
 ] as const
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number]
@@ -18,7 +35,7 @@ export type ApiErrorCode = (typeof API_ERROR_CODES)[number]
 export interface ApiError {
   code: ApiErrorCode
   message: string
-  details?: { remainingToday?: number }
+  details?: { remainingToday?: number; lockedUntil?: string }
 }
 
 /** True when `value` already has the contract error shape with a known `code`. */

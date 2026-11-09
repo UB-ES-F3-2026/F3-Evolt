@@ -124,8 +124,9 @@ Has de veure `Local: http://localhost:5173/`. **No tanquis aquesta finestra.**
 
 ### B4. Obre l'aplicació
 
-1. Obre <http://localhost:5173> al navegador (Chrome o Firefox).
-2. Mira la finestra **T1**: hi ha d'haver aparegut una línia amb `GET /api/home`. Això confirma que la web parla amb el backend.
+1. Obre <http://localhost:5173> al navegador (Chrome o Firefox). Surt la pantalla **Inicia sessió**.
+2. Entra amb `demo@evolt.test` i la contrasenya `Evolt2026`, el compte de prova del seed ([`api.md` §8.13](api.md)).
+3. Mira la finestra **T1**: hi ha d'haver aparegut una línia amb `GET /api/home`. Això confirma que la web parla amb el backend.
 
 ### B5. Com reiniciar les dades (T3)
 
@@ -135,7 +136,7 @@ Les dades viuen en memòria. Més endavant, al començament de les parts C, D, E
 Invoke-RestMethod -Method Post http://localhost:8000/api/dev/reset
 ```
 
-Ha de respondre `status : ok`. Després, al navegador, prem **F5** per tornar a carregar la pàgina.
+Ha de respondre `status : ok`. Després, al navegador, prem **F5** per tornar a carregar la pàgina. Reiniciar les dades també tanca les sessions, així que surt **Inicia sessió**: torna a entrar com al pas B4.
 
 ### B6. Com esborrar la preferència del saldo ocult
 
@@ -234,20 +235,10 @@ El criteri «sense moviments es mostra un missatge» es comprova a la [Part G](#
 
 Ara arrencaràs la web amb l'**usuari 2**, que té un compte buit. El backend (T1) no es toca.
 
-### G0. Torna a arrencar el frontend amb l'usuari 2
+### G0. Entra amb el compte buit
 
-1. A **T2**, prem **Ctrl+C** per aturar el frontend. Si pregunta alguna cosa, respon `S` (o `Y`).
-2. **Tanca la finestra T2** i obre'n una de nova a la carpeta del projecte (pas A2).
-3. Escriu:
-
-```powershell
-cd frontend
-$env:VITE_USE_MOCKS = "false"
-$env:VITE_DEMO_USER = "2"
-npm run dev
-```
-
-4. Al navegador, prem **F5** a <http://localhost:5173>.
+1. Al menú de dalt a la dreta, clica **Tancar sessió**.
+2. Entra amb `buit@evolt.test` i la contrasenya `Evolt2026`, el compte sense moviments del seed.
 
 | Id | Què fas | Què has de veure |
 |---|---|---|
@@ -256,10 +247,9 @@ npm run dev
 | **G3** | Torna a Inici, clica **Afegir diners**, escriu `20` i **Confirmar**. | A **Inici**, saldo **20,00 €** i la **Recàrrega** (+20,00 €) a «Últims moviments». |
 | **G4** | Clica **Veure tots**. | Un sol moviment: **Recàrrega** (+20,00 €). |
 
-### G5. Torna a l'usuari 1
+### G5. Torna al compte de prova
 
-1. A **T2**, **Ctrl+C** i **tanca la finestra**.
-2. Obre una finestra nova i torna a fer el pas **B3** (sense `VITE_DEMO_USER`).
+Clica **Tancar sessió** i torna a entrar amb `demo@evolt.test`, com al pas B4.
 
 ---
 
@@ -415,7 +405,6 @@ Fes servir **Terminal** en lloc de PowerShell. Les ordres que canvien:
 |---|---|---|
 | Activar l'entorn | `.venv\Scripts\Activate.ps1` | `source .venv/bin/activate` |
 | Frontend (B3) | `$env:VITE_USE_MOCKS = "false"` i després `npm run dev` | `VITE_USE_MOCKS=false npm run dev` |
-| Usuari 2 (G0) | `$env:VITE_USE_MOCKS = "false"`, `$env:VITE_DEMO_USER = "2"` i després `npm run dev` | `VITE_USE_MOCKS=false VITE_DEMO_USER=2 npm run dev` |
 | Backend lent (H1) | `$env:SIMULATE_DELAY_MS = "2000"` i després `uvicorn …` | `SIMULATE_DELAY_MS=2000 uvicorn app.main:app --reload` |
 | Backend que falla (H2, H3) | `$env:SIMULATE_ERROR_RATE = "100"` i després `uvicorn …` | `SIMULATE_ERROR_RATE=100 uvicorn app.main:app --reload` |
 | Reiniciar les dades (B5) | `Invoke-RestMethod -Method Post http://localhost:8000/api/dev/reset` | `curl -X POST http://localhost:8000/api/dev/reset` |

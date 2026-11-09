@@ -4,12 +4,14 @@ import {
   ArrowLeftRight,
   Briefcase,
   Bus,
+  PiggyBank,
   Receipt,
   ShoppingBag,
   Utensils,
   Wallet,
   type LucideIcon,
 } from '@lucide/vue'
+import { RouterLink, type RouteLocationRaw } from 'vue-router'
 import MoneyAmount from '@/components/MoneyAmount.vue'
 import { formatDateTime } from '@/models/date'
 import type { Movement, MovementIcon } from '@/models/movement'
@@ -20,8 +22,10 @@ const props = withDefaults(
     movement: Movement
     /** Masks the amount, like the balance (T07.10). */
     hidden?: boolean
+    /** Where tapping the row goes. Without it, the row does not react (a pot's history has no detail). */
+    to?: RouteLocationRaw
   }>(),
-  { hidden: false },
+  { hidden: false, to: undefined },
 )
 
 // One visual icon per value of the closed `icon` list (docs/api.md §3).
@@ -32,6 +36,7 @@ const ICON_COMPONENTS: Record<MovementIcon, LucideIcon> = {
   shopping: ShoppingBag,
   food: Utensils,
   transport: Bus,
+  savings: PiggyBank,
   other: Receipt,
 }
 
@@ -42,30 +47,36 @@ const isIncome = computed(() => props.movement.type === 'income')
 
 <template>
   <li class="movement-row">
-    <span class="icon">
-      <component :is="iconComponent" :size="20" />
-    </span>
-    <div class="details">
-      <p class="concept">{{ movement.concept }}</p>
-      <time class="date" :datetime="movement.date">{{ formatDateTime(movement.date) }}</time>
-    </div>
-    <MoneyAmount
-      class="amount"
-      :class="isIncome ? 'income' : 'expense'"
-      :cents="movement.amount"
-      :sign="isIncome ? 'positive' : 'negative'"
-      :hidden="hidden"
-    />
+    <component :is="to ? RouterLink : 'div'" :to="to" class="row">
+      <span class="icon">
+        <component :is="iconComponent" :size="20" />
+      </span>
+      <div class="details">
+        <p class="concept">{{ movement.concept }}</p>
+        <time class="date" :datetime="movement.date">{{ formatDateTime(movement.date) }}</time>
+      </div>
+      <MoneyAmount
+        class="amount"
+        :class="isIncome ? 'income' : 'expense'"
+        :cents="movement.amount"
+        :sign="isIncome ? 'positive' : 'negative'"
+        :hidden="hidden"
+      />
+    </component>
   </li>
 </template>
 
 <style scoped>
 .movement-row {
+  list-style: none;
+}
+
+.row {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.625rem 0;
-  list-style: none;
+  color: inherit;
 }
 
 .icon {

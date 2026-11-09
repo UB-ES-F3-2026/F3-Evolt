@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { eurosToCents, formatCents } from './money'
+import { eurosToCents, formatCents, formatSignedCents } from './money'
+
+describe('formatSignedCents', () => {
+  it('puts «+» on an income and «−» on an expense', () => {
+    expect(formatSignedCents(1500, 'positive')).toBe(`+${formatCents(1500)}`)
+    expect(formatSignedCents(1000, 'negative')).toBe(`−${formatCents(1000)}`)
+  })
+})
 
 describe('eurosToCents', () => {
   it.each([

@@ -12,6 +12,15 @@ export function formatCents(cents: number): string {
   return EUROS.format(cents / 100)
 }
 
+export type AmountSign = 'positive' | 'negative'
+
+const SIGN_TEXT: Record<AmountSign, string> = { positive: '+', negative: '−' }
+
+/** For amounts with a direction (income / expense): `1000, 'negative'` → `"−10,00 €"` */
+export function formatSignedCents(cents: number, sign: AmountSign): string {
+  return `${SIGN_TEXT[sign]}${formatCents(cents)}`
+}
+
 // What a person types: digits, then optionally a comma or a dot and 1 or 2 decimals.
 const TYPED_EUROS = /^(\d+)(?:[.,](\d{1,2}))?$/
 

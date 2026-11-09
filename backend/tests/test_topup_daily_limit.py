@@ -66,6 +66,7 @@ def test_reaching_exactly_1000_euros_in_a_day_is_allowed(client: TestClient) -> 
     assert _statuses(client, 50000, 40000, 10000) == [201, 201, 201]
 
 
+@pytest.mark.memory_only
 def test_rejected_topup_changes_neither_balance_nor_movements(client: TestClient) -> None:
     assert _statuses(client, 50000, 50000) == [201, 201]
     seed = _seed(client)
@@ -97,6 +98,7 @@ def test_each_user_has_their_own_daily_limit(client: TestClient) -> None:
 # --- Criteri 6: les recàrregues no donen XP ---------------------------------------
 
 
+@pytest.mark.memory_only
 def test_topups_do_not_change_any_user_xp(client: TestClient) -> None:
     users = _seed(client).users
     xp_before = {user_id: user.xp for user_id, user in users.items()}

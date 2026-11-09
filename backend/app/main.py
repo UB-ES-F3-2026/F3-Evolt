@@ -13,13 +13,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.base import BaseHTTPMiddleware
 
+from app.config import STORAGE_FIRESTORE, load_app_settings
 from app.data.seed import build_seed
 from app.middleware import SimulationMiddleware, load_simulation_settings
-from app.routers import dev, health, home, movements, topups
+from app.repositories.atomic import MemoryAtomic
+from app.routers import auth, dev, health, home, movements, pots, topups
 from app.services.errors import (
     ERROR_MESSAGES,
     ERROR_STATUS,
@@ -31,16 +33,26 @@ from app.services.errors import (
 
 logger = logging.getLogger("evolt")
 
-# Origen del Vite dev server: casa amb el BASE_URL per defecte de l'apiClient
-# del frontend (localhost:8000 ↔ localhost:5173).
-FRONTEND_ORIGIN = "http://localhost:5173"
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    # Es reconstrueix a cada arrencada: així cada `with TestClient(...)` rep un
-    # seed net i els tests no depenen de l'ordre en què s'executen.
-    app.state.seed = build_seed()
+    if app.state.settings.storage == STORAGE_FIRESTORE:
+        # Firestore (TR01.1): les dades es conserven entre reinicis; el seed
+        # només s'escriu si la base de dades és buida. Importat aquí perquè amb
+        # STORAGE=memory l'app no carregui cap llibreria de Google.
+        from app.data.firestore import create_client
+        from app.data.firestore_seed import ensure_seeded
+        from app.repositories.atomic import FirestoreAtomic
+
+        client = create_client(app.state.settings.firestore_project_id)
+        ensure_seeded(client)
+        app.state.firestore = client
+        app.state.atomic = FirestoreAtomic(client)
+    else:
+        # Es reconstrueix a cada arrencada: així cada `with TestClient(...)` rep un
+        # seed net i els tests no depenen de l'ordre en què s'executen.
+        app.state.seed = build_seed()
+        app.state.atomic = MemoryAtomic()
     yield
 
 
@@ -87,8 +99,14 @@ def _register_error_handlers(app: FastAPI) -> None:
         request: Request, exc: RequestValidationError
     ) -> JSONResponse:
         # El detall de quin camp ha fallat és per als logs, mai per al client:
-        # el contracte no el publica en aquest error.
-        logger.warning("Petició invàlida: %s", exc.errors())
+        # el contracte no el publica en aquest error. Sense el valor rebut
+        # (`input`): podria ser una contrasenya, i no ha de sortir mai als logs
+        # (docs/api.md §8.4).
+        failures = [
+            {key: error[key] for key in ("loc", "type", "msg") if key in error}
+            for error in exc.errors()
+        ]
+        logger.warning("Petició invàlida: %s", failures)
         return JSONResponse(
             status_code=ERROR_STATUS[VALIDATION_ERROR],
             content=error_body(
@@ -138,6 +156,9 @@ def create_app() -> FastAPI:
     """Fabriquen una aplicació nova. Els tests la fan servir per afegir-hi
     rutes de proves sense tocar la instància de producció."""
     app = FastAPI(title="F3-Evolt API", lifespan=lifespan)
+    app_settings = load_app_settings()
+    # `current_user_id` hi llegeix `allow_x_user_id` (docs/api.md §8.2).
+    app.state.settings = app_settings
     # Ordre de middleware (afegits de dins cap a fora; el darrer afegit és el
     # més extern):
     #   1. ContractExceptionMiddleware (intern): captura excepcions i les
@@ -153,11 +174,14 @@ def create_app() -> FastAPI:
     app.add_middleware(SimulationMiddleware, settings=settings)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[FRONTEND_ORIGIN],
+        allow_origins=list(app_settings.frontend_origins),
         # Mètodes i capçaleres explícits = autodocumentats contra l'apiClient
-        # del frontend; sense credencials perquè a l'Sprint 0 no hi ha cookies.
+        # del frontend; sense credencials perquè el token viatja a la capçalera
+        # `Authorization` (T03.1), no en una cookie. Si el frontend comença a
+        # enviar una capçalera nova, s'ha d'afegir aquí o el navegador la
+        # bloquejarà.
         allow_methods=["GET", "POST"],
-        allow_headers=["Content-Type", "X-User-Id"],
+        allow_headers=["Content-Type", "Authorization", "X-User-Id"],
     )
     # El prefix /api es declara un sol cop aquí; els routers declaren rutes
     # relatives (docs/api.md §4).
@@ -165,7 +189,14 @@ def create_app() -> FastAPI:
     app.include_router(home.router, prefix="/api")
     app.include_router(movements.router, prefix="/api")
     app.include_router(topups.router, prefix="/api")
-    app.include_router(dev.router, prefix="/api")
+    app.include_router(auth.router, prefix="/api")
+    app.include_router(pots.router, prefix="/api")
+    # Eines de desenvolupament: fora quan ENABLE_DEV_ROUTES=false (desplegament).
+    if app_settings.dev_routes_enabled:
+        app.include_router(dev.router, prefix="/api")
+    # La bústia té el seu interruptor (ENABLE_DEV_OUTBOX) i, al desplegament, clau (§8.12).
+    if app_settings.dev_outbox_enabled:
+        app.include_router(dev.outbox_router, prefix="/api")
     _register_error_handlers(app)
     return app
 
