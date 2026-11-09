@@ -1785,6 +1785,7 @@ La Cloud Function que s'havia decidit abans demanava el pla Blaze de Firebase, a
 - La font DejaVu Sans va dins del fitxer, perquè les fonts bàsiques de PDF no tenen el signe «−». jsPDF i la font es carreguen només en tocar el botó.
 - Si no es poden carregar (per exemple, sense connexió), surt un error propi de la pantalla, sense cap `code`, i el detall continua visible. El navegador recorda la càrrega fallida, així que per tornar-ho a provar cal recarregar la pàgina, i el missatge ho diu.
 - El PDF porta les mateixes dades que la pantalla «Detall del moviment» ([10.3](#103-get-apimovementsmovementid)): el concepte, l'import amb el signe, la data i l'hora, l'estat, la contrapart (o «—» si és `null`) i la referència. L'import i la referència han de coincidir exactament amb els del detall.
+- Amb l'ull d'amagar els imports actiu (US-07), la pantalla mostra «••••», però el PDF porta igualment l'import: el justificant es demana expressament, i sense l'import no serviria (decisió del PO).
 
 ### 10.6 Errors
 

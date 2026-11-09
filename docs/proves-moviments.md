@@ -146,6 +146,7 @@ Totes les peticions són de l'usuari 1, llevat que es digui el contrari.
 | **DP-07** | Escriu què passa i envia'l. | Surt una confirmació que l'informe s'ha enviat. |
 | **DP-08** | Crea una guardiola amb un nom molt llarg, aporta-hi diners i baixa el justificant de l'aportació. | El concepte surt sencer al PDF, en diverses línies. |
 | **DP-09** | Amb la pantalla oberta, sense connexió i sense haver baixat cap justificant abans, toca «Descarregar justificant». | Mentre prova, el botó diu «Generant…». Després surt en vermell «No s'ha pogut generar el justificant. Recarrega la pàgina i torna-ho a provar.», i el detall continua a la pantalla. Amb connexió i la pàgina recarregada, el botó torna a funcionar. |
+| **DP-10** | A «Inici», toca l'ull per amagar els imports. Obre «Bizum enviat» i toca «Descarregar justificant». | Al detall, l'import surt com «••••», però el PDF porta «−10,00 €»: el justificant porta sempre l'import. |
 
 ---
 
@@ -162,4 +163,4 @@ Totes les peticions són de l'usuari 1, llevat que es digui el contrari.
 | US-11 · Hi ha el botó «Descarregar justificant», que baixa un PDF amb aquestes mateixes dades | D-01, DP-04, DP-08 |
 | US-11 · Hi ha l'enllaç «Reportar un problema», que obre un formulari amb el moviment ja indicat i una casella per explicar què passa | I-01, I-02, I-03, I-04, I-08, DP-05, DP-06, DP-07 |
 
-Proves que no surten d'un criteri, sinó del contracte: F-05 a F-07 (els camps nous a totes les respostes i el saldo amb pendents), M-20 (la Home sense filtres), D-03 a D-05 i D-07 (moviments inexistents, d'altres usuaris i nous), I-05 a I-07, I-09 i I-10 (format, ordre de les validacions i reinici), i DP-09 (el botó quan no es pot generar el PDF).
+Proves que no surten d'un criteri, sinó del contracte: F-05 a F-07 (els camps nous a totes les respostes i el saldo amb pendents), M-20 (la Home sense filtres), D-03 a D-05 i D-07 (moviments inexistents, d'altres usuaris i nous), I-05 a I-07, I-09 i I-10 (format, ordre de les validacions i reinici), DP-09 (el botó quan no es pot generar el PDF) i DP-10 (el justificant amb els imports amagats).
