@@ -64,7 +64,7 @@ If a request ends in an error, **nothing changes**: neither the balance nor the 
 
 ## Current user
 
-There is no login in Sprint 0: user 1 by default, or the one in the `X-User-Id` header. Resolve it in one dependency; services receive the user id as a parameter.
+Resolve it in one dependency (`routers/current_user.py`); services receive the user id as a parameter. Since Sprint 1 the user comes from the session token (`Authorization: Bearer`, `docs/api.md` §8.2). The Sprint 0 `X-User-Id` header only works when `ALLOW_X_USER_ID=true`: off by default since T03.5, on in the tests (`tests/conftest.py`).
 
 ## Errors
 

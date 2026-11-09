@@ -42,7 +42,8 @@ class AppSettings:
     `frontend_origins` són els orígens que el CORS accepta;
     `dev_routes_enabled` indica si es registra el router `/api/dev`;
     `allow_x_user_id` indica si una ruta protegida sense token encara es pot
-    resoldre amb `X-User-Id` (docs/api.md §8.2, transició fins a la T03.5);
+    resoldre amb `X-User-Id` (docs/api.md §8.2): des de la T03.5, només si
+    s'activa a propòsit (eines locals i tests);
     `dev_outbox_enabled` indica si es registra `GET /api/dev/outbox`, i
     `dev_outbox_key`, si n'hi ha, és la clau que ha de portar `X-Dev-Key`;
     `frontend_url` és la base de l'enllaç de recuperació (`FRONTEND_URL`, §8.10);
@@ -51,7 +52,7 @@ class AppSettings:
 
     frontend_origins: tuple[str, ...] = (DEFAULT_FRONTEND_ORIGIN,)
     dev_routes_enabled: bool = True
-    allow_x_user_id: bool = True
+    allow_x_user_id: bool = False
     dev_outbox_enabled: bool = True
     dev_outbox_key: str | None = None
     frontend_url: str = DEFAULT_FRONTEND_ORIGIN
@@ -95,8 +96,10 @@ def load_app_settings(env: Mapping[str, str] | None = None) -> AppSettings:
     """Llegeix `FRONTEND_ORIGINS`, `ENABLE_DEV_ROUTES` i `ALLOW_X_USER_ID` de l'entorn.
 
     `FRONTEND_ORIGINS` és una llista separada per comes; si queda buida, es fa
-    servir l'origen de Vite. `ENABLE_DEV_ROUTES` i `ALLOW_X_USER_ID` buides o
-    sense definir queden activades (la segona, fins a la T03.5). Mai no llença.
+    servir l'origen de Vite. `ENABLE_DEV_ROUTES` buida o sense definir queda
+    activada. `ALLOW_X_USER_ID` buida o sense definir queda **desactivada** des de
+    la T03.5 (§8.2): si a un desplegament s'oblida la variable, cap petició sense
+    token no entra com l'usuari 1. Mai no llença.
     """
     source = os.environ if env is None else env
 
@@ -109,7 +112,7 @@ def load_app_settings(env: Mapping[str, str] | None = None) -> AppSettings:
     dev_routes_enabled = _dev_routes_enabled(
         source.get("ENABLE_DEV_ROUTES", ""), storage, source.get("FIRESTORE_EMULATOR_HOST", "")
     )
-    allow_x_user_id = _parse_flag("ALLOW_X_USER_ID", source.get("ALLOW_X_USER_ID", ""), True)
+    allow_x_user_id = _parse_flag("ALLOW_X_USER_ID", source.get("ALLOW_X_USER_ID", ""), False)
     dev_outbox_key = source.get("DEV_OUTBOX_KEY", "").strip() or None
     dev_outbox_enabled = _outbox_enabled(
         source.get("ENABLE_DEV_OUTBOX", ""), dev_routes_enabled, dev_outbox_key

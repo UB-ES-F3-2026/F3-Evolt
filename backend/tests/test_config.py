@@ -89,9 +89,11 @@ def test_dev_routes_disabled_are_not_registered(monkeypatch) -> None:
 # --- ALLOW_X_USER_ID (T03.1, docs/api.md §8.2) ------------------------------------------
 
 
-def test_x_user_id_is_allowed_by_default() -> None:
-    # Fins a la T03.5 el frontend encara envia X-User-Id.
-    assert load_app_settings({}).allow_x_user_id
+def test_x_user_id_is_disabled_by_default() -> None:
+    # Des de la T03.5 (§8.2) el frontend només envia el token: la porta queda tancada
+    # si la variable no hi és o és buida.
+    assert not load_app_settings({}).allow_x_user_id
+    assert not load_app_settings({"ALLOW_X_USER_ID": "  "}).allow_x_user_id
 
 
 def test_load_settings_allow_x_user_id_values() -> None:
