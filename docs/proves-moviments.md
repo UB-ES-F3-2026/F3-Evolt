@@ -20,7 +20,7 @@ Cada bloc té dues taules:
 - **API:** proves del backend. Cada fila es converteix en un test de pytest a la tasca indicada. Els esperats es calculen a partir del seed, com als tests de l'Sprint 0.
 - **Pantalla:** proves del frontend. Es comproven a mà amb l'app arrencada (com a [`docs/prueba-sprint0.md`](prueba-sprint0.md)) i, quan es pugui, amb un test de Vitest del ViewModel.
 
-L'usuari de cada petició es tria com a la resta de l'API ([`api.md` §2](api.md#2-usuari-actual-i-estat-del-servei)): amb `X-User-Id` mentre estigui permès, o amb la sessió quan arribi la T03.1. «Usuari 2» vol dir una petició feta com a usuari 2.
+L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.md` §8.2](api.md#82-sessió)). «Usuari 1» és `demo@evolt.test` i «usuari 2», `buit@evolt.test`, totes dues amb la contrasenya `Evolt2026` (P13). Per provar l'API a mà amb `X-User-Id`, com a l'Sprint 0, cal engegar el backend amb `ALLOW_X_USER_ID=true` ([`api.md` §8.2](api.md#transició-des-dx-user-id)).
 
 ## Dades de partida
 

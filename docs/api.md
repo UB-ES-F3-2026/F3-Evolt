@@ -4,7 +4,7 @@ Contracte compartit entre el backend (FastAPI) i el frontend per a les històrie
 
 - Tasques: T07.1 (issue #4) per a l'Sprint 0 i T01.1 (issue #56) per a l'[apartat 8](#8-accés-us-01-a-us-04).
 - Qualsevol canvi en aquest contracte es fa amb una PR sobre aquest fitxer, revisada per almenys una persona de backend i una de frontend.
-- Els punts marcats amb **[PROPOSTA — pendent de validar]** s'han de confirmar a la revisió. Hi ha la llista completa a l'[apartat 7](#7-punts-pendents-de-validar).
+- Els punts nous es marquen amb **[PROPOSTA — pendent de validar]** i s'han de confirmar a la revisió de la PR que els proposa. Quan s'aprova, la marca es treu i el punt queda a l'[apartat 7](#7-propostes-del-contracte).
 
 ## Índex
 
@@ -14,7 +14,7 @@ Contracte compartit entre el backend (FastAPI) i el frontend per a les històrie
 4. [Endpoints](#4-endpoints)
 5. [Errors](#5-errors)
 6. [Model intern (no exposat a l'API)](#6-model-intern-no-exposat-a-lapi)
-7. [Punts pendents de validar](#7-punts-pendents-de-validar)
+7. [Propostes del contracte](#7-propostes-del-contracte)
 8. [Accés (US-01 a US-04)](#8-accés-us-01-a-us-04)
 9. [Guardioles (US-17 i US-18)](#9-guardioles-us-17-i-us-18)
 10. [Moviments: filtres, detall i informe (US-10 i US-11)](#10-moviments-filtres-detall-i-informe-us-10-i-us-11)
@@ -39,7 +39,7 @@ Contracte compartit entre el backend (FastAPI) i el frontend per a les històrie
 
 - Format ISO 8601 **amb desplaçament horari**. Exemple: `2026-10-12T22:14:00+02:00`.
 - El desplaçament és el de la zona `Europe/Madrid`: `+02:00` a l'horari d'estiu i `+01:00` a l'horari d'hivern.
-- Precisió de segons, sense fraccions de segon. **[PROPOSTA — pendent de validar]**
+- Precisió de segons, sense fraccions de segon.
 
 ### Què vol dir "avui"
 
@@ -102,7 +102,7 @@ Representa un moviment del compte principal. És el mateix objecte a `GET /api/h
 
 | Camp | Tipus | Notes |
 |---|---|---|
-| `id` | string | Identificador opac. El frontend no l'ha d'interpretar. **[PROPOSTA — pendent de validar]** string, per no dependre de l'emmagatzematge. |
+| `id` | string | Identificador opac. El frontend no l'ha d'interpretar. És un string, per no dependre de l'emmagatzematge. |
 | `amount` | integer | Cèntims, sempre `> 0`. |
 | `concept` | string | Text que es mostra a l'usuari. A les recàrregues val `"Recàrrega"`. |
 | `date` | string | ISO 8601 amb desplaçament (vegeu l'[apartat 1](#dates)). |
@@ -122,7 +122,7 @@ Valors d'`icon` (llista tancada):
 | `shopping` | Compres |
 | `food` | Menjar i restaurants |
 | `transport` | Transport |
-| `savings` | Aportació a una guardiola ([apartat 9.4](#94-post-apipotspotidcontributions)) **[PROPOSTA — pendent de validar]** |
+| `savings` | Aportació a una guardiola ([apartat 9.4](#94-post-apipotspotidcontributions)) |
 | `other` | Qualsevol altre moviment |
 
 Exemple:
@@ -269,11 +269,11 @@ Llistat paginat de tots els moviments de l'usuari (US-08), pensat per a l'scroll
 | Paràmetre | Tipus | Per defecte | Rang vàlid |
 |---|---|---|---|
 | `offset` | integer | `0` | `≥ 0` |
-| `limit` | integer | `20` | `1`–`50` **[PROPOSTA — pendent de validar]** |
+| `limit` | integer | `20` | `1`–`50` |
 | `dateFrom`, `dateTo`, `type`, `q` | — | Sense filtre | Filtres opcionals de US-10. Vegeu l'[apartat 10.2](#102-filtres-de-get-apimovements). |
 
 - Un `offset` negatiu, un `limit` fora de rang o un valor que no sigui enter retorna `422 VALIDATION_ERROR`.
-- Un `offset` igual o més gran que el nombre total de moviments **no** és un error: retorna `200` amb `items: []` i `nextOffset: null`. **[PROPOSTA — pendent de validar]**
+- Un `offset` igual o més gran que el nombre total de moviments **no** és un error: retorna `200` amb `items: []` i `nextOffset: null`.
 
 **Resposta `200`:** `{ items, nextOffset }`
 
@@ -283,7 +283,7 @@ Llistat paginat de tots els moviments de l'usuari (US-08), pensat per a l'scroll
 | `nextOffset` | integer \| `null` | `offset + items.length` si encara queden moviments després d'aquesta pàgina. `null` si s'ha arribat al final. |
 
 - El frontend continua demanant pàgines amb `offset = nextOffset` fins que rep `null`.
-- Ordre: per `date` descendent. Si dos moviments tenen la mateixa `date`, va primer el que s'ha creat més tard, perquè l'ordre sigui estable entre pàgines. **[PROPOSTA — pendent de validar]**
+- Ordre: per `date` descendent. Si dos moviments tenen la mateixa `date`, va primer el que s'ha creat més tard, perquè l'ordre sigui estable entre pàgines.
 
 **Petició (primera pàgina):**
 
@@ -391,7 +391,7 @@ Recàrrega de prova simulada (US-09). No demana dades de targeta i s'aprova auto
 |---|---|---|
 | `amount` | integer | Import de la recàrrega en cèntims. Obligatori. |
 
-`amount` ha de ser un **enter JSON**. Valors com `"500"` (string) o `500.5` (decimal) retornen `422 VALIDATION_ERROR`. També `500.0` es considera no vàlid. **[PROPOSTA — pendent de validar]**
+`amount` ha de ser un **enter JSON**. Valors com `"500"` (string) o `500.5` (decimal) retornen `422 VALIDATION_ERROR`. També `500.0` es considera no vàlid.
 
 **Resposta `201`:** `{ balance, movement }`
 
@@ -511,7 +511,7 @@ Totes les respostes d'error tenen aquest format:
 |---|---|---|
 | `code` | string | Codi estable de la taula següent. |
 | `message` | string | Text en català per mostrar a l'usuari. |
-| `details` | object | **Opcional.** Dades addicionals de l'error. Quan un error no en té, la clau `details` no apareix a la resposta. **[PROPOSTA — pendent de validar]** |
+| `details` | object | **Opcional.** Dades addicionals de l'error. Quan un error no en té, la clau `details` no apareix a la resposta. |
 
 > El frontend decideix què fa a partir del **`code`** (i de `details`), **mai** a partir del text de `message`. Els textos de `message` d'aquest document són orientatius i el backend els pot ajustar sense trencar el contracte.
 
@@ -541,7 +541,7 @@ Codis de l'accés (Sprint 1, [apartat 8](#8-accés-us-01-a-us-04)):
 | `ACCOUNT_NOT_VERIFIED` | 403 | Login correcte d'un compte encara pendent de verificació | — |
 | `RESET_LINK_EXPIRED` | 422 | Enllaç de recuperació caducat, ja usat o desconegut | — |
 
-> Fins a l'Sprint 0 tots els errors eren `422` o `500`. Els codis d'accés fan servir també `401`, `403`, `409`, `423` i `429`, i els recursos que no existeixen (p. ex. una guardiola) faran servir `404` **[PROPOSTA — pendent de validar]**. El frontend continua decidint només amb el `code`: l'`apiClient` ja propaga qualsevol cos d'error del contracte, sigui quin sigui l'estat HTTP.
+> Fins a l'Sprint 0 tots els errors eren `422` o `500`. Els codis d'accés fan servir també `401`, `403`, `409`, `423` i `429`, i els recursos que no existeixen (p. ex. una guardiola) fan servir `404`. El frontend continua decidint només amb el `code`: l'`apiClient` ja propaga qualsevol cos d'error del contracte, sigui quin sigui l'estat HTTP.
 
 > Qualsevol ruta o mètode no definit es tracta com a error inesperat i retorna `500 INTERNAL_ERROR` (mateix cos que `INTERNAL_ERROR`).
 
@@ -552,14 +552,14 @@ Codis de l'estalvi (Sprint 1, [apartat 9](#9-guardioles-us-17-i-us-18)):
 | `INVALID_POT_NAME` | 422 | El nom de la guardiola és buit o només té espais | — |
 | `INVALID_TARGET` | 422 | L'objectiu de la guardiola és `≤ 0` | — |
 | `INSUFFICIENT_BALANCE` | 422 | L'aportació supera el saldo del compte principal | — |
-| `POT_NOT_FOUND` | 404 **[PROPOSTA — pendent de validar]** | La guardiola no existeix o és d'un altre usuari | — |
+| `POT_NOT_FOUND` | 404 | La guardiola no existeix o és d'un altre usuari | — |
 
 Codis dels moviments (Sprint 1, [apartat 10](#10-moviments-filtres-detall-i-informe-us-10-i-us-11)):
 
 | `code` | HTTP | Quan | `details` |
 |---|---|---|---|
-| `MOVEMENT_NOT_FOUND` | 404 **[PROPOSTA — pendent de validar]** | El moviment no existeix o és d'un altre usuari | — |
-| `INVALID_DESCRIPTION` | 422 **[PROPOSTA — pendent de validar]** | La descripció de l'informe és buida, només té espais o passa de 500 caràcters | — |
+| `MOVEMENT_NOT_FOUND` | 404 | El moviment no existeix o és d'un altre usuari | — |
+| `INVALID_DESCRIPTION` | 422 | La descripció de l'informe és buida, només té espais o passa de 500 caràcters | — |
 
 ### Exemples
 
@@ -631,9 +631,11 @@ Aquest apartat és per al backend. El frontend no en depèn.
 
 ---
 
-## 7. Punts pendents de validar
+## 7. Propostes del contracte
 
-Propostes d'aquest contracte que s'han de confirmar a la revisió de la PR:
+Totes les propostes d'aquesta llista estan acceptades: es van validar en aprovar-se la PR que les proposava. Les noves continuen a partir de la P47 i porten la marca fins que s'aproven.
+
+Propostes de l'Sprint 0 (PR #29):
 
 | # | Apartat | Proposta |
 |---|---|---|
@@ -645,7 +647,7 @@ Propostes d'aquest contracte que s'han de confirmar a la revisió de la PR:
 | P6 | [5](#5-errors) | Quan un error no té `details`, la clau no apareix a la resposta (en lloc de `"details": null`). |
 | P7 | [1](#dates) | Les dates es donen amb precisió de segons, sense fraccions de segon. |
 
-Propostes de l'accés (T01.1), per validar a la revisió de la PR de l'Sprint 1:
+Propostes de l'accés (T01.1, PR #105):
 
 | # | Apartat | Proposta |
 |---|---|---|
@@ -664,7 +666,7 @@ Propostes de l'accés (T01.1), per validar a la revisió de la PR de l'Sprint 1:
 | P20 | [8.13](#813-model-intern-de-laccés) | **Acceptada** (TR01.1, #106). Les dades es guarden a Cloud Firestore des del backend. El login és propi (no Firebase Auth) i el frontend no parla amb Firebase. |
 | P46 | [8.12](#812-get-apidevoutbox) | La bústia simulada es pot activar al desplegament amb `ENABLE_DEV_OUTBOX`, independent d'`ENABLE_DEV_ROUTES`, però protegida amb la clau `DEV_OUTBOX_KEY` (capçalera `X-Dev-Key`). El número salta a P46 perquè P21–P33 són del contracte de guardioles (§9) i P34–P45, del de moviments (§10). |
 
-Propostes de l'estalvi (T17.1), per validar a la revisió de la PR de l'Sprint 1:
+Propostes de l'estalvi (T17.1, PR #119):
 
 | # | Apartat | Proposta |
 |---|---|---|
@@ -676,13 +678,13 @@ Propostes de l'estalvi (T17.1), per validar a la revisió de la PR de l'Sprint 1
 | P26 | [9.3](#93-post-apipots) | Ordre de les validacions en crear: format (`VALIDATION_ERROR`) → `INVALID_POT_NAME` → `INVALID_TARGET`. |
 | P27 | [9.4](#94-post-apipotspotidcontributions) | L'aportació respon `201` amb `{ balance, pot, movement }`. |
 | P28 | [9.4](#94-post-apipotspotidcontributions) | Ordre de les validacions en aportar: format (`VALIDATION_ERROR`) → `POT_NOT_FOUND` → `INVALID_AMOUNT` → `INSUFFICIENT_BALANCE`. |
-| P29 | [3](#3-objecte-movement), [9.4](#94-post-apipotspotidcontributions) | El moviment del compte principal d'una aportació té el concepte `"Aportació a <nom de la guardiola>"` i la icona nova `savings`. L'alternativa a la icona nova és `transfer`. |
+| P29 | [3](#3-objecte-movement), [9.4](#94-post-apipotspotidcontributions) | El moviment del compte principal d'una aportació té el concepte `"Aportació a <nom de la guardiola>"` i la icona nova `savings`. |
 | P30 | [9.4](#94-post-apipotspotidcontributions) | Es pot aportar a una guardiola que ja ha arribat a l'objectiu. Dues aportacions alhora s'apliquen una darrere l'altra. |
 | P31 | [9.5](#95-get-apipotspotidmovements) | L'historial respon `{ items }`, del més recent al més antic i sense paginació. Cada entrada té `id` (`pmov-01`, `pmov-02`…), `amount`, `concept`, `date` i `type`. |
 | P32 | [9.8](#98-model-intern-de-lestalvi) | Cada guardiola del seed té una entrada inicial «Saldo inicial» pel seu saldo, i el seed dona un color a cada guardiola i un objectiu a dues. |
-| P33 | [9.7](#97-errors) | `POT_NOT_FOUND` respon `404`, seguint la P11 de l'accés. Si la P11 no s'aprova, l'estat el decideix l'equip. |
+| P33 | [9.7](#97-errors) | `POT_NOT_FOUND` respon `404`, seguint la P11 de l'accés. |
 
-Propostes dels moviments (T10.1), per validar a la revisió de la PR de l'Sprint 1:
+Propostes dels moviments (T10.1, PR #120):
 
 | # | Apartat | Proposta |
 |---|---|---|
@@ -793,7 +795,7 @@ Les rutes d'accés reben un sol camp, **`identifier`**, que pot ser un email o u
 - **Mínim 8 caràcters, almenys una lletra majúscula i almenys un número** (`0`–`9`). Qualsevol majúscula compta, també les accentuades (`À`, `É`...).
 - És la mateixa regla al registre (US-01) i a la contrasenya nova (US-04). El backend la defineix en **un sol lloc** (T01.2) i la reutilitza la T04.1.
 - Si no la compleix → `422 WEAK_PASSWORD`.
-- Una contrasenya de més de 72 bytes en UTF-8 → `422 VALIDATION_ERROR`, perquè bcrypt no en fa servir més. **[PROPOSTA — pendent de validar]**
+- Una contrasenya de més de 72 bytes en UTF-8 → `422 VALIDATION_ERROR`, perquè bcrypt no en fa servir més.
 - El frontend també la valida per mostrar l'error en vermell sense esperar, però la comprovació que mana és la del backend.
 - La contrasenya **mai** es guarda en clar (es desa el hash amb bcrypt) i **mai** surt a cap resposta, log ni missatge de la bústia.
 
@@ -826,7 +828,7 @@ Crea un compte nou en estat **«pendent de verificació»** (US-01). **No obre c
 
 **Efectes:**
 
-- Es crea l'usuari en estat `pending`, amb el seu compte principal amb saldo `0`, sense moviments ni guardioles i amb XP `0`. **[PROPOSTA — pendent de validar]**
+- Es crea l'usuari en estat `pending`, amb el seu compte principal amb saldo `0`, sense moviments ni guardioles i amb XP `0`.
 - Es genera un codi de verificació i es deixa a la bústia simulada ([8.12](#812-get-apidevoutbox)).
 
 **Petició:**
@@ -853,7 +855,7 @@ Content-Type: application/json
 
 ### 8.6 `POST /api/auth/verify`
 
-Comprova el codi de 6 xifres, activa el compte i **obre la sessió** (US-02). **[PROPOSTA — pendent de validar]**
+Comprova el codi de 6 xifres, activa el compte i **obre la sessió** (US-02).
 
 **Cos de la petició:** `{ identifier, code }`
 
@@ -911,7 +913,7 @@ Envia un codi de verificació nou («Envia'm un codi nou», US-02).
 
 - `identifier` mal format → `VALIDATION_ERROR`.
 - **Resposta `200`:** `{ status }`, amb `status` sempre `"ok"`. La resposta és la mateixa existeixi o no el compte, per no revelar quins comptes hi ha.
-- Si hi ha un compte **pendent** amb aquest `identifier`: es genera un codi nou, l'anterior **deixa de servir**, el comptador d'intents torna a zero i els 10 minuts tornen a començar. **[PROPOSTA — pendent de validar]**
+- Si hi ha un compte **pendent** amb aquest `identifier`: es genera un codi nou, l'anterior **deixa de servir**, el comptador d'intents torna a zero i els 10 minuts tornen a començar.
 - Si el compte no existeix o ja està actiu, no s'envia res.
 - A l'Sprint 1 no hi ha límit de reenviaments.
 
@@ -927,7 +929,7 @@ Inicia la sessió amb l'email o el telèfon i la contrasenya (US-03).
 2. L'`identifier` no és vàlid o no hi ha cap compte amb aquest `identifier` → `401 INVALID_CREDENTIALS`.
 3. El compte està bloquejat → `423 ACCOUNT_LOCKED`, **encara que la contrasenya sigui correcta**. No compta com a error.
 4. La contrasenya no és correcta → suma un error seguit. Si és el 5è: el compte queda bloquejat 15 minuts, el comptador torna a zero, s'envia un avís a la bústia simulada i la resposta és `423 ACCOUNT_LOCKED`. Si no, `401 INVALID_CREDENTIALS`.
-5. La contrasenya és correcta però el compte és pendent → `403 ACCOUNT_NOT_VERIFIED` **[PROPOSTA — pendent de validar]**. El comptador d'errors torna a zero. El frontend pot portar l'usuari a «Verifica el teu compte» i demanar un codi nou ([8.7](#87-post-apiauthresend-code)).
+5. La contrasenya és correcta però el compte és pendent → `403 ACCOUNT_NOT_VERIFIED`. El comptador d'errors torna a zero. El frontend pot portar l'usuari a «Verifica el teu compte» i demanar un codi nou ([8.7](#87-post-apiauthresend-code)).
 6. Tot correcte: el comptador d'errors torna a zero i s'obre una sessió nova.
 
 `INVALID_CREDENTIALS` és **idèntic** (estat, `code` i `message`) tant si el compte no existeix com si la contrasenya és errònia.
@@ -983,7 +985,7 @@ Tanca la sessió actual («Tancar sessió», US-03).
 - **Cos de la petició:** cap.
 - **Resposta `200`:** `{ status }`, amb `status` sempre `"ok"`.
 - Si el token és vàlid, la sessió es tanca i el token deixa de servir.
-- Respon `200` **sempre**, també sense capçalera o amb un token ja caducat o tancat: l'usuari vol sortir i no té sentit mostrar-li un error. **[PROPOSTA — pendent de validar]**
+- Respon `200` **sempre**, també sense capçalera o amb un token ja caducat o tancat: l'usuari vol sortir i no té sentit mostrar-li un error.
 - La resposta porta cos JSON (no `204`), perquè l'`apiClient` del frontend espera JSON a totes les respostes.
 
 ### 8.10 `POST /api/auth/forgot-password`
@@ -992,11 +994,11 @@ Demana un enllaç per canviar la contrasenya («He oblidat la contrasenya», US-
 
 **Cos de la petició:** `{ identifier }`
 
-- Accepta email **o** telèfon. **[PROPOSTA — pendent de validar]** La US-04 parla d'email, però així qui s'ha registrat amb telèfon també pot recuperar el compte, i l'enllaç li arriba per SMS.
+- Accepta email **o** telèfon. La US-04 parla d'email, però així qui s'ha registrat amb telèfon també pot recuperar el compte, i l'enllaç li arriba per SMS.
 - `identifier` mal format → `VALIDATION_ERROR`.
 - **Resposta `200`:** `{ status }`, amb `status` sempre `"ok"`, **existeixi o no el compte**. El frontend mostra sempre «Si l'email és correcte, rebràs un enllaç per canviar la contrasenya».
-- Si el compte existeix (pendent, actiu o bloquejat): es genera un enllaç d'**un sol ús** que caduca als 30 minuts, l'enllaç anterior **deixa de servir** **[PROPOSTA — pendent de validar]** i es deixa a la bústia simulada.
-- L'enllaç és `<FRONTEND_URL>/nova-contrasenya?token=<token>`. `FRONTEND_URL` és una variable d'entorn ([8.1](#variables-dentorn-de-laccés)): en local val `http://localhost:5173` i a Render, l'URL del frontend desplegat. La T04.2 crea aquesta ruta del frontend, que llegeix el `token` de l'URL. **[PROPOSTA — pendent de validar]**
+- Si el compte existeix (pendent, actiu o bloquejat): es genera un enllaç d'**un sol ús** que caduca als 30 minuts, l'enllaç anterior **deixa de servir** i es deixa a la bústia simulada.
+- L'enllaç és `<FRONTEND_URL>/nova-contrasenya?token=<token>`. `FRONTEND_URL` és una variable d'entorn ([8.1](#variables-dentorn-de-laccés)): en local val `http://localhost:5173` i a Render, l'URL del frontend desplegat. La T04.2 crea aquesta ruta del frontend, que llegeix el `token` de l'URL.
 
 ### 8.11 `POST /api/auth/reset-password`
 
@@ -1021,14 +1023,14 @@ Canvia la contrasenya amb el token de l'enllaç («Nova contrasenya», US-04).
 
 - La contrasenya canvia i el token queda gastat.
 - **Totes les sessions** de l'usuari es tanquen (US-04: es tanquen les sessions dels altres dispositius). No s'obre cap sessió nova: l'usuari ha d'iniciar sessió amb la contrasenya nova.
-- El compte es desbloqueja i el comptador d'errors de login torna a zero. **[PROPOSTA — pendent de validar]**
+- El compte es desbloqueja i el comptador d'errors de login torna a zero.
 - L'estat del compte (pendent o actiu) no canvia.
 
 ### 8.12 `GET /api/dev/outbox`
 
 Bústia simulada: eina de **desenvolupament**, com `POST /api/dev/reset`. En lloc d'enviar emails o SMS de veritat, el backend desa aquí els missatges. **No l'usa l'app**: serveix per llegir el codi o l'enllaç a les proves manuals, a la demo i als tests.
 
-**Disponibilitat i protecció** (P46) **[PROPOSTA — pendent de validar]**:
+**Disponibilitat i protecció** (P46):
 
 - La ruta existeix si `ENABLE_DEV_OUTBOX` és `true`. Per defecte pren el valor d'`ENABLE_DEV_ROUTES`, així que en local està activa i al desplegament no, tret que s'activi expressament ([8.1](#variables-dentorn-de-laccés)). Si no existeix, respon com qualsevol ruta no definida ([apartat 5](#5-errors)).
 - Si `DEV_OUTBOX_KEY` està definida, la petició ha de portar la capçalera `X-Dev-Key` amb aquest valor; si falta o no coincideix → `401 UNAUTHENTICATED`. En local no es defineix i no cal cap capçalera.
@@ -1122,7 +1124,7 @@ Les dates es desen com a `Timestamp` de Firestore (UTC) i el backend les convert
 - Tots els temps fan servir el rellotge injectable de `models/clock.py`, perquè els tests puguin fixar l'hora.
 - Les noves dades s'afegeixen al seed i es reinicien amb `POST /api/dev/reset`, com la resta.
 
-**Credencials del seed** **[PROPOSTA — pendent de validar]**. Són fictícies i serveixen per a la demo i les proves:
+**Credencials del seed**. Són fictícies i serveixen per a la demo i les proves:
 
 | Usuari | `identifier` | Contrasenya | Estat |
 |---|---|---|---|
@@ -1171,13 +1173,13 @@ Una guardiola de l'usuari. És el mateix objecte a totes les respostes d'aquest 
 
 | Camp | Tipus | Notes |
 |---|---|---|
-| `id` | string | Identificador opac, com `Movement.id` (P1). El frontend no l'ha d'interpretar. Format `pot-01`, `pot-02`… **[PROPOSTA — pendent de validar]** |
+| `id` | string | Identificador opac, com `Movement.id` (P1). El frontend no l'ha d'interpretar. Format `pot-01`, `pot-02`… |
 | `name` | string | Mai buit: té almenys un caràcter que no és un espai. |
 | `balance` | integer | Cèntims, `≥ 0`. Una guardiola nova té `0`. |
 | `target` | integer \| `null` | Objectiu en cèntims, `> 0`. Val `null` si la guardiola no en té, perquè és opcional. |
 | `color` | string | Un dels valors de la llista tancada següent. |
 
-Valors de `color` (llista tancada) **[PROPOSTA — pendent de validar]**:
+Valors de `color` (llista tancada):
 
 | Valor | Notes |
 |---|---|
@@ -1207,11 +1209,11 @@ Exemple:
 
 Les guardioles de l'usuari (US-17).
 
-**Resposta `200`:** `{ items }` **[PROPOSTA — pendent de validar]**
+**Resposta `200`:** `{ items }`
 
 | Camp | Tipus | Descripció |
 |---|---|---|
-| `items` | `Pot[]` | Totes les guardioles de l'usuari, en ordre de creació, de la més antiga a la més nova **[PROPOSTA — pendent de validar]**. Pot ser una llista buida. |
+| `items` | `Pot[]` | Totes les guardioles de l'usuari, en ordre de creació, de la més antiga a la més nova. Pot ser una llista buida. |
 
 - No té paginació: a la demo, un usuari té poques guardioles.
 - Un usuari sense guardioles rep `{ "items": [] }`. És l'estat buit de US-17 (criteri 2): el frontend mostra «Encara no tens cap guardiola».
@@ -1268,16 +1270,16 @@ Crea una guardiola (US-17).
 
 | Camp | Tipus | Descripció |
 |---|---|---|
-| `name` | string | Obligatori. Es desa sense els espais del principi i del final **[PROPOSTA — pendent de validar]**. |
+| `name` | string | Obligatori. Es desa sense els espais del principi i del final. |
 | `target` | integer \| `null` | Opcional. Objectiu en cèntims. Si no s'envia, o val `null`, la guardiola no té objectiu. |
 | `color` | string | Opcional. Un dels valors de [9.1](#91-objecte-pot). Si no s'envia, o val `null`, és `purple`. |
 
-**Resposta `201`:** l'objecte `Pot` creat, sol **[PROPOSTA — pendent de validar]**.
+**Resposta `201`:** l'objecte `Pot` creat, sol.
 
 - La guardiola neix amb `balance: 0`.
 - Es retorna l'objecte sol perquè només hi ha una cosa a retornar, i és exactament el mateix objecte que surt a `GET /api/pots`. La recàrrega i l'aportació retornen un objecte amb diverses claus perquè canvien més d'una cosa (el saldo i el moviment).
 
-**Ordre de les validacions.** S'aturen al primer error **[PROPOSTA — pendent de validar]**:
+**Ordre de les validacions.** S'aturen al primer error:
 
 1. Format del cos → `VALIDATION_ERROR`:
    - falta `name` o no és un string;
@@ -1290,7 +1292,7 @@ Crea una guardiola (US-17).
 
 - Si hi ha un error, no es crea res.
 - No hi ha límit de guardioles (assumpte de US-17).
-- Es poden repetir noms **[PROPOSTA — pendent de validar]**.
+- Es poden repetir noms.
 - Fora de l'abast d'aquest sprint: editar i esborrar guardioles, que no són als criteris de US-17.
 
 **Petició:**
@@ -1328,7 +1330,7 @@ Aporta diners del compte principal a una guardiola (US-18).
 |---|---|---|
 | `amount` | integer | Import de l'aportació en cèntims. Obligatori. Enter JSON estricte, com a P5. |
 
-**Resposta `201`:** `{ balance, pot, movement }` **[PROPOSTA — pendent de validar]**
+**Resposta `201`:** `{ balance, pot, movement }`
 
 | Camp | Tipus | Descripció |
 |---|---|---|
@@ -1338,7 +1340,7 @@ Aporta diners del compte principal a una guardiola (US-18).
 
 Amb aquesta resposta, el frontend pot pintar el tic verd «Has aportat X € a <nom>» i actualitzar els dos saldos sense tornar a demanar res.
 
-**Ordre de les validacions.** S'aturen al primer error **[PROPOSTA — pendent de validar]**:
+**Ordre de les validacions.** S'aturen al primer error:
 
 1. Format del cos: `amount` falta o no és un enter JSON estricte → `VALIDATION_ERROR`.
 2. La guardiola no existeix o és d'un altre usuari → `POT_NOT_FOUND`. La resposta és la mateixa en tots dos casos, perquè no es pugui saber si una guardiola d'un altre usuari existeix. Un `potId` amb un format qualsevol (p. ex. `abc`) també dona `POT_NOT_FOUND`.
@@ -1352,12 +1354,12 @@ Amb aquesta resposta, el frontend pot pintar el tic verd «Has aportat X € a <
 - **Moviment del compte principal.** Cada aportació crea, en la mateixa operació, un moviment del compte principal (decisió de l'equip: així el saldo del compte continua sent la suma dels seus moviments):
   - `type: "expense"`;
   - `amount` igual a l'aportació;
-  - `concept: "Aportació a <nom de la guardiola>"`, p. ex. `"Aportació a Vacances"` **[PROPOSTA — pendent de validar]**;
-  - `icon: "savings"`, un valor nou de la llista de l'[apartat 3](#3-objecte-movement) **[PROPOSTA — pendent de validar]**. Si el frontend rep una icona que no coneix, ja mostra `other` (`frontend/src/models/movement.ts`), així que la icona nova no trenca res. Per mostrar-la, però, s'ha d'afegir al frontend. L'alternativa és fer servir `transfer`;
+  - `concept: "Aportació a <nom de la guardiola>"`, p. ex. `"Aportació a Vacances"`;
+  - `icon: "savings"`, un valor nou de la llista de l'[apartat 3](#3-objecte-movement). Si el frontend rep una icona que no coneix, mostra `other` (`frontend/src/models/movement.ts`), així que la icona nova no trenca res;
   - `date`: el moment de l'aportació;
   - `counterparty: null`, `status: "completed"` i una `reference` nova, com tots els moviments nous ([10.1](#101-camps-nous-de-movement), P38);
   - `kind` intern `"other"`, perquè no compti per al límit diari de recàrrega.
-- **Casos límit** **[PROPOSTA — pendent de validar]**:
+- **Casos límit**:
   - Es pot aportar a una guardiola que ja ha arribat a l'objectiu, o que el passaria: els criteris no ho prohibeixen, i l'objectiu és una meta, no un límit.
   - Dues aportacions alhora s'apliquen una darrere l'altra. La segona es valida amb el saldo que ha deixat la primera: si ja no n'hi ha prou, rep `INSUFFICIENT_BALANCE`. El saldo del compte mai pot quedar negatiu.
 - En aquest sprint, aportar no dona XP: la gamificació no és a l'abast.
@@ -1403,13 +1405,13 @@ Content-Type: application/json
 
 L'historial d'una guardiola (US-18, criteri 6).
 
-**Resposta `200`:** `{ items }` **[PROPOSTA — pendent de validar]**
+**Resposta `200`:** `{ items }`
 
 | Camp | Tipus | Descripció |
 |---|---|---|
 | `items` | Entrada[] | Les entrades de l'historial, de la més recent a la més antiga, sense paginació. |
 
-Cada entrada de l'historial **[PROPOSTA — pendent de validar]**:
+Cada entrada de l'historial:
 
 | Camp | Tipus | Notes |
 |---|---|---|
@@ -1479,11 +1481,11 @@ Els codis són a la taula de l'[apartat 5](#taula-de-codis). Els missatges són 
 | `VALIDATION_ERROR` | 422 | Totes les de `POST` | El cos està mal format ([9.3](#93-post-apipots), [9.4](#94-post-apipotspotidcontributions)) |
 | `INVALID_POT_NAME` | 422 | `POST /api/pots` | El nom és buit o només té espais |
 | `INVALID_TARGET` | 422 | `POST /api/pots` | `target ≤ 0` |
-| `POT_NOT_FOUND` | 404 **[PROPOSTA — pendent de validar]** | Les de `/api/pots/{potId}/…` | La guardiola no existeix o és d'un altre usuari |
+| `POT_NOT_FOUND` | 404 | Les de `/api/pots/{potId}/…` | La guardiola no existeix o és d'un altre usuari |
 | `INVALID_AMOUNT` | 422 | `POST /api/pots/{potId}/contributions` | `amount ≤ 0` |
 | `INSUFFICIENT_BALANCE` | 422 | `POST /api/pots/{potId}/contributions` | L'aportació supera el saldo del compte principal |
 
-- El `404` segueix la P11 ([apartat 7](#7-punts-pendents-de-validar)), que ja el preveu per als recursos que no existeixen. Si la P11 no s'aprova, l'estat el decideix l'equip.
+- El `404` segueix la P11 ([apartat 7](#7-propostes-del-contracte)), que el preveu per als recursos que no existeixen.
 - Un `POT_NOT_FOUND` és un error de negoci amb el seu `code`. No té res a veure amb el `500 INTERNAL_ERROR` de les rutes que no existeixen ([apartat 5](#taula-de-codis)).
 
 `INVALID_POT_NAME`:
@@ -1534,7 +1536,7 @@ Aquest apartat és per al backend. El frontend no en depèn.
   - el saldo d'una guardiola és la suma del seu historial;
   - `balance + totalSaved` és igual abans i després d'aportar.
 - **Amb Firestore** (TR01.1, #106): les guardioles i el seu historial són les col·leccions `pots` i `pot_movements`, els ids surten dels comptadors i l'aportació va dins d'una **transacció**, com la recàrrega ([8.13](#813-model-intern-de-laccés)).
-- **Seed** **[PROPOSTA — pendent de validar]**. Les tres guardioles de l'usuari 1 no canvien de nom ni de saldo, perquè en depenen els tests i els mocks del frontend. Guanyen:
+- **Seed**. Les tres guardioles de l'usuari 1 no canvien de nom ni de saldo, perquè en depenen els tests i els mocks del frontend. Guanyen:
 
   | `id` | `name` | `balance` | `target` | `color` | Entrada inicial de l'historial |
   |---|---|---|---|---|---|
@@ -1570,11 +1572,11 @@ L'objecte `Movement` de l'[apartat 3](#3-objecte-movement) guanya tres camps. Co
 
 | Camp | Tipus | Notes |
 |---|---|---|
-| `counterparty` | string \| `null` | Qui paga o qui cobra (US-11). Mai és un text buit. **[PROPOSTA — pendent de validar]** el nom del camp, i que la clau sempre hi sigui amb `null` quan no n'hi ha. |
+| `counterparty` | string \| `null` | Qui paga o qui cobra (US-11). Mai és un text buit. La clau sempre hi és, amb `null` quan no n'hi ha. |
 | `status` | `"completed"` \| `"pending"` | Llista tancada. La pantalla mostra «Completat» o «Pendent». |
-| `reference` | string | Única entre tots els moviments i opaca: el frontend no l'ha d'interpretar. La genera el backend en crear el moviment, com l'`id`. Format `EVT-000031` **[PROPOSTA — pendent de validar]**. |
+| `reference` | string | Única entre tots els moviments i opaca: el frontend no l'ha d'interpretar. La genera el backend en crear el moviment, com l'`id`. Format `EVT-000031`. |
 
-**Regla de `counterparty`** **[PROPOSTA — pendent de validar]**:
+**Regla de `counterparty`**:
 
 | Moviment | `counterparty` |
 |---|---|
@@ -1586,7 +1588,7 @@ L'objecte `Movement` de l'[apartat 3](#3-objecte-movement) guanya tres camps. Co
 - L'alternativa, si es vol una contrapart a tots els pagaments, és posar-hi el nom del comerç. Caldria inventar un nom per a cada moviment del seed.
 - Els noms són sempre inventats: cap dada personal real.
 
-**Estat** **[PROPOSTA — pendent de validar]**:
+**Estat**:
 
 - Un moviment pendent **ja compta al saldo**. El saldo continua sent la suma de tots els moviments, pendents o no: `status` només canvia l'etiqueta.
 - Els moviments nous (recàrregues i aportacions) neixen amb `status: "completed"`, una `reference` nova i `counterparty: null`.
@@ -1609,7 +1611,7 @@ Exemple (un Bizum del seed):
 
 ### 10.2 Filtres de `GET /api/movements`
 
-Paràmetres de consulta nous (US-10), opcionals i combinables. Funcionen junt amb `offset` i `limit` ([4.2](#42-get-apimovements)). Noms **[PROPOSTA — pendent de validar]**:
+Paràmetres de consulta nous (US-10), opcionals i combinables. Funcionen junt amb `offset` i `limit` ([4.2](#42-get-apimovements)). Noms:
 
 | Paràmetre | Tipus | Què fa |
 |---|---|---|
@@ -1621,7 +1623,7 @@ Paràmetres de consulta nous (US-10), opcionals i combinables. Funcionen junt am
 **Regles:**
 
 - **Dates:** dies naturals a `Europe/Madrid` ([apartat 1](#què-vol-dir-avui)), amb **els dos extrems inclosos**. El dia d'un moviment és el de la seva `date` a Madrid. Es pot fer servir només un dels dos extrems.
-- **Text** **[PROPOSTA — pendent de validar]**:
+- **Text**:
   - El moviment surt si el text apareix com a part del concepte o de la contrapart (`super` troba «Supermercat»).
   - No es distingeixen majúscules ni accents: `recarrega` troba «Recàrrega», i `SUPER` troba el mateix que `super`.
   - S'ignoren els espais dels extrems. Un `q` buit o només amb espais no filtra.
@@ -1731,7 +1733,7 @@ Informe d'un problema amb un moviment (US-11, criteri 3).
 |---|---|---|
 | `description` | string | Obligatori. Què passa amb el moviment, explicat per l'usuari. |
 
-**Resposta `201`:** `{ id, movementId, description, createdAt }` **[PROPOSTA — pendent de validar]**
+**Resposta `201`:** `{ id, movementId, description, createdAt }`
 
 | Camp | Tipus | Descripció |
 |---|---|---|
@@ -1740,7 +1742,7 @@ Informe d'un problema amb un moviment (US-11, criteri 3).
 | `description` | string | La descripció desada, sense els espais dels extrems. |
 | `createdAt` | string | Data ISO 8601 amb el desplaçament de Madrid. |
 
-**Ordre de les validacions.** S'aturen al primer error **[PROPOSTA — pendent de validar]**:
+**Ordre de les validacions.** S'aturen al primer error:
 
 1. Format del cos: falta `description` o no és un string → `VALIDATION_ERROR`.
 2. El moviment no existeix o és d'un altre usuari → `MOVEMENT_NOT_FOUND`.
@@ -1749,7 +1751,7 @@ Informe d'un problema amb un moviment (US-11, criteri 3).
 **Regles:**
 
 - Si hi ha un error, no es desa res.
-- Es poden enviar diversos informes sobre el mateix moviment **[PROPOSTA — pendent de validar]**.
+- Es poden enviar diversos informes sobre el mateix moviment.
 - L'informe es desa on diu `STORAGE`, com la resta de dades: en memòria, o a la col·lecció `movement_reports` de Firestore (TR01.1, [8.13](#813-model-intern-de-laccés)). **No s'envia enlloc**. `POST /api/dev/reset` l'esborra.
 - En aquest sprint no hi ha cap ruta per consultar els informes: el frontend mostra la confirmació a partir de la resposta `201`.
 
@@ -1795,10 +1797,10 @@ Els codis són a la taula de l'[apartat 5](#taula-de-codis). Els missatges són 
 |---|---|---|---|
 | `VALIDATION_ERROR` | 422 | `GET /api/movements` | Filtres no vàlids ([10.2](#102-filtres-de-get-apimovements)) |
 | `VALIDATION_ERROR` | 422 | `POST /api/movements/{movementId}/reports` | Falta `description` o no és un string |
-| `MOVEMENT_NOT_FOUND` | 404 **[PROPOSTA — pendent de validar]** | Les de `/api/movements/{movementId}…` | El moviment no existeix o és d'un altre usuari |
-| `INVALID_DESCRIPTION` | 422 **[PROPOSTA — pendent de validar]** | `POST /api/movements/{movementId}/reports` | La descripció és buida, només té espais o passa de 500 caràcters |
+| `MOVEMENT_NOT_FOUND` | 404 | Les de `/api/movements/{movementId}…` | El moviment no existeix o és d'un altre usuari |
+| `INVALID_DESCRIPTION` | 422 | `POST /api/movements/{movementId}/reports` | La descripció és buida, només té espais o passa de 500 caràcters |
 
-- El `404` segueix la P11 ([apartat 7](#7-punts-pendents-de-validar)), que ja el preveu per als recursos que no existeixen, igual que el `POT_NOT_FOUND` de l'estalvi (PR #119). Si la P11 no s'aprova, l'estat el decideix l'equip.
+- El `404` segueix la P11 ([apartat 7](#7-propostes-del-contracte)), que el preveu per als recursos que no existeixen, igual que el `POT_NOT_FOUND` de l'estalvi (PR #119).
 - Un `MOVEMENT_NOT_FOUND` és un error de negoci amb el seu `code`. No té res a veure amb el `500 INTERNAL_ERROR` de les rutes que no existeixen ([apartat 5](#taula-de-codis)).
 
 `MOVEMENT_NOT_FOUND`:
@@ -1828,7 +1830,7 @@ Aquest apartat és per al backend. El frontend no en depèn.
 - **Cerca de text:** la regla «sense distingir majúscules ni accents» viu en un sol lloc, una funció pura amb tests propis, que fan servir el servei o el repositori.
 - **Informes:** cada informe té `id`, el moviment, l'usuari, la descripció i la data de creació. Es desen en una col·lecció nova del seed, així que `POST /api/dev/reset` els esborra.
 - **Amb Firestore** (TR01.1, #106): els informes són la col·lecció `movement_reports`, i la `reference` dels moviments i l'`id` dels informes surten dels comptadors, perquè Firestore no té autoincrement. Crear un informe va dins d'una transacció.
-- **Seed** **[PROPOSTA — pendent de validar]**. Els 30 moviments de l'usuari 1 no canvien d'import, de data, de concepte ni d'ordre, perquè en depenen els tests i els mocks del frontend. Guanyen:
+- **Seed**. Els 30 moviments de l'usuari 1 no canvien d'import, de data, de concepte ni d'ordre, perquè en depenen els tests i els mocks del frontend. Guanyen:
   - `reference`: `EVT-000001` a `EVT-000030`, en l'ordre de creació (el mateix número que l'`id`);
   - `status`: `completed` a tots, excepte el més recent (`mov-30`, «Restaurant La Plaça»), que és `pending`;
   - `counterparty`: `null`, excepte aquests (noms inventats):
