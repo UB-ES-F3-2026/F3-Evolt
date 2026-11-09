@@ -155,10 +155,14 @@ checks are reported, branch protection needs the same change in the same PR.
 
 ## Current status
 
-**Not applied yet.** The TR05.1 workflow has to land first.
+**Applied.** Both `develop` and `main` are protected with the payload above.
 
-- [ ] PR #110 (`feature/devops/t05-1-ci-pipeline`, issue #89) merges into `develop`
-- [ ] At least one CI run exists on `develop` (happens automatically on merge)
-- [ ] Check names verified with the `gh api` command above
-- [ ] `develop` and `main` protected with the payload above (owner: team, per issue #90)
+- [x] PR #110 (`feature/devops/t05-1-ci-pipeline`, issue #89) merges into `develop`
+- [x] At least one CI run exists on `develop` (happens automatically on merge)
+- [x] Check names verified with the `gh api` command above
+- [x] `develop` and `main` protected with the payload above (owner: team, per issue #90)
 - [ ] Announced at daily stand-up (per issue #90)
+
+Verified with `gh api repos/UB-ES-F3-2026/F3-Evolt/branches/<branch>/protection`:
+`required_approving_review_count=1`, `contexts=["ci"]`, `enforce_admins=true`,
+force pushes and deletions blocked on both branches.
