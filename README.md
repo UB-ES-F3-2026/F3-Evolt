@@ -129,7 +129,10 @@ The frontend runs on [Render](https://render.com) as a free **Static Site**
 
 - **Public URL:** https://f3-evolt.onrender.com
 - **Branch:** `main` (the demo line); redeploy manually from the Render
-  dashboard until automatic deploys exist (TR06.3)
+  dashboard until automatic deploys exist (TR06.3). **Known technical debt:**
+  Render native auto-deploy and the `deploy.yml` hook must never be enabled at
+  the same time, or each push deploys twice — see
+  [`docs/deploy.md`](docs/deploy.md#known-technical-debt-native-auto-deploy-vs-deploy-hook).
 
 | Render setting | Value |
 |----------------|-------|
@@ -293,7 +296,10 @@ The backend runs on [Render](https://render.com) (free plan) as a Web Service:
 
 - **Public URL:** https://evolt-api.onrender.com (e.g. [`/api/health`](https://evolt-api.onrender.com/api/health))
 - **Branch:** `main` (the demo line); redeploy manually from the Render
-  dashboard until automatic deploys exist (TR06.3)
+  dashboard until automatic deploys exist (TR06.3). **Known technical debt:**
+  Render native auto-deploy and the `deploy.yml` hook must never be enabled at
+  the same time, or each push deploys twice — see
+  [`docs/deploy.md`](docs/deploy.md#known-technical-debt-native-auto-deploy-vs-deploy-hook).
 
 | Render setting | Value |
 |----------------|-------|

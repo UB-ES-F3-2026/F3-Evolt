@@ -114,6 +114,34 @@ gh variable set DEPLOY_ENABLED      -b "true"
 # gh variable set PUBLIC_API_URL   -b "https://api.f3-evolt.example"
 ```
 
+## Known technical debt: native auto-deploy vs deploy hook
+
+Render offers **two independent ways** to deploy, and only one of them may be
+active per service, or every push to `main` deploys twice:
+
+| Mechanism | How it fires | Gate | What it costs us |
+|-----------|--------------|------|------------------|
+| **Render native auto-deploy** | Render is connected to the GitHub repo and rebuilds on every push to the service's branch (`main`) | none — no CI, no health check | Zero setup, but a red commit can go live |
+| **Deploy hook** (this workflow) | Actions POSTs the hook URL after `ci` is green and `/api/health` answers | `ci` job + health poll | Needs the two secrets and `DEPLOY_ENABLED=true` |
+
+**Never enable both at the same time.** A plain `git push`/merge to `main`
+would trigger Render natively *and* the workflow would POST the hook, which
+means two builds and two short outages per release.
+
+Current state (tracked as debt before the demo):
+
+- Render native auto-deploy is **off** on both services (README says "redeploy
+  manually from the Render dashboard").
+- The hook secrets and `DEPLOY_ENABLED` are **unset**, so the deploy jobs are
+  skipped and the workflow stays green.
+- Net effect: **no automated deploy today**. Either turn on native auto-deploy
+  (fast path, no gate) or configure the hooks (reviewed path), then update this
+  section and the README `Deploy` sections in the same PR.
+
+Note: calling the deployed API (`GET /api/health`, `/api/movements`, ...) does
+**not** trigger a deploy. Only a push to the branch (native) or a POST to the
+hook deploys.
+
 ## First deploy checklist
 
 1. Hosting live per the example above (#107/#108; both public URLs answer).
