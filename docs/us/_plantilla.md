@@ -351,9 +351,9 @@ Per què aquests tres i cap més: AC1 verifica el resultat final amb xifres; AC2
 
 ## 11. Wireframes + Mermaid
 
-- `docs/us/img/US-19-retirada-import.png` ← `src/US-19-retirada-import.html`
-- `docs/us/img/US-19-retirada-error.png` ← `src/US-19-retirada-error.html`
-- `docs/us/img/US-19-exit-tic-verd.png` ← `src/US-19-exit-tic-verd.html`
+- `docs/us/img/US-19-detall-guardiola.png` ← `src/US-19-detall-guardiola.html`
+- `docs/us/img/US-19-retirar-vacances.png` ← `src/US-19-retirar-vacances.html`
+- `docs/us/img/US-19-retirada-feta.png` ← `src/US-19-retirada-feta.html`
 
 ```mermaid
 flowchart TD

@@ -1,6 +1,6 @@
 # Documentació de User Stories · Sprint 2 (F3-Evolt)
 
-> Índex i punt d'entrada de les especificacions de les 8 US del Sprint 2. Aquesta branca (`docs/us-sprint2`) conté la **fundació**: la [plantilla obligatòria](_plantilla.md), el [context compartit](_context.md), la [guia d'escriptura](_guia-escriptura.md) i el [pipeline de mockups](_mockup/render.sh). Les especificacions detallades per història són obligatòries segons [`docs/P1/AGENTS.md`](../P1/AGENTS.md) (§"User Stories — format obligatori" i §"Regla dels 3 criteris d'acceptació").
+> Índex i punt d'entrada de les especificacions de les 8 US del Sprint 2. Aquesta branca (`docs/us-sprint2`) conté la **fundació** —la [plantilla obligatòria](_plantilla.md), el [context compartit](_context.md), la [guia d'escriptura](_guia-escriptura.md) i el [pipeline de mockups](_mockup/render.sh)— i **les 8 fitxes `US-XX.md` amb els seus mockups**. Les especificacions detallades per història són obligatòries segons [`docs/P1/AGENTS.md`](../P1/AGENTS.md) (§"User Stories — format obligatori" i §"Regla dels 3 criteris d'acceptació").
 
 ---
 
@@ -14,11 +14,11 @@
 | US-13 | Cercar un usuari | Pagaments | 2 | 9 h | [US-13.md](US-13.md) |
 | US-14 | Enviar diners a usuaris | Pagaments | 5 | 15 h | [US-14.md](US-14.md) |
 | US-25 | Afegir subcompte en divisa | Multidivisa | 4 | 12 h | [US-25.md](US-25.md) |
-| US-26 | Eliminar subcompte en divisa | Multidivisa | 2 | 4 h | [US-26.md](US-26.md) *(pendent)* |
-| US-27 | Canviar entre divises | Multidivisa | 5 | 10 h | [US-27.md](US-27.md) *(pendent)* |
+| US-26 | Eliminar subcompte en divisa | Multidivisa | 2 | 4 h | [US-26.md](US-26.md) |
+| US-27 | Canviar entre divises | Multidivisa | 5 | 10 h | [US-27.md](US-27.md) |
 | **Total** | **8 històries** | — | **27** | **76 h** (75 h de les 8 US + 1 h de TR06.3) | — |
 
-Les fitxes `US-XX.md` s'afegeixen en **commits posteriors en aquesta mateixa branca**; les marcades *(pendent)* encara no existeixen. Els value statements literals (COM/VULL/PER) de les vuit US, els endpoints existents i a crear, l'inventari de frontend i les decisions del PO són al [context compartit](_context.md).
+Les vuit fitxes `US-XX.md` ja existeixen a aquesta branca. Els value statements literals (COM/VULL/PER) de les vuit US, els endpoints existents i a crear, l'inventari de frontend i les decisions del PO són al [context compartit](_context.md).
 
 ### Documents de suport
 
@@ -119,4 +119,4 @@ Els mockups són **HTML estàtic** (sense JS de negoci) convertits a **PNG amb C
 
 ## 5. Estat d'aquesta documentació
 
-Aquesta branca (`docs/us-sprint2`) conté la **fundació**: plantilla, context compartit, guia d'escriptura i pipeline de mockups (`_mockup/`). Les 8 fitxes `US-XX.md` arriben en **commits posteriors d'aquesta mateixa branca**; a l'índex de la secció 1 s'hi indica quines ja hi són i quines queden pendents.
+Aquesta branca (`docs/us-sprint2`) conté la **fundació** (plantilla, context compartit, guia d'escriptura i pipeline de mockups `_mockup/`) i **les 8 fitxes `US-XX.md` amb els seus mockups HTML + PNG**, totes ja presents a l'índex de la secció 1.

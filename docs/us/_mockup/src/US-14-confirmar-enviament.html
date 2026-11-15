@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Confirmar enviament · F3-Evolt</title>
+<style>
+:root{
+  --color-bg:#f7f9fc;
+  --color-surface:#ffffff;
+  --color-text:#1a2233;
+  --color-muted:#6c7a96;
+  --color-border:#e6ebf4;
+  --color-primary:#4f46e5;
+  --color-income:#16a34a;
+  --color-error:#dc2626;
+  --radius:0.75rem;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--color-bg);
+  color:var(--color-text);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:16px;
+  line-height:1.5;
+}
+/* --- Pantalla 390x844 --- */
+.screen{
+  width:390px;
+  height:844px;
+  background:var(--color-bg);
+  overflow:hidden;
+  margin:0 auto;
+  position:relative;
+}
+/* --- Barra superior --- */
+.appbar{
+  background:var(--color-surface);
+  border-bottom:1px solid var(--color-border);
+  padding:14px 16px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.appbar-title{
+  font-size:17px;
+  font-weight:600;
+}
+.appbar-back{
+  color:var(--color-muted);
+  font-size:20px;
+  line-height:1;
+}
+/* --- Contingut --- */
+.content{
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.card{
+  background:var(--color-surface);
+  border:1px solid var(--color-border);
+  border-radius:var(--radius);
+  padding:16px;
+}
+.card-title{
+  font-size:13px;
+  font-weight:600;
+  color:var(--color-muted);
+  text-transform:uppercase;
+  letter-spacing:0.04em;
+  display:block;
+  margin-bottom:8px;
+}
+/* --- Destinatari (resum) --- */
+.row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:56px;
+}
+.row-icon{
+  width:36px;
+  height:36px;
+  background:#eef0fb;
+  color:var(--color-primary);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:15px;
+  font-weight:600;
+  border-radius:50%;
+  flex:none;
+}
+.row-name{
+  flex:1;
+  font-size:15px;
+  font-weight:500;
+}
+.row-sub{
+  font-size:12px;
+  color:var(--color-muted);
+  display:block;
+  margin-top:2px;
+}
+/* --- Resum --- */
+/* <!-- TODO: classe pendent a base.css --> */
+.summary-line{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  min-height:40px;
+  border-top:1px solid var(--color-border);
+  font-size:15px;
+}
+.summary-line:first-of-type{border-top:none}
+/* <!-- TODO: classe pendent a base.css --> */
+.summary-label{
+  color:var(--color-muted);
+  flex:none;
+}
+/* <!-- TODO: classe pendent a base.css --> */
+.summary-value{
+  color:var(--color-text);
+  font-weight:500;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+.summary-value.big{
+  font-size:24px;
+  font-weight:700;
+}
+/* --- Botó --- */
+.btn-primary{
+  background:var(--color-primary);
+  color:#fff;
+  border-radius:var(--radius);
+  min-height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  font-size:15px;
+  font-weight:600;
+  border:none;
+  width:100%;
+  margin-top:4px;
+}
+.error-text{
+  color:var(--color-error);
+  font-size:14px;
+  margin:8px 0 0;
+}
+</style>
+</head>
+<body>
+<!--
+  US-14 · «Enviar diners a usuaris» — maqueta estàtica (resum «Confirmar»).
+
+  Estats NO representats aquí (es documenten al doc, no als mockups):
+  - «Enviant…» (botó desactivat mentre s'envia)
+  - Error saldo: «No tens prou saldo.» (vermell, role="alert")
+  - Error autoenviament: «No et pots enviar diners a tu mateix.»
+  - Error límit diari: «Has superat el límit diari d'enviaments. Avui encara pots enviar 980,00 €.»
+  - Èxit: tic verd → US-14-exit-tic-verd.html
+-->
+<div class="screen">
+  <header class="appbar">
+    <span class="appbar-back" aria-hidden="true">←</span>
+    <h1 class="appbar-title" style="margin:0">Confirmar</h1>
+  </header>
+  <main class="content">
+    <div class="card">
+      <span class="card-title">Destinatari</span>
+      <div class="row">
+        <span class="row-icon">UN</span>
+        <div class="row-name">Usuari nou<span class="row-sub">@buit</span></div>
+      </div>
+      <div class="summary-line">
+        <span class="summary-label">Import</span>
+        <span class="summary-value big">20,00&nbsp;€</span>
+      </div>
+      <div class="summary-line">
+        <span class="summary-label">Concepte</span>
+        <span class="summary-value">El sopar de divendres</span>
+      </div>
+      <div class="summary-line">
+        <span class="summary-label">Saldo disponible</span>
+        <span class="summary-value">3.795,21&nbsp;€</span>
+      </div>
+    </div>
+    <button class="btn-primary" type="button">Confirmar enviament</button>
+  </main>
+</div>
+</body>
+</html>
