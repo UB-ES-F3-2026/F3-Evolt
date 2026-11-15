@@ -1,7 +1,7 @@
 # CI/CD
 
 This repo has one GitHub Actions pipeline ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)).
-It runs the backend and frontend checks on every PR and push to `develop`/`main`,
+It runs the backend and frontend checks on every PR and push to `develop`, `main` and `story/**` branches,
 and a final gate job `ci` that is the **required status check for merging**.
 
 - Workflow: GitHub Actions, defined in `.github/workflows/ci.yml` (workflow name `CI`, gate job `ci`).
@@ -19,7 +19,7 @@ and a final gate job `ci` that is the **required status check for merging**.
                             ┌──────────────┐
         PR / push ─────────►│    checkout  │
         to develop / main   └──────┬───────┘
-                                   │
+        or story/**                │
               ┌────────────────────┴─────────────────────┐
               ▼                                          ▼
         ┌───────────┐                            ┌───────────┐
@@ -39,7 +39,7 @@ and a final gate job `ci` that is the **required status check for merging**.
             push to main (green ci) ──► Deploy  (see docs/deploy.md)
 ```
 
-- PR / push to `develop` or `main` → the two jobs `backend` and `frontend` run in parallel.
+- PR / push to `develop`, `main` or a `story/**` branch → the two jobs `backend` and `frontend` run in parallel. Story branches get the same checks, so a story is green before it reaches `develop` (skill `gitflow`).
 - Both finish → the **gate job `ci`** marks the whole pipeline pass/fail.
 - Push to `main` → after green `ci`, the deploy flow takes over (later effort).
 - Manual runs (`workflow_dispatch`) and reusable runs (`workflow_call`) are supported.
