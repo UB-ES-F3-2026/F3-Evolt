@@ -75,7 +75,7 @@ Cada US té:
 2. **Assumptes / Comments**
 3. **Acceptance criteria**
 
-Les especificacions detallades per història (pantalles amb ruta i component Vue, matriu d'estats, còpia d'UI literal, validacions amb missatge exacte, integració API amb reacció a cada codi d'error, criteris d'acceptació, mockups i enllaços Trello/issue/PR) es documenten a [`docs/us/`](../us/), amb plantilla obligatòria a [`docs/us/_plantilla.md`](../us/_plantilla.md) i guia d'escriptura a [`docs/us/_guia-escriptura.md`](../us/_guia-escriptura.md).
+Les especificacions detallades per història (pantalles amb ruta i component Vue, matriu d'estats, còpia d'UI literal, validacions amb missatge exacte, integració API amb reacció a cada codi d'error, criteris d'acceptació, mockups i enllaços Trello/issue/PR) es documenten a [`docs/us/`](../us/), amb una fitxa `US-XX.md` per història en format compacte.
 
 ### Acceptance criteria (AC)
 
@@ -95,7 +95,7 @@ Les especificacions detallades per història (pantalles amb ruta i component Vue
 - Cadascun escrit en **Gherkin** (Given/When/Then), **independentment testable**, amb resultat **Pass / Fall** clar i **verificable pel PO al navegador en menys d'un minut**.
 - L'extensió de pantalla (estats, còpia literal, validacions, reaccions a errors d'API) és **especificació al cos de la US, no criteris d'acceptació addicionals**; així es mantenen 3 AC forts en lloc de 6 febles.
 - Aquesta regla substitueix el «com a mínim 1» del bloc Acceptance criteria anterior: a partir d'ara, exactament 3.
-- La plantilla i l'índex d'aquesta documentació són a [`docs/us/README.md`](../us/README.md) i [`docs/us/_plantilla.md`](../us/_plantilla.md).
+- Les fitxes d'aquesta documentació són a [`docs/us/`](../us/) i el repartiment de tasques a [`docs/us/_repartiment.md`](../us/_repartiment.md).
 
 ### INVEST (qualitat de cada US)
 

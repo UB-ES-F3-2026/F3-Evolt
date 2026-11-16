@@ -3,214 +3,70 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Enviar · import · F3-Evolt</title>
+<title>US-14 · Enviar: import, teclat i concepte</title>
 <style>
-:root{
-  --color-bg:#f7f9fc;
-  --color-surface:#ffffff;
-  --color-text:#1a2233;
-  --color-muted:#6c7a96;
-  --color-border:#e6ebf4;
-  --color-primary:#4f46e5;
-  --color-income:#16a34a;
-  --color-error:#dc2626;
-  --radius:0.75rem;
-}
+:root{--color-bg:#f7f9fc;--color-surface:#fff;--color-text:#1a2233;--color-muted:#6c7a96;--color-border:#e6ebf4;--color-primary:#4f46e5;--color-income:#16a34a;--color-error:#dc2626;--color-icon-bg:#eef0fb;--radius:.75rem;--annot:#b45309}
 *{box-sizing:border-box}
-body{
-  margin:0;
-  background:var(--color-bg);
-  color:var(--color-text);
-  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  font-size:16px;
-  line-height:1.5;
-}
-/* --- Pantalla 390x844 --- */
-.screen{
-  width:390px;
-  height:844px;
-  background:var(--color-bg);
-  overflow:hidden;
-  margin:0 auto;
-  position:relative;
-  display:flex;
-  flex-direction:column;
-}
-/* --- Barra superior --- */
-.appbar{
-  background:var(--color-surface);
-  border-bottom:1px solid var(--color-border);
-  padding:14px 16px;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  flex:none;
-}
-.appbar-title{
-  font-size:17px;
-  font-weight:600;
-}
-.appbar-back{
-  color:var(--color-muted);
-  font-size:20px;
-  line-height:1;
-}
-/* --- Contingut --- */
-.content{
-  padding:16px;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  flex:1;
-}
-.card{
-  background:var(--color-surface);
-  border:1px solid var(--color-border);
-  border-radius:var(--radius);
-  padding:16px;
-}
-/* <!-- TODO: classe pendent a base.css --> */
-.label{
-  display:block;
-  font-size:13px;
-  color:var(--color-muted);
-  margin-bottom:6px;
-}
-/* --- Destinatari --- */
-.row{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  min-height:56px;
-}
-.row-icon{
-  width:36px;
-  height:36px;
-  background:#eef0fb;
-  color:var(--color-primary);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:15px;
-  font-weight:600;
-  border-radius:50%;
-  flex:none;
-}
-.row-name{
-  flex:1;
-  font-size:15px;
-  font-weight:500;
-}
-.row-sub{
-  font-size:12px;
-  color:var(--color-muted);
-  display:block;
-  margin-top:2px;
-}
-/* --- Import gran --- */
-/* <!-- TODO: classe pendent a base.css --> */
-.amount-display{
-  font-size:40px;
-  font-weight:700;
-  font-variant-numeric:tabular-nums;
-  line-height:1.2;
-  margin-top:2px;
-}
-/* --- Camp concepte --- */
-.field{
-  background:var(--color-surface);
-  border:1px solid var(--color-border);
-  border-radius:var(--radius);
-  padding:12px 16px;
-  font-size:16px;
-  color:var(--color-text);
-  width:100%;
-  font-family:inherit;
-}
-/* <!-- TODO: classe pendent a base.css --> */
-.keypad{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:8px;
-}
-/* <!-- TODO: classe pendent a base.css --> */
-.key{
-  background:var(--color-surface);
-  border:1px solid var(--color-border);
-  border-radius:var(--radius);
-  min-height:48px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:20px;
-  font-weight:600;
-  color:var(--color-text);
-  font-variant-numeric:tabular-nums;
-}
-/* <!-- TODO: classe pendent a base.css --> */
-.key.key-action{
-  color:var(--color-muted);
-  font-size:18px;
-}
-/* --- Botó --- */
-.btn-primary{
-  background:var(--color-primary);
-  color:#fff;
-  border-radius:var(--radius);
-  min-height:48px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  font-size:15px;
-  font-weight:600;
-  border:none;
-  width:100%;
-  margin-top:4px;
-}
+body{margin:0;background:var(--color-bg);color:var(--color-text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.screen{position:relative;width:390px;height:844px;overflow:hidden;margin:0 auto;background:var(--color-bg);display:flex;flex-direction:column}
+.appbar{display:flex;align-items:center;gap:16px;padding:16px 20px;background:var(--color-surface);border-bottom:1px solid var(--color-border)}
+.appbar-back{display:inline-block;padding:6px 12px;border:1px solid var(--color-primary);border-radius:var(--radius);color:var(--color-primary);font-size:14px;white-space:nowrap}
+.appbar-title{margin:0;font-size:20px;font-weight:700;white-space:nowrap}
+.appbar .menu{margin-left:auto;display:grid;place-items:center;padding:6px;border-radius:50%;color:var(--color-muted)}
+.content{flex:1;overflow:hidden;padding:16px 20px;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--color-surface);border-radius:var(--radius);padding:16px 20px}
+.label{display:block;margin:0 0 6px;font-size:13px;font-weight:600;color:var(--color-muted)}
+.row{display:flex;align-items:center;gap:12px;min-height:56px}
+.row-icon{width:36px;height:36px;border-radius:50%;background:var(--color-icon-bg);color:var(--color-primary);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;flex:none}
+.row-name{flex:1;min-width:0;font-size:15px;font-weight:500}
+.row-sub{display:block;margin-top:2px;font-size:12px;font-weight:400;color:var(--color-muted)}
+.amount-display{margin:0;font-size:34px;font-weight:700;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.keypad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.key{display:grid;place-items:center;min-height:56px;border:1px solid var(--color-border);border-radius:var(--radius);background:var(--color-surface);font-size:22px;font-weight:600}
+.key-action{color:var(--color-muted);font-size:18px}
+.field{width:100%;padding:12px;border:1px solid var(--color-border);border-radius:var(--radius);background:var(--color-surface);color:var(--color-text);font:inherit}
+.field::placeholder{color:var(--color-muted)}
+.btn-primary{display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:var(--radius);background:var(--color-primary);color:var(--color-surface);font-size:15px;font-weight:600}
 </style>
 </head>
 <body>
 <!--
-  US-14 · «Enviar diners a usuaris» — maqueta estàtica (entrada d'import amb teclat).
+  US-14 · «Enviar» (/pagaments/enviar?to=2) amb l'import ja escrit.
 
-  Estats NO representats aquí:
-  - Destinatari 404: «No hem trobat aquest destinatari.»
-  - «Continuar» desactivat mentre l'import sigui buit, ≤ 0 o mal format
-  - Error de format: «Escriu un import en euros, amb 2 decimals com a màxim.»
-  - Error: «L'import ha de ser més gran que 0.»
+  Destinatari revalidat a dalt (avatar d'inicials «UN» + «Usuari nou» + «@buit» en gris),
+  etiqueta «Import» amb el display «20,00 €» (tabular-nums), teclat numèric 4×3, camp
+  «Concepte» amb «El sopar de divendres» i el botó lila «Continuar» actiu.
+
+  L'import el decideix el teclat: no hi ha cap secció d'import a la pantalla de tria.
 -->
 <div class="screen">
   <header class="appbar">
-    <span class="appbar-back" aria-hidden="true">←</span>
-    <h1 class="appbar-title" style="margin:0">Enviar</h1>
+    <span class="appbar-back">← Inici</span>
+    <h1 class="appbar-title">Enviar</h1>
+    <span class="menu" aria-label="Menú" title="Menú"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg></span>
   </header>
   <main class="content">
-    <!-- Destinatari -->
-    <div class="card">
+    <div class="card" style="padding-top:8px;padding-bottom:8px">
       <div class="row">
         <span class="row-icon">UN</span>
-        <div class="row-name">Usuari nou<span class="row-sub">@buit</span></div>
+        <span class="row-name">Usuari nou<span class="row-sub">@buit</span></span>
       </div>
     </div>
-    <!-- Import -->
     <div class="card">
       <span class="label">Import</span>
-      <div class="amount-display">20,00&nbsp;€</div>
+      <p class="amount-display">20,00 €</p>
     </div>
-    <!-- Teclat numèric -->
     <div class="keypad">
-      <div class="key">1</div><div class="key">2</div><div class="key">3</div>
-      <div class="key">4</div><div class="key">5</div><div class="key">6</div>
-      <div class="key">7</div><div class="key">8</div><div class="key">9</div>
-      <div class="key key-action">,</div><div class="key">0</div><div class="key key-action">⌫</div>
+      <span class="key">1</span><span class="key">2</span><span class="key">3</span>
+      <span class="key">4</span><span class="key">5</span><span class="key">6</span>
+      <span class="key">7</span><span class="key">8</span><span class="key">9</span>
+      <span class="key key-action">,</span><span class="key">0</span><span class="key key-action">⌫</span>
     </div>
-    <!-- Concepte -->
     <section>
       <span class="label">Concepte</span>
-      <input class="field" type="text" placeholder="Opcional" value="El sopar de divendres">
+      <input class="field" type="text" aria-label="Concepte" placeholder="Opcional" value="El sopar de divendres">
     </section>
-    <button class="btn-primary" type="button">Continuar</button>
+    <span class="btn-primary">Continuar</span>
   </main>
 </div>
 </body>

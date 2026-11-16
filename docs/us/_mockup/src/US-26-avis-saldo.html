@@ -114,18 +114,31 @@
       font-size: 14px;
       color: var(--color-text);
     }
-    .btn-danger {
+    .actions {
       margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .btn-ghost,
+    .btn-danger {
       width: 100%;
       height: 48px;
-      border: 0;
       border-radius: var(--radius);
-      background: var(--color-expense);
-      color: #ffffff;
       font-family: inherit;
       font-size: 16px;
       font-weight: 600;
       cursor: pointer;
+    }
+    .btn-ghost {
+      border: 1px solid var(--color-primary);
+      background: var(--color-surface);
+      color: var(--color-primary);
+    }
+    .btn-danger {
+      border: 0;
+      background: var(--color-expense);
+      color: #ffffff;
     }
     .overlay {
       position: fixed;
@@ -181,7 +194,10 @@
           <p class="empty-text" style="margin:0;">Encara no tens moviments</p>
         </div>
       </section>
-      <button type="button" class="btn-danger">Eliminar subcompte</button>
+      <div class="actions">
+        <button type="button" class="btn-ghost">Aportar</button>
+        <button type="button" class="btn-danger">Eliminar subcompte</button>
+      </div>
     </main>
     <div class="overlay">
       <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">

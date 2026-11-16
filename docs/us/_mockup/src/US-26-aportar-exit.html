@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aportació feta al subcompte</title>
+  <style>
+    :root {
+      --color-bg: #f7f9fc;
+      --color-surface: #ffffff;
+      --color-text: #1a2233;
+      --color-muted: #6c7a96;
+      --color-border: #e6ebf4;
+      --color-primary: #4f46e5;
+      --color-income: #16a34a;
+      --color-expense: #dc2626;
+      --radius: 0.75rem;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 390px;
+      height: 844px;
+      overflow: hidden;
+    }
+    body {
+      background: var(--color-bg);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--color-text);
+      -webkit-font-smoothing: antialiased;
+    }
+    .screen {
+      width: 390px;
+      height: 844px;
+      display: flex;
+      flex-direction: column;
+    }
+    .appbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .appbar h1 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+    .back {
+      flex: none;
+      padding: 6px 10px;
+      border: 1px solid var(--color-primary);
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-primary);
+      white-space: nowrap;
+    }
+    .content {
+      flex: 1;
+      overflow: hidden;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .card {
+      background: var(--color-surface);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .success {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 32px 20px;
+      text-align: center;
+    }
+    .success-text {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .success-next {
+      margin: 0;
+      font-size: 14px;
+      color: var(--color-muted);
+    }
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .balance-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .balance-row:last-child { border-bottom: none; }
+    .balance-label { font-size: 15px; }
+    .balance-value {
+      font-size: 15px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .total-line {
+      display: block;
+      margin-top: 10px;
+      padding-top: 12px;
+      border-top: 1px solid var(--color-border);
+      font-size: 14px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .movement {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 0;
+    }
+    .movement-concept { font-size: 15px; }
+    .movement-date {
+      display: block;
+      margin-top: 2px;
+      font-size: 12px;
+      color: var(--color-muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .movement-amount {
+      font-size: 15px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      color: var(--color-income);
+    }
+  </style>
+</head>
+<body>
+  <!--
+    US-26 · Aportació feta (390×844, PNG 780×1688).
+
+    Després del tic «Has aportat 20,00 $ a Dòlar nord-americà» el subcompte passa de
+    317,55 $ a 337,55 $ i el «Total ≈ … €» es recalcula a 1.558,45 €
+    (1.250,50 € + 30.795 cèntims de 33.755 $ al tipus 9.123).
+  -->
+  <div class="screen">
+    <header class="appbar">
+      <span class="back">← USD</span>
+      <h1>Aportar a Dòlar nord-americà</h1>
+    </header>
+    <main class="content">
+      <section class="card success" role="status">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+          <circle cx="20" cy="20" r="20" fill="#16a34a"/>
+          <path d="M12 20.5L17.5 26L28 14.5" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <p class="success-text">Has aportat 20,00 $ a Dòlar nord-americà</p>
+        <p class="success-next">Tornant al subcompte…</p>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title">Divises</h2>
+        <div class="balance-row">
+          <span class="balance-label">EUR · Euro</span>
+          <span class="balance-value">1.250,50 €</span>
+        </div>
+        <div class="balance-row">
+          <span class="balance-label">USD · Dòlar nord-americà</span>
+          <span class="balance-value">337,55 $</span>
+        </div>
+        <span class="total-line">Total ≈ 1.558,45 €</span>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title">Últims moviments</h2>
+        <div class="movement">
+          <div>
+            <span class="movement-concept">Aportació</span>
+            <span class="movement-date">15 de nov. · 18:30</span>
+          </div>
+          <span class="movement-amount">+20,00 $</span>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
