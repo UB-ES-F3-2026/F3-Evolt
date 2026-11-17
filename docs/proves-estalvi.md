@@ -175,7 +175,7 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 | **REP-09** | Amb el backend aturat, retira `10`. | Surt «No hi ha connexió amb el servidor. Torna-ho a provar.» en vermell sota el botó i l'import es queda escrit. |
 | **REP-10** | Retira exactament tot el saldo de Vacances (`150`). | Es fa la retirada i Vacances queda a 0,00 €. |
 | **REP-11** | Amb Vacances a 0,00 € (REP-10), obre el detall i prova de tocar «Retirar», amb el ratolí i amb el tabulador. | «Retirar» surt desactivat, amb el fons gris; no fa res i el tabulador se'l salta. «Aportar» continua actiu. |
-| **REP-12** | A «Retirar de Vacances», escriu `30` i toca «Cancel·lar». | Torna al detall de Vacances sense retirar res, com «Cancel·lar» a «Aportar a <nom>». **Pendent que el PO ho confirmi a US-19**: la història diu que hi ha «Cancel·lar», però no què fa. |
+| **REP-12** | A «Retirar de Vacances», escriu `30` i toca «Cancel·lar». | Surt una pantalla d'avís de retirada cancel·lada (decisió del PO, 17/11), no es retira res i cap dels dos saldos canvia. **Pendent que el PO ho defineixi a US-19:** el text exacte de l'avís, si porta un resum (import i saldos) i a quina pantalla torna després. |
 
 ---
 
@@ -243,4 +243,4 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 | US-20 · Després d'aportar o retirar, la barra i el percentatge ja surten actualitzats | O-02, O-03, O-04, RE-01, OP-04, OP-05, OP-06 |
 | US-20 · El percentatge també surt escrit amb números (per exemple «24 %»), no només com a barra | OP-01, OP-08 |
 
-Proves que no surten d'un criteri, sinó del contracte: P-12 i P-13 (format del cos), A-10 a A-13 (guardioles inexistents o d'altres usuaris), A-15 (aportar per sobre de l'objectiu), A-20 (sense XP), A-21 (límit diari) i A-22 (reinici de dades); RE-10 a RE-13 (format i guardioles d'altres), RE-17 (retirades alhora), RE-19 a RE-21 (límit diari, XP i reinici), REP-12 (cancel·lar, pendent del PO), O-06 (claus del `Pot`) i O-07 (arrodoniment).
+Proves que no surten d'un criteri, sinó del contracte: P-12 i P-13 (format del cos), A-10 a A-13 (guardioles inexistents o d'altres usuaris), A-15 (aportar per sobre de l'objectiu), A-20 (sense XP), A-21 (límit diari) i A-22 (reinici de dades); RE-10 a RE-13 (format i guardioles d'altres), RE-17 (retirades alhora), RE-19 a RE-21 (límit diari, XP i reinici), REP-12 (cancel·lar: la pantalla d'avís, amb el text pendent del PO), O-06 (claus del `Pot`) i O-07 (arrodoniment).
