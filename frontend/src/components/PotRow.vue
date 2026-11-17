@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ChevronRight, PiggyBank } from '@lucide/vue'
 import MoneyAmount from '@/components/MoneyAmount.vue'
+import PotProgress from '@/components/PotProgress.vue'
 import type { Pot } from '@/models/pot'
 
 // The root element is an <li>: render rows inside a <ul>. The whole row opens the pot.
@@ -24,7 +25,10 @@ withDefaults(
       <span class="icon">
         <PiggyBank :size="20" />
       </span>
-      <span class="name">{{ pot.name }}</span>
+      <div class="row-name-col">
+        <span class="name">{{ pot.name }}</span>
+        <PotProgress :pot="pot" compact />
+      </div>
       <MoneyAmount class="balance" :cents="pot.balance" :hidden="hidden" />
       <ChevronRight class="chevron" :size="18" />
     </router-link>
@@ -55,9 +59,15 @@ withDefaults(
   color: var(--pot-color);
 }
 
-.name {
+.row-name-col {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

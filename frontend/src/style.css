@@ -6,6 +6,9 @@
   --color-border: #e6ebf4;
   --color-primary: #4f46e5;
   --color-income: #16a34a;
+  /* Goal badge «Objectiu assolit» (US-20). */
+  --color-goal-badge-bg: #e8f6ee;
+  --color-goal-badge-text: #166534;
   --color-expense: #dc2626;
   --color-error: #dc2626;
   /* Pot colours (docs/api.md §9.1): never green or red, which mean income, expense and errors. */

@@ -17,6 +17,28 @@ describe('fromApiPot', () => {
 
     expect(pot.color).toBe(DEFAULT_POT_COLOR)
   })
+
+  it('keeps the goal progress fields of US-20 when the API sends them', () => {
+    const pot = fromApiPot({
+      id: 'pot-04',
+      name: 'Vacances',
+      balance: 42000,
+      target: 100000,
+      color: 'blue',
+      percentage: 42,
+      goalStatus: 'achieved',
+    })
+
+    expect(pot.percentage).toBe(42)
+    expect(pot.goalStatus).toBe('achieved')
+  })
+
+  it('leaves the goal progress fields absent when the API does not send them', () => {
+    const pot = fromApiPot({ id: 'pot-05', name: 'Fons', balance: 0, target: null, color: 'teal' })
+
+    expect(pot.percentage).toBeUndefined()
+    expect(pot.goalStatus).toBeUndefined()
+  })
 })
 
 describe('fromApiPots', () => {
