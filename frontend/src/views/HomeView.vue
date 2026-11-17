@@ -1,20 +1,32 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { Eye, EyeOff, PiggyBank, Plus } from '@lucide/vue'
+import { Coins, Eye, EyeOff, PiggyBank, Plus } from '@lucide/vue'
 import AppShell from '@/components/AppShell.vue'
+import CurrencyRow from '@/components/CurrencyRow.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ErrorState from '@/components/ErrorState.vue'
 import LoadingIndicator from '@/components/LoadingIndicator.vue'
 import MoneyAmount from '@/components/MoneyAmount.vue'
 import MovementRow from '@/components/MovementRow.vue'
 import { useBalanceVisibility } from '@/viewmodels/useBalanceVisibility'
+import { useCurrenciesViewModel } from '@/viewmodels/useCurrenciesViewModel'
 import { useHomeViewModel } from '@/viewmodels/useHomeViewModel'
 
 const { balance, totalSaved, lastMovements, hasMovements, isLoading, error, load } = useHomeViewModel()
 const { isHidden, toggle } = useBalanceVisibility()
+const {
+  rows: currencyRows,
+  totalCents: currenciesTotalCents,
+  isLoading: currenciesIsLoading,
+  error: currenciesError,
+  load: loadCurrencies,
+} = useCurrenciesViewModel()
 
 // Every visit reloads, so a top-up made on another screen shows up (US-07 AC 4).
-onMounted(load)
+onMounted(() => {
+  void load()
+  void loadCurrencies()
+})
 </script>
 
 <template>
@@ -54,7 +66,30 @@ onMounted(load)
             <PiggyBank :size="18" />
             Guardioles
           </router-link>
+          <router-link :to="{ name: 'currencies' }" class="currencies-link">
+            <Coins :size="18" />
+            Divises
+          </router-link>
         </div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <h2 class="label">Divises</h2>
+        </div>
+        <LoadingIndicator v-if="currenciesIsLoading" />
+        <ErrorState v-else-if="currenciesError" :message="currenciesError" @retry="loadCurrencies" />
+        <template v-else>
+          <ul class="currency-rows">
+            <CurrencyRow
+              v-for="row in currencyRows" :key="row.code" :code="row.code" :name="row.name"
+              :symbol="row.symbol" :amount-text="row.amountText" :hidden="isHidden"
+            />
+          </ul>
+          <p class="total-line">
+            Total ≈ <strong><MoneyAmount :cents="currenciesTotalCents" :hidden="isHidden" /></strong>
+          </p>
+        </template>
       </section>
 
       <section class="card">
@@ -159,6 +194,18 @@ onMounted(load)
   color: var(--color-primary);
 }
 
+.currencies-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius);
+  font-weight: 600;
+  background: var(--color-surface);
+  color: var(--color-primary);
+}
+
 .see-all {
   font-size: 0.875rem;
 }
@@ -166,5 +213,19 @@ onMounted(load)
 .movements {
   margin: 0.5rem 0 0;
   padding: 0;
+}
+
+.currency-rows {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.total-line {
+  border-top: 1px solid var(--color-border);
+  padding-top: 0.75rem;
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  font-weight: 600;
 }
 </style>
