@@ -10,6 +10,10 @@ describe('toUserMessage', () => {
     expect(toUserMessage({ code: 'INTERNAL_ERROR', message: 'x' })).toMatch(/error inesperat/)
     expect(toUserMessage({ code: 'INVALID_POT_NAME', message: 'x' })).toBe('El nom de la guardiola no pot estar buit.')
     expect(toUserMessage({ code: 'INVALID_TARGET', message: 'x' })).toBe("L'objectiu ha de ser més gran que 0.")
+    expect(toUserMessage({ code: 'AMOUNT_TOO_SMALL', message: 'x' })).toBe("L'import és massa petit per canviar.")
+    expect(toUserMessage({ code: 'SAME_CURRENCY', message: 'x' })).toBe(
+      'Origen i destí no poden ser el mateix subcompte.',
+    )
   })
 
   it.each([

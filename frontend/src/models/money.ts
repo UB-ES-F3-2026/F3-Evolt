@@ -1,9 +1,13 @@
 /**
- * Money for display. Amounts travel as integer cents (docs/api.md §1) and
- * become euros only at the presentation edge, through this module.
+ * Money for display. Amounts travel as integer minor units (docs/api.md §1) and
+ * become a formatted currency only at the presentation edge, through this module.
  * Turning a typed euro amount into cents (T09.4) belongs here too, so every
  * euro ↔ cent conversion lives in one file.
  */
+
+// Type-only on purpose: `exchange.ts` imports this module's runtime helpers,
+// so a value import here would create a runtime cycle (US-27).
+import type { CurrencyCode } from './exchange'
 
 const EUROS = new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR' })
 
@@ -31,4 +35,40 @@ export function eurosToCents(text: string): number | null {
   const [, euros, decimals = ''] = match
   const cents = Number(euros) * 100 + Number(decimals.padEnd(2, '0'))
   return Number.isSafeInteger(cents) ? cents : null
+}
+
+// Symbol shown after the amount for each currency (US-25 mockup). CHF has no
+// symbol, its code is the symbol.
+const SYMBOLS: Record<CurrencyCode, string> = {
+  EUR: '€',
+  USD: '$',
+  GBP: '£',
+  CHF: 'CHF',
+  JPY: '¥',
+}
+
+/** Minor units per whole unit: 100 for every currency except JPY (whole yen). */
+export function currencyDecimals(code: CurrencyCode): number {
+  return code === 'JPY' ? 0 : 2
+}
+
+/** € $ £ CHF ¥ */
+export function currencySymbol(code: CurrencyCode): string {
+  return SYMBOLS[code]
+}
+
+/**
+ * Formats any currency's minor units the way the app shows them (US-25/US-27):
+ * `"317,55 $", "1.234 ¥", "1.234,56 CHF"` (NBSP before the symbol, like EUR),
+ * so the amount never wraps away from its currency. EUR delegates to
+ * `formatCents`, so its output is exactly the euro formatting already used.
+ */
+export function formatMinor(minor: number, code: CurrencyCode): string {
+  if (code === 'EUR') return formatCents(minor)
+  const decimals = currencyDecimals(code)
+  const amount = new Intl.NumberFormat('ca-ES', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  }).format(minor / 10 ** decimals)
+  return `${amount}\u00A0${SYMBOLS[code]}`
 }
