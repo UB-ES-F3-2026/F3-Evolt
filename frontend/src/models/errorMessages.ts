@@ -34,6 +34,9 @@ const MESSAGES: Record<ApiErrorCode, string> = {
   UNAUTHENTICATED: 'Cal iniciar sessió.',
   SESSION_EXPIRED: "La sessió s'ha tancat per inactivitat.",
   RESET_LINK_EXPIRED: 'Aquest enllaç ha caducat.',
+  // Provisional until the sub-accounts contract lands (issues #166/#167).
+  CURRENCY_EXISTS: 'Ja tens un subcompte en aquesta divisa.',
+  CURRENCY_NOT_SUPPORTED: 'Aquesta divisa no és a la llista de divises disponibles.',
 }
 
 export function messageForCode(code: ApiErrorCode, details?: ApiError['details']): string {
