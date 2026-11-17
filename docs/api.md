@@ -18,6 +18,7 @@ Contracte compartit entre el backend (FastAPI) i el frontend per a les històrie
 8. [Accés (US-01 a US-04)](#8-accés-us-01-a-us-04)
 9. [Guardioles (US-17 i US-18)](#9-guardioles-us-17-i-us-18)
 10. [Moviments: filtres, detall i informe (US-10 i US-11)](#10-moviments-filtres-detall-i-informe-us-10-i-us-11)
+11. [Guardioles: retirar i progrés (US-19 i US-20)](#11-guardioles-retirar-i-progrés-us-19-i-us-20)
 
 ---
 
@@ -122,7 +123,7 @@ Valors d'`icon` (llista tancada):
 | `shopping` | Compres |
 | `food` | Menjar i restaurants |
 | `transport` | Transport |
-| `savings` | Aportació a una guardiola ([apartat 9.4](#94-post-apipotspotidcontributions)) |
+| `savings` | Aportació a una guardiola ([apartat 9.4](#94-post-apipotspotidcontributions)) o retirada d'una guardiola ([apartat 11.2](#112-post-apipotspotidwithdrawals)) |
 | `other` | Qualsevol altre moviment |
 
 Exemple:
@@ -519,7 +520,7 @@ Totes les respostes d'error tenen aquest format:
 
 | `code` | HTTP | Quan | `details` |
 |---|---|---|---|
-| `INVALID_AMOUNT` | 422 | `amount ≤ 0`, a una recàrrega o a una aportació a una guardiola ([9.4](#94-post-apipotspotidcontributions)) | — |
+| `INVALID_AMOUNT` | 422 | `amount ≤ 0`, a una recàrrega, a una aportació a una guardiola ([9.4](#94-post-apipotspotidcontributions)) o a una retirada ([11.2](#112-post-apipotspotidwithdrawals)) | — |
 | `AMOUNT_OVER_LIMIT` | 422 | `amount > 50000` | — |
 | `DAILY_LIMIT_EXCEEDED` | 422 | Recàrregues d'avui + `amount > 100000` | `{ remainingToday }` (cèntims) |
 | `VALIDATION_ERROR` | 422 | Paràmetres o cos mal formats: falta `amount`, no és un enter, `offset`/`limit` fora de rang, o filtres del llistat no vàlids (data mal formada, `type` desconegut o `dateFrom` posterior a `dateTo`, [10.2](#102-filtres-de-get-apimovements)) | — |
@@ -560,6 +561,12 @@ Codis dels moviments (Sprint 1, [apartat 10](#10-moviments-filtres-detall-i-info
 |---|---|---|---|
 | `MOVEMENT_NOT_FOUND` | 404 | El moviment no existeix o és d'un altre usuari | — |
 | `INVALID_DESCRIPTION` | 422 | La descripció de l'informe és buida, només té espais o passa de 500 caràcters | — |
+
+Codis de retirar i progrés (Sprint 2, [apartat 11](#11-guardioles-retirar-i-progrés-us-19-i-us-20)):
+
+| `code` | HTTP | Quan | `details` |
+|---|---|---|---|
+| `INSUFFICIENT_POT_BALANCE` | 422 | La retirada supera el saldo de la guardiola | — |
 
 ### Exemples
 
@@ -700,6 +707,14 @@ Propostes dels moviments (T10.1, PR #120):
 | P43 | [10.4](#104-post-apimovementsmovementidreports) | Codi propi `INVALID_DESCRIPTION` (`422`) per a una descripció buida, només amb espais o de més de 500 caràcters. La descripció es desa sense els espais dels extrems. |
 | P44 | [10.5](#105-justificant-pdf) | El justificant PDF es genera al navegador amb jsPDF (llicència MIT), sense Cloud Function ni cap ruta (decisió de PO). |
 | P45 | [10.7](#107-model-intern-dels-moviments) | Seed: els noms fictius de la contrapart de la taula de 10.7, i el moviment més recent de l'usuari 1 (`mov-30`) en estat `pending`. |
+
+Propostes de retirar i progrés (T19.1, issue #146). **[PROPOSTA — pendent de validar]** fins que s'aprovi la PR:
+
+| # | Apartat | Proposta |
+|---|---|---|
+| P47 | [11.2](#112-post-apipotspotidwithdrawals) | La retirada és `POST /api/pots/{potId}/withdrawals` amb `{ amount }` i respon `201` amb `{ balance, pot, movement }`, la mateixa forma que l'aportació. |
+| P48 | [11.2](#112-post-apipotspotidwithdrawals) | El moviment del compte principal d'una retirada porta la icona `savings`, la mateixa que l'aportació, i el `kind` intern `"other"`. |
+| P49 | [11.1](#111-progrés-de-pot) | Valors de `goalStatus`: `"in_progress"` i `"achieved"` (i `null` sense objectiu). |
 
 ---
 
@@ -1205,6 +1220,8 @@ Exemple:
 }
 ```
 
+> Des de l'Sprint 2, `Pot` també porta `percentage` i `goalStatus`, el progrés cap a l'objectiu (US-20, [11.1](#111-progrés-de-pot)).
+
 ### 9.2 `GET /api/pots`
 
 Les guardioles de l'usuari (US-17).
@@ -1417,12 +1434,12 @@ Cada entrada de l'historial:
 |---|---|---|
 | `id` | string | Identificador opac. Format `pmov-01`, `pmov-02`… |
 | `amount` | integer | Cèntims, sempre `> 0`. |
-| `concept` | string | `"Aportació"` a les aportacions. `"Saldo inicial"` a l'entrada inicial de les guardioles del seed ([9.8](#98-model-intern-de-lestalvi)). |
+| `concept` | string | `"Aportació"` a les aportacions. `"Saldo inicial"` a l'entrada inicial de les guardioles del seed ([9.8](#98-model-intern-de-lestalvi)). `"Retirada"` a les retirades ([11.3](#113-historial-de-la-guardiola)). |
 | `date` | string | ISO 8601 amb desplaçament. |
-| `type` | `"income"` \| `"expense"` | Des del punt de vista de la **guardiola**: una aportació hi fa entrar diners, i per tant és `income`. El frontend la mostra en verd i amb «+». |
+| `type` | `"income"` \| `"expense"` | Des del punt de vista de la **guardiola**: una aportació hi fa entrar diners, i per tant és `income`. El frontend la mostra en verd i amb «+». Una retirada és `expense`, en vermell i amb «−» ([11.3](#113-historial-de-la-guardiola)). |
 
 - L'historial és de la guardiola, no del compte. Per això l'aportació hi surt com a `income` amb el concepte «Aportació», mentre que al compte principal surt com a `expense` amb el concepte «Aportació a <nom>».
-- El saldo d'una guardiola és sempre la suma del seu historial.
+- El saldo d'una guardiola és sempre la suma del seu historial; amb les retirades, una suma amb signe ([11.3](#113-historial-de-la-guardiola)).
 - Si dues entrades tenen la mateixa data, va primer la creada més tard, com a P4.
 - La guardiola no existeix o és d'un altre usuari → `POT_NOT_FOUND`.
 
@@ -1844,3 +1861,266 @@ Aquest apartat és per al backend. El frontend no en depèn.
     | `mov-18` | Transferència enviada | Laia Vidal |
     | `mov-24` | Bizum rebut | Pau Ferrer |
     | `mov-29` | Bizum enviat | Núria Soler |
+
+---
+
+## 11. Guardioles: retirar i progrés (US-19 i US-20)
+
+Retirar diners d'una guardiola al compte principal i veure el progrés de cada guardiola cap al seu objectiu. Tasca: T19.1 (issue #146). Les pantalles, els textos i els mockups són a les històries (`docs/us/US-19.md` i `docs/us/US-20.md`).
+
+| Tasca | Què implementa d'aquest apartat |
+|---|---|
+| T19.2 (backend) | [11.2](#112-post-apipotspotidwithdrawals), [11.3](#113-historial-de-la-guardiola), [11.4](#114-efecte-sobre-altres-rutes) i la retirada de [11.6](#116-model-intern) |
+| T20.1 (backend) | [11.1](#111-progrés-de-pot) i el càlcul de [11.6](#116-model-intern) |
+| T19.3 (frontend) | El botó «Retirar» i la pantalla «Retirar de <nom>», que criden [11.2](#112-post-apipotspotidwithdrawals) |
+| T20.2 (frontend) | La barra de progrés, el percentatge i l'etiqueta a la llista i al detall, amb els camps de [11.1](#111-progrés-de-pot) |
+
+Tot és com a l'[apartat 9](#9-guardioles-us-17-i-us-18): rutes protegides, cada usuari només veu i modifica les seves guardioles, imports en cèntims enters, dates ISO 8601 amb el desplaçament de Madrid i claus en camelCase. Els exemples fan servir l'usuari 1 del seed (compte principal amb `379521` i les tres guardioles de [9.8](#98-model-intern-de-lestalvi)) i el moment `2026-11-03T10:00:00+01:00`.
+
+### 11.1 Progrés de `Pot`
+
+L'objecte `Pot` de [9.1](#91-objecte-pot) guanya dos camps (US-20). Surten a **totes** les respostes que porten una guardiola: `GET /api/pots`, `POST /api/pots`, l'aportació ([9.4](#94-post-apipotspotidcontributions)) i la retirada ([11.2](#112-post-apipotspotidwithdrawals)).
+
+| Camp | Tipus | Notes |
+|---|---|---|
+| `percentage` | integer \| `null` | Progrés cap a l'objectiu: `balance / target` en percentatge, arrodonit a l'enter, amb els mitjos cap amunt. Pot passar de `100`. Val `null` si la guardiola no té objectiu. |
+| `goalStatus` | `"in_progress"` \| `"achieved"` \| `null` | `"achieved"` si `balance ≥ target`; `"in_progress"` si `balance < target`; `null` si la guardiola no té objectiu. **[PROPOSTA — pendent de validar]** (P49) |
+
+**Regles:**
+
+- Les dues claus hi són sempre. Sense objectiu (`target: null`) valen totes dues `null`; amb objectiu, cap de les dues és mai `null`.
+- **Arrodoniment:** 62,5 → `63` i 62,4 → `62`. Com es calcula sense errors d'arrodoniment, a [11.6](#116-model-intern).
+- `goalStatus` es decideix amb `balance` i `target`, no amb el percentatge arrodonit: amb `7999` de `8000`, `percentage` és `100` (99,99 arrodonit) però `goalStatus` continua sent `"in_progress"`, perquè encara no s'ha arribat a l'objectiu.
+- El backend el calcula a cada resposta, a partir del saldo d'aquell moment; no es desa. El frontend **no el recalcula mai** a partir de `balance` i `target`: pinta el que rep.
+- Per sobre de l'objectiu, `percentage` diu el valor real (`125`) i `goalStatus` és `"achieved"`. Que la barra no passi mai del 100 % de l'ample ho decideix el frontend (US-20).
+- L'estat depèn del saldo de cada moment: una retirada pot tornar una guardiola de `"achieved"` a `"in_progress"`.
+- Una guardiola nova amb objectiu té `percentage: 0` i `goalStatus: "in_progress"`.
+- Els cossos de les peticions i les validacions de [9.3](#93-post-apipots) i [9.4](#94-post-apipotspotidcontributions) no canvien: `percentage` i `goalStatus` només surten a les respostes.
+- En aquest sprint, assolir un objectiu no dona XP (la gamificació, EP-11 i EP-12, no és a l'abast).
+
+Exemples:
+
+| Guardiola | `balance` | `target` | `percentage` | `goalStatus` |
+|---|---|---|---|---|
+| Vacances (seed) | `15000` | `100000` | `15` | `"in_progress"` |
+| Emergències (seed) | `10000` | `null` | `null` | `null` |
+| Regal d'aniversari (seed) | `5000` | `8000` | `63` (62,5) | `"in_progress"` |
+| Regal d'aniversari, després d'aportar `3000` | `8000` | `8000` | `100` | `"achieved"` |
+| Regal d'aniversari, després d'aportar `5000` | `10000` | `8000` | `125` | `"achieved"` |
+| Viatge, acabada de crear ([9.3](#93-post-apipots)) | `0` | `30000` | `0` | `"in_progress"` |
+
+**`GET /api/pots`** amb el seed:
+
+```json
+{
+  "items": [
+    {
+      "id": "pot-01",
+      "name": "Vacances",
+      "balance": 15000,
+      "target": 100000,
+      "color": "blue",
+      "percentage": 15,
+      "goalStatus": "in_progress"
+    },
+    {
+      "id": "pot-02",
+      "name": "Emergències",
+      "balance": 10000,
+      "target": null,
+      "color": "orange",
+      "percentage": null,
+      "goalStatus": null
+    },
+    {
+      "id": "pot-03",
+      "name": "Regal d'aniversari",
+      "balance": 5000,
+      "target": 8000,
+      "color": "pink",
+      "percentage": 63,
+      "goalStatus": "in_progress"
+    }
+  ]
+}
+```
+
+### 11.2 `POST /api/pots/{potId}/withdrawals`
+
+Retira diners d'una guardiola al compte principal (US-19). És l'operació inversa de l'aportació ([9.4](#94-post-apipotspotidcontributions)), amb la mateixa forma de petició i de resposta. **[PROPOSTA — pendent de validar]** (P47)
+
+**Cos de la petició:** `{ amount }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `amount` | integer | Import de la retirada en cèntims. Obligatori. Enter JSON estricte, com a P5. |
+
+**Resposta `201`:** `{ balance, pot, movement }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `balance` | integer | Saldo **nou** del compte principal, en cèntims. |
+| `pot` | `Pot` | La guardiola amb el saldo nou i el progrés recalculat ([11.1](#111-progrés-de-pot)). |
+| `movement` | `Movement` | El moviment que s'ha creat al compte principal. |
+
+Amb aquesta resposta, el frontend pinta el tic verd «Has retirat 30,00 € de Vacances» i «Saldo disponible: 3.825,21 € · Vacances: 120,00 €» sense tornar a demanar res.
+
+**Ordre de les validacions.** S'aturen al primer error:
+
+1. Format del cos: `amount` falta o no és un enter JSON estricte → `VALIDATION_ERROR`.
+2. La guardiola no existeix o és d'un altre usuari → `POT_NOT_FOUND`, amb el mateix cos en tots dos casos, com a [9.4](#94-post-apipotspotidcontributions). Un `potId` amb un format qualsevol també dona `POT_NOT_FOUND`.
+3. `amount ≤ 0` → `INVALID_AMOUNT`, el mateix codi que a la recàrrega i a l'aportació.
+4. `amount` més gran que el saldo de la guardiola → `INSUFFICIENT_POT_BALANCE` (codi nou, `422`).
+
+**Regles:**
+
+- Retirar **exactament** tot el saldo de la guardiola està permès: la guardiola es queda a `0`. D'una guardiola a `0`, qualsevol import positiu dona `INSUFFICIENT_POT_BALANCE` (el frontend, a més, hi desactiva el botó «Retirar»).
+- **Tot o res.** Una retirada fa quatre canvis: el saldo del compte puja, el saldo de la guardiola baixa, un moviment nou al compte i una entrada nova a l'historial de la guardiola. O es fan tots quatre, o no se'n fa cap. Si hi ha un error, no canvia res.
+- **Moviment del compte principal**, creat en la mateixa operació, perquè el saldo del compte continuï sent la suma dels seus moviments:
+  - `type: "income"`;
+  - `amount` igual a la retirada;
+  - `concept: "Retirada de <nom de la guardiola>"`, p. ex. `"Retirada de Vacances"`;
+  - `icon: "savings"`, la mateixa icona que l'aportació **[PROPOSTA — pendent de validar]** (P48);
+  - `date`: el moment de la retirada;
+  - `counterparty: null`, `status: "completed"` i una `reference` nova, com tots els moviments nous (P38);
+  - `kind` intern `"other"`: és un ingrés, però no una recàrrega, així que no compta per al límit diari ([4.3](#43-post-apitopups)).
+- **Entrada de l'historial de la guardiola:** `concept: "Retirada"` i `type: "expense"` ([11.3](#113-historial-de-la-guardiola)).
+- **Casos límit:**
+  - Dues retirades alhora de la mateixa guardiola s'apliquen una darrere l'altra. La segona es valida amb el saldo que ha deixat la primera: si ja no n'hi ha prou, rep `INSUFFICIENT_POT_BALANCE`. El saldo d'una guardiola mai pot quedar negatiu.
+  - Una retirada i una aportació alhora a la mateixa guardiola també s'apliquen una darrere l'altra.
+  - Retirar pot deixar la guardiola per sota de l'objectiu: el `pot` de la resposta ja porta el `percentage` i el `goalStatus` nous.
+- En aquest sprint, retirar no dona ni treu XP.
+
+**Petició:**
+
+```http
+POST /api/pots/pot-01/withdrawals HTTP/1.1
+Content-Type: application/json
+
+{
+  "amount": 3000
+}
+```
+
+**Resposta `201`** (saldo anterior del compte: `379521`; saldo anterior de la guardiola: `15000`):
+
+```json
+{
+  "balance": 382521,
+  "pot": {
+    "id": "pot-01",
+    "name": "Vacances",
+    "balance": 12000,
+    "target": 100000,
+    "color": "blue",
+    "percentage": 12,
+    "goalStatus": "in_progress"
+  },
+  "movement": {
+    "id": "mov-31",
+    "amount": 3000,
+    "concept": "Retirada de Vacances",
+    "date": "2026-11-03T10:00:00+01:00",
+    "type": "income",
+    "icon": "savings",
+    "counterparty": null,
+    "status": "completed",
+    "reference": "EVT-000031"
+  }
+}
+```
+
+### 11.3 Historial de la guardiola
+
+`GET /api/pots/{potId}/movements` ([9.5](#95-get-apipotspotidmovements)) no canvia de forma. Cada retirada hi afegeix una entrada:
+
+- `concept: "Retirada"`;
+- `type: "expense"`, perquè des del punt de vista de la **guardiola** hi surten diners. El frontend la mostra en vermell i amb «−» («−30,00 €»);
+- `amount`: l'import retirat, `> 0`, com totes les entrades.
+
+Al compte principal, la mateixa retirada surt com a `income` amb el concepte «Retirada de <nom>» ([11.2](#112-post-apipotspotidwithdrawals)).
+
+El saldo d'una guardiola continua sent la suma del seu historial, ara amb signe: les entrades `income` sumen i les `expense` resten.
+
+**Resposta** de `GET /api/pots/pot-01/movements` després de la retirada de 11.2:
+
+```json
+{
+  "items": [
+    {
+      "id": "pmov-04",
+      "amount": 3000,
+      "concept": "Retirada",
+      "date": "2026-11-03T10:00:00+01:00",
+      "type": "expense"
+    },
+    {
+      "id": "pmov-01",
+      "amount": 15000,
+      "concept": "Saldo inicial",
+      "date": "2026-10-04T10:00:00+02:00",
+      "type": "income"
+    }
+  ]
+}
+```
+
+`15000 − 3000 = 12000`, el saldo de la guardiola.
+
+### 11.4 Efecte sobre altres rutes
+
+Després d'una retirada:
+
+- `GET /api/home`: el `balance` puja i el `totalSaved` baixa exactament el mateix import. La suma `balance + totalSaved` no canvia mai amb una retirada.
+- El moviment del compte principal surt el primer a `lastMovements` i a `GET /api/movements`, i també amb el filtre `type=income` ([10.2](#102-filtres-de-get-apimovements)). Té detall i justificant com qualsevol altre moviment ([10.3](#103-get-apimovementsmovementid), [10.5](#105-justificant-pdf)).
+- El límit diari de recàrrega no canvia: la retirada no és una recàrrega.
+- `GET /api/pots`: la guardiola surt amb el saldo nou i el progrés recalculat.
+
+Exemple amb la retirada de 11.2:
+
+| | `balance` | `totalSaved` | `balance + totalSaved` |
+|---|---|---|---|
+| Abans | `379521` | `30000` | `409521` |
+| Després | `382521` | `27000` | `409521` |
+
+### 11.5 Errors
+
+Els codis són a la taula de l'[apartat 5](#taula-de-codis). Els missatges són orientatius: el frontend decideix a partir del `code`.
+
+| `code` | HTTP | Ruta | Quan |
+|---|---|---|---|
+| `VALIDATION_ERROR` | 422 | `POST /api/pots/{potId}/withdrawals` | El cos està mal format |
+| `POT_NOT_FOUND` | 404 | `POST /api/pots/{potId}/withdrawals` | La guardiola no existeix o és d'un altre usuari |
+| `INVALID_AMOUNT` | 422 | `POST /api/pots/{potId}/withdrawals` | `amount ≤ 0` |
+| `INSUFFICIENT_POT_BALANCE` | 422 | `POST /api/pots/{potId}/withdrawals` | La retirada supera el saldo de la guardiola |
+
+`INSUFFICIENT_POT_BALANCE`:
+
+```json
+{
+  "code": "INSUFFICIENT_POT_BALANCE",
+  "message": "La guardiola no té prou saldo per aquesta retirada."
+}
+```
+
+Textos de la pantalla «Retirar de <nom>» (US-19), en vermell sota el camp o sota el botó:
+
+| `code` | Text |
+|---|---|
+| `INVALID_AMOUNT` | «L'import ha de ser més gran que 0.» (ja existeix) |
+| `INSUFFICIENT_POT_BALANCE` | «La guardiola no té prou saldo per aquesta retirada.» (nou) |
+| `INTERNAL_ERROR` | «S'ha produït un error inesperat. Torna-ho a provar més tard.» (ja existeix) |
+| `NETWORK_ERROR` (només frontend) | «No hi ha connexió amb el servidor. Torna-ho a provar.» (ja existeix) |
+
+### 11.6 Model intern
+
+Aquest apartat és per al backend. El frontend no en depèn.
+
+- **Progrés.** `Pot` no desa cap camp nou: `percentage` i `goalStatus` es calculen en construir la resposta, amb una sola funció pura que fan servir totes les respostes de guardioles i que té els seus tests (skill `middle-services`). El percentatge es calcula amb enters: `(200 × balance + target) // (2 × target)`. **No** amb `round()` de Python, que arrodoneix 62,5 a 62 (arrodoniment bancari), ni amb decimals de coma flotant.
+- **Una retirada escriu quatre coses alhora**, com l'aportació ([9.8](#98-model-intern-de-lestalvi)): el saldo del compte, el saldo de la guardiola, el moviment del compte i l'entrada de l'historial. Es valida tot abans d'escriure. Si una escriptura falla a mig camí, es desfan les anteriors abans de deixar sortir l'error.
+- **Invariants:**
+  - el saldo del compte és la suma dels `signed_amount` dels seus moviments;
+  - el saldo d'una guardiola és la suma amb signe del seu historial (`income` suma, `expense` resta) i mai és negatiu;
+  - `balance + totalSaved` és igual abans i després de retirar.
+- **Amb Firestore:** les mateixes col·leccions `pots` i `pot_movements`; els ids surten dels comptadors i la retirada va dins d'una **transacció**, com l'aportació.
+- **Seed:** no canvia. Les tres guardioles de l'usuari 1 surten amb el progrés de la taula de [11.1](#111-progrés-de-pot).
