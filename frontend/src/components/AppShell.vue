@@ -2,7 +2,11 @@
 import { Menu } from '@lucide/vue'
 import { useSessionMenuViewModel } from '@/viewmodels/useSessionMenuViewModel'
 
-withDefaults(defineProps<{ title: string; back?: boolean }>(), { back: false })
+withDefaults(defineProps<{ title: string; back?: boolean; backTo?: string; backLabel?: string }>(), {
+  back: false,
+  backTo: '/',
+  backLabel: '← Inici',
+})
 
 // The one component with a ViewModel: every screen has this header, so the alternative
 // is repeating the same menu and its logout in all of them.
@@ -12,7 +16,7 @@ const { isLoggedIn, logOut } = useSessionMenuViewModel()
 <template>
   <div class="shell">
     <header class="header">
-      <router-link v-if="back" to="/" class="back">← Inici</router-link>
+      <router-link v-if="back" :to="backTo" class="back">{{ backLabel }}</router-link>
       <h1 class="title">{{ title }}</h1>
       <details v-if="isLoggedIn" class="menu">
         <summary class="menu-button" aria-label="Menú" title="Menú">

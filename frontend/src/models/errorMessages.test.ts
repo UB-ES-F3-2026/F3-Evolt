@@ -32,6 +32,13 @@ describe('toUserMessage', () => {
     expect(toUserMessage({ code, message: 'x' })).toBe(text)
   })
 
+  it.each([
+    ['CURRENCY_EXISTS', 'Ja tens un subcompte en aquesta divisa.'],
+    ['CURRENCY_NOT_SUPPORTED', 'Aquesta divisa no és a la llista de divises disponibles.'],
+  ])('gives the currency code %s the text of US-25', (code, text) => {
+    expect(toUserMessage({ code, message: 'x' })).toBe(text)
+  })
+
   it('says how much can still be topped up today, from details', () => {
     const failure = { code: 'DAILY_LIMIT_EXCEEDED', message: 'x', details: { remainingToday: 10000 } }
     expect(toUserMessage(failure)).toMatch(/límit diari.*Avui encara pots recarregar 100,00\s€\./)
