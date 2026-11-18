@@ -4,11 +4,14 @@ import type { ApiErrorCode } from '@/models/apiError'
 import { formatCents, formatSignedCents } from '@/models/money'
 import type { ExchangeRequestJson } from '@/models/exchange'
 import { mockBalance, mockHome } from './index'
-import { mockGetSubaccounts, mockPostExchange } from './exchange'
+import { mockPostExchange } from './exchange'
+import { createCurrenciesState, mockGetSubaccounts } from './currencies'
 import { setMockCurrentUser } from './mockUser'
 
 // The mock keeps its state for the whole file, like `npm run dev` keeps it until a reload.
 // The tests that exchange money are therefore written in order.
+
+createCurrenciesState(['EUR', 'USD'], { USD: 31755 })
 
 describe('mockGetSubaccounts (US-27)', () => {
   it('starts with the EUR main account and 317,55 $ for the demo user', () => {
@@ -112,9 +115,9 @@ describe('each account sees its own sub-accounts (US-27)', () => {
 
     setMockCurrentUser(null)
 
-    expect(mockGetSubaccounts()).toEqual([
-      { code: 'EUR', balanceMinor: 379521, isMain: true },
-      { code: 'USD', balanceMinor: 31755, isMain: false },
-    ])
+    // The demo reset yields the EUR-only default seed (US-25); re-seed US-27's demo state
+    // so the post-conditions of this file stay stable.
+    expect(mockGetSubaccounts()).toEqual([{ code: 'EUR', balanceMinor: 379521, isMain: true }])
+    createCurrenciesState(['EUR', 'USD'], { USD: 31755 })
   })
 })

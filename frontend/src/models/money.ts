@@ -5,9 +5,17 @@
  * euro ↔ cent conversion lives in one file.
  */
 
-// Type-only on purpose: `exchange.ts` imports this module's runtime helpers,
-// so a value import here would create a runtime cycle (US-27).
-import type { CurrencyCode } from './exchange'
+// Type-only on purpose: `currency.ts` value-imports `halfUpDiv` from this
+// module, so a value import here would create a runtime cycle (US-27).
+import type { CurrencyCode } from './currency'
+
+/**
+ * Exact integer half-up division: `Math.floor((2n + d) / 2d)` for `n, d ≥ 0`.
+ * Same result as the non-integer `n / d` rounded half up, without floats.
+ */
+export function halfUpDiv(n: number, d: number): number {
+  return Math.floor((2 * n + d) / (2 * d))
+}
 
 const EUROS = new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR' })
 
@@ -66,9 +74,20 @@ export function currencySymbol(code: CurrencyCode): string {
 export function formatMinor(minor: number, code: CurrencyCode): string {
   if (code === 'EUR') return formatCents(minor)
   const decimals = currencyDecimals(code)
-  const amount = new Intl.NumberFormat('ca-ES', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  }).format(minor / 10 ** decimals)
+  const amount = numberFormatter(decimals).format(minor / 10 ** decimals)
   return `${amount}\u00A0${SYMBOLS[code]}`
+}
+
+const FORMATTERS: Record<number, Intl.NumberFormat> = {}
+
+function numberFormatter(decimals: number): Intl.NumberFormat {
+  let formatter = FORMATTERS[decimals]
+  if (formatter === undefined) {
+    formatter = new Intl.NumberFormat('ca-ES', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    })
+    FORMATTERS[decimals] = formatter
+  }
+  return formatter
 }

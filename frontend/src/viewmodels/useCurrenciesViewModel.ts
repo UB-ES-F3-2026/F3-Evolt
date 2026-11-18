@@ -2,12 +2,12 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   CURRENCIES,
-  formatCurrencyAmount,
   totalInEurosMinor,
   type CurrencyCode,
   type Subaccount,
 } from '@/models/currency'
 import { toUserMessage } from '@/models/errorMessages'
+import { formatMinor } from '@/models/money'
 import { getSubaccounts } from '@/services/subaccountsService'
 
 export interface CurrenciesDependencies {
@@ -44,7 +44,7 @@ export function useCurrenciesViewModel(dependencies: CurrenciesDependencies = de
           code: currency.code,
           name: currency.name,
           symbol: currency.symbol,
-          amountText: formatCurrencyAmount(subaccount.balance, currency.code),
+          amountText: formatMinor(subaccount.balance, currency.code),
         },
       ]
     }),

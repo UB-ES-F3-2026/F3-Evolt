@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest'
 import {
   CURRENCIES,
   eurosFromMinor,
-  formatCurrencyAmount,
   fromApiSubaccount,
   fromApiSubaccounts,
   isCurrencyCode,
   totalInEurosMinor,
 } from './currency'
+import { formatMinor } from './money'
 
 describe('totalInEurosMinor', () => {
   it('is 0 for an empty list', () => {
@@ -53,19 +53,19 @@ describe('eurosFromMinor', () => {
   })
 })
 
-describe('formatCurrencyAmount', () => {
+describe('formatMinor (US-25)', () => {
   it.each([
-    ['USD', 31755, '317,55 $'],
-    ['JPY', 1234, '1.234 ¥'],
-    ['JPY', 7, '7 ¥'],
-    ['GBP', 123455, '1.234,55 £'],
-    ['CHF', 123455, '1.234,55 CHF'],
+    ['USD', 31755, '317,55\u00A0$'],
+    ['JPY', 1234, '1.234\u00A0¥'],
+    ['JPY', 7, '7\u00A0¥'],
+    ['GBP', 123455, '1.234,55\u00A0£'],
+    ['CHF', 123455, '1.234,55\u00A0CHF'],
   ] as const)('shows %s %i as %j', (code, minor, text) => {
-    expect(formatCurrencyAmount(minor, code)).toBe(text)
+    expect(formatMinor(minor, code)).toBe(text)
   })
 
   it('formats EUR through the shared cents formatter', () => {
-    expect(formatCurrencyAmount(125050, 'EUR')).toMatch(/^1\.250,50\s€$/)
+    expect(formatMinor(125050, 'EUR')).toMatch(/^1\.250,50\s€$/)
   })
 })
 

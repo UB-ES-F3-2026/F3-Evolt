@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { mockBalance, mockTopup } from './index'
-import { mockAddSubaccount, mockSubaccounts } from './currencies'
+import { mockAddSubaccount, createCurrenciesState, mockGetSubaccounts, mockSubaccounts } from './currencies'
 
 // The mock keeps its state for the whole file, like `npm run dev` keeps it until a reload.
 // The tests that add sub-accounts are therefore written in order.
@@ -61,5 +61,21 @@ describe('mockAddSubaccount (US-25)', () => {
     const items = mockSubaccounts().items
     expect(items[0]).toEqual({ id: 'sub-01', currency: 'EUR', balance: balanceBefore + 5000 })
     expect(items.filter((subaccount) => subaccount.currency !== 'EUR')).toEqual(foreignBefore)
+  })
+})
+
+describe('createCurrenciesState (US-27 seed)', () => {
+  it('seeds EUR + USD with the given balances, and returns to the EUR-only default', () => {
+    createCurrenciesState(['EUR', 'USD'], { USD: 31755 })
+    expect(mockSubaccounts().items).toEqual([
+      { id: 'sub-01', currency: 'EUR', balance: mockBalance() },
+      { id: 'sub-02', currency: 'USD', balance: 31755 },
+    ])
+    expect(mockGetSubaccounts()).toEqual([
+      { code: 'EUR', balanceMinor: mockBalance(), isMain: true },
+      { code: 'USD', balanceMinor: 31755, isMain: false },
+    ])
+    createCurrenciesState()
+    expect(mockSubaccounts().items).toEqual([{ id: 'sub-01', currency: 'EUR', balance: mockBalance() }])
   })
 })

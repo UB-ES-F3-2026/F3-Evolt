@@ -1,74 +1,32 @@
 /**
  * Currency exchange (US-27). All the money math of a currency change lives
  * here, in integer minor units: a conversion is
- * `amount × RATE_BPS[from] / RATE_BPS[to]`, computed with integer half-up
+ * `amount × rateBps[from] / rateBps[to]`, computed with integer half-up
  * rounding so no float ever decides an amount.
  *
- * `RATE_BPS` is "basis points": the minor units of EUR one unit of the
- * currency costs, ×10000 (so 9123 = 0,9123 € per $). The display rate is the
- * rounded 2-decimal version (`rateRoundedMinor`); exact conversions always use
- * the raw rate, never the rounded one.
+ * Rates are "basis points": the minor units of EUR one unit of the currency
+ * costs, ×10000 (so 9123 = 0,9123 € per $). The display rate is the rounded
+ * 2-decimal version (`rateRoundedMinor`); exact conversions always use the
+ * raw rate, never the rounded one.
  *
- * `money.ts` imports only the `CurrencyCode` TYPE from here, so there is no
- * runtime cycle; this file imports the formatting functions from `money.ts`.
+ * The rate table (`CURRENCIES[].rateBps`) lives in `currency.ts`; `money.ts`
+ * imports only the `CurrencyCode` TYPE from there, so there is no runtime
+ * cycle. This file imports the helpers it needs from `currency.ts` and
+ * `money.ts`.
  */
 
-import { formatMinor } from './money'
-
-export type CurrencyCode = 'EUR' | 'USD' | 'GBP' | 'CHF' | 'JPY'
-
-export interface CurrencyMeta {
-  code: CurrencyCode
-  name: string
-}
-
-export const CURRENCIES: Record<CurrencyCode, CurrencyMeta> = {
-  EUR: { code: 'EUR', name: 'Euro' },
-  USD: { code: 'USD', name: 'Dòlar nord-americà' },
-  GBP: { code: 'GBP', name: 'Lliura esterlina' },
-  CHF: { code: 'CHF', name: 'Franc suís' },
-  JPY: { code: 'JPY', name: 'Ien japonès' },
-}
-
-/** Minor units of EUR one unit of the currency costs, ×10000 (docs US-27). */
-export const RATE_BPS: Record<CurrencyCode, number> = {
-  EUR: 10000,
-  USD: 9123,
-  GBP: 11680,
-  CHF: 10355,
-  JPY: 5700,
-}
-
-const CURRENCY_CODES = Object.keys(RATE_BPS) as CurrencyCode[]
-
-/** Runtime guard for data that travels as text, like `history.state`. */
-export function isCurrencyCode(value: unknown): value is CurrencyCode {
-  return typeof value === 'string' && CURRENCY_CODES.includes(value as CurrencyCode)
-}
-
-/**
- * Exact integer half-up division: `Math.floor((2n + d) / 2d)` for `n, d ≥ 0`.
- * Same result as the non-integer `n / d` rounded half up, without floats.
- */
-export function halfUpDiv(n: number, d: number): number {
-  return Math.floor((2 * n + d) / (2 * d))
-}
+import { currencyByCode, type CurrencyCode } from './currency'
+import { formatMinor, halfUpDiv } from './money'
+// Backward-compat type re-exports only — no second definition anywhere:
+export type { CurrencyCode, SubaccountOption } from './currency'
 
 /**
  * `amountMinor` of `from` into minor units of `to`, with integer half-up:
- * `amountMinor × RATE_BPS[from] / RATE_BPS[to]`.
+ * `amountMinor × rateBps(from) / rateBps(to)`.
  * Example: `convertMinor(10000, 'EUR', 'USD')` → `10961` (100,00 € = 109,61 $).
  */
 export function convertMinor(amountMinor: number, from: CurrencyCode, to: CurrencyCode): number {
-  return halfUpDiv(amountMinor * RATE_BPS[from], RATE_BPS[to])
-}
-
-/** A subaccount of «Divises», as the ViewModel of «Canviar» lists it. */
-export interface SubaccountOption {
-  code: CurrencyCode
-  name: string
-  balanceMinor: number
-  isMain: boolean
+  return halfUpDiv(amountMinor * currencyByCode(from).rateBps, currencyByCode(to).rateBps)
 }
 
 /** What the «Canviar» screen keeps while the person types. */
@@ -157,7 +115,7 @@ export function estimateMinor(amountMinor: number, src: CurrencyCode, tgt: Curre
  */
 export function commissionSrcMinor(amountMinor: number, src: CurrencyCode): number {
   const amountEur = convertMinor(amountMinor, src, 'EUR')
-  const commissionEur = Math.max(Math.floor((150 * amountEur + 5000) / 10000), 50)
+  const commissionEur = Math.max(halfUpDiv(150 * amountEur, 10000), 50)
   return convertMinor(commissionEur, 'EUR', src)
 }
 
@@ -172,9 +130,9 @@ export interface ExchangePreview {
 
 /**
  * Everything the summary screen needs from one pure computation.
- * `tooSmall` compares RAW rates (`a × RATE_BPS[src] < RATE_BPS[tgt]`), never
- * the half-up result: 0,01 $ → EUR must be rejected even though the rounding
- * of 0,9123 € would say 1 ¢.
+ * `tooSmall` compares RAW rates (`a × currencyByCode(src).rateBps <
+ * currencyByCode(tgt).rateBps`), never the half-up result: 0,01 $ → EUR must
+ * be rejected even though the rounding of 0,9123 € would say 1 ¢.
  */
 export function exchangePreview(
   a: number,
@@ -187,7 +145,7 @@ export function exchangePreview(
     exactReceivedMinor: convertMinor(a, src, tgt),
     commissionSrcMinor: commission,
     totalChargeMinor: a + commission,
-    tooSmall: a * RATE_BPS[src] < RATE_BPS[tgt],
+    tooSmall: a * currencyByCode(src).rateBps < currencyByCode(tgt).rateBps,
     insufficient: a + commission > srcBalanceMinor,
   }
 }

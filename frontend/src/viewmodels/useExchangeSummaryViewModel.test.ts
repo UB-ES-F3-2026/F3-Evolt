@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import { messageForCode } from '@/models/errorMessages'
 import type { ExchangeDraft } from '@/models/exchange'
-import type { ExchangeResultJson, SubaccountJson } from '@/services/exchangeService'
+import type { Subaccount } from '@/models/currency'
+import type { ExchangeResultJson } from '@/services/exchangeService'
 import {
   CONFIRMATION_MS,
   useExchangeSummaryViewModel,
@@ -13,10 +14,10 @@ const eurToUsd: ExchangeDraft = { srcCurrency: 'EUR', tgtCurrency: 'USD', amount
 // What the backend answers to 100,00 € to USD (US-27, criterion 9).
 const exchanged: ExchangeResultJson = { srcBalanceMinor: 114900, tgtBalanceMinor: 42716 }
 
-function subaccounts(eurBalanceMinor: number): SubaccountJson[] {
+function subaccounts(eurBalanceMinor: number): Subaccount[] {
   return [
-    { code: 'EUR', balanceMinor: eurBalanceMinor, isMain: true },
-    { code: 'USD', balanceMinor: 31755, isMain: false },
+    { id: 'sub-01', code: 'EUR', balance: eurBalanceMinor },
+    { id: 'sub-02', code: 'USD', balance: 31755 },
   ]
 }
 
@@ -57,7 +58,7 @@ describe('useExchangeSummaryViewModel', () => {
       fakeDependencies({
         draft: { srcCurrency: 'JPY', tgtCurrency: 'EUR', amountMinor: 10000 },
         getSubaccounts: vi.fn(() =>
-          Promise.resolve<SubaccountJson[]>([{ code: 'JPY', balanceMinor: 20000, isMain: true }]),
+          Promise.resolve<Subaccount[]>([{ id: 'sub-01', code: 'JPY', balance: 20000 }]),
         ),
       }),
     )
@@ -129,7 +130,7 @@ describe('useExchangeSummaryViewModel', () => {
     expect(viewModel.confirmed.value).toBe(true)
     expect(viewModel.newBalances.value).toEqual(exchanged)
     expect(viewModel.newBalanceRows.value.map((row) => row.label)).toEqual([
-      'EUR · Euro',
+      'Compte en euros',
       'USD · Dòlar nord-americà',
     ])
     expect(viewModel.newBalanceRows.value[0]?.value).toMatch(/^1\.149,00\s€$/)

@@ -1,8 +1,17 @@
 /**
- * In-memory currency sub-accounts (US-25). Every account owns EUR; the foreign ones start empty.
+ * In-memory currency sub-accounts (US-25/US-27). This state is the single source of
+ * truth for the owned sub-accounts: `./exchange.ts` reads and writes it and keeps
+ * nothing of its own.
  */
 
-import { isCurrencyCode, type SubaccountJson, type SubaccountsJson } from '@/models/currency'
+import {
+  fromApiSubaccount,
+  isCurrencyCode,
+  type CurrencyCode,
+  type SubaccountJson,
+  type SubaccountsJson,
+} from '@/models/currency'
+import type { SubaccountJson as CurrencySubaccountJson } from '@/models/exchange'
 import { mockBalance, mockError } from './index'
 import { onMockUserChange } from './mockUser'
 
@@ -11,10 +20,29 @@ let nextNumber = 0
 startSubaccounts()
 onMockUserChange(startSubaccounts)
 
+/**
+ * Test seed (US-27): rebuilds the whole state with the owned currencies and their
+ * starting balances. EUR is always owned (US-25): it is prepended when missing,
+ * and its balance is always read live from `mockBalance()`, so a `balances`
+ * entry for EUR is ignored.
+ */
+export function createCurrenciesState(
+  owned: readonly CurrencyCode[] = ['EUR'],
+  balances: Partial<Record<CurrencyCode, number>> = {},
+): void {
+  const codes: CurrencyCode[] = ['EUR', ...owned.filter((code) => code !== 'EUR')]
+  let idNumber = 1
+  subaccounts = codes.map((code) => ({
+    id: subaccountId(idNumber++),
+    currency: code,
+    balance: code === 'EUR' ? mockBalance() : (balances[code] ?? 0),
+  }))
+  nextNumber = idNumber
+}
+
 /** Every account starts with only the EUR sub-account, with the live balance of the mocks. */
 function startSubaccounts(): void {
-  subaccounts = [{ id: subaccountId(1), currency: 'EUR', balance: mockBalance() }]
-  nextNumber = 2
+  createCurrenciesState(['EUR'])
 }
 
 /**
@@ -61,6 +89,29 @@ export function mockAddSubaccount(body: { currency?: unknown }): SubaccountJson 
   }
   subaccounts.push(subaccount)
   return { ...subaccount }
+}
+
+/** The owned sub-accounts in the shape GET /api/currencies will answer (US-27, issue #166): EUR, the main account, first. */
+export function mockGetSubaccounts(): CurrencySubaccountJson[] {
+  // The state only ever holds owned, validated codes (factory input + `mockAddSubaccount`
+  // narrowing), so `fromApiSubaccount` never throws here: it is the type bridge, not a check.
+  return subaccounts.map((subaccount) => ({
+    code: fromApiSubaccount(subaccount).code,
+    balanceMinor: subaccount.currency === 'EUR' ? mockBalance() : subaccount.balance,
+    isMain: subaccount.currency === 'EUR',
+  }))
+}
+
+/** Stored minor units of one sub-account: the live main balance for EUR, the row for the rest. */
+export function mockSubaccountBalance(code: CurrencyCode): number {
+  return code === 'EUR' ? mockBalance() : (subaccounts.find((s) => s.currency === code)?.balance ?? 0)
+}
+
+/** Writes the stored balance of one sub-account row (never EUR — the main account is read live). */
+export function mockSetSubaccountBalance(code: CurrencyCode, balanceMinor: number): void {
+  const row = subaccounts.find((s) => s.currency === code)
+  if (row === undefined) throw new Error(`No sub-account to write: ${code}`)
+  row.balance = balanceMinor
 }
 
 /** Same opaque id format as the backend. */

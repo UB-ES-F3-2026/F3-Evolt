@@ -1,9 +1,10 @@
 /**
- * US-25: the closed list of currency sub-accounts, their € rates and display
- * formatting. Amounts in minor units (cents, or whole yen for JPY).
+ * US-25: the closed list of currency sub-accounts, their € rates and the
+ * sub-account mapping. Amounts in minor units (cents, or whole yen for JPY).
+ * Display formatting lives in `money.ts` (`formatMinor`).
  */
 
-import { formatCents } from './money'
+import { halfUpDiv } from './money'
 
 /** Every currency the bank offers, in the order the API and the UI list them. */
 export type CurrencyCode = 'EUR' | 'USD' | 'GBP' | 'CHF' | 'JPY'
@@ -25,9 +26,9 @@ export const CURRENCIES: readonly CurrencyInfo[] = [
   { code: 'JPY', name: 'Ien japonès', symbol: '¥', rateBps: 5700, decimals: 0 },
 ]
 
-/** `true` only for the five codes in `CURRENCIES` (case sensitive, like the API). */
-export function isCurrencyCode(value: string): value is CurrencyCode {
-  return CURRENCIES.some((currency) => currency.code === value)
+/** `true` only for the five codes in `CURRENCIES` (case sensitive, like the API); safe on untyped data, like `history.state`. */
+export function isCurrencyCode(value: unknown): value is CurrencyCode {
+  return typeof value === 'string' && CURRENCIES.some((currency) => currency.code === value)
 }
 
 /** The `CurrencyInfo` of a known code. Throws on anything else (internal invariant). */
@@ -39,8 +40,7 @@ export function currencyByCode(code: CurrencyCode): CurrencyInfo {
 
 /** `minor` units of `rateBps` into whole euro cents, rounding halves up. */
 export function eurosFromMinor(minor: number, rateBps: number): number {
-  // Integer-exact equivalent of `Math.floor(minor * rateBps / 10000 + 0.5)`.
-  return Math.floor((minor * rateBps + 5000) / 10000)
+  return halfUpDiv(minor * rateBps, 10000)
 }
 
 /** One currency sub-account of the main account. */
@@ -85,26 +85,25 @@ export function totalInEurosMinor(subaccounts: readonly { code: CurrencyCode; ba
   }, 0)
 }
 
-const FORMATTERS: Record<number, Intl.NumberFormat> = {}
-
-function numberFormatter(decimals: number): Intl.NumberFormat {
-  let formatter = FORMATTERS[decimals]
-  if (formatter === undefined) {
-    formatter = new Intl.NumberFormat('ca-ES', {
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals,
-    })
-    FORMATTERS[decimals] = formatter
-  }
-  return formatter
+/** One subaccount of the «Canviar» pickers (US-27 View), derived from a `Subaccount`. */
+export interface SubaccountOption {
+  code: CurrencyCode
+  name: string
+  balanceMinor: number
+  isMain: boolean
 }
 
-/**
- * `31755, 'USD'` → `"317,55 $"`. EUR reuses `formatCents`; the rest avoid
- * Intl's `style: 'currency'`, which renders USD as `US$` in ca-ES.
- */
-export function formatCurrencyAmount(minor: number, code: CurrencyCode): string {
-  const currency = currencyByCode(code)
-  if (code === 'EUR') return formatCents(minor)
-  return `${numberFormatter(currency.decimals).format(minor / 10 ** currency.decimals)} ${currency.symbol}`
+/** EUR is the main currency (US-25): every account owns it and it holds the main balance. */
+export function isMainCurrency(code: CurrencyCode): boolean {
+  return code === 'EUR'
+}
+
+/** Maps a service `Subaccount` (id, code, balance in minor units) to a picker option. */
+export function toSubaccountOption(subaccount: Subaccount): SubaccountOption {
+  return {
+    code: subaccount.code,
+    name: currencyByCode(subaccount.code).name,
+    balanceMinor: subaccount.balance,
+    isMain: isMainCurrency(subaccount.code),
+  }
 }

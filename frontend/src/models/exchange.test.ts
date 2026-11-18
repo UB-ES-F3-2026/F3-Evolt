@@ -5,14 +5,13 @@ import {
   estimateMinor,
   exchangePreview,
   formatCommissionLabel,
-  halfUpDiv,
-  isCurrencyCode,
   parseKeypadAmount,
   rateLabelCount,
   rateRoundedMinor,
   type CurrencyCode,
 } from './exchange'
-import { formatMinor } from './money'
+import { formatMinor, halfUpDiv } from './money'
+import { isCurrencyCode } from './currency'
 
 describe('convertMinor (US-27)', () => {
   it.each<[number, CurrencyCode, CurrencyCode, number]>([

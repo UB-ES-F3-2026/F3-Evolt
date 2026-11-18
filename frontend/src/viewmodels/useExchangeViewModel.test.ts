@@ -2,12 +2,12 @@ import { nextTick } from 'vue'
 import { describe, expect, it, vi } from 'vitest'
 import { messageForCode } from '@/models/errorMessages'
 import type { CurrencyCode } from '@/models/exchange'
-import type { SubaccountJson } from '@/services/exchangeService'
+import type { Subaccount } from '@/models/currency'
 import { useExchangeViewModel, type ExchangeDependencies } from './useExchangeViewModel'
 
-const EUR_MAIN: SubaccountJson = { code: 'EUR', balanceMinor: 125050, isMain: true }
-const USD: SubaccountJson = { code: 'USD', balanceMinor: 31755, isMain: false }
-const GBP: SubaccountJson = { code: 'GBP', balanceMinor: 48000, isMain: false }
+const EUR_MAIN: Subaccount = { id: 'sub-01', code: 'EUR', balance: 125050 }
+const USD: Subaccount = { id: 'sub-02', code: 'USD', balance: 31755 }
+const GBP: Subaccount = { id: 'sub-03', code: 'GBP', balance: 48000 }
 
 // Screen copy of the keypad: the shared message says «en euros», wrong outside EUR.
 const FORMAT_MESSAGE_CASES: [CurrencyCode, string][] = [
@@ -100,7 +100,7 @@ describe('useExchangeViewModel', () => {
   it('says there is not enough balance when the amount plus commission exceeds it (US-27)', async () => {
     const { viewModel, dependencies } = await loadedViewModel({
       getSubaccounts: vi.fn(() =>
-        Promise.resolve([{ code: 'EUR', balanceMinor: 10149, isMain: true }, USD] as SubaccountJson[]),
+        Promise.resolve([{ id: 'sub-01', code: 'EUR', balance: 10149 }, USD] as Subaccount[]),
       ),
     })
 
@@ -110,6 +110,21 @@ describe('useExchangeViewModel', () => {
     expect(viewModel.amountError.value).toBe('No tens prou saldo')
     expect(viewModel.canContinue.value).toBe(false)
     expect(dependencies.goToSummary).not.toHaveBeenCalled()
+  })
+
+  it('flags the shortfall so the view can place the message under the button (US-27)', async () => {
+    const { viewModel } = await loadedViewModel({
+      getSubaccounts: vi.fn(() =>
+        Promise.resolve([{ id: 'sub-01', code: 'EUR', balance: 10149 }, USD] as Subaccount[]),
+      ),
+    })
+
+    expect(viewModel.insufficient.value).toBe(false)
+
+    viewModel.amount.value = '100,00'
+
+    expect(viewModel.insufficient.value).toBe(true)
+    expect(viewModel.amountError.value).toBe('No tens prou saldo')
   })
 
   it('approximates what the person receives and opens the summary with the draft (US-27)', async () => {
@@ -137,9 +152,9 @@ describe('useExchangeViewModel', () => {
       const { viewModel } = await loadedViewModel({
         getSubaccounts: vi.fn(() =>
           Promise.resolve([
-            { code: 'EUR', balanceMinor: 125050, isMain: true },
-            { code: origin, balanceMinor: 31755, isMain: false },
-          ] as SubaccountJson[]),
+            { id: 'sub-01', code: 'EUR', balance: 125050 },
+            { id: 'sub-02', code: origin, balance: 31755 },
+          ] as Subaccount[]),
         ),
       })
 

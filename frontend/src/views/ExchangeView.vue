@@ -18,6 +18,7 @@ const {
   amount,
   decimals,
   amountError,
+  insufficient,
   estimateText,
   canContinue,
   load,
@@ -63,19 +64,20 @@ onMounted(load)
       </section>
 
       <section class="card">
-        <AmountKeypad
-          v-model:amount="amount"
-          :currency-code="srcCurrency"
-          :decimals="decimals"
-          :error="amountError"
-        >
+        <AmountKeypad v-model:amount="amount" :currency-code="srcCurrency" :decimals="decimals">
           <template #hint>
             <p v-if="estimateText" class="estimate">{{ estimateText }}</p>
           </template>
         </AmountKeypad>
       </section>
 
+      <!-- «Import massa petit» lives above the button (US-27-error-import-petit); -->
+      <!-- «No tens prou saldo» lives under it (US-27 «Saldo insuficient»). -->
+      <p v-if="amountError !== null && !insufficient" class="error" role="alert">{{ amountError }}</p>
+
       <button type="button" class="button" :disabled="!canContinue" @click="proceed()">Continuar</button>
+
+      <p v-if="insufficient" class="error" role="alert">{{ amountError }}</p>
     </template>
   </AppShell>
 </template>
@@ -116,5 +118,12 @@ onMounted(load)
 .button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.error {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--color-expense);
 }
 </style>

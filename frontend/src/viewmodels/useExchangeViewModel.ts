@@ -1,21 +1,25 @@
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
-  CURRENCIES,
   estimateMinor,
   exchangePreview,
   parseKeypadAmount,
   type CurrencyCode,
   type ExchangeDraft,
-  type SubaccountOption,
 } from '@/models/exchange'
 import {
   EXCHANGE_INSUFFICIENT_BALANCE_MESSAGE,
   messageForCode,
   toUserMessage,
 } from '@/models/errorMessages'
+import {
+  isMainCurrency,
+  toSubaccountOption,
+  type Subaccount,
+  type SubaccountOption,
+} from '@/models/currency'
 import { currencyDecimals, formatMinor } from '@/models/money'
-import { getSubaccounts, type SubaccountJson } from '@/services/exchangeService'
+import { getSubaccounts } from '@/services/subaccountsService'
 
 // Screen copy for the keypad: the shared AMOUNT_FORMAT_MESSAGE says «en euros»,
 // which is wrong once the origin is USD, GBP, CHF or JPY.
@@ -23,7 +27,7 @@ const AMOUNT_FORMAT_TWO_DECIMALS = 'Escriu un import vàlid, amb 2 decimals com 
 const AMOUNT_FORMAT_WHOLE_UNITS = 'Escriu un import vàlid.'
 
 export interface ExchangeDependencies {
-  getSubaccounts: () => Promise<SubaccountJson[]>
+  getSubaccounts: () => Promise<Subaccount[]>
   goToSummary: (draft: ExchangeDraft) => Promise<unknown>
   goToCurrencies: () => Promise<unknown>
 }
@@ -37,17 +41,15 @@ export function useExchangeViewModel(dependencies: ExchangeDependencies = defaul
   // Starts true so the pickers never render an empty list before the first answer.
   const isLoading = ref(true)
   const loadError = ref<string | null>(null)
-  const subaccounts = ref<SubaccountJson[]>([])
+  const subaccounts = ref<Subaccount[]>([])
   const srcCurrency = ref<CurrencyCode>('EUR')
   const tgtCurrency = ref<CurrencyCode>('EUR')
   const amount = ref('')
 
   const isLoaded = computed(() => !isLoading.value && loadError.value === null)
 
-  // The service sends codes, balances and the main flag; the name is ours to add.
-  const options = computed<SubaccountOption[]>(() =>
-    subaccounts.value.map((account) => ({ ...account, name: CURRENCIES[account.code].name })),
-  )
+  // The service sends id, code and balance; the option adds the name and the main flag.
+  const options = computed<SubaccountOption[]>(() => subaccounts.value.map(toSubaccountOption))
 
   // With fewer than two subaccounts there is nothing to exchange between (US-27).
   const needsTwoSubaccounts = computed(() => isLoaded.value && subaccounts.value.length < 2)
@@ -57,8 +59,14 @@ export function useExchangeViewModel(dependencies: ExchangeDependencies = defaul
   const amountMinor = computed(() => parseKeypadAmount(amount.value, decimals.value))
 
   const srcBalance = computed(
-    () => subaccounts.value.find((account) => account.code === srcCurrency.value)?.balanceMinor ?? null,
+    () => subaccounts.value.find((account) => account.code === srcCurrency.value)?.balance ?? null,
   )
+
+  // Same verdict the summary judges: null until the amount parses and the balance is known.
+  const preview = computed(() => {
+    if (amountMinor.value === null || srcBalance.value === null) return null
+    return exchangePreview(amountMinor.value, srcCurrency.value, tgtCurrency.value, srcBalance.value)
+  })
 
   const amountError = computed<string | null>(() => {
     if (amount.value === '') return null
@@ -69,12 +77,17 @@ export function useExchangeViewModel(dependencies: ExchangeDependencies = defaul
     if (parsed <= 0) return messageForCode('INVALID_AMOUNT')
     if (srcBalance.value === null) return null
 
-    const preview = exchangePreview(parsed, srcCurrency.value, tgtCurrency.value, srcBalance.value)
-    if (preview.tooSmall) return messageForCode('AMOUNT_TOO_SMALL')
+    if (preview.value?.tooSmall) return messageForCode('AMOUNT_TOO_SMALL')
     // Its own text on purpose: the INSUFFICIENT_BALANCE message speaks of a pot contribution.
-    if (preview.insufficient) return EXCHANGE_INSUFFICIENT_BALANCE_MESSAGE
+    if (preview.value?.insufficient) return EXCHANGE_INSUFFICIENT_BALANCE_MESSAGE
     return null
   })
+
+  // No balance, no verdict: mirrors the summary's rule so the view can place the
+  // «No tens prou saldo» message under «Continuar» (US-27 «Saldo insuficient»).
+  const insufficient = computed(
+    () => srcBalance.value !== null && preview.value?.insufficient === true,
+  )
 
   // The mockup keeps the approximation on screen while the amount is too small.
   const estimateText = computed<string | null>(() => {
@@ -112,9 +125,9 @@ export function useExchangeViewModel(dependencies: ExchangeDependencies = defaul
     }
   }
 
-  function applyInitialSelection(accounts: SubaccountJson[]): void {
+  function applyInitialSelection(accounts: Subaccount[]): void {
     subaccounts.value = accounts
-    const origin = accounts.find((account) => account.isMain) ?? accounts[0]
+    const origin = accounts.find((account) => isMainCurrency(account.code)) ?? accounts[0]
     if (origin === undefined) return
     srcCurrency.value = origin.code
     const target = accounts.find((account) => account.code !== origin.code)
@@ -148,6 +161,7 @@ export function useExchangeViewModel(dependencies: ExchangeDependencies = defaul
     amount,
     decimals,
     amountError,
+    insufficient,
     estimateText,
     canContinue,
     load,

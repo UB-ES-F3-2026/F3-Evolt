@@ -1,23 +1,21 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { isApiError } from '@/models/apiError'
+import { currencyByCode, isCurrencyCode, isMainCurrency, type Subaccount } from '@/models/currency'
 import { EXCHANGE_INSUFFICIENT_BALANCE_MESSAGE, toUserMessage } from '@/models/errorMessages'
 import {
-  CURRENCIES,
   exchangePreview,
   formatCommissionLabel,
-  isCurrencyCode,
   rateLabelCount,
   rateRoundedMinor,
   type ExchangeDraft,
 } from '@/models/exchange'
 import { currencySymbol, formatMinor } from '@/models/money'
+import { getSubaccounts } from '@/services/subaccountsService'
 import {
-  getSubaccounts,
   postExchange,
   type ExchangeRequestJson,
   type ExchangeResultJson,
-  type SubaccountJson,
 } from '@/services/exchangeService'
 
 // Long enough to read the confirmation before going back to Home.
@@ -26,7 +24,7 @@ export const CONFIRMATION_MS = 1500
 export interface ExchangeSummaryDependencies {
   /** What «Canviar» left in `history.state`; null when someone opens the screen directly. */
   draft: ExchangeDraft | null
-  getSubaccounts: () => Promise<SubaccountJson[]>
+  getSubaccounts: () => Promise<Subaccount[]>
   confirmExchange: (request: ExchangeRequestJson) => Promise<ExchangeResultJson>
   goHome: () => Promise<unknown>
   goToExchange: () => Promise<unknown>
@@ -116,11 +114,11 @@ export function useExchangeSummaryViewModel(
     const { srcCurrency: src, tgtCurrency: tgt } = draft
     return [
       {
-        label: `${src} · ${CURRENCIES[src].name}`,
+        label: isMainCurrency(src) ? 'Compte en euros' : `${src} · ${currencyByCode(src).name}`,
         value: formatMinor(newBalances.value.srcBalanceMinor, src),
       },
       {
-        label: `${tgt} · ${CURRENCIES[tgt].name}`,
+        label: isMainCurrency(tgt) ? 'Compte en euros' : `${tgt} · ${currencyByCode(tgt).name}`,
         value: formatMinor(newBalances.value.tgtBalanceMinor, tgt),
       },
     ]
@@ -138,7 +136,7 @@ export function useExchangeSummaryViewModel(
       const subaccounts = await dependencies.getSubaccounts()
       // Fetched fresh: the server balance decides, whatever «Canviar» showed.
       originBalance.value =
-        subaccounts.find((subaccount) => subaccount.code === draft.srcCurrency)?.balanceMinor ?? 0
+        subaccounts.find((subaccount) => subaccount.code === draft.srcCurrency)?.balance ?? 0
     } catch (failure) {
       loadError.value = toUserMessage(failure)
     } finally {

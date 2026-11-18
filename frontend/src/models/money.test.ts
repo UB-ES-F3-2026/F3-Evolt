@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { currencyDecimals, currencySymbol, eurosToCents, formatCents, formatMinor, formatSignedCents } from './money'
-import type { CurrencyCode } from './exchange'
+import { CURRENCIES, type CurrencyCode } from './currency'
 
 describe('formatSignedCents', () => {
   it('puts «+» on an income and «−» on an expense', () => {
@@ -54,6 +54,13 @@ describe('currencyDecimals and currencySymbol (US-25, US-27)', () => {
     ['JPY', '¥'],
   ])('shows %s with the symbol %s', (code, symbol) => {
     expect(currencySymbol(code)).toBe(symbol)
+  })
+
+  it('agrees with the CURRENCIES table of models/currency (one currency domain)', () => {
+    for (const currency of CURRENCIES) {
+      expect(currencySymbol(currency.code)).toBe(currency.symbol)
+      expect(currencyDecimals(currency.code)).toBe(currency.decimals)
+    }
   })
 })
 
