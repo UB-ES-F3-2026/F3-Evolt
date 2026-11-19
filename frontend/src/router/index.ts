@@ -14,6 +14,7 @@ import RegisterView from '@/views/RegisterView.vue'
 import ReportProblemView from '@/views/ReportProblemView.vue'
 import TopUpView from '@/views/TopUpView.vue'
 import VerifyView from '@/views/VerifyView.vue'
+import WithdrawView from '@/views/WithdrawView.vue'
 import { accessGuard } from './accessGuard'
 
 const router = createRouter({
@@ -29,6 +30,7 @@ const router = createRouter({
     { path: '/pots/new', name: 'create-pot', component: CreatePotView },
     { path: '/pots/:potId', name: 'pot', component: PotView, props: true },
     { path: '/pots/:potId/contribute', name: 'contribute', component: ContributeView, props: true },
+    { path: '/pots/:potId/withdraw', name: 'withdraw', component: WithdrawView, props: true },
     { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
     { path: '/register', name: 'register', component: RegisterView, meta: { public: true } },
     { path: '/verify', name: 'verify', component: VerifyView, meta: { public: true } },

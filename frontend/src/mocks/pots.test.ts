@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { mockHome, mockMovements } from './index'
-import { mockContribute, mockCreatePot, mockPotMovements, mockPots, mockTotalSaved } from './pots'
+import { mockContribute, mockCreatePot, mockPotMovements, mockPots, mockTotalSaved, mockWithdraw } from './pots'
 
 // The mock keeps its state for the whole file, like `npm run dev` keeps it until a reload.
 // The tests that create pots are therefore written in order.
@@ -132,5 +132,61 @@ describe('mockContribute (docs/api.md §9.4)', () => {
     const result = mockContribute('pot-02', { amount: mockHome().balance })
 
     expect(result.balance).toBe(0)
+  })
+})
+
+// After the contributions above: Vacances (pot-01) holds 18000 and the main account 0.
+describe('mockWithdraw (docs/api.md §11.2)', () => {
+  it.each([
+    ['pot-01', { amount: '30' }, 'VALIDATION_ERROR'],
+    ['pot-01', { amount: 30.5 }, 'VALIDATION_ERROR'],
+    ['pot-01', {}, 'VALIDATION_ERROR'],
+    ['pot-99', { amount: 3000 }, 'POT_NOT_FOUND'],
+    // The pot is checked before the amount.
+    ['pot-99', { amount: 0 }, 'POT_NOT_FOUND'],
+    ['pot-01', { amount: 0 }, 'INVALID_AMOUNT'],
+    ['pot-01', { amount: -100 }, 'INVALID_AMOUNT'],
+    ['pot-01', { amount: 18001 }, 'INSUFFICIENT_POT_BALANCE'],
+  ])('rejects %s with %j as %s and changes nothing', (potId, body, code) => {
+    const before = { home: mockHome(), pots: mockPots(), history: mockPotMovements('pot-01') }
+
+    expect(() => mockWithdraw(potId, body)).toThrow(expect.objectContaining({ code }) as Error)
+
+    expect(mockHome()).toEqual(before.home)
+    expect(mockPots()).toEqual(before.pots)
+    expect(mockPotMovements('pot-01')).toEqual(before.history)
+  })
+
+  it('moves the money from the pot to the account, with the movement «Retirada de Vacances»', () => {
+    const before = mockHome()
+
+    const result = mockWithdraw('pot-01', { amount: 3000 })
+
+    expect(result.balance).toBe(before.balance + 3000)
+    expect(result.pot).toMatchObject({ id: 'pot-01', name: 'Vacances', balance: 15000 })
+    expect(result.movement).toMatchObject({
+      amount: 3000,
+      concept: 'Retirada de Vacances',
+      type: 'income',
+      icon: 'savings',
+    })
+    const after = mockHome()
+    expect(after.balance + after.totalSaved).toBe(before.balance + before.totalSaved)
+    expect(after.lastMovements[0].concept).toBe('Retirada de Vacances')
+  })
+
+  it('adds «Retirada» as expense to the top of the pot history', () => {
+    const items = mockPotMovements('pot-01').items
+
+    expect(items[0]).toMatchObject({ concept: 'Retirada', amount: 3000, type: 'expense' })
+  })
+
+  it('allows taking exactly the whole pot balance, leaving it at 0', () => {
+    const result = mockWithdraw('pot-03', { amount: 5000 })
+
+    expect(result.pot.balance).toBe(0)
+    expect(() => mockWithdraw('pot-03', { amount: 1 })).toThrow(
+      expect.objectContaining({ code: 'INSUFFICIENT_POT_BALANCE' }) as Error,
+    )
   })
 })

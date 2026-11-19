@@ -6,6 +6,9 @@
  * - `color` is a closed list; an unknown value falls back to the default one.
  */
 
+import type { ApiErrorCode } from './apiError'
+import { AMOUNT_FORMAT_MESSAGE, messageForCode } from './errorMessages'
+import { eurosToCents } from './money'
 import { fromApiMovement, type Movement, type MovementJson, type MovementType } from './movement'
 
 export const POT_COLORS = ['purple', 'blue', 'teal', 'orange', 'pink', 'yellow'] as const
@@ -92,6 +95,10 @@ export interface Contribution {
   movement: Movement
 }
 
+/** POST /api/pots/{potId}/withdrawals answer (docs/api.md §11.2): the same shape as a contribution. */
+export type WithdrawalJson = ContributionJson
+export type Withdrawal = Contribution
+
 export function isPotColor(value: string): value is PotColor {
   return (POT_COLORS as readonly string[]).includes(value)
 }
@@ -122,6 +129,27 @@ export function fromApiPotMovements(jsonList: PotMovementJson[] | null | undefin
 
 export function fromApiContribution(json: ContributionJson): Contribution {
   return { balance: json.balance, pot: fromApiPot(json.pot), movement: fromApiMovement(json.movement) }
+}
+
+export const fromApiWithdrawal: (json: WithdrawalJson) => Withdrawal = fromApiContribution
+
+/**
+ * Why an amount typed in euros cannot move between the account and a pot, or null if it can.
+ * The backend owns these rules (docs/api.md §9.4 and §11.2); the screens repeat them only to
+ * answer before sending. `limit` is the most that can move (the main balance to contribute,
+ * the pot balance to withdraw), null while it is unknown; going over it reads as `overLimit`.
+ * An empty field is not an error yet: the button just stays disabled.
+ */
+export function potAmountError(typed: string, limit: number | null, overLimit: ApiErrorCode): string | null {
+  const text = typed.trim()
+  if (text === '') return null
+  // eurosToCents only reads digits, so a minus sign would read as a format error: US-18 asks for this text.
+  if (text.startsWith('-')) return messageForCode('INVALID_AMOUNT')
+  const cents = eurosToCents(text)
+  if (cents === null) return AMOUNT_FORMAT_MESSAGE
+  if (cents <= 0) return messageForCode('INVALID_AMOUNT')
+  if (limit !== null && cents > limit) return messageForCode(overLimit)
+  return null
 }
 
 /** A history entry drawn with the same row as the account movements, with the pot icon. */
