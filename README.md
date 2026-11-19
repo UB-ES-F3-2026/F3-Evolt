@@ -62,7 +62,9 @@ Skills live in the repo and load only when the task matches:
 | `shared-module` | reusable models, components, helpers |
 | `code-style` | naming, file shape, design consistency |
 | `comments-docs` | when and how to comment |
-| `gitflow` | branches, develop/main, hotfix, PR base |
+| `user-stories` | writing, splitting and refining stories; Definition of Ready |
+| `qa-strategy` | what to test, test naming, coverage and quality metrics |
+| `gitflow` | story branches, task branches, develop/main, hotfix, PR base |
 | `pr-conventions` | pull request format and checklist |
 | `commit-conventions` | Conventional Commits + US reference |
 | `ci-cd` | GitHub Actions, lint, branch protection, deploy |
@@ -77,9 +79,11 @@ Full standards: [`AGENTS.md`](AGENTS.md).
 ### Branches (GitFlow)
 
 ```
-main        ← demo / release
-develop     ← sprint integration (PR target)
-  feature/<slug>   fix/<slug>   refactor/<slug>   hotfix/<slug>
+main        ← production (demo / release)
+develop     ← integration, never broken: only whole stories land here
+  story/us-<id>-<slug>                        ← one user story
+    feature/<frontend|backend|devops>/<tNN-N-slug>   ← one task, PR into its story
+  fix/<slug>   refactor/<slug>   hotfix/<slug> (from main)
 ```
 
 ### Commits
@@ -92,8 +96,9 @@ feat(savings): create pot with target US-17
 
 ### PRs
 
-- One US or one technical task per PR
-- Branch `feature/<slug>`, `fix/<slug>` or `refactor/<slug>` → PR base **`develop`**
+- Task PR: one task → PR base its **story branch**
+- Story PR: the whole story → PR base **`develop`**, once every task is in, `develop` is merged into the story branch with every test green, and the PO has accepted it
+- Technical tasks outside a story, docs and fixes → PR base `develop`, only if complete on their own
 - Only `hotfix/<slug>` goes from `main` → PR base `main`
 - Title mirrors the commit
 - Body maps work to acceptance criteria
@@ -329,7 +334,7 @@ Things to know about the free plan:
 
 ![CI](https://github.com/UB-ES-F3-2026/F3-Evolt/actions/workflows/ci.yml/badge.svg)
 
-GitHub Actions pipeline in [`.github/workflows/ci.yml`](.github/workflows/ci.yml): every PR (and push) to `develop` or `main` runs two parallel jobs and a gate:
+GitHub Actions pipeline in [`.github/workflows/ci.yml`](.github/workflows/ci.yml): every PR (and push) to `develop`, `main` or a `story/**` branch runs two parallel jobs and a gate:
 
 | Job | Runs | Version |
 |-----|------|---------|
@@ -346,8 +351,8 @@ one trigger are **AND**.
 
 | Trigger | When it runs | Notes |
 |---------|--------------|-------|
-| `pull_request` → `develop`, `main` | PR opened, updated (new push) or reopened | Default types: `opened`, `synchronize`, `reopened`. Runs on the synthetic merge commit. Merging does not re-run it (`closed` is not included). |
-| `push` → `develop`, `main` | A commit lands on the branch (e.g. a merge) | It does not allow direct pushes; branch protection blocks those. Feature-branch pushes are covered by the PR's `synchronize` event. |
+| `pull_request` → `develop`, `main`, `story/**` | PR opened, updated (new push) or reopened | Default types: `opened`, `synchronize`, `reopened`. Runs on the synthetic merge commit. Merging does not re-run it (`closed` is not included). |
+| `push` → `develop`, `main`, `story/**` | A commit lands on the branch (e.g. a merge) | It does not allow direct pushes to `develop`/`main`; branch protection blocks those. On a story branch it checks each merged task and each merge of `develop`. Task-branch pushes are covered by the PR's `synchronize` event. |
 | `workflow_dispatch` | Manual run from *Actions* → *Run workflow*, or `gh workflow run ci.yml --ref develop` | Dormant until the workflow exists on the default branch (`main`). `pull_request`/`push` already work from `develop`. |
 | `workflow_call` | Another workflow calls this one | `deploy.yml` calls it so deploy reuses this CI instead of duplicating it. |
 
