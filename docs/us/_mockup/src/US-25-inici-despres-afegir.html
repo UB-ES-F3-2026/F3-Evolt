@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=390">
+  <title>Inici després d'afegir la divisa</title>
+  <style>
+    :root {
+      --color-primary: #4f46e5;
+      --color-bg: #f7f9fc;
+      --color-surface: #ffffff;
+      --color-text: #1a2233;
+      --color-muted: #6c7a96;
+      --color-border: #e6ebf4;
+      --color-income: #16a34a;
+      --color-expense: #dc2626;
+      --color-icon-bg: #eef0fb;
+      --radius: 0.75rem;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--color-bg);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--color-text);
+      -webkit-font-smoothing: antialiased;
+    }
+    .screen {
+      width: 390px;
+      height: 844px;
+      overflow: hidden;
+      margin: 0 auto;
+      background: var(--color-bg);
+      display: flex;
+      flex-direction: column;
+    }
+    .appbar {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 20px 10px;
+    }
+    .appbar-title {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--color-text);
+    }
+    .appbar .appbar-glyph {
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-52%);
+      font-size: 20px;
+      letter-spacing: 1px;
+    }
+    .content {
+      flex: 1;
+      overflow: hidden;
+      padding: 8px 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: 0 1px 2px rgba(26, 34, 51, 0.04);
+    }
+    .card-title {
+      margin: 0 0 12px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+    .section-header { margin-bottom: 10px; }
+    .section-header .card-title { margin-bottom: 0; }
+    .balance-big {
+      margin: 0;
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      font-variant-numeric: tabular-nums;
+    }
+    .saved-line {
+      margin: 6px 0 0;
+      font-size: 13px;
+      color: var(--color-muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .actions > * {
+      flex: 1 1 auto;
+      min-width: 0;
+      min-height: 48px;
+      padding: 10px 8px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-primary {
+      background: var(--color-primary);
+      color: var(--color-surface);
+    }
+    .btn-outline {
+      background: var(--color-surface);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+    }
+    ul.rows {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 56px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+    ul.rows li.row:last-child { border-bottom: none; }
+    .row-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--color-icon-bg);
+      color: var(--color-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .row-name {
+      flex: 1;
+      min-width: 0;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--color-text);
+    }
+    .amount {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text);
+      font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+      white-space: nowrap;
+      text-align: right;
+    }
+    .total-line {
+      display: block;
+      margin-top: 10px;
+      padding-top: 12px;
+      border-top: 1px solid var(--color-border);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text);
+      font-variant-numeric: tabular-nums;
+    }
+    .movement-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 52px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .movement-row:last-child { border-bottom: none; }
+    .movement-date {
+      font-size: 12px;
+      color: var(--color-muted);
+      font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+    }
+    .amount.income { color: var(--color-income); }
+    .amount.expense { color: var(--color-expense); }
+  </style>
+</head>
+<body>
+  <!--
+    US-25 · Tornada a Inici després d'afegir el subcompte USD amb saldo 0
+    (390×844, PNG 780×1688). La card «Divises» ja porta la fila «USD · Dòlar
+    nord-americà» amb «0,00 $» i el total aproximat no es mou: «Total ≈ 1.250,50 €».
+  -->
+  <div class="screen">
+    <header class="appbar">
+      <h1 class="appbar-title">Inici</h1>
+      <span class="appbar-glyph" aria-hidden="true">⋮</span>
+    </header>
+    <main class="content">
+
+      <section class="card">
+        <div class="section-header">
+          <h2 class="card-title">Saldo disponible</h2>
+        </div>
+        <p class="balance-big">1.250,50 €</p>
+        <p class="saved-line">Total estalviat a guardioles: 300,00 €</p>
+        <div class="actions">
+          <span class="btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Afegir diners
+          </span>
+          <span class="btn-outline">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2h0V5z"/><path d="M2 9v1c0 1.1.9 2 2 2h1"/><path d="M16 11h1"/></svg>Guardioles
+          </span>
+          <span class="btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>Divises
+          </span>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">Divises</h2>
+        <ul class="rows">
+          <li class="row">
+            <span class="row-icon">€</span>
+            <span class="row-name">EUR · Euro</span>
+            <span class="amount">1.250,50 €</span>
+          </li>
+          <li class="row">
+            <span class="row-icon">$</span>
+            <span class="row-name">USD · Dòlar nord-americà</span>
+            <span class="amount">0,00 $</span>
+          </li>
+        </ul>
+        <span class="total-line">Total ≈ 1.250,50 €</span>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">Últims moviments</h2>
+        <div class="movement-row">
+          <span class="row-name">Nòmina</span>
+          <span class="movement-date">11 d'oct. · 21:15</span>
+          <span class="amount income">+1.500,00 €</span>
+        </div>
+        <div class="movement-row">
+          <span class="row-name">Lloguer</span>
+          <span class="movement-date">10 d'oct. · 09:02</span>
+          <span class="amount expense">−850,00 €</span>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</body>
+</html>

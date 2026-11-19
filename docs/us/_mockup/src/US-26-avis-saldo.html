@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Avís de saldo</title>
+  <style>
+    :root {
+      --color-bg: #f7f9fc;
+      --color-surface: #ffffff;
+      --color-text: #1a2233;
+      --color-muted: #6c7a96;
+      --color-border: #e6ebf4;
+      --color-primary: #4f46e5;
+      --color-income: #16a34a;
+      --color-expense: #dc2626;
+      --radius: 0.75rem;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 390px;
+      height: 844px;
+      overflow: hidden;
+    }
+    body {
+      background: var(--color-bg);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--color-text);
+      -webkit-font-smoothing: antialiased;
+    }
+    .screen {
+      width: 390px;
+      height: 844px;
+      display: flex;
+      flex-direction: column;
+    }
+    .appbar {
+      height: 56px;
+      flex: 0 0 56px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--color-bg);
+    }
+    .appbar h1 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+    .back {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 0;
+      background: transparent;
+      padding: 8px;
+      font-size: 24px;
+      line-height: 1;
+      color: var(--color-text);
+      cursor: pointer;
+    }
+    .content {
+      flex: 1;
+      overflow: hidden;
+      padding: 8px 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .label {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--color-text);
+    }
+    .amount {
+      margin-top: 6px;
+      font-size: 32px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--color-text);
+    }
+    .movements-title {
+      margin: 0 0 14px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+    .empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 24px 0;
+    }
+    .empty-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--color-border);
+    }
+    .empty-text {
+      font-size: 14px;
+      color: var(--color-text);
+    }
+    .actions {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .btn-ghost,
+    .btn-danger {
+      width: 100%;
+      height: 48px;
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-ghost {
+      border: 1px solid var(--color-primary);
+      background: var(--color-surface);
+      color: var(--color-primary);
+    }
+    .btn-danger {
+      border: 0;
+      background: var(--color-expense);
+      color: #ffffff;
+    }
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(26, 34, 51, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+    .dialog {
+      width: calc(390px - 32px);
+      background: var(--color-surface);
+      border-radius: 1rem;
+      padding: 24px;
+      text-align: center;
+    }
+    .dialog-title {
+      margin: 0 0 16px;
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+    .btn-primary {
+      width: 100%;
+      height: 48px;
+      border: 0;
+      border-radius: var(--radius);
+      background: var(--color-primary);
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="screen">
+    <header class="appbar">
+      <button type="button" class="back" aria-label="Enrere">←</button>
+      <h1>USD · Dòlar nord-americà</h1>
+    </header>
+    <main class="content">
+      <section class="card">
+        <p class="label" style="margin:0;">Saldo</p>
+        <p class="amount" style="margin:0;">317,55 $</p>
+      </section>
+      <section class="card">
+        <h2 class="movements-title">Últims moviments</h2>
+        <div class="empty">
+          <div class="empty-icon" aria-hidden="true"></div>
+          <p class="empty-text" style="margin:0;">Encara no tens moviments</p>
+        </div>
+      </section>
+      <div class="actions">
+        <button type="button" class="btn-ghost">Aportar</button>
+        <button type="button" class="btn-danger">Eliminar subcompte</button>
+      </div>
+    </main>
+    <div class="overlay">
+      <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+        <p class="dialog-title" id="dialog-title">Abans d'eliminar-lo has de deixar el saldo a 0</p>
+        <button type="button" class="btn-primary">Entesos</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
