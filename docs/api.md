@@ -2107,6 +2107,7 @@ Textos de la pantalla «Retirar de <nom>» (US-19), en vermell sota el camp o so
 
 | `code` | Text |
 |---|---|
+| `POT_NOT_FOUND` | «No s'ha trobat la guardiola.» (ja existeix) |
 | `INVALID_AMOUNT` | «L'import ha de ser més gran que 0.» (ja existeix) |
 | `INSUFFICIENT_POT_BALANCE` | «La guardiola no té prou saldo per aquesta retirada.» (nou) |
 | `INTERNAL_ERROR` | «S'ha produït un error inesperat. Torna-ho a provar més tard.» (ja existeix) |
@@ -2118,6 +2119,7 @@ Aquest apartat és per al backend. El frontend no en depèn.
 
 - **Progrés.** `Pot` no desa cap camp nou: `percentage` i `goalStatus` es calculen en construir la resposta, amb una sola funció pura que fan servir totes les respostes de guardioles i que té els seus tests (skill `middle-services`). El percentatge es calcula amb enters: `(200 × balance + target) // (2 × target)`. **No** amb `round()` de Python, que arrodoneix 62,5 a 62 (arrodoniment bancari), ni amb decimals de coma flotant.
 - **Una retirada escriu quatre coses alhora**, com l'aportació ([9.8](#98-model-intern-de-lestalvi)): el saldo del compte, el saldo de la guardiola, el moviment del compte i l'entrada de l'historial. Es valida tot abans d'escriure. Si una escriptura falla a mig camí, es desfan les anteriors abans de deixar sortir l'error.
+- **El mateix pany que l'aportació.** «Validar + escriure» de la retirada va dins del `_CONTRIBUTION_LOCK` que ja fa servir l'aportació a `pot_service.py`, no en un pany nou. Així una retirada i una aportació alhora a la mateixa guardiola s'apliquen una darrere l'altra ([11.2](#112-post-apipotspotidwithdrawals), casos límit; prova RE-17).
 - **Invariants:**
   - el saldo del compte és la suma dels `signed_amount` dels seus moviments;
   - el saldo d'una guardiola és la suma amb signe del seu historial (`income` suma, `expense` resta) i mai és negatiu;
