@@ -174,7 +174,9 @@ Details: skill `middle-services`.
 
 ## 4. AI workflow (how we use copilots)
 
-1. **Read** the US / acceptance criteria first.
+1. **Read** the US, its acceptance criteria and its mockup first. If they do not
+   define a screen, a button, a message or a list you need, **stop and ask the PO**;
+   never invent it (skill `user-stories`).
 2. **Load the right skill** (lazy — only what the task needs):
    - Structure / layers → `arch-structure`
    - Vue screens / ViewModels / components → `mvvm-patterns`
@@ -183,6 +185,8 @@ Details: skill `middle-services`.
    - Reusable models, components, helpers → `shared-module`
    - Naming/style → `code-style`
    - Comments → `comments-docs`
+   - Writing or refining a story, or a story that does not define something → `user-stories`
+   - Tests, coverage, acceptance tests → `qa-strategy`
    - Branches / gitflow → `gitflow`
    - PR → `pr-conventions`
    - Commit → `commit-conventions`
@@ -199,14 +203,18 @@ AI is a co-pilot. **Humans own** architecture, product, security and final QA.
 
 ### Branches (GitFlow)
 
+**`develop` never breaks.** Each user story has its own branch; its tasks
+integrate there, and the story reaches `develop` only when it is complete.
+
 | Branch | Role |
 |--------|------|
-| `main` | Demo / release line |
-| `develop` | Integration for sprint work — **PR target** |
-| `feature/<slug>` | One US or one technical task |
+| `main` | Production (demo / release line) |
+| `develop` | Integration, always working: receives whole stories, self-contained tasks and fixes |
+| `story/us-<id>-<slug>` | One user story, from `develop`; PR into `develop` when the story is complete |
+| `feature/<frontend\|backend\|devops>/<tNN-N-slug>` | One task, from its story branch; PR into the story branch |
 | `fix/<slug>` | Bugfix |
 | `refactor/<slug>` | Behavior-preserving cleanup (one module) |
-| `hotfix/<slug>` | Urgent fix on `main` when the demo is broken |
+| `hotfix/<slug>` | Urgent fix on `main` when production is broken |
 
 Full rules: skill `gitflow`.
 
@@ -252,15 +260,16 @@ Full rules: skill `commit-conventions`.
 ### Pull Requests
 
 - Title: same shape as commit: `feat(savings): create pot with target US-17`
-- **One US / one technical task per PR**
-- Branch: `feature/<slug>`, `fix/<slug>` or `refactor/<slug>` from `develop`; PR base **`develop`**
+- **Task PR:** one task, base = its **story branch**
+- **Story PR:** the whole story, base **`develop`**; only after every task is in, `develop` is merged into the story branch with every test green, and the PO has accepted the story on its branch
+- Technical tasks outside any story, docs and fixes: PR base `develop`, only if complete on their own
 - Only `hotfix/<slug>` starts from `main`; PR base `main`, then sync `develop`
 - Body: what, why, AC mapping, screenshots if UI
 - Checklist: DoD + architecture checklist
 - ≥1 teammate review (per course DoD proposal)
 - Tests pass before merge
 - Required status check: the `ci` GitHub Actions job must be green
-- Target: `develop` (demo/release on `main` via agreed flow)
+- Release: `develop` → `main` at the end of the sprint, after checking pre-production
 
 Full rules: skills `pr-conventions` + `gitflow`.
 
@@ -270,15 +279,13 @@ Full rules: skills `pr-conventions` + `gitflow`.
 
 1. Code committed
 2. Developer tests pass
-3. Acceptance criteria verified
+3. Acceptance criteria verified, each one mapped to a test (skill `qa-strategy`)
 4. Help/doc text updated if user-facing
-5. Product Owner accepts
+5. Product Owner accepts, on the story branch, before the story reaches `develop`
 6. PR reviewed by another member
-7. CI green: the `ci` GitHub Actions check passes on the PR (Ruff, pytest, ESLint, type-check, Vitest, build). Deploys from `main` are automated (see `docs/ci-cd.md`).
+7. CI green: the `ci` GitHub Actions check passes on the PR (Ruff, pytest, ESLint, type-check, Vitest, build), and `develop` stays deployable. Environments and deploys: skill `ci-cd`.
 8. No critical open bugs for that story
 9. **Architecture checklist** (layers respected, no API call from a View, shared rules not duplicated)
-
-CI and deployment are out of Sprint 0. Until they exist, point 7 means: `vitest` and `pytest` pass locally, and the PR says so.
 
 ---
 
@@ -299,3 +306,24 @@ The full list of documents and what each one holds is in [`README.md` → Docs m
 | Same limit check in 2 files | One module, imported by both |
 | Mega PR with 5 stories | One US per PR |
 | “It works, don’t ask” hack | Real structure, even if slower to type |
+| Task PR straight into `develop` while its story is open | Task PR into the story branch |
+| Screen, button or message the story does not define | Ask the PO, refine the story, then build it |
+| Test nobody can say what it proves | Name the AC or rule it proves |
+
+---
+
+## 9. Sprint 1 review: what went wrong and how we avoid it
+
+The professor's feedback at the Sprint 1 review (2026-11-10), turned into rules.
+
+| What went wrong | How we avoid it | Skill |
+|-----------------|-----------------|-------|
+| Screens invented while building (the pots list had no definition: names, icons, positions, colours, arrows) | Every story with UI has a mockup of each screen; nobody invents a screen | `user-stories` |
+| Stories too big (listing and creating pots in one) | One functionality per story | `user-stories` |
+| Undefined behaviour: what Cancel does, the exact error message, how many items a list shows, scrolling, the empty case | Definition of Ready checklist before a story enters a sprint | `user-stories` |
+| Stories treated as frozen; gaps filled by guessing | Backlog refinement meetings during the sprint; a gap stops the work until the PO answers | `user-stories` |
+| Every task merged into `develop` on its own, so `develop` held half-built stories | One branch per story; only whole stories reach `develop`; `develop` never breaks | `gitflow` |
+| Integration coordinated over WhatsApp; it does not scale | The story branch is the integration point; CI runs on it | `gitflow`, `ci-cd` |
+| Only one deployed environment | Pre-production from `develop`, production from `main` | `ci-cd` |
+| No answer to "what is the quality strategy?" or "what do these tests prove?" | Test levels, rules and metrics (80 % coverage, routes, ACs, bugs caught) | `qa-strategy` |
+| The PO and the Scrum Master made no commits | Every role also takes development tasks; PO and Scrum Master change every sprint | — |

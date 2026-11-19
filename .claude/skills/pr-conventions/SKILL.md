@@ -1,93 +1,135 @@
 ---
 name: pr-conventions
-description: Load when creating, updating, or reviewing a pull request for F3-Evolt — PR title format, body structure, scope, DoD checklist, architecture checklist, branch targets, review rules. Use before opening any PR.
+description: Load when creating, updating, or reviewing a pull request for F3-Evolt — task PRs into a story branch, story PRs into develop, release PRs into main, title format, body structure, scope, DoD checklist, architecture checklist, review rules. Use before opening any PR.
 ---
 
 # Pull request conventions
 
-PRs are how we deliver **one clear change** with a review trail.
+PRs are how we deliver **one clear change** with a review trail. Since the
+Sprint 1 review there are three kinds, one per level of the branch model
+(skill `gitflow`):
+
+| Kind | Head → base | Holds | Merges when |
+|------|-------------|-------|-------------|
+| **Task PR** | `feature/<layer>/<tNN-N-slug>` → `story/us-<id>-<slug>` | One task of the story | CI green + 1 review |
+| **Story PR** | `story/us-<id>-<slug>` → `develop` | The whole story, frontend + backend | Everything in the story checklist below |
+| **Release PR** | `develop` → `main` | The sprint | Pre-production checked + 1 review |
+
+Technical tasks and docs outside any story (`feature/devops/…`, `docs/…`) and
+fixes open a task PR straight into `develop`, and only if the change is
+complete on its own.
 
 ## Title
 
 Same shape as commits:
 
 ```
-feat(savings): create pot with target US-17
+feat(savings): pot detail endpoint US-19                    ← task PR
+feat(savings): see the detail of a pot US-19                ← story PR (the story itself)
 fix(auth): generic error on bad login US-03
-refactor(shared): extract daily XP cap US-23
+ci: run CI on story branches
 ```
 
 - Conventional type + scope
 - Imperative mood
 - US id when the change maps to a story
 
-## Scope of a PR
+## Scope
 
 | Allowed | Not allowed |
 |---------|-------------|
-| One user story / AC slice | Five stories in one PR |
-| One technical task (spike, refactor of one module) | “Cleanup of everything” |
-| Related tests for that change | Unrelated formatting of other files |
+| One task (task PR) or one whole story (story PR) | A task PR into `develop` while its story is still open |
+| Related tests for that change | Half a story in `develop` ("the backend comes next week") |
+| | Five stories in one PR |
+| | Unrelated formatting of other files |
 
-**One US or one technical task per PR.**
-
-## Body (template)
+## Body: task PR
 
 ```markdown
 ## What
 Short description of the change.
 
 ## Why
-US ref / problem solved. Link backlog or US id (US-XX).
+Story and task: US-XX, TXX.X (issue #N).
 
 ## How
 Layers touched (View / ViewModel / Model, or Router / Service / Repository).
 
 ## AC mapping
-- [ ] AC 1 …
-- [ ] AC 2 …
+- [ ] AC 1 … → test that proves it
+- [ ] AC 2 … → test that proves it
 
 ## Screenshots
-UI: before/after or empty/loading/error states.
+UI: next to the story's mockup; empty / loading / error states.
 
 ## Checklist
+- [ ] Base is the story branch (not `develop`)
 - [ ] Commits follow commit-conventions
 - [ ] Architecture: correct layers (no API call from a View, no `seed.py` access from a service)
 - [ ] Shared rules not duplicated
-- [ ] Tests added/updated where required
-- [ ] Help/doc text updated if user-facing
+- [ ] Tests added per skill `qa-strategy` (each AC or rule has a test that names it)
+- [ ] Nothing invented: every screen element, message and button comes from the story or its mockup
 - [ ] Tests pass (`vitest` / `pytest`)
-- [ ] DoD ready for review
 ```
 
-## Branch / target
+## Body: story PR
 
-- Branches: `feature/<slug>`, `fix/<slug>`, `refactor/<slug>` from `develop`; `hotfix/<slug>` from `main` (see skill `gitflow`).
-- Target: **`develop`** for normal work; `main` only for hotfix/release paths per gitflow.
-- Do not merge to `main` directly without review + green CI (per course rules).
+```markdown
+## Story
+US-XX: value statement. Trello card / issue #N. Mockup: link.
+
+## Task PRs in this story
+- #… backend: …
+- #… frontend: …
+
+## Acceptance
+- Acceptance tests run on the story branch: `docs/proves-….md` IDs …, all pass
+- Automated tests per AC: AC 1 → test …, AC 2 → test …
+- PO acceptance: link to the comment on the story issue
+
+## Sync
+`develop` merged into the story branch at <sha>; every test passes after it.
+
+## Bugs
+Found while integrating, and the test that now covers each one.
+```
+
+Story PR checklist (all must be true before it merges):
+
+- [ ] Every task PR of the story is merged into the story branch
+- [ ] Latest `develop` merged into the story branch; CI green after that
+- [ ] The whole flow works from the story branch, and its acceptance tests pass
+- [ ] The PO accepted the story on the story branch
+- [ ] No critical bug open for the story
+- [ ] Merged with a merge commit (no squash), so every task stays traceable
 
 ## Review
 
-- At least **1 teammate** reviews (course DoD proposal).
-- Reviewer checks: **architecture + AC**, not only syntax.
-- AI may draft the PR body; **humans** approve merge.
+- At least **1 teammate** reviews every PR.
+- Reviewer checks **architecture + AC**, not only syntax. On a story PR, the
+  reviewer also checks the story checklist above.
+- A screen that does not match the story or its mockup is a review comment,
+  even if it looks good: the fix is to refine the story with the PO (skill
+  `user-stories`), not to keep the invention.
+- AI may draft the PR body; **humans** approve merges.
 
 ## DoD reminder (course + tech)
 
-1. Code committed  
-2. Dev tests pass  
-3. AC verified  
-4. Help/doc if user-facing  
-5. PO accepts  
-6. PR reviewed  
-7. CI green; staging/demo deployable (out of Sprint 0: until then, tests pass locally)  
-8. No critical open bugs for that story  
-9. Architecture checklist respected  
+1. Code committed
+2. Dev tests pass
+3. AC verified
+4. Help/doc if user-facing
+5. PO accepts (on the story branch)
+6. PR reviewed
+7. CI green; the story reaches `develop` whole, and `develop` stays deployable
+8. No critical open bugs for that story
+9. Architecture checklist respected
 
-## Self-check before request for review
+## Self-check before requesting review
 
-- [ ] Title + body follow the template
-- [ ] Exactly one US / technical task
-- [ ] AC mapped
+- [ ] Right kind of PR, right base branch
+- [ ] Title + body follow the template for that kind
+- [ ] Exactly one task (task PR) or one story (story PR)
+- [ ] AC mapped to tests
 - [ ] Architecture checklist done
 - [ ] No secrets, no build junk in the diff

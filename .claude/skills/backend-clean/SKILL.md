@@ -81,6 +81,8 @@ Resolve it in one dependency (`routers/current_user.py`); services receive the u
 - pytest, in `backend/tests/`.
 - Reset the in-memory data before each test so the order does not matter.
 - Cover the edges the contract names: exactly 500 €, 500,01 €, the third top-up of the day, a user with no movements, invalid `offset`/`limit`.
+- Every route gets its contract tests in the same PR: the success answer, each error `code` `docs/api.md` lists for it, and `401` without a session (skill `qa-strategy`).
+- A change to a Firestore repository is run against the emulator before its PR (`tests/test_firestore.py`); CI only runs in memory for now.
 
 ## Self-check
 
@@ -90,3 +92,4 @@ Resolve it in one dependency (`routers/current_user.py`); services receive the u
 - [ ] On error nothing was modified
 - [ ] Amounts are integer cents; “today” uses `Europe/Madrid`
 - [ ] Tests reset the data and pass
+- [ ] Each route has tests for its success answer and every error code it can return
