@@ -23,6 +23,8 @@ PROTECTED = [
     ("GET", "/api/home"),
     ("GET", "/api/movements"),
     ("POST", "/api/topups"),
+    # T19.2: la retirada de 10,00 € de Vacances (150,00 €) també necessita sessió.
+    ("POST", "/api/pots/pot-01/withdrawals"),
 ]
 UNAUTHENTICATED_BODY = {"code": "UNAUTHENTICATED", "message": "Cal iniciar sessió."}
 
