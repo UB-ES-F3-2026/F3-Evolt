@@ -27,11 +27,12 @@ RESET_LINK_EXPIRED = "RESET_LINK_EXPIRED"
 INVALID_CODE = "INVALID_CODE"
 CODE_EXPIRED = "CODE_EXPIRED"
 TOO_MANY_ATTEMPTS = "TOO_MANY_ATTEMPTS"
-# Estalvi (docs/api.md §5 i §9.7).
+# Estalvi (docs/api.md §5, §9.7 i §11.5).
 INVALID_POT_NAME = "INVALID_POT_NAME"
 INVALID_TARGET = "INVALID_TARGET"
 INSUFFICIENT_BALANCE = "INSUFFICIENT_BALANCE"
 POT_NOT_FOUND = "POT_NOT_FOUND"
+INSUFFICIENT_POT_BALANCE = "INSUFFICIENT_POT_BALANCE"
 # Moviments (docs/api.md §5 i §10.6).
 MOVEMENT_NOT_FOUND = "MOVEMENT_NOT_FOUND"
 INVALID_DESCRIPTION = "INVALID_DESCRIPTION"
@@ -58,6 +59,7 @@ ERROR_STATUS: dict[str, int] = {
     INVALID_TARGET: 422,
     INSUFFICIENT_BALANCE: 422,
     POT_NOT_FOUND: 404,
+    INSUFFICIENT_POT_BALANCE: 422,
     MOVEMENT_NOT_FOUND: 404,
     INVALID_DESCRIPTION: 422,
 }
@@ -86,6 +88,7 @@ ERROR_MESSAGES: dict[str, str] = {
     INVALID_TARGET: "L'objectiu ha de ser més gran que 0.",
     INSUFFICIENT_BALANCE: "No tens prou saldo per fer aquesta aportació.",
     POT_NOT_FOUND: "No s'ha trobat la guardiola.",
+    INSUFFICIENT_POT_BALANCE: "La guardiola no té prou saldo per aquesta retirada.",
     MOVEMENT_NOT_FOUND: "No s'ha trobat el moviment.",
     INVALID_DESCRIPTION: "Explica què passa amb el moviment (com a màxim 500 caràcters).",
 }
