@@ -333,10 +333,11 @@ def test_add_user_gets_a_new_id_and_is_findable(seed):
     ana = _new_user(users)
     pau = _new_user(users, "pau@x.com")
 
-    assert (ana.id, pau.id) == (3, 4)
+    # El seed té 8 usuaris (T13.2).
+    assert (ana.id, pau.id) == (9, 10)
     assert users.get(ana.id) is ana
     assert users.find_by_identifier("pau@x.com") is pau
-    assert seed.next_user_id == 5
+    assert seed.next_user_id == 11
 
 
 def test_get_unknown_user_is_none(seed):
