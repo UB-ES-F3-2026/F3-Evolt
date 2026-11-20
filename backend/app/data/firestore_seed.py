@@ -27,12 +27,20 @@ from app.repositories.firestore.pot import (
     pot_to_dict,
 )
 from app.repositories.firestore.session import SESSIONS
-from app.repositories.firestore.user import USER_COUNTER, USER_IDENTIFIERS, USERS, identifier_key, user_to_dict
+from app.repositories.firestore.user import (
+    USER_COUNTER,
+    USER_IDENTIFIERS,
+    USERNAMES,
+    USERS,
+    identifier_key,
+    user_to_dict,
+)
 from app.repositories.firestore.verification_code import VERIFICATION_CODES
 
 COLLECTIONS = (
     USERS,
     USER_IDENTIFIERS,
+    USERNAMES,
     ACCOUNTS,
     POTS,
     POT_MOVEMENTS,
@@ -75,6 +83,8 @@ def write_seed(client: firestore.Client, seed: SeedData) -> None:
             client.collection(USER_IDENTIFIERS).document(identifier_key(user.identifier)),
             {"user_id": user.id},
         )
+        if user.username:
+            batch.set(client.collection(USERNAMES).document(user.username), {"user_id": user.id})
     for user_id, account in seed.accounts.items():
         batch.set(client.collection(ACCOUNTS).document(str(user_id)), account_to_dict(account))
     for number, pot in enumerate(seed.pots, start=1):
