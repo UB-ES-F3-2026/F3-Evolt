@@ -23,6 +23,9 @@ PROTECTED = [
     ("GET", "/api/home"),
     ("GET", "/api/movements"),
     ("POST", "/api/topups"),
+    # T13.2 (CU-21): la cerca i un usuari concret també necessiten sessió.
+    ("GET", "/api/users"),
+    ("GET", "/api/users/usr-04"),
 ]
 UNAUTHENTICATED_BODY = {"code": "UNAUTHENTICATED", "message": "Cal iniciar sessió."}
 
