@@ -12,6 +12,7 @@ import {
   type PotMovementJson,
   type PotMovementsJson,
   type PotsJson,
+  type WithdrawalJson,
 } from '@/models/pot'
 import { mockBalance, mockError, recordAccountMovement } from './index'
 import { madridDaysAgoAt, toContractDate } from './madridTime'
@@ -137,6 +138,32 @@ export function mockContribute(potId: string, body: { amount?: unknown }): Contr
   return { balance, pot: { ...pot }, movement }
 }
 
+/**
+ * POST /api/pots/{potId}/withdrawals — the inverse of a contribution, with the order of
+ * docs/api.md §11.2: body format → POT_NOT_FOUND → INVALID_AMOUNT → INSUFFICIENT_POT_BALANCE.
+ * All or nothing, as in §9.4. The account gets «Retirada de <nom>» as income and the pot
+ * history «Retirada» as expense.
+ */
+export function mockWithdraw(potId: string, body: { amount?: unknown }): WithdrawalJson {
+  const { amount } = body
+  if (typeof amount !== 'number' || !Number.isInteger(amount)) {
+    throw mockError('VALIDATION_ERROR', 'Les dades de la petició no són vàlides.')
+  }
+  const pot = findPot(potId)
+  if (amount <= 0) {
+    throw mockError('INVALID_AMOUNT', "L'import ha de ser més gran que 0.")
+  }
+  if (amount > pot.balance) {
+    throw mockError('INSUFFICIENT_POT_BALANCE', 'La guardiola no té prou saldo per aquesta retirada.')
+  }
+
+  const now = new Date()
+  const { balance, movement } = recordAccountMovement(`Retirada de ${pot.name}`, 'income', 'savings', amount, now)
+  pot.balance -= amount
+  history.push(toStoredEntry(nextEntryNumber++, pot.id, now, 'Retirada', amount, 'expense'))
+  return { balance, pot: { ...pot }, movement }
+}
+
 /** A pot that does not exist gets the same answer as one of another user (§9.4). */
 function findPot(potId: string): PotJson {
   const pot = pots.find((candidate) => candidate.id === potId)
@@ -144,12 +171,19 @@ function findPot(potId: string): PotJson {
   return pot
 }
 
-function toStoredEntry(number: number, potId: string, at: Date, concept: string, amount: number): StoredPotMovement {
+/** `type` is seen from the pot: money in is income, a withdrawal is expense (§9.5, §11.3). */
+function toStoredEntry(
+  number: number,
+  potId: string,
+  at: Date,
+  concept: string,
+  amount: number,
+  type: PotMovementJson['type'] = 'income',
+): StoredPotMovement {
   const date = toContractDate(at)
   return {
     potId,
-    // Every entry brings money into the pot, so it is income seen from the pot (§9.5).
-    json: { id: `pmov-${String(number).padStart(2, '0')}`, amount, concept, date, type: 'income' },
+    json: { id: `pmov-${String(number).padStart(2, '0')}`, amount, concept, date, type },
     at: Date.parse(date),
     seq: number,
   }
