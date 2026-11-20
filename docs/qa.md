@@ -97,19 +97,21 @@ local (abans del commit)  →  CI a cada PR i push (develop, main, story/**)  �
 
 ### 4.2 Rutes
 
-Les 18 rutes de `develop` (17 de l'app i 1 de desenvolupament) tenen tests de contracte (èxit, cada codi d'error de `docs/api.md` i `401`): **100 %**.
+Les 19 rutes de `develop` (17 de l'app i 2 de desenvolupament: `POST /api/dev/reset` i `GET /api/dev/outbox`) tenen tests de contracte (èxit, cada codi d'error de `docs/api.md` i `401`): **100 %**.
 
 ## 5. Traçabilitat AC → prova (Sprint 2)
 
-Font dels AC: les targetes del Trello (checklist «Acceptance Criteria»). Estat a 19/11.
+Font dels AC: les targetes del Trello (checklist «Acceptance Criteria»). Estat a 20/11.
+
+Les proves de multidivisa (US-25, US-26 i US-27) són a `docs/proves-multidivisa.md`, amb el contracte de la #193 (cap a `story/us-25-currency-subaccounts`; alguns punts encara són proposta del PO).
 
 | Història | AC al Trello | Proves definides | Codi | Provat per QA |
 |---|---|---|---|---|
 | US-19 Retirar diners | 7 | RE-01…RE-21 (API), REP-01… (pantalla) a la #177 | Frontend #190 · backend T19.2 pendent | **Sí** (§5.1) |
 | US-20 Progrés | 8 | OP-01…OP-08 a la #177 | Frontend #179 · backend T20.1 pendent | Yayun (#179) |
-| US-25 Afegir subcompte | 6 | Pendent del contracte T25.1 (#166) | Frontend a `story/us-25` (#178) | Izan (#178) |
-| US-26 Eliminar subcompte | 6 | Pendent de #166 | No començat | — |
-| US-27 Canvi de divises | 7 | Pendent de #166 | Frontend #180 (esborrany) | — |
+| US-25 Afegir subcompte | 6 | DV-01…DV-16 (API), DVP-01…DVP-07 (pantalla) a la #193 | Frontend a `story/us-25` (#178) · backend T25.2 pendent | Izan (#178) |
+| US-26 Eliminar subcompte | 6 | EL-01…EL-09 (API), ELP-01…ELP-07 (pantalla) a la #193 | No començat (depèn de la T25.2) | — |
+| US-27 Canvi de divises | 7 | CV-01…CV-23 (API), CVP-01…CVP-10 (pantalla) a la #193 | Frontend #180 (esborrany) · backend T27.1 pendent | — |
 | US-13 Cercar usuari | 7 | Pendent del contracte T13.1 (#157) | No començat | — |
 | US-14 Enviar diners | 9 | Pendent de #157 | No començat | — |
 | US-15 Sol·licitar diners | 10 | Pendent del contracte T15.1 (#153) | No començat | — |
@@ -179,6 +181,10 @@ pip install pytest-cov
 # sense les vistes:
 (cd frontend && npx vitest run --coverage --coverage.include='src/**' --coverage.exclude='src/views/**')
 
-# backend sobre l'emulador de Firestore (local)
-(cd backend && TEST_STORAGE=firestore python -m pytest tests/ -q)
+# backend sobre l'emulador de Firestore (local, vegeu el README)
+firebase emulators:start --only firestore          # terminal 1, i deixar-lo engegat
+(cd backend && FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 TEST_STORAGE=firestore python -m pytest tests/ -q)   # terminal 2
+# Sense FIRESTORE_EMULATOR_HOST, test_firestore.py s'omet i els tests no van a l'emulador.
 ```
+
+PowerShell (Windows), per a l'emulador: `$env:FIRESTORE_EMULATOR_HOST="127.0.0.1:8080"; $env:TEST_STORAGE="firestore"; python -m pytest tests/ -q`, a la mateixa terminal i amb l'emulador engegat en una altra.
