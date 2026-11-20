@@ -103,24 +103,24 @@ Les 19 rutes de `develop` (17 de l'app i 2 de desenvolupament: `POST /api/dev/re
 
 ## 5. Traçabilitat AC → prova (Sprint 2)
 
-Font dels AC: les targetes del Trello (checklist «Acceptance Criteria»). Estat a 20/11.
+Font dels AC: les targetes del Trello (checklist «Acceptance Criteria»). Estat a 20/11 a la nit.
 
 Les proves de multidivisa (US-25, US-26 i US-27) són a `docs/proves-multidivisa.md`, amb el contracte de la #193 (cap a `story/us-25-currency-subaccounts`; alguns punts encara són proposta del PO).
 
 | Història | AC al Trello | Proves definides | Codi | Provat per QA |
 |---|---|---|---|---|
-| US-19 Retirar diners | 7 | RE-01…RE-21 (API), REP-01… (pantalla) a la #177 | Frontend #190 · backend T19.2 pendent | **Sí** (§5.1) |
-| US-20 Progrés | 8 | OP-01…OP-08 a la #177 | Frontend #179 · backend T20.1 pendent | Yayun (#179) |
+| US-19 Retirar diners | 7 | RE-01…RE-21 (API), REP-01…REP-12 (pantalla) a la #177 | Frontend #190 · backend #195 (totes dues aprovades) | **Sí, de punta a punta** (§5.1) |
+| US-20 Progrés | 8 | O-01…O-08 (API), OP-01…OP-08 (pantalla) a la #177 | Frontend #179 · backend #194 | Yayun i Huabin (#179, #194) |
 | US-25 Afegir subcompte | 6 | DV-01…DV-16 (API), DVP-01…DVP-07 (pantalla) a la #193 | Frontend a `story/us-25` (#178) · backend T25.2 pendent | Izan (#178) |
 | US-26 Eliminar subcompte | 6 | EL-01…EL-09 (API), ELP-01…ELP-07 (pantalla) a la #193 | No començat (depèn de la T25.2) | — |
 | US-27 Canvi de divises | 7 | CV-01…CV-23 (API), CVP-01…CVP-10 (pantalla) a la #193 | Frontend #180 (esborrany) · backend T27.1 pendent | — |
-| US-13 Cercar usuari | 7 | Pendent del contracte T13.1 (#157) | No començat | — |
-| US-14 Enviar diners | 9 | Pendent de #157 | No començat | — |
-| US-15 Sol·licitar diners | 10 | Pendent del contracte T15.1 (#153) | No començat | — |
+| US-13 Cercar usuari | 7 | CU-01…CU-23 (API), CUP-01…CUP-11 (pantalla) a la #196 | Backend #197 · frontend T13.3 pendent | Huabin (#197, l'API) |
+| US-14 Enviar diners | 9 | EN-01…EN-32 (API), ENP-01…ENP-11 (pantalla) a la #196 | Backend T14.1 i T14.2 i frontend T14.3 pendents | — |
+| US-15 Sol·licitar diners | 10 | SO-01…SO-25 (API), SOP-01…SOP-11 (pantalla) a la #198 | Backend #199 · frontend T15.3 pendent | Huabin (#199, l'API) |
 
-### 5.1 US-19 · Retirar diners (#190, 19/11)
+### 5.1 US-19 · Retirar diners (#190 i #195, 19–20/11)
 
-Provat al navegador amb els mocks (flux sencer) i amb el backend real (login `demo@evolt.test`, errors 500 i de xarxa).
+Provat al navegador amb els mocks (19/11) i, el 20/11, de punta a punta: el frontend de la #190 i el backend de la #195 fusionats en local, amb el login `demo@evolt.test`. També s'ha provat un `422` real del servidor (la guardiola buidada des d'una altra pestanya) i els errors 500 i de xarxa.
 
 | AC del Trello | Prova | Test automàtic | Resultat |
 |---|---|---|---|
@@ -130,9 +130,9 @@ Provat al navegador amb els mocks (flux sencer) i amb el backend real (login `de
 | 4. Més que el saldo → «La guardiola no té prou saldo…»; retirar-ho tot es pot | Navegador (`150,01`, `150,00`) | `pots.test` (mock) | ✅ |
 | 5. Tic verd «Has retirat 30,00 € de Vacances»; 1,5 s i torna al detall | Navegador | `useWithdrawViewModel.test` | ✅ |
 | 6. Guardiola avall i principal amunt; «−30,00 € Retirada» i «Retirada de Vacances» | Navegador + Inici | `pots.test` (mock) | ✅ |
-| 7. Errors del servidor i de xarxa; l'import es queda escrit | Navegador (500 i xarxa) | `useWithdrawViewModel.test` | ✅ text · ❌ posició |
+| 7. Errors del servidor i de xarxa; l'import es queda escrit | Navegador (500 i xarxa) | `useWithdrawViewModel.test`, `WithdrawView.test` | ✅ |
 
-Defectes oberts a la #190: l'error surt sobre el botó (ha d'anar a sota), la casella es posa vermella amb un error del servidor, i falta el camí de tornada «← Inici». «Cancel·lar» no està definit al Trello (decisió del PO pendent).
+Els tres defectes que va trobar la prova del 19/11 (l'error sobre el botó, la casella vermella amb un error del servidor i la falta de «← Inici») es van arreglar a `4fb2396` i el 20/11 es van tornar a provar amb el backend real: ✅. Queda pendent del PO què fa «Cancel·lar» (REP-12): ara torna al detall.
 
 ## 6. Han servit els tests? Defectes trobats
 
@@ -150,12 +150,14 @@ Defectes oberts a la #190: l'error surt sobre el botó (ha d'anar a sota), la ca
 | 2 | US-25, US-26 i US-15 tenien dues funcionalitats; AC que contradeien els casos especials (US-14, US-15, US-27, US-20) | Revisió de QA (Definition of Ready) | #176 → #189 |
 | 2 | 79,99 € de 80,00 € mostra «100 %» i «En progrés» | Revisió | #177, #179 |
 | 2 | El frontend recalcula el percentatge que el contracte diu que dona el backend | Revisió | #179 |
-| 2 | Pantalla en blanc en anar a «Canviar» des de la US-25; llista amb l'EUR seleccionable si falla la càrrega | Revisió | #178 |
+| 2 | Pantalla en blanc en anar a «Canviar» des de la US-25; llista amb l'EUR seleccionable si falla la càrrega | Revisió, després de fusionar-la a `story/us-25` | #178 |
 | 2 | Dues còpies del model de divises i dues rutes per al mateix (`/api/subaccounts` vs `/api/currencies`) | Revisió | #180 |
 | 2 | Error del servidor en el lloc equivocat, casella vermella amb import correcte, sense camí de tornada | **Prova al navegador** (QA) | #190 |
 | 2 | El CI no corria a `story/us-20` (anava 4 commits per darrere de `develop`) | Revisió | #179 |
+| 2 | El contracte d'enviaments no deixava saber el límit que queda abans de confirmar, i la US-14 (D4) ho demana a «Enviar» | Revisió (frontend) | #196 |
+| 2 | Els usuaris registrats amb telèfon abans de la T13.2 no tenen el camp `phone` i la cerca per telèfon no els troba | Revisió (QA) | #197 |
 
-**Recompte:** 16 defectes. 4 els va trobar una prova (tests, script o navegador), 10 la revisió, 1 totes dues i 1 el desplegament. Cap defecte de codi no ha arribat a `develop`: tots es van trobar a la PR.
+**Recompte:** 18 defectes. 4 els va trobar una prova (tests, script o navegador), 12 la revisió, 1 totes dues i 1 el desplegament. Cap defecte de codi no ha arribat a `develop`. Tots es van trobar a la PR, menys els dos de la #178, que es van trobar a `story/us-25` perquè s'hi va fusionar sense revisió.
 
 Com és habitual, la revisió de disseny i de codi troba més defectes que les proves unitàries. Per això la revisió és obligatòria i la revisió de QA executa els AC.
 
@@ -187,7 +189,8 @@ Com és habitual, la revisió de disseny i de codi troba més defectes que les p
 | Punt | Què hi corre a Evolt | Pressupost recomanat | Temps real |
 |---|---|---|---|
 | PR i push (`develop`, `main`, `story/**`) | Ruff, `compileall`, pytest, ESLint, `vue-tsc`, Vitest, build | ~10 min | **75–100 s** (últimes execucions del CI, 20/11) |
-| Fusió a `develop` / `main` | El mateix CI i `/api/health` després del desplegament | Minuts | — |
+| Fusió a `develop` | El mateix CI (no es desplega) | Minuts | 75–100 s |
+| Fusió a `main` | El mateix CI, desplegament a Render i `/api/health` | Minuts | — |
 | Abans de la demo | Revisió de QA de cada història al navegador i acceptació del PO | Dies | — |
 | Cada nit / producció | Res encara | Hores / continu | — |
 
@@ -197,7 +200,7 @@ Com més tard és el punt, més cara és la prova i menys sovint corre. El CI de
 
 | Mecanisme | Què garanteix | Estat a Evolt |
 |---|---|---|
-| Aprovació obligatòria | Algú que no és l'autor ha mirat el canvi | ✅ a `develop` i `main` · ⚠️ a `story/*` només és una norma de l'equip: la #178 es va fusionar sense revisió i tenia 2 errors |
+| Aprovació obligatòria | Algú que no és l'autor ha mirat el canvi | ✅ a `develop` i `main` · a `story/*` és una norma de l'equip, a propòsit: una regla de PR bloquejaria el push del merge de `develop` a la història (pas 4 del gitflow, skill `ci-cd`). La #178 es va fusionar sense revisió i tenia 2 errors |
 | Checks obligatoris | Lint, tests i build han passat | ✅ `ci` obligatori a `develop` i `main` |
 | Branca al dia abans de fusionar | La combinació s'ha provat sobre l'últim `develop` | ⚠️ acordat per l'equip el 17/11 (proposta de QA a la #145), però `docs/branch-protection.md` encara diu `strict: false` |
 | Comentaris resolts | Cap problema bloquejant es perd | Revisió manual |
@@ -228,7 +231,6 @@ Amb assistents d'IA hi ha tres riscos nous: menys comprensió del codi generat, 
 | Preproducció | No hi ha encara un segon entorn | `develop` desplegat com a preproducció (DevOps, skill `ci-cd`) |
 | Auditoria de dependències i de secrets (Q4, SAST) | No és al CI | `npm audit` i `pip-audit` al CI, informatius; més endavant CodeQL |
 | Testing de mutació | La cobertura no diu si els tests detecten errors | Provar `mutmut` en un servei del backend (p. ex. les recàrregues) i donar el % de mutants morts |
-| Protecció de `story/*` | Avui és una norma de l'equip, no una regla de GitHub | 1 aprovació i el CI obligatoris també a `story/**` (DevOps) |
 | Accessibilitat automàtica (Q4) | Els tests miren `aria-*` a mà | axe o Lighthouse amb l'E2E |
 
 ## 9. Com reproduir les xifres
