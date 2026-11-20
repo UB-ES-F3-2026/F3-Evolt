@@ -19,6 +19,7 @@ Contracte compartit entre el backend (FastAPI) i el frontend per a les històrie
 9. [Guardioles (US-17 i US-18)](#9-guardioles-us-17-i-us-18)
 10. [Moviments: filtres, detall i informe (US-10 i US-11)](#10-moviments-filtres-detall-i-informe-us-10-i-us-11)
 13. [Pagaments: cercar usuaris i enviar diners (US-13 i US-14)](#13-pagaments-cercar-usuaris-i-enviar-diners-us-13-i-us-14)
+14. [Sol·licituds de diners (US-15)](#14-sol·licituds-de-diners-us-15)
 
 ---
 
@@ -171,6 +172,9 @@ Exemple:
 | `GET /api/users` | `200` | US-13 · [13.2](#132-get-apiusers) |
 | `GET /api/users/{userId}` | `200` | US-13 · [13.3](#133-get-apiusersuserid) |
 | `POST /api/transfers` | `201` | US-14 · [13.4](#134-post-apitransfers) |
+| `POST /api/money-requests` | `201` | US-15 · [14.2](#142-post-apimoney-requests) |
+| `GET /api/money-requests` | `200` | US-15 · [14.3](#143-get-apimoney-requests) |
+| `POST /api/money-requests/{requestId}/cancel` | `200` | US-15 · [14.4](#144-post-apimoney-requestsrequestidcancel) |
 
 A partir de la T03.1, `GET /api/home`, `GET /api/movements` i `POST /api/topups` són **rutes protegides**: necessiten una sessió ([apartat 8.2](#82-sessió)).
 
@@ -575,6 +579,17 @@ Codis dels pagaments (Sprint 2, [apartat 13](#13-pagaments-cercar-usuaris-i-envi
 
 `INSUFFICIENT_BALANCE` i `INVALID_AMOUNT` també surten a `POST /api/transfers`, amb el mateix significat.
 
+Codis de les sol·licituds (Sprint 2, [apartat 14](#14-sol·licituds-de-diners-us-15)):
+
+| `code` | HTTP | Quan | `details` |
+|---|---|---|---|
+| `SELF_REQUEST` | 422 | Demanar-se diners a un mateix | — |
+| `INVALID_CONCEPT` | 422 | El concepte d'una sol·licitud és buit o passa de 140 caràcters | — |
+| `REQUEST_NOT_FOUND` | 404 | La sol·licitud no existeix, ja s'ha cancel·lat o és d'un altre usuari | — |
+| `REQUEST_NOT_PENDING` | 422 | Cancel·lar una sol·licitud que ja no és pendent | — |
+
+`RECIPIENT_NOT_FOUND`, `INVALID_AMOUNT` i `AMOUNT_OVER_LIMIT` (amb el límit d'1.000.000,00 €) també surten a `POST /api/money-requests`.
+
 ### Exemples
 
 `INVALID_AMOUNT`:
@@ -732,6 +747,19 @@ Propostes dels pagaments (T13.1, US-13 i US-14). Comencen a la P64 perquè les P
 | P73 | [13.7](#137-avisos-a-la-bústia-simulada) | Els avisos d'enviament són missatges `transfer_sent` i `transfer_received` a la bústia simulada, amb els textos de 13.7. |
 | P74 | [13.9](#139-model-intern) | L'`@usuari` d'un registre amb email és la part local netejada, amb un número si ja existeix; amb telèfon, `usuari` i l'id. |
 | P75 | [13.9](#139-model-intern) | Seed de vuit usuaris: els dos d'abans i un per a cada membre de l'equip, amb el seu àlies de GitHub com a `@usuari` i telèfons fictius `+34 611 22 33 0N`. |
+
+Propostes de les sol·licituds (T15.1, US-15):
+
+| # | Apartat | Proposta |
+|---|---|---|
+| P76 | [14.1](#141-objecte-moneyrequest) | `MoneyRequest` té `id` (`req-01`…), `to` (un `UserSummary`), `amount`, `concept`, `status`, `createdAt` i `expiresAt`. |
+| P77 | [14.1](#141-objecte-moneyrequest) | Quatre estats, `pending`, `paid`, `rejected` i `expired`, sense «Cancel·lada» (decisió de PO); en aquest sprint només n'hi ha dos. |
+| P78 | [14.2](#142-post-apimoney-requests) | `POST /api/money-requests` amb `{ toUserId, amount, concept }`, que respon `201` amb la sol·licitud. |
+| P79 | [14.2](#142-post-apimoney-requests) | Ordre de les validacions: format → `RECIPIENT_NOT_FOUND` → `SELF_REQUEST` → `INVALID_AMOUNT` → `AMOUNT_OVER_LIMIT` (més d'1.000.000,00 €) → `INVALID_CONCEPT`. |
+| P80 | [14.4](#144-post-apimoney-requestsrequestidcancel) | Cancel·lar és `POST /api/money-requests/{requestId}/cancel`, que esborra la sol·licitud pendent i respon `{ "status": "ok" }`; si no és pendent, `REQUEST_NOT_PENDING`; si no existeix o no és teva, `REQUEST_NOT_FOUND`. |
+| P81 | [14.5](#145-caducitat) | La caducitat es compta per dies naturals de Madrid: `expiresAt` són les 00:00 del setè dia després del de creació, i `expired` es calcula en llegir. |
+| P82 | [14.6](#146-avís-a-la-bústia-simulada) | L'avís al destinatari és un missatge `money_request` a la bústia simulada. |
+| P83 | [14.8](#148-model-intern) | Seed: l'usuari 1 té una sol·licitud caducada a Huabin i una de pendent a Alicia. |
 
 ---
 
@@ -1115,7 +1143,7 @@ X-Dev-Key: <DEV_OUTBOX_KEY>
 }
 ```
 
-Textos dels altres dos tipus (els avisos d'enviament, `transfer_sent` i `transfer_received`, són a [13.7](#137-avisos-a-la-bústia-simulada)):
+Textos dels altres dos tipus (els avisos d'enviament, `transfer_sent` i `transfer_received`, són a [13.7](#137-avisos-a-la-bústia-simulada), i el de les sol·licituds, `money_request`, a [14.6](#146-avís-a-la-bústia-simulada)):
 
 - `account_locked`: «Hem bloquejat el teu compte d'Evolt durant 15 minuts després de 5 intents fallits. Si no has estat tu, canvia la contrasenya.»
 - `password_reset`: «Per canviar la contrasenya d'Evolt, obre aquest enllaç. Caduca en 30 minuts: <enllaç>»
@@ -2179,3 +2207,199 @@ Els telèfons del seed són fictius i segueixen el mockup de US-13 (`611 22 33 0
 
 - `username` i `phone` són camps nous del document de `users`. Una col·lecció `usernames` (un document per `username`, que apunta a l'usuari) impedeix dos `@usuari` iguals encara que arribin dos registres alhora, com `user_identifiers` ([8.13](#813-model-intern-de-laccés)).
 - La cerca llegeix els usuaris i filtra al backend. Amb les dades de la demo (pocs usuaris) és suficient; si l'app creix, caldria un índex de cerca.
+
+---
+
+## 14. Sol·licituds de diners (US-15)
+
+Demanar diners a un altre usuari i veure i cancel·lar les sol·licituds enviades. Tasca: T15.1 (issue #153). Les pantalles, els textos i els mockups són a la història (`docs/us/US-15.md`); les proves d'acceptació, a [`docs/proves-pagaments.md`](proves-pagaments.md#us-15--sol·licitar-diners).
+
+| Tasca | Què implementa d'aquest apartat |
+|---|---|
+| T15.2 (backend) | [14.1](#141-objecte-moneyrequest) a [14.5](#145-caducitat), l'avís de [14.6](#146-avís-a-la-bústia-simulada) i el model de [14.8](#148-model-intern) |
+| T15.3 (frontend) | «Demanar diners» (`/requests/new`) i «Sol·licituds enviades» (`/requests`), amb el diàleg de cancel·lació |
+
+Totes les rutes són **protegides** ([8.2](#82-sessió)). El destinatari es tria amb la cerca de [13.2](#132-get-apiusers) i es representa amb un `UserSummary` ([13.1](#131-objecte-usersummary)). Els exemples fan servir l'usuari 1 del seed i el moment `2026-11-15T21:15:00+01:00`.
+
+Una sol·licitud **no mou diners**: ni saldos, ni moviments, ni `totalSaved`, ni XP. Pagar-la o rebutjar-la és de la US-16, que no entra en aquest sprint.
+
+### 14.1 Objecte `MoneyRequest`
+
+**[PROPOSTA — pendent de validar]** (P76, P77)
+
+| Camp | Tipus | Notes |
+|---|---|---|
+| `id` | string | Identificador opac amb el format `req-01`, com `Movement.id` (P1). |
+| `to` | `UserSummary` | A qui es demanen els diners ([13.1](#131-objecte-usersummary)). |
+| `amount` | integer | Cèntims, `> 0`. |
+| `concept` | string | Entre 1 i 140 caràcters, sense els espais dels extrems. |
+| `status` | `"pending"` \| `"paid"` \| `"rejected"` \| `"expired"` | La pantalla mostra «Pendent», «Pagada», «Rebutjada» o «Caducada». No hi ha cap estat «Cancel·lada»: cancel·lar l'esborra ([14.4](#144-post-apimoney-requestsrequestidcancel)). |
+| `createdAt` | string | Quan es va enviar, ISO 8601 amb el desplaçament de Madrid. |
+| `expiresAt` | string | A partir de quan es veu «Caducada» si encara és pendent: les 00:00 de Madrid del setè dia després del de `createdAt` ([14.5](#145-caducitat)). |
+
+- En aquest sprint, una sol·licitud només pot ser `pending` o `expired`. `paid` i `rejected` arribaran amb la US-16, però ja són al contracte perquè el frontend en tingui l'etiqueta.
+- El frontend no calcula mai l'estat: pinta el `status` que rep.
+
+```json
+{
+  "id": "req-03",
+  "to": {
+    "id": "usr-03",
+    "name": "Alicia",
+    "username": "aliciaa415"
+  },
+  "amount": 2500,
+  "concept": "El sopar de divendres",
+  "status": "pending",
+  "createdAt": "2026-11-15T21:15:00+01:00",
+  "expiresAt": "2026-11-22T00:00:00+01:00"
+}
+```
+
+### 14.2 `POST /api/money-requests`
+
+Envia una sol·licitud de diners a un altre usuari (US-15). **[PROPOSTA — pendent de validar]** (P78, P79)
+
+**Cos de la petició:** `{ toUserId, amount, concept }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `toUserId` | string | L'`id` de l'`UserSummary` del destinatari. Obligatori. |
+| `amount` | integer | Import en cèntims. Obligatori. Enter JSON estricte, com a P5. |
+| `concept` | string | Obligatori, entre 1 i 140 caràcters després de treure els espais dels extrems. |
+
+**Resposta `201`:** la `MoneyRequest` creada ([14.1](#141-objecte-moneyrequest)), amb `status: "pending"`.
+
+Amb aquesta resposta, la pantalla mostra «Sol·licitud enviada a Alicia.» i, 1,5 s després, obre `/requests` amb la fila nova la primera.
+
+**Ordre de les validacions.** S'aturen al primer error:
+
+1. Format del cos: falta algun camp o no és del tipus de la taula → `VALIDATION_ERROR`.
+2. El destinatari no existeix, està pendent de verificar o l'id té un format qualsevol → `RECIPIENT_NOT_FOUND` (`404`), com a [13.4](#134-post-apitransfers).
+3. El destinatari és l'usuari de la sessió → `SELF_REQUEST` (`422`, «No et pots demanar diners a tu mateix.»).
+4. `amount ≤ 0` → `INVALID_AMOUNT`.
+5. `amount > 100000000` (1.000.000,00 €) → `AMOUNT_OVER_LIMIT`.
+6. `concept` buit, només amb espais o de més de 140 caràcters → `INVALID_CONCEPT` (`422`).
+
+Si una validació falla, no es desa res ni s'envia cap avís.
+
+**Regles:**
+
+- Es poden enviar diverses sol·licituds iguals a la mateixa persona: cadascuna és nova.
+- No hi ha límit diari de sol·licituds, i el saldo de qui la demana no importa.
+- Crear la sol·licitud i deixar l'avís a la bústia ([14.6](#146-avís-a-la-bústia-simulada)) van junts: tot o res.
+
+**Petició:**
+
+```http
+POST /api/money-requests HTTP/1.1
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "toUserId": "usr-03",
+  "amount": 2500,
+  "concept": "El sopar de divendres"
+}
+```
+
+**Resposta `201`:** la sol·licitud de l'exemple de [14.1](#141-objecte-moneyrequest).
+
+### 14.3 `GET /api/money-requests`
+
+Les sol·licituds **enviades** per l'usuari de la sessió (US-15). Les rebudes són de la US-16.
+
+**Resposta `200`:** `{ items }`, una llista de `MoneyRequest`.
+
+- De la més recent a la més antiga per `createdAt`; si dues coincideixen, primer la creada més tard (P4).
+- Sense paginació.
+- Sense cap sol·licitud → `items: []`. La pantalla mostra «Encara no has enviat cap sol·licitud.».
+- L'estat es calcula en aquesta lectura ([14.5](#145-caducitat)).
+
+### 14.4 `POST /api/money-requests/{requestId}/cancel`
+
+Cancel·la una sol·licitud **pendent**: s'esborra i no torna a sortir mai a `/requests` (decisió de PO, 18/11). **[PROPOSTA — pendent de validar]** (P80)
+
+**Cos de la petició:** cap.
+
+**Resposta `200`:** `{ "status": "ok" }`. La pantalla mostra «Sol·licitud cancel·lada.» a dalt i treu la fila.
+
+**Ordre de les validacions:**
+
+1. La sol·licitud no existeix, ja s'ha cancel·lat, és d'un altre usuari o l'id té un format qualsevol → `REQUEST_NOT_FOUND` (`404`, «Aquesta sol·licitud ja no existeix.»). El cos és el mateix en tots els casos.
+2. La sol·licitud no és pendent (`expired`, i amb la US-16 també `paid` o `rejected`) → `REQUEST_NOT_PENDING` (`422`, «Només es poden cancel·lar les sol·licituds pendents.»). La pantalla torna a carregar la llista.
+
+**Regles:**
+
+- Només la pot cancel·lar qui l'ha enviada. El destinatari no rep cap avís de la cancel·lació.
+- Una sol·licitud que ha caducat ja no es pot cancel·lar, encara que no es desi mai com a `expired`: l'estat es calcula en el moment de la petició.
+- Dues cancel·lacions alhora de la mateixa sol·licitud: una respon `200` i l'altra `REQUEST_NOT_FOUND`.
+
+### 14.5 Caducitat
+
+Una sol·licitud sense resposta caduca als 7 dies (US-15). **[PROPOSTA — pendent de validar]** (P81)
+
+- Es compta per **dies naturals de Madrid** ([apartat 1](#què-vol-dir-avui)): una sol·licitud del 14 de novembre (a qualsevol hora) es veu «Caducada» des de les **00:00 del 21 de novembre**. Aquest moment és el seu `expiresAt`.
+- `status` es calcula en cada lectura: `"expired"` si la sol·licitud està desada com a pendent i ara és `≥ expiresAt`; si no, l'estat desat.
+- `expired` **no es desa mai** i no hi ha cap tasca de fons que canviï res.
+- Si hi ha un canvi d'hora pel mig, `expiresAt` continua sent les 00:00 de Madrid d'aquell dia, amb el desplaçament que toqui (`+01:00` o `+02:00`).
+
+| `createdAt` | `expiresAt` | Estat el 20/11 a les 23:59 | Estat el 21/11 a les 00:00 |
+|---|---|---|---|
+| `2026-11-14T19:30:00+01:00` | `2026-11-21T00:00:00+01:00` | `pending` | `expired` |
+| `2026-11-14T00:00:00+01:00` | `2026-11-21T00:00:00+01:00` | `pending` | `expired` |
+
+### 14.6 Avís a la bústia simulada
+
+Crear una sol·licitud deixa un missatge al destinatari a la bústia simulada ([8.12](#812-get-apidevoutbox)). Dins de l'app no hi ha cap llista d'avisos. **[PROPOSTA — pendent de validar]** (P82)
+
+| `type` | A qui | `text` (exemple de 14.2) |
+|---|---|---|
+| `money_request` | Qui ha de pagar | «Usuari demo et demana 25,00 €: El sopar de divendres.» |
+
+- `to` i `channel` com a [13.7](#137-avisos-a-la-bústia-simulada); el nom és el visible de qui demana.
+- Sense `code` ni `link`.
+
+### 14.7 Errors
+
+Els codis són a la taula de l'[apartat 5](#taula-de-codis). Els missatges són orientatius: el frontend decideix a partir del `code`.
+
+| `code` | HTTP | Ruta | Quan |
+|---|---|---|---|
+| `VALIDATION_ERROR` | 422 | `POST /api/money-requests` | El cos està mal format |
+| `RECIPIENT_NOT_FOUND` | 404 | `POST /api/money-requests` | El destinatari no existeix o està pendent de verificar |
+| `SELF_REQUEST` | 422 | `POST /api/money-requests` | El destinatari és l'usuari de la sessió |
+| `INVALID_AMOUNT` | 422 | `POST /api/money-requests` | `amount ≤ 0` |
+| `AMOUNT_OVER_LIMIT` | 422 | `POST /api/money-requests` | `amount > 100000000` |
+| `INVALID_CONCEPT` | 422 | `POST /api/money-requests` | Concepte buit o de més de 140 caràcters |
+| `REQUEST_NOT_FOUND` | 404 | `POST /api/money-requests/{requestId}/cancel` | No existeix, ja s'ha cancel·lat o és d'un altre usuari |
+| `REQUEST_NOT_PENDING` | 422 | `POST /api/money-requests/{requestId}/cancel` | La sol·licitud ja no és pendent |
+
+Textos de les pantalles de US-15, en vermell:
+
+| `code` | Text |
+|---|---|
+| `SELF_REQUEST` | «No et pots demanar diners a tu mateix.» (nou) |
+| `INVALID_CONCEPT` | «El concepte ha de tenir entre 1 i 140 caràcters.» (nou; la pantalla ja no deixa enviar-lo) |
+| `REQUEST_NOT_FOUND` | «Aquesta sol·licitud ja no existeix.» (nou) |
+| `REQUEST_NOT_PENDING` | «Només es poden cancel·lar les sol·licituds pendents.» (nou) |
+| `AMOUNT_OVER_LIMIT` | «L'import màxim és de 1.000.000,00 €.» (a «Demanar diners»; a la recàrrega continua sent el de [4.3](#43-post-apitopups)) |
+
+Un error deixa el destinatari, l'import i el concepte escrits.
+
+### 14.8 Model intern
+
+Aquest apartat és per al backend. El frontend no en depèn.
+
+- **`MoneyRequest`**: `id`, `requester_id` (qui demana), `recipient_id`, `amount`, `concept`, `created_at`, l'estat desat (`pending`, i amb la US-16 `paid` o `rejected`) i `seq` (ordre de creació, per al desempat de P4). `expired` es calcula, no es desa ([14.5](#145-caducitat)).
+- Els ids surten d'un comptador, com les guardioles: `req-01`, `req-02`… Cancel·lar esborra la sol·licitud i el seu id no es torna a fer servir.
+- **Amb Firestore:** col·lecció `money_requests`, un document per sol·licitud amb el seu id, i el comptador `next_money_request_number` al document `counters`. Crear la sol·licitud i el missatge de la bústia van dins d'una **transacció**; cancel·lar llegeix i esborra dins d'una altra. En memòria, el mateix codi amb el pany.
+- `POST /api/dev/reset` torna les sol·licituds al seed.
+- **Seed** (P83): l'usuari 1 ja té dues sol·licituds enviades, perquè `/requests` tingui contingut a la demo:
+
+  | `id` | A qui | Import | Concepte | `createdAt` | Estat |
+  |---|---|---|---|---|---|
+  | `req-01` | Huabin (`usr-04`) | 42,00 € (`4200`) | Pizza del diumenge | fa 9 dies, 21:15 | `expired` |
+  | `req-02` | Alicia (`usr-03`) | 25,00 € (`2500`) | El sopar de divendres | ahir, 19:30 | `pending` |
+
+  Les dates són relatives a avui, com les dels moviments del seed. Una sol·licitud nova és, per tant, `req-03`.
