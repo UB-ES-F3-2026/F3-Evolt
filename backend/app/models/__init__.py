@@ -6,6 +6,13 @@ La conversió a la forma de l'API (camelCase, sense `kind` ni `seq`) es fa als r
 
 from app.models.account import Account
 from app.models.clock import MADRID_TZ, now_madrid
+from app.models.money_request import (
+    MAX_REQUEST_AMOUNT,
+    MAX_REQUEST_CONCEPT,
+    REQUEST_EXPIRED,
+    REQUEST_PENDING,
+    MoneyRequest,
+)
 from app.models.movement import (
     ICONS,
     KIND_OTHER,
@@ -28,6 +35,7 @@ from app.models.outbox import (
     CHANNEL_EMAIL,
     CHANNEL_SMS,
     MESSAGE_ACCOUNT_LOCKED,
+    MESSAGE_MONEY_REQUEST,
     MESSAGE_PASSWORD_RESET,
     MESSAGE_VERIFICATION_CODE,
     OutboxMessage,
@@ -57,6 +65,12 @@ from app.models.user import (
 from app.models.verification import CODE_LENGTH, VerificationCode
 
 __all__ = [
+    "MAX_REQUEST_AMOUNT",
+    "MAX_REQUEST_CONCEPT",
+    "MESSAGE_MONEY_REQUEST",
+    "REQUEST_EXPIRED",
+    "REQUEST_PENDING",
+    "MoneyRequest",
     "Account",
     "Movement",
     "MovementFilters",

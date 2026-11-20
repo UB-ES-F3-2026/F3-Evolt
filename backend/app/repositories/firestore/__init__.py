@@ -6,6 +6,7 @@ on es guarden les dades. Quin es fa servir ho decideix `STORAGE`
 """
 
 from app.repositories.firestore.account import FirestoreAccountRepository
+from app.repositories.firestore.money_request import FirestoreMoneyRequestRepository
 from app.repositories.firestore.movement import FirestoreMovementRepository
 from app.repositories.firestore.movement_report import FirestoreMovementReportRepository
 from app.repositories.firestore.outbox import FirestoreOutboxRepository
@@ -17,6 +18,7 @@ from app.repositories.firestore.verification_code import FirestoreVerificationCo
 
 __all__ = [
     "FirestoreAccountRepository",
+    "FirestoreMoneyRequestRepository",
     "FirestoreMovementReportRepository",
     "FirestoreMovementRepository",
     "FirestoreOutboxRepository",
