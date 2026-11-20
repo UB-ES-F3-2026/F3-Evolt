@@ -13,7 +13,9 @@ from app.data.seed import DEMO_USER_ID, EMPTY_USER_ID, SeedData, build_seed
 from app.models import DEFAULT_POT_COLOR, POT_COLORS, Pot
 from app.repositories import PotRepository
 
-POT_KEYS = {"id", "name", "balance", "target", "color"}
+POT_KEYS = {"id", "name", "balance", "target", "color", "percentage", "goalStatus"}
+# Progrés de les guardioles del seed (§11.1, O-01): percentatge i estat de l'objectiu.
+SEED_PROGRESS = {"pot-01": (15, "in_progress"), "pot-02": (None, None), "pot-03": (63, "in_progress")}
 EMPTY_USER = {"X-User-Id": str(EMPTY_USER_ID)}
 
 
@@ -29,6 +31,8 @@ def _as_json(pot: Pot) -> dict[str, object]:
         "balance": pot.balance,
         "target": pot.target,
         "color": pot.color,
+        "percentage": SEED_PROGRESS[pot.id][0],
+        "goalStatus": SEED_PROGRESS[pot.id][1],
     }
 
 
@@ -81,6 +85,8 @@ def test_create_pot_with_target_and_default_color(client: TestClient) -> None:
         "balance": 0,
         "target": 30000,
         "color": DEFAULT_POT_COLOR,
+        "percentage": 0,
+        "goalStatus": "in_progress",
     }
     assert set(response.json()) == POT_KEYS
 
