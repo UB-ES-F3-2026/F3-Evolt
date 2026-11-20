@@ -37,6 +37,11 @@ MOVEMENT_NOT_FOUND = "MOVEMENT_NOT_FOUND"
 INVALID_DESCRIPTION = "INVALID_DESCRIPTION"
 # Pagaments (docs/api.md §5 i §13.8).
 RECIPIENT_NOT_FOUND = "RECIPIENT_NOT_FOUND"
+# Sol·licituds (docs/api.md §5 i §14.7).
+SELF_REQUEST = "SELF_REQUEST"
+INVALID_CONCEPT = "INVALID_CONCEPT"
+REQUEST_NOT_FOUND = "REQUEST_NOT_FOUND"
+REQUEST_NOT_PENDING = "REQUEST_NOT_PENDING"
 
 # Codi d'error → estat HTTP de la resposta.
 ERROR_STATUS: dict[str, int] = {
@@ -63,6 +68,10 @@ ERROR_STATUS: dict[str, int] = {
     MOVEMENT_NOT_FOUND: 404,
     INVALID_DESCRIPTION: 422,
     RECIPIENT_NOT_FOUND: 404,
+    SELF_REQUEST: 422,
+    INVALID_CONCEPT: 422,
+    REQUEST_NOT_FOUND: 404,
+    REQUEST_NOT_PENDING: 422,
 }
 
 # Missatge per defecte de cada codi (docs/api.md §5). El contracte els marca
@@ -92,6 +101,10 @@ ERROR_MESSAGES: dict[str, str] = {
     MOVEMENT_NOT_FOUND: "No s'ha trobat el moviment.",
     INVALID_DESCRIPTION: "Explica què passa amb el moviment (com a màxim 500 caràcters).",
     RECIPIENT_NOT_FOUND: "No hem trobat aquest destinatari.",
+    SELF_REQUEST: "No et pots demanar diners a tu mateix.",
+    INVALID_CONCEPT: "El concepte ha de tenir entre 1 i 140 caràcters.",
+    REQUEST_NOT_FOUND: "Aquesta sol·licitud ja no existeix.",
+    REQUEST_NOT_PENDING: "Només es poden cancel·lar les sol·licituds pendents.",
 }
 
 
