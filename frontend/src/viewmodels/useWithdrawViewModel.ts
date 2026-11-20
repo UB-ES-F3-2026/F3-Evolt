@@ -31,11 +31,11 @@ export function useWithdrawViewModel(potId: string, dependencies: WithdrawDepend
   const title = computed(() => (pot.value === null ? 'Retirar' : `Retirar de ${pot.value.name}`))
   const cents = computed(() => eurosToCents(amount.value))
   // The pot balance is the most that can come out; taking exactly all of it is allowed (US-19).
+  // Shown under the field, which turns red; a server answer goes under the button instead (REP-03, REP-08).
   const amountError = computed(() =>
     potAmountError(amount.value, pot.value?.balance ?? null, 'INSUFFICIENT_POT_BALANCE'),
   )
 
-  const error = computed(() => submitError.value ?? amountError.value)
   const canSubmit = computed(
     () => pot.value !== null && cents.value !== null && amountError.value === null && !isSubmitting.value,
   )
@@ -92,7 +92,8 @@ export function useWithdrawViewModel(potId: string, dependencies: WithdrawDepend
     isLoading,
     loadError,
     amount,
-    error,
+    amountError,
+    submitError,
     canSubmit,
     isSubmitting,
     confirmation,

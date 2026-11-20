@@ -147,7 +147,7 @@ describe('mockWithdraw (docs/api.md §11.2)', () => {
     ['pot-01', { amount: 0 }, 'INVALID_AMOUNT'],
     ['pot-01', { amount: -100 }, 'INVALID_AMOUNT'],
     ['pot-01', { amount: 18001 }, 'INSUFFICIENT_POT_BALANCE'],
-  ])('rejects %s with %j as %s and changes nothing', (potId, body, code) => {
+  ])('RE-07, RE-09, RE-10, RE-11, RE-13: rejects %s with %j as %s and changes nothing', (potId, body, code) => {
     const before = { home: mockHome(), pots: mockPots(), history: mockPotMovements('pot-01') }
 
     expect(() => mockWithdraw(potId, body)).toThrow(expect.objectContaining({ code }) as Error)
@@ -157,7 +157,7 @@ describe('mockWithdraw (docs/api.md §11.2)', () => {
     expect(mockPotMovements('pot-01')).toEqual(before.history)
   })
 
-  it('moves the money from the pot to the account, with the movement «Retirada de Vacances»', () => {
+  it('RE-01, RE-02, RE-03: moves the money from the pot to the account, with the movement «Retirada de Vacances»', () => {
     const before = mockHome()
 
     const result = mockWithdraw('pot-01', { amount: 3000 })
@@ -175,13 +175,13 @@ describe('mockWithdraw (docs/api.md §11.2)', () => {
     expect(after.lastMovements[0].concept).toBe('Retirada de Vacances')
   })
 
-  it('adds «Retirada» as expense to the top of the pot history', () => {
+  it('RE-04: adds «Retirada» as expense to the top of the pot history', () => {
     const items = mockPotMovements('pot-01').items
 
     expect(items[0]).toMatchObject({ concept: 'Retirada', amount: 3000, type: 'expense' })
   })
 
-  it('allows taking exactly the whole pot balance, leaving it at 0', () => {
+  it('RE-06, RE-08: allows taking exactly the whole pot balance, leaving it at 0', () => {
     const result = mockWithdraw('pot-03', { amount: 5000 })
 
     expect(result.pot.balance).toBe(0)

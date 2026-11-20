@@ -35,7 +35,7 @@ async function type(field: { value: string }, text: string): Promise<void> {
 }
 
 describe('useWithdrawViewModel', () => {
-  it('shows the pot balance, with the pot name in the title (US-19)', async () => {
+  it('REP-02: shows the pot balance, with «Retirar de Vacances» as the title', async () => {
     const { viewModel } = setUp()
     expect(viewModel.title.value).toBe('Retirar')
 
@@ -46,7 +46,7 @@ describe('useWithdrawViewModel', () => {
     expect(viewModel.isLoading.value).toBe(false)
   })
 
-  it('cannot withdraw from a pot that is not there', async () => {
+  it('POT_NOT_FOUND: cannot withdraw from a pot that is not there', async () => {
     const { viewModel } = setUp({ getPots: vi.fn(() => Promise.resolve([])) })
 
     await viewModel.load()
@@ -54,11 +54,11 @@ describe('useWithdrawViewModel', () => {
     expect(viewModel.loadError.value).toBe(messageForCode('POT_NOT_FOUND'))
   })
 
-  it('shows no message and keeps "Confirmar" disabled while the amount is empty', async () => {
+  it('REP-03: shows no message and keeps "Confirmar" disabled while the amount is empty', async () => {
     const { viewModel } = setUp()
     await viewModel.load()
 
-    expect(viewModel.error.value).toBeNull()
+    expect(viewModel.amountError.value).toBeNull()
     expect(viewModel.canSubmit.value).toBe(false)
   })
 
@@ -67,27 +67,28 @@ describe('useWithdrawViewModel', () => {
     ['-5', messageForCode('INVALID_AMOUNT')],
     ['abc', AMOUNT_FORMAT_MESSAGE],
     ['150,01', messageForCode('INSUFFICIENT_POT_BALANCE')],
-  ])('rejects %j with its reason while typing and keeps "Confirmar" disabled', async (text, message) => {
+  ])('REP-03, REP-04: rejects %j under the field while typing and keeps "Confirmar" disabled', async (text, message) => {
     const { viewModel } = setUp()
     await viewModel.load()
 
     await type(viewModel.amount, text)
 
-    expect(viewModel.error.value).toBe(message)
+    expect(viewModel.amountError.value).toBe(message)
+    expect(viewModel.submitError.value).toBeNull()
     expect(viewModel.canSubmit.value).toBe(false)
   })
 
-  it('allows taking exactly the whole pot balance', async () => {
+  it('REP-10: allows taking exactly the whole pot balance', async () => {
     const { viewModel } = setUp()
     await viewModel.load()
 
     await type(viewModel.amount, '150,00')
 
-    expect(viewModel.error.value).toBeNull()
+    expect(viewModel.amountError.value).toBeNull()
     expect(viewModel.canSubmit.value).toBe(true)
   })
 
-  it('sends the amount in cents, shows the green tick with both balances and goes back to the pot', async () => {
+  it('REP-05: sends the amount in cents, shows the green tick with both balances and goes back to the pot', async () => {
     const { viewModel, dependencies } = setUp()
     await viewModel.load()
     await type(viewModel.amount, '30')
@@ -104,7 +105,7 @@ describe('useWithdrawViewModel', () => {
   })
 
   it.each(['INTERNAL_ERROR', 'NETWORK_ERROR', 'INSUFFICIENT_POT_BALANCE'] as const)(
-    'shows %s in red, keeps the amount typed and the pot balance unchanged',
+    'REP-08, REP-09: shows %s under the button, keeps the amount typed, the field valid and the pot balance unchanged',
     async (code) => {
       const { viewModel, dependencies } = setUp({
         withdraw: vi.fn(() => Promise.reject({ code, message: 'x' })),
@@ -115,7 +116,8 @@ describe('useWithdrawViewModel', () => {
       const sent = await viewModel.submit()
 
       expect(sent).toBe(false)
-      expect(viewModel.error.value).toBe(messageForCode(code))
+      expect(viewModel.submitError.value).toBe(messageForCode(code))
+      expect(viewModel.amountError.value).toBeNull()
       expect(viewModel.amount.value).toBe('30')
       expect(viewModel.confirmation.value).toBeNull()
       expect(viewModel.pot.value?.balance).toBe(15000)
@@ -133,7 +135,7 @@ describe('useWithdrawViewModel', () => {
 
     await type(viewModel.amount, '20')
 
-    expect(viewModel.error.value).toBeNull()
+    expect(viewModel.submitError.value).toBeNull()
   })
 
   it('does not send anything while the amount is not valid', async () => {

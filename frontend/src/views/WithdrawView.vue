@@ -10,8 +10,9 @@ import { useWithdrawViewModel } from '@/viewmodels/useWithdrawViewModel'
 
 const props = defineProps<{ potId: string }>()
 
-// The ViewModel checks the amount while it is typed, so `error` is already there
+// The ViewModel checks the amount while it is typed, so `amountError` is already there
 // before submitting and the button stays disabled until the amount is valid.
+// A server answer (`submitError`) goes under the button and leaves the field as it is (US-19).
 const {
   pot,
   balance,
@@ -19,7 +20,8 @@ const {
   isLoading,
   loadError,
   amount,
-  error,
+  amountError,
+  submitError,
   canSubmit,
   isSubmitting,
   confirmation,
@@ -36,7 +38,7 @@ watch(amountInput, (input) => input?.focus())
 </script>
 
 <template>
-  <AppShell :title="title">
+  <AppShell :title="title" back>
     <LoadingIndicator v-if="isLoading" />
 
     <section v-else-if="loadError" class="card">
@@ -61,7 +63,7 @@ watch(amountInput, (input) => input?.focus())
       </dl>
 
       <label class="label" for="withdrawal-amount">Import</label>
-      <div class="field" :class="{ invalid: error }">
+      <div class="field" :class="{ invalid: amountError }">
         <input
           id="withdrawal-amount"
           ref="amountInput"
@@ -72,16 +74,17 @@ watch(amountInput, (input) => input?.focus())
           autocomplete="off"
           placeholder="0,00"
           :disabled="isSubmitting"
-          :aria-invalid="error !== null"
-          :aria-describedby="error ? 'withdrawal-error' : undefined"
+          :aria-invalid="amountError !== null"
+          :aria-describedby="amountError ? 'withdrawal-amount-error' : undefined"
         />
         <span class="currency" aria-hidden="true">€</span>
       </div>
-      <p v-if="error" id="withdrawal-error" class="error" role="alert">{{ error }}</p>
+      <p v-if="amountError" id="withdrawal-amount-error" class="error" role="alert">{{ amountError }}</p>
 
       <button type="submit" class="button" :disabled="!canSubmit">
         {{ isSubmitting ? 'Enviant…' : 'Confirmar' }}
       </button>
+      <p v-if="submitError" class="error submit-error" role="alert">{{ submitError }}</p>
       <router-link :to="{ name: 'pot', params: { potId } }" class="cancel">Cancel·lar</router-link>
     </form>
   </AppShell>
@@ -178,6 +181,11 @@ watch(amountInput, (input) => input?.focus())
   margin: -0.75rem 0 1rem;
   font-size: 0.875rem;
   color: var(--color-error);
+}
+
+.submit-error {
+  margin: 0.5rem 0 0;
+  text-align: center;
 }
 
 .button {

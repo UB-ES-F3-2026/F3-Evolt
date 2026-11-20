@@ -78,7 +78,7 @@ describe('usePotViewModel', () => {
   it.each([
     [18000, true],
     [0, false],
-  ])('with %i cents in the pot, «Retirar» is enabled: %s (US-19)', async (balance, enabled) => {
+  ])('REP-01, REP-11: with %i cents in the pot, «Retirar» is enabled: %s', async (balance, enabled) => {
     vi.mocked(getPots).mockResolvedValue([{ ...vacances, balance }])
     vi.mocked(getPotMovements).mockResolvedValue([])
     const viewModel = usePotViewModel('pot-01')
