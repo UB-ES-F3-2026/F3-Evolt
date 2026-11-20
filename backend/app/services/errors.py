@@ -35,6 +35,8 @@ POT_NOT_FOUND = "POT_NOT_FOUND"
 # Moviments (docs/api.md §5 i §10.6).
 MOVEMENT_NOT_FOUND = "MOVEMENT_NOT_FOUND"
 INVALID_DESCRIPTION = "INVALID_DESCRIPTION"
+# Pagaments (docs/api.md §5 i §13.8).
+RECIPIENT_NOT_FOUND = "RECIPIENT_NOT_FOUND"
 
 # Codi d'error → estat HTTP de la resposta.
 ERROR_STATUS: dict[str, int] = {
@@ -60,6 +62,7 @@ ERROR_STATUS: dict[str, int] = {
     POT_NOT_FOUND: 404,
     MOVEMENT_NOT_FOUND: 404,
     INVALID_DESCRIPTION: 422,
+    RECIPIENT_NOT_FOUND: 404,
 }
 
 # Missatge per defecte de cada codi (docs/api.md §5). El contracte els marca
@@ -88,6 +91,7 @@ ERROR_MESSAGES: dict[str, str] = {
     POT_NOT_FOUND: "No s'ha trobat la guardiola.",
     MOVEMENT_NOT_FOUND: "No s'ha trobat el moviment.",
     INVALID_DESCRIPTION: "Explica què passa amb el moviment (com a màxim 500 caràcters).",
+    RECIPIENT_NOT_FOUND: "No hem trobat aquest destinatari.",
 }
 
 
