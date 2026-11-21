@@ -1192,7 +1192,6 @@ Valors de `color` (llista tancada):
 
 - No hi ha verd ni vermell: la guia d'estil els reserva per als ingressos, les despeses i els errors.
 - El backend només guarda el nom del color. Quin to exacte es pinta el decideix el frontend.
-- **Càlcul de `percentage` i `goalStatus` (US-20, issue #150):** quan el backend els afegeixi, `percentage` és un integer arrodonit **mig cap amunt** amb la fórmula `(balance * 100 + target/2) / target` i divisió entera — mai `round()` de Python, que fa arrodoniment bancari (a la parell) —, `goalStatus` val `achieved` quan `balance >= target` (sinó `in_progress`) i tots dos camps van a `null` quan la guardiola no té objectiu. Exemple: `balance = 5000` sobre `target = 8000` → `percentage: 63` (62,5 → 63); amb `balance = 92000` sobre `target = 80000` la resposta porta `percentage: 115`, el frontend imprimeix «115 %» i la barra es queda plena (mai passa del 100 % de l'ample).
 
 Exemple:
 
