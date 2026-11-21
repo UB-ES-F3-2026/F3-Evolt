@@ -38,6 +38,7 @@ from app.models.pot import (
     POT_COLORS,
     POT_CONTRIBUTION_CONCEPT,
     POT_INITIAL_CONCEPT,
+    POT_WITHDRAWAL_CONCEPT,
     Pot,
     PotMovement,
 )
@@ -91,6 +92,7 @@ __all__ = [
     "POT_COLORS",
     "POT_CONTRIBUTION_CONCEPT",
     "POT_INITIAL_CONCEPT",
+    "POT_WITHDRAWAL_CONCEPT",
     "SAVINGS_ICON",
     "TOPUP_CONCEPT",
     "TOPUP_ICON",

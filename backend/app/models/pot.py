@@ -8,9 +8,10 @@ POT_COLORS = frozenset({"purple", "blue", "teal", "orange", "pink", "yellow"})
 # Color d'una guardiola creada sense color (§9.3).
 DEFAULT_POT_COLOR = "purple"
 
-# Conceptes de l'historial d'una guardiola (§9.5).
+# Conceptes de l'historial d'una guardiola (§9.5 i §11.3).
 POT_INITIAL_CONCEPT = "Saldo inicial"
 POT_CONTRIBUTION_CONCEPT = "Aportació"
+POT_WITHDRAWAL_CONCEPT = "Retirada"
 
 
 @dataclass
@@ -51,7 +52,8 @@ class PotMovement:
     """Entrada de l'historial d'una guardiola (§9.5).
 
     Camps de l'API: id, amount, concept, date, type. `type` és des del punt de vista
-    de la guardiola: una aportació hi fa entrar diners, i per tant és income.
+    de la guardiola: una aportació hi fa entrar diners (income) i una retirada
+    n'hi fa sortir (expense, §11.3).
     Camps interns (mai a les respostes):
       - pot_id: guardiola a la qual pertany.
       - seq: ordre de creació (creixent). Desempata quan dues dates coincideixen:
