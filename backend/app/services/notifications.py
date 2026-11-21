@@ -22,7 +22,7 @@ from app.models import (
 from app.repositories import OutboxRepository
 from app.services.errors import VALIDATION_ERROR, ApiError
 from app.services.identifier import InvalidIdentifier, normalize_identifier
-from app.services.money_format import format_euros
+from app.services.money_text import format_euros
 
 
 def _channel(user: User) -> str:

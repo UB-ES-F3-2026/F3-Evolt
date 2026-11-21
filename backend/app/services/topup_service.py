@@ -26,7 +26,7 @@ from app.services.errors import (
     INVALID_AMOUNT,
     ApiError,
 )
-from app.services.money_format import format_euros
+from app.services.money_text import format_euros
 
 # Màxim per recàrrega, en cèntims (500,00 €). Exactament el màxim està permès.
 MAX_TOPUP = 50_000
@@ -78,7 +78,8 @@ def top_up(
         raise ApiError(
             DAILY_LIMIT_EXCEEDED,
             message=(
-                f"Has superat el límit diari de recàrrega. Avui encara pots recarregar {format_euros(remaining_today)}."
+                "Has superat el límit diari de recàrrega. "
+                f"Avui encara pots recarregar {format_euros(remaining_today)}."
             ),
             details={"remainingToday": remaining_today},
         )
@@ -95,3 +96,4 @@ def top_up(
     new_balance = account.balance + amount
     accounts.set_balance(user_id, new_balance)
     return TopupResult(balance=new_balance, movement=movement)
+

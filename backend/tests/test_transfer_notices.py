@@ -30,7 +30,7 @@ from app.models import (
     User,
 )
 from app.repositories import OutboxRepository
-from app.services.money_format import format_euros
+from app.services.money_text import format_euros
 from app.services.notifications import send_transfer_received, send_transfer_sent
 
 T0 = datetime(2026, 11, 3, 10, 0, tzinfo=MADRID_TZ)
