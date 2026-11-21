@@ -18,6 +18,8 @@ Contracte compartit entre el backend (FastAPI) i el frontend per a les històrie
 8. [Accés (US-01 a US-04)](#8-accés-us-01-a-us-04)
 9. [Guardioles (US-17 i US-18)](#9-guardioles-us-17-i-us-18)
 10. [Moviments: filtres, detall i informe (US-10 i US-11)](#10-moviments-filtres-detall-i-informe-us-10-i-us-11)
+13. [Pagaments: cercar usuaris i enviar diners (US-13 i US-14)](#13-pagaments-cercar-usuaris-i-enviar-diners-us-13-i-us-14)
+14. [Sol·licituds de diners (US-15)](#14-sol·licituds-de-diners-us-15)
 
 ---
 
@@ -98,7 +100,7 @@ Comprova que el backend està en marxa. No fa servir la capçalera `X-User-Id`.
 
 ## 3. Objecte `Movement`
 
-Representa un moviment del compte principal. És el mateix objecte a `GET /api/home`, `GET /api/movements`, `POST /api/topups` i `POST /api/pots/{potId}/contributions` ([apartat 9.4](#94-post-apipotspotidcontributions)).
+Representa un moviment del compte principal. És el mateix objecte a `GET /api/home`, `GET /api/movements`, `POST /api/topups`, `POST /api/pots/{potId}/contributions` ([apartat 9.4](#94-post-apipotspotidcontributions)) i `POST /api/transfers` ([apartat 13.4](#134-post-apitransfers)).
 
 | Camp | Tipus | Notes |
 |---|---|---|
@@ -167,6 +169,13 @@ Exemple:
 | `GET /api/pots/{potId}/movements` | `200` | US-18 · [9.5](#95-get-apipotspotidmovements) |
 | `GET /api/movements/{movementId}` | `200` | US-11 · [10.3](#103-get-apimovementsmovementid) |
 | `POST /api/movements/{movementId}/reports` | `201` | US-11 · [10.4](#104-post-apimovementsmovementidreports) |
+| `GET /api/users` | `200` | US-13 · [13.2](#132-get-apiusers) |
+| `GET /api/users/{userId}` | `200` | US-13 · [13.3](#133-get-apiusersuserid) |
+| `POST /api/transfers` | `201` | US-14 · [13.4](#134-post-apitransfers) |
+| `GET /api/transfers/limit` | `200` | US-14 · [13.5](#get-apitransferslimit) |
+| `POST /api/money-requests` | `201` | US-15 · [14.2](#142-post-apimoney-requests) |
+| `GET /api/money-requests` | `200` | US-15 · [14.3](#143-get-apimoney-requests) |
+| `POST /api/money-requests/{requestId}/cancel` | `200` | US-15 · [14.4](#144-post-apimoney-requestsrequestidcancel) |
 
 A partir de la T03.1, `GET /api/home`, `GET /api/movements` i `POST /api/topups` són **rutes protegides**: necessiten una sessió ([apartat 8.2](#82-sessió)).
 
@@ -561,6 +570,27 @@ Codis dels moviments (Sprint 1, [apartat 10](#10-moviments-filtres-detall-i-info
 | `MOVEMENT_NOT_FOUND` | 404 | El moviment no existeix o és d'un altre usuari | — |
 | `INVALID_DESCRIPTION` | 422 | La descripció de l'informe és buida, només té espais o passa de 500 caràcters | — |
 
+Codis dels pagaments (Sprint 2, [apartat 13](#13-pagaments-cercar-usuaris-i-enviar-diners-us-13-i-us-14)):
+
+| `code` | HTTP | Quan | `details` |
+|---|---|---|---|
+| `RECIPIENT_NOT_FOUND` | 404 | El destinatari no existeix o està pendent de verificar ([13.3](#133-get-apiusersuserid), [13.4](#134-post-apitransfers)) | — |
+| `SELF_TRANSFER` | 422 | Enviar-se diners a un mateix | — |
+| `TRANSFER_LIMIT_EXCEEDED` | 422 | Enviat avui + `amount > 100000` ([13.5](#135-límit-diari-denviament)) | `{ remainingToday }` (cèntims) |
+
+`INSUFFICIENT_BALANCE` i `INVALID_AMOUNT` també surten a `POST /api/transfers`, amb el mateix significat.
+
+Codis de les sol·licituds (Sprint 2, [apartat 14](#14-sol·licituds-de-diners-us-15)):
+
+| `code` | HTTP | Quan | `details` |
+|---|---|---|---|
+| `SELF_REQUEST` | 422 | Demanar-se diners a un mateix | — |
+| `INVALID_CONCEPT` | 422 | El concepte d'una sol·licitud és buit o passa de 140 caràcters | — |
+| `REQUEST_NOT_FOUND` | 404 | La sol·licitud no existeix, ja s'ha cancel·lat o és d'un altre usuari | — |
+| `REQUEST_NOT_PENDING` | 422 | Cancel·lar una sol·licitud que ja no és pendent | — |
+
+`RECIPIENT_NOT_FOUND`, `INVALID_AMOUNT` i `AMOUNT_OVER_LIMIT` (amb el límit d'1.000.000,00 €) també surten a `POST /api/money-requests`.
+
 ### Exemples
 
 `INVALID_AMOUNT`:
@@ -623,6 +653,7 @@ Aquest apartat és per al backend. El frontend no en depèn.
 - Serveix per sumar les recàrregues d'un dia (mètode del repositori de T07.4 i comprovació del límit diari de T09.2) **sense dependre del text del concepte**.
 - La suma de les recàrregues d'avui filtra per `kind == "topup"` i per la `date` dins del dia natural d'avui a `Europe/Madrid` (vegeu l'[apartat 1](#què-vol-dir-avui)).
 - `kind` **no s'exposa** a cap resposta. Per mostrar una recàrrega, el frontend ja té `icon: "topup"`.
+- Des de l'Sprint 2, els enviaments fan servir `"transfer_out"` i `"transfer_in"` per al seu límit diari ([13.9](#139-model-intern)).
 
 ### Seed
 
@@ -700,6 +731,38 @@ Propostes dels moviments (T10.1, PR #120):
 | P43 | [10.4](#104-post-apimovementsmovementidreports) | Codi propi `INVALID_DESCRIPTION` (`422`) per a una descripció buida, només amb espais o de més de 500 caràcters. La descripció es desa sense els espais dels extrems. |
 | P44 | [10.5](#105-justificant-pdf) | El justificant PDF es genera al navegador amb jsPDF (llicència MIT), sense Cloud Function ni cap ruta (decisió de PO). |
 | P45 | [10.7](#107-model-intern-dels-moviments) | Seed: els noms fictius de la contrapart de la taula de 10.7, i el moviment més recent de l'usuari 1 (`mov-30`) en estat `pending`. |
+
+Propostes dels pagaments (T13.1, US-13 i US-14). Comencen a la P64 perquè les P47–P49 són de la retirada i el progrés (T19.1, PR #177) i les P50–P63, de la multidivisa (T25.1, PR #193):
+
+| # | Apartat | Proposta |
+|---|---|---|
+| P64 | [13.1](#131-objecte-usersummary) | L'`id` d'un usuari a l'API és un string opac amb el format `usr-03`, com `Movement.id` (P1). |
+| P65 | [13.1](#131-objecte-usersummary) | `UserSummary` només té `id`, `name` (o `null` si no en té) i `username` (sense `@`): mai email, telèfon, estat ni cap dada financera. |
+| P66 | [13.2](#132-get-apiusers) | La cerca troba el text com a part de l'`username` o del nom (sense majúscules ni accents), l'email només si és igual, i el telèfon per les 9 últimes xifres. Mai l'usuari de la sessió ni els pendents. Com a màxim 10, ordenats pel nom visible. `q` de més de 64 caràcters és `VALIDATION_ERROR`. |
+| P67 | [13.2](#132-get-apiusers) | Sense `q`, o amb `q` buit, la llista inicial són tots els altres usuaris actius (els 10 primers pel nom visible). |
+| P68 | [13.3](#133-get-apiusersuserid) | `GET /api/users/{userId}` per tornar a validar el destinatari en recarregar «Enviar». Un usuari que no existeix o pendent és `404 RECIPIENT_NOT_FOUND`. |
+| P69 | [13.4](#134-post-apitransfers) | `POST /api/transfers` amb `{ toUserId, amount, concept? }`, que respon `201` amb `{ balance, movement, recipient }`. |
+| P70 | [13.4](#134-post-apitransfers) | Ordre de les validacions: format → `RECIPIENT_NOT_FOUND` → `SELF_TRANSFER` → `INVALID_AMOUNT` → `INSUFFICIENT_BALANCE` → `TRANSFER_LIMIT_EXCEEDED`. |
+| P71 | [13.5](#135-límit-diari-denviament) | El límit d'enviament (1.000,00 € al dia, decisió de PO) és independent del de recàrrega i té el seu propi codi, `TRANSFER_LIMIT_EXCEEDED`, amb `details.remainingToday`. |
+| P72 | [13.4](#134-post-apitransfers) | El concepte és opcional (fins a 140 caràcters). Sense concepte, els moviments diuen «Transferència enviada» i «Transferència rebuda». Tots dos fan servir `icon: "transfer"` i, a `counterparty`, el nom visible de l'altra persona. |
+| P73 | [13.7](#137-avisos-a-la-bústia-simulada) | Els avisos d'enviament són missatges `transfer_sent` i `transfer_received` a la bústia simulada, amb els textos de 13.7. |
+| P74 | [13.9](#139-model-intern) | L'`@usuari` d'un registre amb email és la part local netejada, amb un número si ja existeix; amb telèfon, `usuari` i l'id. |
+| P75 | [13.9](#139-model-intern) | Seed de vuit usuaris: els dos d'abans i un per a cada membre de l'equip, amb el seu àlies de GitHub com a `@usuari` i telèfons fictius `+34 611 22 33 0N`. |
+| P84 | [13.5](#get-apitransferslimit) | `GET /api/transfers/limit` → `{ dailyLimit, remainingToday }`, perquè «Enviar» pugui avisar del límit abans de confirmar (revisió de l'Izan a la #196). La numeració salta a P84 perquè les P76–P83 són de la #198. |
+| P85 | [13.8](#138-errors) | `INSUFFICIENT_BALANCE` té un sol text, «No tens prou saldo.», a l'aportació, a l'enviament i al canvi de divises (revisió del Huabin a la #196). |
+
+Propostes de les sol·licituds (T15.1, US-15):
+
+| # | Apartat | Proposta |
+|---|---|---|
+| P76 | [14.1](#141-objecte-moneyrequest) | `MoneyRequest` té `id` (`req-01`…), `to` (un `UserSummary`), `amount`, `concept`, `status`, `createdAt` i `expiresAt`. |
+| P77 | [14.1](#141-objecte-moneyrequest) | Quatre estats, `pending`, `paid`, `rejected` i `expired`, sense «Cancel·lada» (decisió de PO); en aquest sprint només n'hi ha dos. |
+| P78 | [14.2](#142-post-apimoney-requests) | `POST /api/money-requests` amb `{ toUserId, amount, concept }`, que respon `201` amb la sol·licitud. |
+| P79 | [14.2](#142-post-apimoney-requests) | Ordre de les validacions: format → `RECIPIENT_NOT_FOUND` → `SELF_REQUEST` → `INVALID_AMOUNT` → `AMOUNT_OVER_LIMIT` (més d'1.000.000,00 €) → `INVALID_CONCEPT`. |
+| P80 | [14.4](#144-post-apimoney-requestsrequestidcancel) | Cancel·lar és `POST /api/money-requests/{requestId}/cancel`, que esborra la sol·licitud pendent i respon `{ "status": "ok" }`; si no és pendent, `REQUEST_NOT_PENDING`; si no existeix o no és teva, `REQUEST_NOT_FOUND`. |
+| P81 | [14.5](#145-caducitat) | La caducitat es compta per dies naturals de Madrid: `expiresAt` són les 00:00 del setè dia després del de creació, i `expired` es calcula en llegir. |
+| P82 | [14.6](#146-avís-a-la-bústia-simulada) | L'avís al destinatari és un missatge `money_request` a la bústia simulada. |
+| P83 | [14.8](#148-model-intern) | Seed: l'usuari 1 té una sol·licitud caducada a Huabin i una de pendent a Alicia. |
 
 ---
 
@@ -1083,7 +1146,7 @@ X-Dev-Key: <DEV_OUTBOX_KEY>
 }
 ```
 
-Textos dels altres dos tipus:
+Textos dels altres dos tipus (els avisos d'enviament, `transfer_sent` i `transfer_received`, són a [13.7](#137-avisos-a-la-bústia-simulada), i el de les sol·licituds, `money_request`, a [14.6](#146-avís-a-la-bústia-simulada)):
 
 - `account_locked`: «Hem bloquejat el teu compte d'Evolt durant 15 minuts després de 5 intents fallits. Si no has estat tu, canvia la contrasenya.»
 - `password_reset`: «Per canviar la contrasenya d'Evolt, obre aquest enllaç. Caduca en 30 minuts: <enllaç>»
@@ -1131,7 +1194,7 @@ Les dates es desen com a `Timestamp` de Firestore (UTC) i el backend les convert
 | 1 (compte amb moviments) | `demo@evolt.test` | `Evolt2026` | `active` |
 | 2 (compte buit) | `buit@evolt.test` | `Evolt2026` | `active` |
 
-El domini `.test` està reservat i no pot arribar a cap bústia real. Els mocks del frontend han de fer servir les mateixes credencials.
+El domini `.test` està reservat i no pot arribar a cap bústia real. Els mocks del frontend han de fer servir les mateixes credencials. Des de la T13.2 el seed té vuit usuaris, tots amb aquesta contrasenya ([13.9](#139-model-intern)).
 
 ### 8.14 Textos dels errors d'accés
 
@@ -1511,7 +1574,7 @@ Els codis són a la taula de l'[apartat 5](#taula-de-codis). Els missatges són 
 ```json
 {
   "code": "INSUFFICIENT_BALANCE",
-  "message": "No tens prou saldo per fer aquesta aportació."
+  "message": "No tens prou saldo."
 }
 ```
 
@@ -1564,7 +1627,7 @@ Camps nous del moviment, filtres i cerca al llistat, detall d'un moviment, infor
 
 Totes les rutes d'aquest apartat són **rutes protegides** i resolen l'usuari igual que la resta: amb `X-User-Id` ([apartat 2](#2-usuari-actual-i-estat-del-servei)) mentre estigui permesa, i a partir de la T03.1 amb la sessió ([apartat 8.2](#82-sessió)). Cada usuari només veu els seus moviments. Segueixen les convencions de l'[apartat 1](#1-convencions-generals).
 
-Els exemples fan servir les dades de l'usuari 1 del seed, suposant que avui és el **3/11/2026**. Els ids són els del seed (`mov-01` és el més antic i `mov-30`, el més recent). En canvi, els exemples de l'[apartat 4](#4-endpoints) són fictícis i els seus ids no coincideixen amb el seed: per exemple, allà `mov-16` és una transferència i al seed és una recàrrega.
+Els exemples fan servir les dades de l'usuari 1 del seed, suposant que avui és el **3/11/2026**. Els ids són els del seed (`mov-01` és el més antic i `mov-30`, el més recent). En canvi, els exemples de l'[apartat 4](#4-endpoints) són fictius i els seus ids no coincideixen amb el seed: per exemple, allà `mov-16` és una transferència i al seed és una recàrrega.
 
 ### 10.1 Camps nous de `Movement`
 
@@ -1844,3 +1907,526 @@ Aquest apartat és per al backend. El frontend no en depèn.
     | `mov-18` | Transferència enviada | Laia Vidal |
     | `mov-24` | Bizum rebut | Pau Ferrer |
     | `mov-29` | Bizum enviat | Núria Soler |
+
+---
+
+## 13. Pagaments: cercar usuaris i enviar diners (US-13 i US-14)
+
+Trobar altres usuaris de l'app i enviar-los diners a l'instant. Tasca: T13.1 (issue #157). Les pantalles, els textos i els mockups són a les històries (`docs/us/US-13.md` i `docs/us/US-14.md`); les proves d'acceptació, a [`docs/proves-pagaments.md`](proves-pagaments.md).
+
+| Tasca | Què implementa d'aquest apartat |
+|---|---|
+| T13.2 (backend) | [13.1](#131-objecte-usersummary), [13.2](#132-get-apiusers), [13.3](#133-get-apiusersuserid), l'`@usuari` i el seed de [13.9](#139-model-intern) |
+| T13.3 (frontend) | La barra de cerca a «Enviar diners», que crida [13.2](#132-get-apiusers) |
+| T14.1 (backend) | [13.4](#134-post-apitransfers), [13.5](#135-límit-diari-denviament) (amb `GET /api/transfers/limit`) i [13.6](#136-efecte-sobre-altres-rutes) |
+| T14.2 (backend) | Els avisos de [13.7](#137-avisos-a-la-bústia-simulada) |
+| T14.3 i T14.4 (frontend) | «Pagaments», «Enviar» i «Confirmar», que criden [13.3](#133-get-apiusersuserid), `GET /api/transfers/limit` ([13.5](#get-apitransferslimit)) i [13.4](#134-post-apitransfers), i Inici i el llistat amb els saldos nous |
+
+Totes les rutes d'aquest apartat són **protegides** ([8.2](#82-sessió)): l'usuari és el de la sessió. Els imports són cèntims enters i les dates, ISO 8601 amb el desplaçament de Madrid ([apartat 1](#1-convencions-generals)). Els exemples fan servir l'usuari 1 del seed (`Usuari demo`, saldo `379521`) i els usuaris de [13.9](#139-model-intern).
+
+### 13.1 Objecte `UserSummary`
+
+Un altre usuari, tal com surt a la cerca i al destinatari d'un enviament. **[PROPOSTA — pendent de validar]** (P64, P65)
+
+| Camp | Tipus | Notes |
+|---|---|---|
+| `id` | string | Identificador opac amb el format `usr-03`, com `Movement.id` (P1). El frontend no l'ha d'interpretar: només el passa a `?to=<id>` i a `toUserId`. |
+| `name` | string \| `null` | Nom visible. Val `null` si l'usuari no en té: els que es registren a US-01 no en donen cap. Llavors el frontend mostra l'`@usuari` com a nom (US-13). |
+| `username` | string | L'`@usuari`, **sense** l'`@` i en minúscules (`aliciaa415`). El frontend hi afegeix l'`@`. |
+
+- **Mai** hi surten dades financeres (saldo, moviments, guardioles, XP) ni l'email, el telèfon o l'estat del compte d'un altre usuari. Les inicials de la fila les calcula el frontend a partir del nom visible.
+- Un usuari **pendent** de verificar ([8.5](#85-post-apiauthregister)) no surt mai: no pot rebre diners.
+
+### 13.2 `GET /api/users`
+
+Cerca d'usuaris per a «Enviar diners» (US-13). **[PROPOSTA — pendent de validar]** (P66, P67)
+
+**Paràmetre de consulta opcional:** `q`, el text de la barra «@usuari, telèfon o email».
+
+- Es treuen els espais del principi i del final.
+- Més de **64 caràcters** (després de treure'ls) → `422 VALIDATION_ERROR`. La pantalla mostra «Les dades no són vàlides. Revisa-les i torna-ho a provar.» amb «Reintentar».
+
+**Resposta `200`:** `{ items }`, una llista d'`UserSummary` ([13.1](#131-objecte-usersummary)).
+
+- **Sense `q`, o amb `q` buit:** la llista inicial, tots els altres usuaris actius.
+- **Amb `q`:** els usuaris que hi coincideixen per alguna d'aquestes quatre vies:
+
+| Via | Coincideix si… | Exemple (seed) |
+|---|---|---|
+| `@usuari` | El text, sense l'`@` del principi, és **part** de l'`username`. Sense distingir majúscules. | `hua`, `@hua` o `@123HUABIN123` → Huabin |
+| Nom | El text és **part** del nom visible. Sense distingir majúscules ni accents. | `marti` o `Martí` → Martí |
+| Email | El text, normalitzat com un email ([8.3](#83-identificador-email-o-telèfon)), és **igual** a l'email de l'usuari. Una part de l'email no coincideix, perquè la cerca no serveixi per endevinar emails. | `Huabin@Evolt.test` → Huabin; `evolt.test` → cap |
+| Telèfon | El text només té xifres, espais, `+`, `-`, `.`, `(` i `)`, en té **9 o més**, i les **9 últimes** són iguals a les 9 últimes del telèfon de l'usuari. | `611 22 33 02`, `+34 611 22 33 02` i `611223302` → Huabin |
+
+**Regles:**
+
+- L'usuari de la sessió **no surt mai**, ni a la llista inicial ni a cap cerca: cercar el meu nom, `@demo`, `demo@evolt.test` o el meu telèfon dona `items: []`.
+- Sense coincidències → `200` amb `items: []`, no un error. La pantalla mostra «No hi ha resultats»; amb el camp buit torna la llista inicial, sense aquest text.
+- **Ordre:** per nom visible (el `name` o, si no en té, l'`username`), sense distingir majúscules ni accents; si dos coincideixen, primer el d'id més petit.
+- **Com a màxim 10** usuaris, tant a la llista inicial com a les cerques (US-14: «màxim 10 resultats»). No hi ha paginació.
+- La cerca no canvia res i no compta com a cap enviament.
+
+**Petició:**
+
+```http
+GET /api/users?q=611%2022%2033%2002 HTTP/1.1
+Authorization: Bearer <token>
+```
+
+**Resposta `200`:**
+
+```json
+{
+  "items": [
+    {
+      "id": "usr-04",
+      "name": "Huabin",
+      "username": "123huabin123"
+    }
+  ]
+}
+```
+
+**Llista inicial** de l'usuari 1 (`GET /api/users`): Alicia, Huabin, Izan, Jiajun, Junhao, Martí i Usuari nou, en aquest ordre.
+
+### 13.3 `GET /api/users/{userId}`
+
+Un usuari concret, perquè «Enviar» ([US-14](#134-post-apitransfers)) pugui tornar a validar el destinatari quan es recarrega `/pagaments/enviar?to=<id>`. **[PROPOSTA — pendent de validar]** (P68)
+
+**Resposta `200`:** l'`UserSummary` de l'usuari ([13.1](#131-objecte-usersummary)).
+
+- L'usuari no existeix, està pendent de verificar o l'id té un format qualsevol → `404 RECIPIENT_NOT_FOUND` («No hem trobat aquest destinatari.»). La pantalla hi afegeix «Torna a triar el destinatari».
+- El propi usuari de la sessió també respon `200`: no és cap dada nova per a ell. Qui impedeix enviar-se diners a un mateix és [13.4](#134-post-apitransfers).
+
+```json
+{
+  "id": "usr-02",
+  "name": "Usuari nou",
+  "username": "buit"
+}
+```
+
+### 13.4 `POST /api/transfers`
+
+Envia diners del compte principal de l'usuari de la sessió al compte principal d'un altre usuari, a l'instant (US-14). **[PROPOSTA — pendent de validar]** (P69, P70)
+
+**Cos de la petició:** `{ toUserId, amount, concept? }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `toUserId` | string | L'`id` de l'`UserSummary` del destinatari. Obligatori. |
+| `amount` | integer | Import en cèntims. Obligatori. Enter JSON estricte, com a P5. |
+| `concept` | string \| `null` | Opcional. Es desa sense els espais dels extrems; buit o només amb espais és com no posar-ne. Com a màxim **140** caràcters. |
+
+**Resposta `201`:** `{ balance, movement, recipient }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `balance` | integer | Saldo **nou** del compte de qui envia, en cèntims. |
+| `movement` | `Movement` | El moviment que s'ha creat al compte de qui envia. |
+| `recipient` | `UserSummary` | El destinatari ([13.1](#131-objecte-usersummary)). |
+
+Amb aquesta resposta, el frontend pinta el tic verd «Has enviat 20,00 € a Usuari nou» i «Saldo disponible: 3.775,21 €» sense tornar a demanar res, i al cap d'1,5 s torna a Inici.
+
+**Ordre de les validacions.** S'aturen al primer error:
+
+1. Format del cos: falta `toUserId` o `amount`, algun no és del tipus de la taula, o `concept` passa de 140 caràcters → `VALIDATION_ERROR`.
+2. El destinatari no existeix, està pendent de verificar o l'id té un format qualsevol → `RECIPIENT_NOT_FOUND` (`404`).
+3. El destinatari és l'usuari de la sessió → `SELF_TRANSFER` (`422`, «No et pots enviar diners a tu mateix.»).
+4. `amount ≤ 0` → `INVALID_AMOUNT`.
+5. `amount` més gran que el saldo de qui envia → `INSUFFICIENT_BALANCE`, el mateix codi i el mateix text que l'aportació («No tens prou saldo.»).
+6. Enviat avui + `amount` supera el límit diari ([13.5](#135-límit-diari-denviament)) → `TRANSFER_LIMIT_EXCEEDED` (`422`), amb `details.remainingToday`.
+
+Si qualsevol validació falla, **no es mou res**: ni saldos, ni moviments, ni avisos.
+
+**Regles:**
+
+- **Tot o res.** Un enviament fa sis escriptures: el saldo de qui envia baixa, el de qui rep puja, un moviment a cada compte i un avís a cadascú ([13.7](#137-avisos-a-la-bústia-simulada)). O es fan totes, o no se'n fa cap.
+- **Moviment de qui envia** (P72):
+  - `type: "expense"`, `amount` igual a l'enviament i `icon: "transfer"`;
+  - `concept`: el concepte de la petició o, si no n'hi ha, `"Transferència enviada"`;
+  - `counterparty`: el nom visible del destinatari (el `name` o, si no en té, `@username`), com a les transferències del seed (P35);
+  - `status: "completed"`, una `reference` nova i la data de l'enviament.
+- **Moviment de qui rep:** igual, però `type: "income"`, el concepte de la petició o `"Transferència rebuda"`, i `counterparty` amb el nom visible de qui envia.
+- El saldo de cada compte continua sent la suma dels seus moviments.
+- **Casos límit:**
+  - Enviar **exactament** tot el saldo està permès: el compte de qui envia queda a `0`.
+  - Dos enviaments alhora de la mateixa persona s'apliquen un darrere l'altre. El segon es valida amb el saldo i el límit que ha deixat el primer: el saldo mai pot quedar negatiu i el límit mai es pot passar.
+  - Un enviament i un altre que arriba al mateix compte alhora també s'apliquen un darrere l'altre.
+- En aquest sprint, enviar o rebre no dona ni treu XP.
+- El límit no es pot editar en aquest sprint.
+
+**Petició:**
+
+```http
+POST /api/transfers HTTP/1.1
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "toUserId": "usr-02",
+  "amount": 2000,
+  "concept": "El sopar de divendres"
+}
+```
+
+**Resposta `201`** (saldo anterior de l'usuari 1: `379521`):
+
+```json
+{
+  "balance": 377521,
+  "movement": {
+    "id": "mov-31",
+    "amount": 2000,
+    "concept": "El sopar de divendres",
+    "date": "2026-11-15T21:15:00+01:00",
+    "type": "expense",
+    "icon": "transfer",
+    "counterparty": "Usuari nou",
+    "status": "completed",
+    "reference": "EVT-000031"
+  },
+  "recipient": {
+    "id": "usr-02",
+    "name": "Usuari nou",
+    "username": "buit"
+  }
+}
+```
+
+L'usuari 2 té ara saldo `2000` i un moviment `mov-32`: `"El sopar de divendres"`, `type: "income"`, `counterparty: "Usuari demo"`.
+
+### 13.5 Límit diari d'enviament
+
+| Límit | Valor | Equivalent |
+|---|---|---|
+| Màxim enviat per dia natural (suma dels enviaments d'avui de qui envia) | `100000` | 1.000,00 € |
+
+- «Avui» és el dia natural a `Europe/Madrid` ([apartat 1](#què-vol-dir-avui)). El límit torna a començar a les 00:00.
+- Arribar **exactament** al límit està permès: després d'enviar `2000` avui, encara es poden enviar `98000`.
+- Només compten els enviaments **fets** per l'usuari. Els diners rebuts no hi compten.
+- És un límit **diferent** del de les recàrregues ([4.3](#43-post-apitopups)): enviar no gasta límit de recàrrega, i recarregar no gasta límit d'enviament. Per això té un codi propi (P71).
+- `TRANSFER_LIMIT_EXCEEDED` porta `details.remainingToday`: el que encara es pot enviar avui, en cèntims (`0` si ja s'ha arribat al límit). La pantalla mostra «Has superat el límit diari de 1.000,00 €. Avui encara pots enviar 980,00 €.».
+
+```json
+{
+  "code": "TRANSFER_LIMIT_EXCEEDED",
+  "message": "Has superat el límit diari d'enviament.",
+  "details": { "remainingToday": 98000 }
+}
+```
+
+#### `GET /api/transfers/limit`
+
+Quant pot enviar encara avui l'usuari de la sessió. «Enviar» ho demana en obrir-se, com el saldo, per mostrar «Has superat el límit diari de 1.000,00 €. Avui encara pots enviar 980,00 €.» i desactivar «Continuar» **abans** de confirmar (decisió de PO a la US-14). **[PROPOSTA — pendent de validar]** (P84)
+
+**Resposta `200`:** `{ dailyLimit, remainingToday }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `dailyLimit` | integer | El límit diari d'enviament, en cèntims (`100000`). El frontend no el té escrit enlloc: el llegeix d'aquí. |
+| `remainingToday` | integer | El que encara es pot enviar avui, en cèntims: `dailyLimit` menys el que s'ha enviat avui, i mai menys de `0`. |
+
+- És una ruta protegida i no canvia res.
+- `POST /api/transfers` torna a comprovar el límit: si entremig s'ha enviat alguna cosa més, respon `TRANSFER_LIMIT_EXCEEDED` igualment.
+- A les 00:00 de Madrid torna a ser `remainingToday: 100000`.
+
+```json
+{
+  "dailyLimit": 100000,
+  "remainingToday": 98000
+}
+```
+
+L'exemple és el de l'usuari 1 després de l'enviament de 13.4.
+
+### 13.6 Efecte sobre altres rutes
+
+Després d'un enviament:
+
+- `GET /api/home` de qui envia: el `balance` baixa l'import, i el moviment surt el primer de `lastMovements`, «−20,00 €» en vermell. El de qui rep: el `balance` puja l'import i el seu moviment surt el primer, «+20,00 €» en verd. No hi ha cap avís dins de l'app: cada Inici torna a demanar `GET /api/home` en obrir-se.
+- `GET /api/movements`, amb els filtres de [10.2](#102-filtres-de-get-apimovements) (`type=expense` per a qui envia, `type=income` per a qui rep, i `q` també troba el nom de la contrapart), el detall de [10.3](#103-get-apimovementsmovementid) i el justificant de [10.5](#105-justificant-pdf): els dos moviments funcionen com qualsevol altre.
+- `totalSaved` no canvia.
+- El límit diari de recàrrega no canvia ([13.5](#135-límit-diari-denviament)).
+
+### 13.7 Avisos a la bústia simulada
+
+US-14 demana un avís a qui envia i a qui rep. Com la resta de missatges, van a la bústia simulada ([8.12](#812-get-apidevoutbox)); dins de l'app no hi ha cap llista d'avisos. **[PROPOSTA — pendent de validar]** (P73)
+
+| `type` | A qui | `text` (exemple de 13.4) |
+|---|---|---|
+| `transfer_sent` | Qui envia | «Has enviat 20,00 € a Usuari nou.» |
+| `transfer_received` | Qui rep | «Usuari demo t'ha enviat 20,00 €: El sopar de divendres.» |
+
+- El destinatari del missatge (`to`) és l'identificador de cada usuari, i el canal, `email` o `sms` segons si és un email o un telèfon, com a [8.12](#812-get-apidevoutbox).
+- Els noms són els visibles (el `name` o `@username`). L'import s'escriu en euros amb el format de la pantalla (`1.000,00 €`).
+- Sense concepte, el text de qui rep acaba a l'import: «Usuari demo t'ha enviat 20,00 €.».
+- Aquests missatges no porten `code` ni `link`.
+
+### 13.8 Errors
+
+Els codis són a la taula de l'[apartat 5](#taula-de-codis). Els missatges són orientatius: el frontend decideix a partir del `code`.
+
+| `code` | HTTP | Ruta | Quan |
+|---|---|---|---|
+| `VALIDATION_ERROR` | 422 | `GET /api/users` | `q` passa de 64 caràcters |
+| `VALIDATION_ERROR` | 422 | `POST /api/transfers` | El cos està mal format o el concepte passa de 140 caràcters |
+| `RECIPIENT_NOT_FOUND` | 404 | `GET /api/users/{userId}`, `POST /api/transfers` | L'usuari no existeix o està pendent de verificar |
+| `SELF_TRANSFER` | 422 | `POST /api/transfers` | El destinatari és l'usuari de la sessió |
+| `INVALID_AMOUNT` | 422 | `POST /api/transfers` | `amount ≤ 0` |
+| `INSUFFICIENT_BALANCE` | 422 | `POST /api/transfers` | L'enviament supera el saldo de qui envia |
+| `TRANSFER_LIMIT_EXCEEDED` | 422 | `POST /api/transfers` | Enviat avui + `amount` > `100000` |
+
+Textos de les pantalles de US-13 i US-14, en vermell:
+
+| `code` | Text |
+|---|---|
+| `VALIDATION_ERROR` | «Les dades no són vàlides. Revisa-les i torna-ho a provar.» (ja existeix) |
+| `RECIPIENT_NOT_FOUND` | «No hem trobat aquest destinatari.» (nou) |
+| `SELF_TRANSFER` | «No et pots enviar diners a tu mateix.» (nou) |
+| `INSUFFICIENT_BALANCE` | «No tens prou saldo.» El mateix text a totes les pantalles, perquè el frontend tria el text pel `code` (P85). |
+| `TRANSFER_LIMIT_EXCEEDED` | «Has superat el límit diari de 1.000,00 €. Avui encara pots enviar X €.», amb `details.remainingToday` (nou) |
+
+### 13.9 Model intern
+
+Aquest apartat és per al backend. El frontend no en depèn.
+
+**`User`** guanya dos camps (US-13):
+
+| Camp | Tipus | Notes |
+|---|---|---|
+| `username` | string | L'`@usuari`, únic i en minúscules, sense l'`@`. Només lletres `a`–`z`, xifres, `.`, `_` i `-`. |
+| `phone` | string \| `None` | El telèfon normalitzat com a [8.3](#83-identificador-email-o-telèfon) (`+34611223302`). Qui es registra amb telèfon el té; qui es registra amb email, no (`None`), fins que es pugui editar al perfil. |
+
+El `name` que ja existia és el nom visible; buit (`""`) vol dir que no en té, i l'API el dona com a `null`.
+
+**`@usuari` dels usuaris nous** (decisió de PO: surt de la part local del correu, és únic i serà editable al perfil). **[PROPOSTA — pendent de validar]** (P74)
+
+- Registre amb email: la part d'abans de l'`@`, en minúscules, sense els caràcters que no siguin `a`–`z`, `0`–`9`, `.`, `_` o `-`. `Anna.Puig+evolt@x.com` → `anna.puigevolt`.
+- Si ja existeix, s'hi afegeix el primer número lliure a partir de `2`: `anna.puigevolt2`, `anna.puigevolt3`…
+- Registre amb telèfon, o una part local que es queda buida: `usuari` seguit de l'id de l'usuari (`usuari9`). No es fa servir el telèfon, perquè l'`@usuari` és visible per a tothom.
+- La forma `usuari` + xifres queda reservada per a aquest cas: una part local que ja la té hi afegeix `_` (`usuari9@x.com` → `usuari9_`), perquè no xoqui amb l'usuari 9. També és la que es mostra als usuaris creats abans de la T13.2, que no en tenen cap de desat.
+- L'`@usuari` es decideix en el registre, encara que el compte quedi pendent: així no canvia en verificar.
+- Editar-lo al perfil no és d'aquest sprint.
+
+**Seed** (decisió de PO: als usuaris del seed se'ls assigna un àlies d'equip). Vuit usuaris actius, tots amb la contrasenya del seed ([8.13](#813-model-intern-de-laccés)). Els usuaris 3 a 8 tenen el compte principal a `0`, sense moviments ni guardioles. **[PROPOSTA — pendent de validar]** (P75)
+
+| Id | `id` a l'API | Nom | Email | `username` | Telèfon |
+|---|---|---|---|---|---|
+| 1 | `usr-01` | Usuari demo | `demo@evolt.test` | `demo` | `+34611223307` |
+| 2 | `usr-02` | Usuari nou | `buit@evolt.test` | `buit` | `+34611223308` |
+| 3 | `usr-03` | Alicia | `alicia@evolt.test` | `aliciaa415` | `+34611223301` |
+| 4 | `usr-04` | Huabin | `huabin@evolt.test` | `123huabin123` | `+34611223302` |
+| 5 | `usr-05` | Izan | `izan@evolt.test` | `izanfarreny47` | `+34611223303` |
+| 6 | `usr-06` | Jiajun | `jiajun@evolt.test` | `yayuuun` | `+34611223304` |
+| 7 | `usr-07` | Junhao | `junhao@evolt.test` | `junhaozhang` | `+34611223305` |
+| 8 | `usr-08` | Martí | `marti@evolt.test` | `sudo-itramplay` | `+34611223306` |
+
+Els telèfons del seed són fictius i segueixen el mockup de US-13 (`611 22 33 02` és Huabin). L'email continua sent l'identificador per iniciar sessió; el telèfon només serveix per a la cerca.
+
+**Enviaments:**
+
+- `Movement.kind` ([apartat 6](#6-model-intern-no-exposat-a-lapi)) guanya dos valors: `"transfer_out"` al moviment de qui envia i `"transfer_in"` al de qui rep. El límit diari ([13.5](#135-límit-diari-denviament)) suma els `transfer_out` d'avui de l'usuari, **sense dependre del concepte**, que el pot escriure qui envia.
+- Les sis escriptures d'un enviament van dins d'una **transacció** amb Firestore, i amb el mateix pany en memòria, com l'aportació ([9.8](#98-model-intern-de-lestalvi)). Es valida tot abans d'escriure; si una escriptura falla a mig camí, es desfan les anteriors.
+- **Invariants:** el saldo de cada compte és la suma dels seus moviments; la suma dels saldos de tots els comptes no canvia amb un enviament.
+
+**Amb Firestore:**
+
+- `username` i `phone` són camps nous del document de `users`. Una col·lecció `usernames` (un document per `username`, que apunta a l'usuari) impedeix dos `@usuari` iguals encara que arribin dos registres alhora, com `user_identifiers` ([8.13](#813-model-intern-de-laccés)).
+- La cerca llegeix els usuaris i filtra al backend. Amb les dades de la demo (pocs usuaris) és suficient; si l'app creix, caldria un índex de cerca.
+
+---
+
+## 14. Sol·licituds de diners (US-15)
+
+Demanar diners a un altre usuari i veure i cancel·lar les sol·licituds enviades. Tasca: T15.1 (issue #153). Les pantalles, els textos i els mockups són a la història (`docs/us/US-15.md`); les proves d'acceptació, a [`docs/proves-pagaments.md`](proves-pagaments.md#us-15--sol·licitar-diners).
+
+| Tasca | Què implementa d'aquest apartat |
+|---|---|
+| T15.2 (backend) | [14.1](#141-objecte-moneyrequest) a [14.5](#145-caducitat), l'avís de [14.6](#146-avís-a-la-bústia-simulada) i el model de [14.8](#148-model-intern) |
+| T15.3 (frontend) | «Demanar diners» (`/requests/new`) i «Sol·licituds enviades» (`/requests`), amb el diàleg de cancel·lació |
+
+Totes les rutes són **protegides** ([8.2](#82-sessió)). El destinatari es tria amb la cerca de [13.2](#132-get-apiusers) i es representa amb un `UserSummary` ([13.1](#131-objecte-usersummary)). Els exemples fan servir l'usuari 1 del seed i el moment `2026-11-15T21:15:00+01:00`.
+
+Una sol·licitud **no mou diners**: ni saldos, ni moviments, ni `totalSaved`, ni XP. Pagar-la o rebutjar-la és de la US-16, que no entra en aquest sprint.
+
+### 14.1 Objecte `MoneyRequest`
+
+**[PROPOSTA — pendent de validar]** (P76, P77)
+
+| Camp | Tipus | Notes |
+|---|---|---|
+| `id` | string | Identificador opac amb el format `req-01`, com `Movement.id` (P1). |
+| `to` | `UserSummary` | A qui es demanen els diners ([13.1](#131-objecte-usersummary)). |
+| `amount` | integer | Cèntims, `> 0`. |
+| `concept` | string | Entre 1 i 140 caràcters, sense els espais dels extrems. |
+| `status` | `"pending"` \| `"paid"` \| `"rejected"` \| `"expired"` | La pantalla mostra «Pendent», «Pagada», «Rebutjada» o «Caducada». No hi ha cap estat «Cancel·lada»: cancel·lar l'esborra ([14.4](#144-post-apimoney-requestsrequestidcancel)). |
+| `createdAt` | string | Quan es va enviar, ISO 8601 amb el desplaçament de Madrid. |
+| `expiresAt` | string | A partir de quan es veu «Caducada» si encara és pendent: les 00:00 de Madrid del setè dia després del de `createdAt` ([14.5](#145-caducitat)). |
+
+- En aquest sprint, una sol·licitud només pot ser `pending` o `expired`. `paid` i `rejected` arribaran amb la US-16, però ja són al contracte perquè el frontend en tingui l'etiqueta.
+- El frontend no calcula mai l'estat: pinta el `status` que rep.
+
+```json
+{
+  "id": "req-03",
+  "to": {
+    "id": "usr-03",
+    "name": "Alicia",
+    "username": "aliciaa415"
+  },
+  "amount": 2500,
+  "concept": "El sopar de divendres",
+  "status": "pending",
+  "createdAt": "2026-11-15T21:15:00+01:00",
+  "expiresAt": "2026-11-22T00:00:00+01:00"
+}
+```
+
+### 14.2 `POST /api/money-requests`
+
+Envia una sol·licitud de diners a un altre usuari (US-15). **[PROPOSTA — pendent de validar]** (P78, P79)
+
+**Cos de la petició:** `{ toUserId, amount, concept }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `toUserId` | string | L'`id` de l'`UserSummary` del destinatari. Obligatori. |
+| `amount` | integer | Import en cèntims. Obligatori. Enter JSON estricte, com a P5. |
+| `concept` | string | Obligatori, entre 1 i 140 caràcters després de treure els espais dels extrems. |
+
+**Resposta `201`:** la `MoneyRequest` creada ([14.1](#141-objecte-moneyrequest)), amb `status: "pending"`.
+
+Amb aquesta resposta, la pantalla mostra «Sol·licitud enviada a Alicia.» i, 1,5 s després, obre `/requests` amb la fila nova la primera.
+
+**Ordre de les validacions.** S'aturen al primer error:
+
+1. Format del cos: falta algun camp o no és del tipus de la taula → `VALIDATION_ERROR`.
+2. El destinatari no existeix, està pendent de verificar o l'id té un format qualsevol → `RECIPIENT_NOT_FOUND` (`404`), com a [13.4](#134-post-apitransfers).
+3. El destinatari és l'usuari de la sessió → `SELF_REQUEST` (`422`, «No et pots demanar diners a tu mateix.»).
+4. `amount ≤ 0` → `INVALID_AMOUNT`.
+5. `amount > 100000000` (1.000.000,00 €) → `AMOUNT_OVER_LIMIT`.
+6. `concept` buit, només amb espais o de més de 140 caràcters → `INVALID_CONCEPT` (`422`).
+
+Si una validació falla, no es desa res ni s'envia cap avís.
+
+**Regles:**
+
+- Es poden enviar diverses sol·licituds iguals a la mateixa persona: cadascuna és nova.
+- No hi ha límit diari de sol·licituds, i el saldo de qui la demana no importa.
+- Crear la sol·licitud i deixar l'avís a la bústia ([14.6](#146-avís-a-la-bústia-simulada)) van junts: tot o res.
+
+**Petició:**
+
+```http
+POST /api/money-requests HTTP/1.1
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "toUserId": "usr-03",
+  "amount": 2500,
+  "concept": "El sopar de divendres"
+}
+```
+
+**Resposta `201`:** la sol·licitud de l'exemple de [14.1](#141-objecte-moneyrequest).
+
+### 14.3 `GET /api/money-requests`
+
+Les sol·licituds **enviades** per l'usuari de la sessió (US-15). Les rebudes són de la US-16.
+
+**Resposta `200`:** `{ items }`, una llista de `MoneyRequest`.
+
+- De la més recent a la més antiga per `createdAt`; si dues coincideixen, primer la creada més tard (P4).
+- Sense paginació.
+- Sense cap sol·licitud → `items: []`. La pantalla mostra «Encara no has enviat cap sol·licitud.».
+- L'estat es calcula en aquesta lectura ([14.5](#145-caducitat)).
+
+### 14.4 `POST /api/money-requests/{requestId}/cancel`
+
+Cancel·la una sol·licitud **pendent**: s'esborra i no torna a sortir mai a `/requests` (decisió de PO, 18/11). **[PROPOSTA — pendent de validar]** (P80)
+
+**Cos de la petició:** cap.
+
+**Resposta `200`:** `{ "status": "ok" }`. La pantalla mostra «Sol·licitud cancel·lada.» a dalt i treu la fila.
+
+**Ordre de les validacions:**
+
+1. La sol·licitud no existeix, ja s'ha cancel·lat, és d'un altre usuari o l'id té un format qualsevol → `REQUEST_NOT_FOUND` (`404`, «Aquesta sol·licitud ja no existeix.»). El cos és el mateix en tots els casos.
+2. La sol·licitud no és pendent (`expired`, i amb la US-16 també `paid` o `rejected`) → `REQUEST_NOT_PENDING` (`422`, «Només es poden cancel·lar les sol·licituds pendents.»). La pantalla torna a carregar la llista.
+
+**Regles:**
+
+- Només la pot cancel·lar qui l'ha enviada. El destinatari no rep cap avís de la cancel·lació.
+- Una sol·licitud que ha caducat ja no es pot cancel·lar, encara que no es desi mai com a `expired`: l'estat es calcula en el moment de la petició.
+- Dues cancel·lacions alhora de la mateixa sol·licitud: una respon `200` i l'altra `REQUEST_NOT_FOUND`.
+
+### 14.5 Caducitat
+
+Una sol·licitud sense resposta caduca als 7 dies (US-15). **[PROPOSTA — pendent de validar]** (P81)
+
+- Es compta per **dies naturals de Madrid** ([apartat 1](#què-vol-dir-avui)): una sol·licitud del 14 de novembre (a qualsevol hora) es veu «Caducada» des de les **00:00 del 21 de novembre**. Aquest moment és el seu `expiresAt`.
+- `status` es calcula en cada lectura: `"expired"` si la sol·licitud està desada com a pendent i ara és `≥ expiresAt`; si no, l'estat desat.
+- `expired` **no es desa mai** i no hi ha cap tasca de fons que canviï res.
+- Si hi ha un canvi d'hora pel mig, `expiresAt` continua sent les 00:00 de Madrid d'aquell dia, amb el desplaçament que toqui (`+01:00` o `+02:00`).
+
+| `createdAt` | `expiresAt` | Estat el 20/11 a les 23:59 | Estat el 21/11 a les 00:00 |
+|---|---|---|---|
+| `2026-11-14T19:30:00+01:00` | `2026-11-21T00:00:00+01:00` | `pending` | `expired` |
+| `2026-11-14T00:00:00+01:00` | `2026-11-21T00:00:00+01:00` | `pending` | `expired` |
+
+### 14.6 Avís a la bústia simulada
+
+Crear una sol·licitud deixa un missatge al destinatari a la bústia simulada ([8.12](#812-get-apidevoutbox)). Dins de l'app no hi ha cap llista d'avisos. **[PROPOSTA — pendent de validar]** (P82)
+
+| `type` | A qui | `text` (exemple de 14.2) |
+|---|---|---|
+| `money_request` | Qui ha de pagar | «Usuari demo et demana 25,00 €: El sopar de divendres.» |
+
+- `to` i `channel` com a [13.7](#137-avisos-a-la-bústia-simulada); el nom és el visible de qui demana.
+- Sense `code` ni `link`.
+
+### 14.7 Errors
+
+Els codis són a la taula de l'[apartat 5](#taula-de-codis). Els missatges són orientatius: el frontend decideix a partir del `code`.
+
+| `code` | HTTP | Ruta | Quan |
+|---|---|---|---|
+| `VALIDATION_ERROR` | 422 | `POST /api/money-requests` | El cos està mal format |
+| `RECIPIENT_NOT_FOUND` | 404 | `POST /api/money-requests` | El destinatari no existeix o està pendent de verificar |
+| `SELF_REQUEST` | 422 | `POST /api/money-requests` | El destinatari és l'usuari de la sessió |
+| `INVALID_AMOUNT` | 422 | `POST /api/money-requests` | `amount ≤ 0` |
+| `AMOUNT_OVER_LIMIT` | 422 | `POST /api/money-requests` | `amount > 100000000` |
+| `INVALID_CONCEPT` | 422 | `POST /api/money-requests` | Concepte buit o de més de 140 caràcters |
+| `REQUEST_NOT_FOUND` | 404 | `POST /api/money-requests/{requestId}/cancel` | No existeix, ja s'ha cancel·lat o és d'un altre usuari |
+| `REQUEST_NOT_PENDING` | 422 | `POST /api/money-requests/{requestId}/cancel` | La sol·licitud ja no és pendent |
+
+Textos de les pantalles de US-15, en vermell:
+
+| `code` | Text |
+|---|---|
+| `SELF_REQUEST` | «No et pots demanar diners a tu mateix.» (nou) |
+| `INVALID_CONCEPT` | «El concepte ha de tenir entre 1 i 140 caràcters.» (nou; la pantalla ja no deixa enviar-lo) |
+| `REQUEST_NOT_FOUND` | «Aquesta sol·licitud ja no existeix.» (nou) |
+| `REQUEST_NOT_PENDING` | «Només es poden cancel·lar les sol·licituds pendents.» (nou) |
+| `AMOUNT_OVER_LIMIT` | «L'import màxim és d'1.000.000,00 €.» (a «Demanar diners»; a la recàrrega continua sent el de [4.3](#43-post-apitopups)) |
+
+Un error deixa el destinatari, l'import i el concepte escrits.
+
+### 14.8 Model intern
+
+Aquest apartat és per al backend. El frontend no en depèn.
+
+- **`MoneyRequest`**: `id`, `requester_id` (qui demana), `recipient_id`, `amount`, `concept`, `created_at`, l'estat desat (`pending`, i amb la US-16 `paid` o `rejected`) i `seq` (ordre de creació, per al desempat de P4). `expired` es calcula, no es desa ([14.5](#145-caducitat)).
+- Els ids surten d'un comptador, com les guardioles: `req-01`, `req-02`… Cancel·lar esborra la sol·licitud i el seu id no es torna a fer servir.
+- **Amb Firestore:** col·lecció `money_requests`, un document per sol·licitud amb el seu id, i el comptador `next_money_request_number` al document `counters`. Crear la sol·licitud i el missatge de la bústia van dins d'una **transacció**; cancel·lar llegeix i esborra dins d'una altra. En memòria, el mateix codi amb el pany.
+- `POST /api/dev/reset` torna les sol·licituds al seed.
+- **Seed** (P83): l'usuari 1 ja té dues sol·licituds enviades, perquè `/requests` tingui contingut a la demo:
+
+  | `id` | A qui | Import | Concepte | `createdAt` | Estat |
+  |---|---|---|---|---|---|
+  | `req-01` | Huabin (`usr-04`) | 42,00 € (`4200`) | Pizza del diumenge | fa 9 dies, 21:15 | `expired` |
+  | `req-02` | Alicia (`usr-03`) | 25,00 € (`2500`) | El sopar de divendres | ahir, 19:30 | `pending` |
+
+  Les dates són relatives a avui, com les dels moviments del seed. Una sol·licitud nova és, per tant, `req-03`.
