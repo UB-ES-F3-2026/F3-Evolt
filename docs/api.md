@@ -708,7 +708,7 @@ Propostes dels moviments (T10.1, PR #120):
 | P44 | [10.5](#105-justificant-pdf) | El justificant PDF es genera al navegador amb jsPDF (llicència MIT), sense Cloud Function ni cap ruta (decisió de PO). |
 | P45 | [10.7](#107-model-intern-dels-moviments) | Seed: els noms fictius de la contrapart de la taula de 10.7, i el moviment més recent de l'usuari 1 (`mov-30`) en estat `pending`. |
 
-Propostes de retirar i progrés (T19.1, issue #146). **[PROPOSTA — pendent de validar]** fins que s'aprovi la PR:
+Propostes de retirar i progrés (T19.1, PR #177):
 
 | # | Apartat | Proposta |
 |---|---|---|
@@ -1883,14 +1883,15 @@ L'objecte `Pot` de [9.1](#91-objecte-pot) guanya dos camps (US-20). Surten a **t
 
 | Camp | Tipus | Notes |
 |---|---|---|
-| `percentage` | integer \| `null` | Progrés cap a l'objectiu: `balance / target` en percentatge, arrodonit a l'enter, amb els mitjos cap amunt. Pot passar de `100`. Val `null` si la guardiola no té objectiu. |
-| `goalStatus` | `"in_progress"` \| `"achieved"` \| `null` | `"achieved"` si `balance ≥ target`; `"in_progress"` si `balance < target`; `null` si la guardiola no té objectiu. **[PROPOSTA — pendent de validar]** (P49) |
+| `percentage` | integer \| `null` | Progrés cap a l'objectiu: `balance / target` en percentatge, arrodonit a l'enter, amb els mitjos cap amunt. Mentre `balance < target`, com a màxim `99`. Amb l'objectiu assolit, pot passar de `100`. Val `null` si la guardiola no té objectiu. |
+| `goalStatus` | `"in_progress"` \| `"achieved"` \| `null` | `"achieved"` si `balance ≥ target`; `"in_progress"` si `balance < target`; `null` si la guardiola no té objectiu. (P49) |
 
 **Regles:**
 
 - Les dues claus hi són sempre. Sense objectiu (`target: null`) valen totes dues `null`; amb objectiu, cap de les dues és mai `null`.
 - **Arrodoniment:** 62,5 → `63` i 62,4 → `62`. Com es calcula sense errors d'arrodoniment, a [11.6](#116-model-intern).
-- `goalStatus` es decideix amb `balance` i `target`, no amb el percentatge arrodonit: amb `7999` de `8000`, `percentage` és `100` (99,99 arrodonit) però `goalStatus` continua sent `"in_progress"`, perquè encara no s'ha arribat a l'objectiu.
+- **Màxim de `99` sense arribar a l'objectiu** (decisió del PO, 21/11): mentre `balance < target`, `percentage` no passa de `99`, encara que l'arrodoniment doni `100`. Amb `7999` de `8000` (99,99 %), `percentage` és `99` i `goalStatus` és `"in_progress"`. El `100` només surt amb `balance ≥ target`, sempre amb `"achieved"`: el número i l'etiqueta no es contradiuen mai.
+- `goalStatus` es decideix amb `balance` i `target`, no amb el percentatge.
 - El backend el calcula a cada resposta, a partir del saldo d'aquell moment; no es desa. El frontend **no el recalcula mai** a partir de `balance` i `target`: pinta el que rep.
 - Per sobre de l'objectiu, `percentage` diu el valor real (`125`) i `goalStatus` és `"achieved"`. Que la barra no passi mai del 100 % de l'ample ho decideix el frontend (US-20).
 - L'estat depèn del saldo de cada moment: una retirada pot tornar una guardiola de `"achieved"` a `"in_progress"`.
@@ -1905,6 +1906,7 @@ Exemples:
 | Vacances (seed) | `15000` | `100000` | `15` | `"in_progress"` |
 | Emergències (seed) | `10000` | `null` | `null` | `null` |
 | Regal d'aniversari (seed) | `5000` | `8000` | `63` (62,5) | `"in_progress"` |
+| Regal d'aniversari, després d'aportar `2999` | `7999` | `8000` | `99` (99,99, sense arribar a l'objectiu) | `"in_progress"` |
 | Regal d'aniversari, després d'aportar `3000` | `8000` | `8000` | `100` | `"achieved"` |
 | Regal d'aniversari, després d'aportar `5000` | `10000` | `8000` | `125` | `"achieved"` |
 | Viatge, acabada de crear ([9.3](#93-post-apipots)) | `0` | `30000` | `0` | `"in_progress"` |
@@ -1947,7 +1949,7 @@ Exemples:
 
 ### 11.2 `POST /api/pots/{potId}/withdrawals`
 
-Retira diners d'una guardiola al compte principal (US-19). És l'operació inversa de l'aportació ([9.4](#94-post-apipotspotidcontributions)), amb la mateixa forma de petició i de resposta. **[PROPOSTA — pendent de validar]** (P47)
+Retira diners d'una guardiola al compte principal (US-19). És l'operació inversa de l'aportació ([9.4](#94-post-apipotspotidcontributions)), amb la mateixa forma de petició i de resposta. (P47)
 
 **Cos de la petició:** `{ amount }`
 
@@ -1980,7 +1982,7 @@ Amb aquesta resposta, el frontend pinta el tic verd «Has retirat 30,00 € de V
   - `type: "income"`;
   - `amount` igual a la retirada;
   - `concept: "Retirada de <nom de la guardiola>"`, p. ex. `"Retirada de Vacances"`;
-  - `icon: "savings"`, la mateixa icona que l'aportació **[PROPOSTA — pendent de validar]** (P48);
+  - `icon: "savings"`, la mateixa icona que l'aportació (P48);
   - `date`: el moment de la retirada;
   - `counterparty: null`, `status: "completed"` i una `reference` nova, com tots els moviments nous (P38);
   - `kind` intern `"other"`: és un ingrés, però no una recàrrega, així que no compta per al límit diari ([4.3](#43-post-apitopups)).
@@ -2117,7 +2119,7 @@ Textos de la pantalla «Retirar de <nom>» (US-19), en vermell sota el camp o so
 
 Aquest apartat és per al backend. El frontend no en depèn.
 
-- **Progrés.** `Pot` no desa cap camp nou: `percentage` i `goalStatus` es calculen en construir la resposta, amb una sola funció pura que fan servir totes les respostes de guardioles i que té els seus tests (skill `middle-services`). El percentatge es calcula amb enters: `(200 × balance + target) // (2 × target)`. **No** amb `round()` de Python, que arrodoneix 62,5 a 62 (arrodoniment bancari), ni amb decimals de coma flotant.
+- **Progrés.** `Pot` no desa cap camp nou: `percentage` i `goalStatus` es calculen en construir la resposta, amb una sola funció pura que fan servir totes les respostes de guardioles i que té els seus tests (skill `middle-services`). El percentatge es calcula amb enters: `(200 × balance + target) // (2 × target)` i, si `balance < target`, com a màxim `99` ([11.1](#111-progrés-de-pot)). **No** amb `round()` de Python, que arrodoneix 62,5 a 62 (arrodoniment bancari), ni amb decimals de coma flotant.
 - **Una retirada escriu quatre coses alhora**, com l'aportació ([9.8](#98-model-intern-de-lestalvi)): el saldo del compte, el saldo de la guardiola, el moviment del compte i l'entrada de l'historial. Es valida tot abans d'escriure. Si una escriptura falla a mig camí, es desfan les anteriors abans de deixar sortir l'error.
 - **El mateix pany que l'aportació.** «Validar + escriure» de la retirada va dins del `_CONTRIBUTION_LOCK` que ja fa servir l'aportació a `pot_service.py`, no en un pany nou. Així una retirada i una aportació alhora a la mateixa guardiola s'apliquen una darrere l'altra ([11.2](#112-post-apipotspotidwithdrawals), casos límit; prova RE-17).
 - **Invariants:**

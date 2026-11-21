@@ -175,7 +175,7 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 | **REP-09** | Amb el backend aturat, retira `10`. | Surt «No hi ha connexió amb el servidor. Torna-ho a provar.» en vermell sota el botó i l'import es queda escrit. |
 | **REP-10** | Retira exactament tot el saldo de Vacances (`150`). | Es fa la retirada i Vacances queda a 0,00 €. |
 | **REP-11** | Amb Vacances a 0,00 € (REP-10), obre el detall i prova de tocar «Retirar», amb el ratolí i amb el tabulador. | «Retirar» surt desactivat, amb el fons gris; no fa res i el tabulador se'l salta. «Aportar» continua actiu. |
-| **REP-12** | A «Retirar de Vacances», escriu `30` i toca «Cancel·lar». | Surt una pantalla d'avís de retirada cancel·lada (decisió del PO, 17/11), no es retira res i cap dels dos saldos canvia. **Pendent que el PO ho defineixi a US-19:** el text exacte de l'avís, si porta un resum (import i saldos) i a quina pantalla torna després. |
+| **REP-12** | A «Retirar de Vacances», escriu `30` i toca «Cancel·lar». Torna-ho a fer i, aquest cop, toca «Tornar a la guardiola». | No es retira res. Surt «Retirada cancel·lada» (`/pots/pot-01/withdraw/cancelled`) amb «No s'ha retirat res i cap dels dos saldos canvia.» i, a sota, «Saldo disponible: 3.795,21 € · Vacances: 150,00 €», sense l'import escrit ni tic verd. 1,5 s després torna sola al detall de Vacances, amb 150,00 €. Amb «Tornar a la guardiola» hi torna abans. |
 
 ---
 
@@ -191,8 +191,9 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 | **O-04** | O-03 fet | Retirar `3000` de `pot-03` | `balance: 7000`, `percentage: 88` (87,5) i `goalStatus: "in_progress"`: la retirada torna la guardiola a «En progrés». |
 | **O-05** | Seed | `POST /api/pots` amb `{ "name": "Viatge", "target": 30000 }` i amb `{ "name": "Fons" }` | Viatge: `percentage: 0` i `goalStatus: "in_progress"`. Fons, sense objectiu: `percentage: null` i `goalStatus: null`. |
 | **O-06** | Seed | Mirar el `pot` de `GET /api/pots`, de `POST /api/pots`, de l'aportació i de la retirada | A totes quatre, exactament les claus `id`, `name`, `balance`, `target`, `color`, `percentage` i `goalStatus`. |
-| **O-07** | Test de la funció pura del progrés | `(balance, target)`: `(5000, 8000)`, `(4990, 8000)`, `(1, 8)`, `(10, 2000)`, `(3, 2000)`, `(7999, 8000)`, `(0, 30000)` | `percentage`: `63`, `62`, `13`, `1`, `0`, `100` i `0`. `goalStatus`: `"in_progress"` a tots, també a `(7999, 8000)`, perquè encara no s'ha arribat a l'objectiu. Amb `(8000, 8000)`, `100` i `"achieved"`. |
+| **O-07** | Test de la funció pura del progrés | `(balance, target)`: `(5000, 8000)`, `(4990, 8000)`, `(1, 8)`, `(10, 2000)`, `(3, 2000)`, `(7999, 8000)`, `(0, 30000)` | `percentage`: `63`, `62`, `13`, `1`, `0`, `99` i `0`. `goalStatus`: `"in_progress"` a tots. `(7999, 8000)` dona `99` i no `100`: sense arribar a l'objectiu, el màxim és `99`. Amb `(8000, 8000)`, `100` i `"achieved"`. |
 | **O-08** | O-02 fet | `GET /api/pots` | Regal d'aniversari surt amb `percentage: 100` i `goalStatus: "achieved"`: el progrés es calcula a cada lectura, no només a la resposta de l'aportació. |
+| **O-09** | Seed | Aportar `2999` a `pot-03`, i després `1` més | Primer `balance: 7999`, `percentage: 99` i `goalStatus: "in_progress"` (99,99 %, sense arribar a l'objectiu). Després `balance: 8000`, `percentage: 100` i `goalStatus: "achieved"`. |
 
 ### Pantalla (T20.2)
 
@@ -206,6 +207,7 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 | **OP-06** | Retira 30,00 € de Regal d'aniversari. | En tornar al detall: «88 %», la barra lila i «En progrés». |
 | **OP-07** | Torna a «Guardioles». | Vacances i Regal d'aniversari tenen una barra petita i el percentatge sota el nom. Emergències només té el saldo. |
 | **OP-08** | Inspecciona la barra (o fes servir el lector de pantalla). | La barra té `role="progressbar"` amb el valor, i el percentatge i l'etiqueta són text visible: el color no és l'únic senyal. |
+| **OP-09** | Amb el seed, aporta 29,99 € a Regal d'aniversari. Després, 0,01 € més. | Primer «79,99 € de 80,00 €», «99 %», la barra lila i «En progrés», mai «100 %» amb «En progrés». Després «100 %», la barra verda i «Objectiu assolit». |
 
 ---
 
@@ -236,11 +238,11 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 | US-19 · Si la guardiola té 0,00 €, el botó «Retirar» surt desactivat (gris clar) | RE-08, REP-11 |
 | US-20 · La pantalla d'una guardiola amb objectiu mostra el saldo i l'objectiu (per exemple «120,00 € de 500,00 €»), una barra de progrés i el percentatge | O-01, OP-01, OP-03 |
 | US-20 · La part plena de la barra, en lila, correspon al percentatge | O-01, O-07, OP-01 |
-| US-20 · Si el saldo és menor que l'objectiu, surt l'etiqueta grisa «En progrés» | O-01, O-04, O-07, OP-01, OP-06 |
-| US-20 · Si el saldo arriba o passa l'objectiu, la barra es posa verda i surt l'etiqueta verda «Objectiu assolit» | O-02, O-03, O-08, OP-04, OP-05 |
+| US-20 · Si el saldo és menor que l'objectiu, surt l'etiqueta grisa «En progrés» | O-01, O-04, O-07, O-09, OP-01, OP-06, OP-09 |
+| US-20 · Si el saldo arriba o passa l'objectiu, la barra es posa verda i surt l'etiqueta verda «Objectiu assolit» | O-02, O-03, O-08, O-09, OP-04, OP-05, OP-09 |
 | US-20 · A la llista de guardioles, cada guardiola amb objectiu té una barra petita sota el nom | O-01, OP-07 |
 | US-20 · Les guardioles sense objectiu no tenen barra, només el saldo | O-01, O-05, OP-02, OP-07 |
 | US-20 · Després d'aportar o retirar, la barra i el percentatge ja surten actualitzats | O-02, O-03, O-04, RE-01, OP-04, OP-05, OP-06 |
 | US-20 · El percentatge també surt escrit amb números (per exemple «24 %»), no només com a barra | OP-01, OP-08 |
 
-Proves que no surten d'un criteri, sinó del contracte: P-12 i P-13 (format del cos), A-10 a A-13 (guardioles inexistents o d'altres usuaris), A-15 (aportar per sobre de l'objectiu), A-20 (sense XP), A-21 (límit diari) i A-22 (reinici de dades); RE-10 a RE-13 (format i guardioles d'altres), RE-17 (retirades i aportacions alhora), RE-19 a RE-21 (límit diari, XP i reinici), REP-12 (cancel·lar: la pantalla d'avís, amb el text pendent del PO), O-06 (claus del `Pot`) i O-07 (arrodoniment).
+Proves que no surten d'un criteri, sinó del contracte: P-12 i P-13 (format del cos), A-10 a A-13 (guardioles inexistents o d'altres usuaris), A-15 (aportar per sobre de l'objectiu), A-20 (sense XP), A-21 (límit diari) i A-22 (reinici de dades); RE-10 a RE-13 (format i guardioles d'altres), RE-17 (retirades i aportacions alhora), RE-19 a RE-21 (límit diari, XP i reinici), REP-12 (cancel·lar, decisió del PO a US-19), O-06 (claus del `Pot`) i O-07 (arrodoniment i màxim de 99, decisió del PO).
