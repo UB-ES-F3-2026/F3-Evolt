@@ -127,6 +127,10 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 | **EN-30** | EN-01 fet | Mirar l'XP dels dos usuaris | No ha canviat. |
 | **EN-31** | EN-01 fet | `POST /api/dev/reset` | Els dos saldos, els moviments i la bústia tornen al seed. |
 | **EN-32** | Seed | `POST /api/transfers` sense sessió (backend amb `ALLOW_X_USER_ID=false`) | `401 UNAUTHENTICATED`. |
+| **EN-33** | Seed | `GET /api/transfers/limit` (usuari 1) | `200` `{ "dailyLimit": 100000, "remainingToday": 100000 }`. |
+| **EN-34** | EN-01 fet | `GET /api/transfers/limit` (usuari 1 i usuari 2) | Usuari 1: `remainingToday: 98000`. Usuari 2: `100000`, perquè els diners rebuts no compten. |
+| **EN-35** | EN-12 fet (1.000,00 € enviats avui) | `GET /api/transfers/limit` | `remainingToday: 0`. L'endemà a les 00:00 (rellotge fixat), `100000`. |
+| **EN-36** | Seed | `GET /api/transfers/limit` sense sessió | `401 UNAUTHENTICATED`. |
 
 ### Pantalla (T14.3 i T14.4)
 
@@ -134,7 +138,7 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 |---|---|---|
 | **ENP-01** | A «Enviar diners», toca «Usuari nou». | S'obre «Enviar» amb Usuari nou i `@buit`, la casella «Import», el teclat numèric, «Concepte» i «Continuar». |
 | **ENP-02** | Escriu `4.000,00`. | «No tens prou saldo.» en vermell i «Continuar» desactivat. No s'envia cap petició. |
-| **ENP-03** | Amb 20,00 € enviats avui, escriu `981`. | «Has superat el límit diari de 1.000,00 €. Avui encara pots enviar 980,00 €.» en vermell i «Continuar» desactivat. |
+| **ENP-03** | Amb 20,00 € enviats avui, escriu `981`. | Sense tocar «Continuar»: «Has superat el límit diari de 1.000,00 €. Avui encara pots enviar 980,00 €.» en vermell i «Continuar» desactivat. «Enviar» ho sap per `GET /api/transfers/limit`. |
 | **ENP-04** | Escriu `20`, el concepte «El sopar de divendres» i toca «Continuar». | «Confirmar» amb el destinatari, l'import, el concepte i el saldo disponible. |
 | **ENP-05** | Toca «Confirmar enviament». | Tic verd «Has enviat 20,00 € a Usuari nou» i «Saldo disponible: 3.775,21 €». 1,5 s després torna sol a Inici. |
 | **ENP-06** | Mira Inici. | Saldo 3.775,21 € i, el primer moviment, «−20,00 €» en vermell. Recarregar no ho canvia. |
@@ -162,7 +166,7 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 | US-14 · Import més gran que 0 i per sota del límit diari | EN-12, EN-13, EN-14, EN-22, ENP-03 |
 | US-14 · Concepte opcional | EN-01, EN-04, EN-23, ENP-10 |
 | US-14 · Sense prou saldo: «No tens prou saldo.» i no s'envia res | EN-11, EN-26, ENP-02 |
-| US-14 · El límit és 1.000,00 €/dia i la igualtat està permesa | EN-12, EN-13, EN-15, ENP-03 |
+| US-14 · El límit és 1.000,00 €/dia i la igualtat està permesa; el missatge surt a «Enviar», abans de confirmar | EN-12, EN-13, EN-15, EN-33, EN-34, EN-35, ENP-03 |
 | US-14 · El servidor torna a comprovar saldo i límit en confirmar | EN-11, EN-14, EN-29, ENP-08 |
 | US-14 · Enviar-me diners a mi mateix dona «No et pots enviar diners a tu mateix.» | EN-19, EN-24, ENP-09 |
 | US-14 · Èxit: tic verd amb l'import, el destinatari i el saldo disponible | EN-01, ENP-05 |
@@ -171,4 +175,4 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 | US-14 · Sense concepte, «Transferència enviada» i «Transferència rebuda» | EN-04, ENP-10 |
 | US-14 · Destinatari inexistent: «No hem trobat aquest destinatari.» | EN-20, EN-21, CUP-10 |
 
-Proves que no surten d'un cas de la història, sinó del contracte: CU-15, CU-17, CU-20 i CU-21 (comptes pendents, màxim de 10 i sessió); EN-06 a EN-08 (llistat, detall i invariants), EN-09 i EN-16 a EN-18 (límits independents), EN-23 a EN-25 (format i ordre de les validacions), EN-27 a EN-32 (tot o res, concurrència, XP, reinici i sessió).
+Proves que no surten d'un cas de la història, sinó del contracte: CU-15, CU-17, CU-20 i CU-21 (comptes pendents, màxim de 10 i sessió); EN-06 a EN-08 (llistat, detall i invariants), EN-09 i EN-16 a EN-18 (límits independents), EN-23 a EN-25 (format i ordre de les validacions), EN-27 a EN-32 i EN-36 (tot o res, concurrència, XP, reinici i sessió).

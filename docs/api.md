@@ -171,6 +171,7 @@ Exemple:
 | `GET /api/users` | `200` | US-13 · [13.2](#132-get-apiusers) |
 | `GET /api/users/{userId}` | `200` | US-13 · [13.3](#133-get-apiusersuserid) |
 | `POST /api/transfers` | `201` | US-14 · [13.4](#134-post-apitransfers) |
+| `GET /api/transfers/limit` | `200` | US-14 · [13.5](#get-apitransferslimit) |
 
 A partir de la T03.1, `GET /api/home`, `GET /api/movements` i `POST /api/topups` són **rutes protegides**: necessiten una sessió ([apartat 8.2](#82-sessió)).
 
@@ -732,6 +733,8 @@ Propostes dels pagaments (T13.1, US-13 i US-14). Comencen a la P64 perquè les P
 | P73 | [13.7](#137-avisos-a-la-bústia-simulada) | Els avisos d'enviament són missatges `transfer_sent` i `transfer_received` a la bústia simulada, amb els textos de 13.7. |
 | P74 | [13.9](#139-model-intern) | L'`@usuari` d'un registre amb email és la part local netejada, amb un número si ja existeix; amb telèfon, `usuari` i l'id. |
 | P75 | [13.9](#139-model-intern) | Seed de vuit usuaris: els dos d'abans i un per a cada membre de l'equip, amb el seu àlies de GitHub com a `@usuari` i telèfons fictius `+34 611 22 33 0N`. |
+| P84 | [13.5](#get-apitransferslimit) | `GET /api/transfers/limit` → `{ dailyLimit, remainingToday }`, perquè «Enviar» pugui avisar del límit abans de confirmar (revisió de l'Izan a la #196). La numeració salta a P84 perquè les P76–P83 són de la #198. |
+| P85 | [13.8](#138-errors) | `INSUFFICIENT_BALANCE` té un sol text, «No tens prou saldo.», a l'aportació, a l'enviament i al canvi de divises (revisió del Huabin a la #196). |
 
 ---
 
@@ -1543,7 +1546,7 @@ Els codis són a la taula de l'[apartat 5](#taula-de-codis). Els missatges són 
 ```json
 {
   "code": "INSUFFICIENT_BALANCE",
-  "message": "No tens prou saldo per fer aquesta aportació."
+  "message": "No tens prou saldo."
 }
 ```
 
@@ -1887,9 +1890,9 @@ Trobar altres usuaris de l'app i enviar-los diners a l'instant. Tasca: T13.1 (is
 |---|---|
 | T13.2 (backend) | [13.1](#131-objecte-usersummary), [13.2](#132-get-apiusers), [13.3](#133-get-apiusersuserid), l'`@usuari` i el seed de [13.9](#139-model-intern) |
 | T13.3 (frontend) | La barra de cerca a «Enviar diners», que crida [13.2](#132-get-apiusers) |
-| T14.1 (backend) | [13.4](#134-post-apitransfers), [13.5](#135-límit-diari-denviament) i [13.6](#136-efecte-sobre-altres-rutes) |
+| T14.1 (backend) | [13.4](#134-post-apitransfers), [13.5](#135-límit-diari-denviament) (amb `GET /api/transfers/limit`) i [13.6](#136-efecte-sobre-altres-rutes) |
 | T14.2 (backend) | Els avisos de [13.7](#137-avisos-a-la-bústia-simulada) |
-| T14.3 i T14.4 (frontend) | «Pagaments», «Enviar» i «Confirmar», que criden [13.3](#133-get-apiusersuserid) i [13.4](#134-post-apitransfers), i Inici i el llistat amb els saldos nous |
+| T14.3 i T14.4 (frontend) | «Pagaments», «Enviar» i «Confirmar», que criden [13.3](#133-get-apiusersuserid), `GET /api/transfers/limit` ([13.5](#get-apitransferslimit)) i [13.4](#134-post-apitransfers), i Inici i el llistat amb els saldos nous |
 
 Totes les rutes d'aquest apartat són **protegides** ([8.2](#82-sessió)): l'usuari és el de la sessió. Els imports són cèntims enters i les dates, ISO 8601 amb el desplaçament de Madrid ([apartat 1](#1-convencions-generals)). Els exemples fan servir l'usuari 1 del seed (`Usuari demo`, saldo `379521`) i els usuaris de [13.9](#139-model-intern).
 
@@ -2003,7 +2006,7 @@ Amb aquesta resposta, el frontend pinta el tic verd «Has enviat 20,00 € a Usu
 2. El destinatari no existeix, està pendent de verificar o l'id té un format qualsevol → `RECIPIENT_NOT_FOUND` (`404`).
 3. El destinatari és l'usuari de la sessió → `SELF_TRANSFER` (`422`, «No et pots enviar diners a tu mateix.»).
 4. `amount ≤ 0` → `INVALID_AMOUNT`.
-5. `amount` més gran que el saldo de qui envia → `INSUFFICIENT_BALANCE` (el mateix codi que l'aportació; la pantalla «Enviar» mostra «No tens prou saldo.»).
+5. `amount` més gran que el saldo de qui envia → `INSUFFICIENT_BALANCE`, el mateix codi i el mateix text que l'aportació («No tens prou saldo.»).
 6. Enviat avui + `amount` supera el límit diari ([13.5](#135-límit-diari-denviament)) → `TRANSFER_LIMIT_EXCEEDED` (`422`), amb `details.remainingToday`.
 
 Si qualsevol validació falla, **no es mou res**: ni saldos, ni moviments, ni avisos.
@@ -2085,6 +2088,30 @@ L'usuari 2 té ara saldo `2000` i un moviment `mov-32`: `"El sopar de divendres"
 }
 ```
 
+#### `GET /api/transfers/limit`
+
+Quant pot enviar encara avui l'usuari de la sessió. «Enviar» ho demana en obrir-se, com el saldo, per mostrar «Has superat el límit diari de 1.000,00 €. Avui encara pots enviar 980,00 €.» i desactivar «Continuar» **abans** de confirmar (decisió de PO a la US-14). **[PROPOSTA — pendent de validar]** (P84)
+
+**Resposta `200`:** `{ dailyLimit, remainingToday }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `dailyLimit` | integer | El límit diari d'enviament, en cèntims (`100000`). El frontend no el té escrit enlloc: el llegeix d'aquí. |
+| `remainingToday` | integer | El que encara es pot enviar avui, en cèntims: `dailyLimit` menys el que s'ha enviat avui, i mai menys de `0`. |
+
+- És una ruta protegida i no canvia res.
+- `POST /api/transfers` torna a comprovar el límit: si entremig s'ha enviat alguna cosa més, respon `TRANSFER_LIMIT_EXCEEDED` igualment.
+- A les 00:00 de Madrid torna a ser `remainingToday: 100000`.
+
+```json
+{
+  "dailyLimit": 100000,
+  "remainingToday": 98000
+}
+```
+
+L'exemple és el de l'usuari 1 després de l'enviament de 13.4.
+
 ### 13.6 Efecte sobre altres rutes
 
 Després d'un enviament:
@@ -2129,7 +2156,7 @@ Textos de les pantalles de US-13 i US-14, en vermell:
 | `VALIDATION_ERROR` | «Les dades no són vàlides. Revisa-les i torna-ho a provar.» (ja existeix) |
 | `RECIPIENT_NOT_FOUND` | «No hem trobat aquest destinatari.» (nou) |
 | `SELF_TRANSFER` | «No et pots enviar diners a tu mateix.» (nou) |
-| `INSUFFICIENT_BALANCE` | «No tens prou saldo.» (a «Enviar»; a l'aportació continua sent el text de [9.7](#97-errors)) |
+| `INSUFFICIENT_BALANCE` | «No tens prou saldo.» El mateix text a totes les pantalles, perquè el frontend tria el text pel `code` (P85). |
 | `TRANSFER_LIMIT_EXCEEDED` | «Has superat el límit diari de 1.000,00 €. Avui encara pots enviar X €.», amb `details.remainingToday` (nou) |
 
 ### 13.9 Model intern
