@@ -8,7 +8,7 @@ duplicat és feina del servei.
 from datetime import datetime
 
 from app.data.seed import SeedData
-from app.models import USER_STATUSES, User
+from app.models import STATUS_ACTIVE, USER_STATUSES, User
 
 
 class UserRepository:
@@ -40,11 +40,15 @@ class UserRepository:
         identifier_type: str,
         password_hash: str,
         status: str,
+        username: str = "",
+        phone: str | None = None,
     ) -> User:
         """Crea un usuari amb un id nou i el retorna.
 
         L'id surt del comptador del seed, així que no es repeteix ni després
         d'esborrar dades. Els camps els valida el model (`User.__post_init__`).
+        Que l'`username` sigui únic ho comprova el servei abans (`is_username_taken`);
+        buit vol dir que es mostra com a `usuari<id>`.
         """
         user = User(
             id=self._seed.next_user_id,
@@ -53,10 +57,20 @@ class UserRepository:
             identifier_type=identifier_type,
             password_hash=password_hash,
             status=status,
+            username=username,
+            phone=phone,
         )
         self._seed.users[user.id] = user
         self._seed.next_user_id += 1
         return user
+
+    def list_active(self) -> list[User]:
+        """Usuaris actius, en ordre d'id (T13.2). Els pendents no poden rebre diners."""
+        return [user for _, user in sorted(self._seed.users.items()) if user.status == STATUS_ACTIVE]
+
+    def is_username_taken(self, username: str) -> bool:
+        """Si algun usuari ja té aquest `@usuari`, també els d'abans de la T13.2 (`usuari<id>`)."""
+        return any(user.visible_username == username for user in self._seed.users.values())
 
     def set_status(self, user_id: int, status: str) -> None:
         """Canvia l'estat del compte (p. ex. `pending` → `active` en verificar, T02.1).
