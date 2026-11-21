@@ -2410,7 +2410,7 @@ Textos de les pantalles de US-15, en vermell:
 | `INVALID_CONCEPT` | «El concepte ha de tenir entre 1 i 140 caràcters.» (nou; la pantalla ja no deixa enviar-lo) |
 | `REQUEST_NOT_FOUND` | «Aquesta sol·licitud ja no existeix.» (nou) |
 | `REQUEST_NOT_PENDING` | «Només es poden cancel·lar les sol·licituds pendents.» (nou) |
-| `AMOUNT_OVER_LIMIT` | «L'import màxim és de 1.000.000,00 €.» (a «Demanar diners»; a la recàrrega continua sent el de [4.3](#43-post-apitopups)) |
+| `AMOUNT_OVER_LIMIT` | «L'import màxim és d'1.000.000,00 €.» (a «Demanar diners»; a la recàrrega continua sent el de [4.3](#43-post-apitopups)) |
 
 Un error deixa el destinatari, l'import i el concepte escrits.
 
