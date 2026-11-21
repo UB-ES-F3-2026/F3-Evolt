@@ -519,6 +519,8 @@ Surt un tic verd amb "Has retirat X € de <nom>"
 A l'historial de la guardiola surt la retirada en vermell amb "−" i el concepte "Retirada"
 Si el servidor falla, surt el missatge d'error en vermell i cap dels dos saldos canvia
 Si la guardiola té 0,00 €, el botó "Retirar" surt desactivat (gris clar)
+En tocar "Cancel·lar" a "Retirar de <nom de la guardiola>" s'obre la pantalla "Retirada cancel·lada" amb el text "No s'ha retirat res i cap dels dos saldos canvia." i els dos saldos sense canvi ("Saldo disponible: X € · <nom>: Y €"), sense mostrar l'import escrit
+En tocar "Tornar a la guardiola" es torna al detall sense esperar; si no, la pantalla de retirada cancel·lada hi torna sola al cap d'1,5 s
 ```
 
 ---
