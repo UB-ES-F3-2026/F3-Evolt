@@ -1,7 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { onSessionEnded, touchSession } from '@/services/session'
+import AddCurrencyView from '@/views/AddCurrencyView.vue'
 import ContributeView from '@/views/ContributeView.vue'
 import CreatePotView from '@/views/CreatePotView.vue'
+import CurrenciesView from '@/views/CurrenciesView.vue'
+import ExchangeSummaryView from '@/views/ExchangeSummaryView.vue'
+import ExchangeView from '@/views/ExchangeView.vue'
 import ForgotPasswordView from '@/views/ForgotPasswordView.vue'
 import HomeView from '@/views/HomeView.vue'
 import LoginView from '@/views/LoginView.vue'
@@ -25,10 +29,14 @@ const router = createRouter({
     { path: '/movements/:movementId', name: 'movement', component: MovementDetailView, props: true },
     { path: '/movements/:movementId/report', name: 'report-movement', component: ReportProblemView, props: true },
     { path: '/topup', name: 'topup', component: TopUpView },
+    { path: '/canviar', name: 'exchange', component: ExchangeView },
+    { path: '/canviar/resum', name: 'exchange-summary', component: ExchangeSummaryView },
     { path: '/pots', name: 'pots', component: PotsView },
     { path: '/pots/new', name: 'create-pot', component: CreatePotView },
     { path: '/pots/:potId', name: 'pot', component: PotView, props: true },
     { path: '/pots/:potId/contribute', name: 'contribute', component: ContributeView, props: true },
+    { path: '/divises', name: 'currencies', component: CurrenciesView },
+    { path: '/divises/afegir', name: 'add-currency', component: AddCurrencyView },
     { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
     { path: '/register', name: 'register', component: RegisterView, meta: { public: true } },
     { path: '/verify', name: 'verify', component: VerifyView, meta: { public: true } },

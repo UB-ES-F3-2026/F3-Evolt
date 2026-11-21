@@ -11,6 +11,8 @@ const API_ERROR_CODES = [
   'INVALID_POT_NAME',
   'INVALID_TARGET',
   'INSUFFICIENT_BALANCE',
+  'AMOUNT_TOO_SMALL',
+  'SAME_CURRENCY',
   'POT_NOT_FOUND',
   'MOVEMENT_NOT_FOUND',
   'INVALID_DESCRIPTION',
@@ -28,6 +30,10 @@ const API_ERROR_CODES = [
   'UNAUTHENTICATED',
   'SESSION_EXPIRED',
   'RESET_LINK_EXPIRED',
+  // Multidivisa codes in use so far (docs/api.md §12, US-25/26/27).
+  'CURRENCY_EXISTS',
+  'CURRENCY_NOT_SUPPORTED',
+  'SUBACCOUNT_NOT_FOUND',
 ] as const
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number]
