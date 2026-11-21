@@ -43,11 +43,13 @@ export function eurosFromMinor(minor: number, rateBps: number): number {
   return halfUpDiv(minor * rateBps, 10000)
 }
 
-/** One currency sub-account of the main account. */
+/** One currency sub-account of the main account (§12.2). */
 export interface Subaccount {
   id: string
   code: CurrencyCode
   balance: number
+  isMain: boolean
+  rateBps: number
 }
 
 /** A subaccount as the API sends it, before `currency` is checked. */
@@ -55,11 +57,20 @@ export interface SubaccountJson {
   id: string
   currency: string
   balance: number
+  isMain: boolean
+  rateBps: number
 }
 
-/** GET /api/subaccounts (docs/api.md). */
+/** GET /api/subaccounts (§12.3): the rows plus the server-computed approximate total. */
 export interface SubaccountsJson {
   items: SubaccountJson[]
+  totalInEuros: number
+}
+
+/** A mapped §12.3 list, ready for the ViewModels: rows and the server's `totalInEuros`. */
+export interface SubaccountList {
+  items: Subaccount[]
+  totalInEuros: number
 }
 
 /** Maps one row; unknown currency codes are an API contract break, so it throws. */
@@ -67,17 +78,30 @@ export function fromApiSubaccount(json: SubaccountJson): Subaccount {
   if (!isCurrencyCode(json.currency)) {
     throw new Error(`Unknown currency code: ${json.currency}`)
   }
-  return { id: json.id, code: json.currency, balance: json.balance }
-}
-
-/** Maps the list, dropping rows whose currency is not a known code. */
-export function fromApiSubaccounts(list: SubaccountJson[] | null | undefined): Subaccount[] {
-  return (list ?? []).filter((json) => isCurrencyCode(json.currency)).map(fromApiSubaccount)
+  if (typeof json.isMain !== 'boolean') {
+    throw new Error(`Invalid subaccount isMain: expected boolean, got ${typeof json.isMain}`)
+  }
+  if (!Number.isSafeInteger(json.rateBps)) {
+    throw new Error(`Invalid subaccount rateBps: expected safe integer, got ${json.rateBps}`)
+  }
+  return { id: json.id, code: json.currency, balance: json.balance, isMain: json.isMain, rateBps: json.rateBps }
 }
 
 /**
- * The total of every subaccount in euro cents: each row is converted and rounded
- * on its own, and only then summed — never the other way around.
+ * Maps the list, dropping rows whose currency is not a known code. `totalInEuros`
+ * passes through untouched: the server computes it (§12.1), no screen recomputes it.
+ */
+export function fromApiSubaccountsList(json: SubaccountsJson | null | undefined): SubaccountList {
+  if (json === null || json === undefined) return { items: [], totalInEuros: 0 }
+  // A payload without `items` degrades to the empty list, like null/undefined above.
+  const rows = Array.isArray(json.items) ? json.items : []
+  const items = rows.filter((row) => isCurrencyCode(row.currency)).map(fromApiSubaccount)
+  return { items, totalInEuros: json.totalInEuros }
+}
+
+/**
+ * The server's approximate-total algorithm (§12.1), used by the mock: every row
+ * is converted to euro cents and rounded on its own, and only then summed.
  */
 export function totalInEurosMinor(subaccounts: readonly { code: CurrencyCode; balance: number }[]): number {
   return subaccounts.reduce((total, subaccount) => {

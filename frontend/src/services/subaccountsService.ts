@@ -1,34 +1,35 @@
-/** /api/subaccounts and /api/currencies — currency sub-accounts (US-25/US-27). One function per endpoint. */
+/**
+ * `/api/subaccounts` — currency sub-accounts (§12, US-25/US-26). One function per
+ * endpoint.
+ *
+ * The mock speaks app shapes (`SubaccountList` / `Subaccount`) and the API speaks
+ * wire shapes (`SubaccountsJson` / `SubaccountJson`), so only the API path maps:
+ * running `fromApiSubaccountsList` over a mock response would find no `currency`
+ * field and silently drop every row.
+ */
 
 import { apiGet, apiPost } from './apiClient'
 import { useMocks } from '@/mocks'
 import { mockAddSubaccount, mockSubaccounts } from '@/mocks/currencies'
 import {
   fromApiSubaccount,
-  fromApiSubaccounts,
+  fromApiSubaccountsList,
   type CurrencyCode,
   type Subaccount,
   type SubaccountJson,
+  type SubaccountList,
   type SubaccountsJson,
 } from '@/models/currency'
 
-// TODO(a crear): GET /api/currencies — issue #166. Returns the owned sub-accounts
-// (code, balance, isMain). Rates are NOT fetched: the rate table is a client constant
-// (models/currency.ts). Nothing calls it yet.
-
-// TODO(a crear): GET /api/subaccounts — issue #166
-export async function getSubaccounts(): Promise<Subaccount[]> {
-  const json = useMocks() ? mockSubaccounts() : await apiGet<SubaccountsJson>('/api/subaccounts')
-  return fromApiSubaccounts(json.items)
+/** GET /api/subaccounts (§12.3): the rows plus the server-computed approximate total. */
+export async function getSubaccounts(): Promise<SubaccountList> {
+  if (useMocks()) return mockSubaccounts()
+  return fromApiSubaccountsList(await apiGet<SubaccountsJson>('/api/subaccounts'))
 }
 
-// TODO(a crear): POST /api/subaccounts — issue #166/#167
+/** POST /api/subaccounts (§12.4): a new currency sub-account, with `balance: 0`. */
 export async function addSubaccount(code: CurrencyCode): Promise<Subaccount> {
-  const json = useMocks()
+  return useMocks()
     ? mockAddSubaccount({ currency: code })
-    : await apiPost<SubaccountJson>('/api/subaccounts', { currency: code })
-  return fromApiSubaccount(json)
+    : fromApiSubaccount(await apiPost<SubaccountJson>('/api/subaccounts', { currency: code }))
 }
-
-// TODO(a crear): POST /api/subaccounts/{id}/topups — issue #166. Future endpoint:
-// top up one sub-account (documented; no caller yet).

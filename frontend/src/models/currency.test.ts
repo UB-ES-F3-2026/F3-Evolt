@@ -3,7 +3,7 @@ import {
   CURRENCIES,
   eurosFromMinor,
   fromApiSubaccount,
-  fromApiSubaccounts,
+  fromApiSubaccountsList,
   isCurrencyCode,
   totalInEurosMinor,
 } from './currency'
@@ -86,26 +86,79 @@ describe('the closed list of currencies', () => {
   })
 })
 
-describe('fromApiSubaccounts', () => {
+describe('fromApiSubaccountsList', () => {
   it('maps known rows and drops unknown currencies', () => {
     expect(
-      fromApiSubaccounts([
-        { id: '1', currency: 'USD', balance: 31755 },
-        { id: '2', currency: 'AUD', balance: 100 },
-        { id: '3', currency: 'JPY', balance: 1234 },
-      ]),
+      fromApiSubaccountsList({
+        items: [
+          { id: '1', currency: 'USD', balance: 31755, isMain: false, rateBps: 9123 },
+          { id: '2', currency: 'AUD', balance: 100, isMain: false, rateBps: 10000 },
+          { id: '3', currency: 'JPY', balance: 1234, isMain: false, rateBps: 5700 },
+        ],
+        totalInEuros: 154020,
+      }),
+    ).toEqual({
+      items: [
+        { id: '1', code: 'USD', balance: 31755, isMain: false, rateBps: 9123 },
+        { id: '3', code: 'JPY', balance: 1234, isMain: false, rateBps: 5700 },
+      ],
+      totalInEuros: 154020,
+    })
+  })
+
+  it('maps isMain and rateBps onto every row (§12.2)', () => {
+    expect(
+      fromApiSubaccountsList({
+        items: [
+          { id: 'main', currency: 'EUR', balance: 125050, isMain: true, rateBps: 10000 },
+          { id: 'sub-01', currency: 'USD', balance: 31755, isMain: false, rateBps: 9123 },
+        ],
+        totalInEuros: 154020,
+      }).items,
     ).toEqual([
-      { id: '1', code: 'USD', balance: 31755 },
-      { id: '3', code: 'JPY', balance: 1234 },
+      { id: 'main', code: 'EUR', balance: 125050, isMain: true, rateBps: 10000 },
+      { id: 'sub-01', code: 'USD', balance: 31755, isMain: false, rateBps: 9123 },
     ])
   })
 
-  it('treats a missing list as empty', () => {
-    expect(fromApiSubaccounts(null)).toEqual([])
-    expect(fromApiSubaccounts(undefined)).toEqual([])
+  it('passes totalInEuros through untouched: the server computes it (§12.3)', () => {
+    // Even a total that does not match the rows goes through: no screen recomputes it.
+    expect(fromApiSubaccountsList({ items: [], totalInEuros: 154020 }).totalInEuros).toBe(154020)
+    expect(
+      fromApiSubaccountsList({
+        items: [{ id: 'main', currency: 'EUR', balance: 125050, isMain: true, rateBps: 10000 }],
+        totalInEuros: 999999,
+      }).totalInEuros,
+    ).toBe(999999)
   })
 
+  it('treats a missing list as an empty one', () => {
+    expect(fromApiSubaccountsList(null)).toEqual({ items: [], totalInEuros: 0 })
+    expect(fromApiSubaccountsList(undefined)).toEqual({ items: [], totalInEuros: 0 })
+  })
+
+  it('throws on a row whose isMain is not a boolean', () => {
+    const bad = {
+      id: 'main',
+      currency: 'EUR',
+      balance: 125050,
+      isMain: 'true',
+      rateBps: 10000,
+    } as unknown as Parameters<typeof fromApiSubaccount>[0]
+    expect(() => fromApiSubaccount(bad)).toThrow(/isMain/)
+  })
+
+  it('throws on a row whose rateBps is not a safe integer', () => {
+    // 91.23 is a valid `number` in TS: only the runtime guard catches it.
+    const bad = { id: 'sub-01', currency: 'USD', balance: 31755, isMain: false, rateBps: 91.23 }
+    expect(() => fromApiSubaccount(bad)).toThrow(/rateBps/)
+  })
+})
+
+describe('fromApiSubaccount', () => {
   it('throws on a single row with an unknown currency', () => {
-    expect(() => fromApiSubaccount({ id: '1', currency: 'AUD', balance: 100 })).toThrow()
+    expect(() =>
+      fromApiSubaccount({ id: '1', currency: 'AUD', balance: 100, isMain: false, rateBps: 10000 }),
+    ).toThrow()
   })
 })
