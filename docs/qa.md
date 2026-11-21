@@ -102,6 +102,42 @@ local (abans del commit)  →  CI a cada PR i push (develop, main, story/**)  �
 
 Les 19 rutes de `develop` (17 de l'app i 2 de desenvolupament: `POST /api/dev/reset` i `GET /api/dev/outbox`) tenen tests de contracte (èxit, cada codi d'error de `docs/api.md` i `401`): **100 %**.
 
+### 4.3 Proves puntuals de Q4 (21/11/2026, `develop` a `0e31a4c`)
+
+Tres proves que encara no són al CI (§8). S'han fet una vegada a mà perquè el pla tingui dades reals.
+
+**Dependències** (`pip-audit` i `npm audit`):
+
+| Part | Resultat | Què fem |
+|---|---|---|
+| Backend (`requirements.txt`) | 0 vulnerabilitats conegudes | — |
+| Frontend, dependències de producció (`npm audit --omit=dev`) | 0 | — |
+| Frontend, dependències de desenvolupament | 19 (2 crítiques, 17 moderades), totes d'eines: `vitest` (via `tinypool`), `vite`, `eslint`, `typescript-eslint`, `vue-tsc`, `@vue/test-utils` | No arriben a l'app publicada (el build no les inclou). `npm audit fix` sense canvis de versió major n'arregla 9; les altres 10 demanen `vitest` 5 i `vue-tsc` 3. No es toquen abans de la demo |
+
+**Testing de mutació** (`mutmut` 3 sobre `topup_service.py`, `identifier.py` i `password_policy.py`, amb tots els tests del backend):
+
+| | Mutants | Morts | Vius | Puntuació |
+|---|---|---|---|---|
+| Abans | 140 | 126 | 14 | 90 % |
+| Amb els 2 tests nous | 140 | 128 | 12 | 91 % (**100 %** dels no equivalents) |
+
+Els 12 que queden vius són **equivalents** (cap test no els pot matar perquè no canvien el que veu ningú): 8 canvien el text d'`InvalidIdentifier`, que els serveis capturen i substitueixen pel seu; 1 canvia `partition` per `rpartition`, que dona el mateix perquè abans es comprova que només hi ha una `@`; 1 canvia el text intern d'un `LookupError`; 2 canvien el separador de milers de `_format_euros`, que en aquest missatge no pot sortir mai (com a màxim queden 500 €, perquè una recàrrega no passa de 500 €).
+
+Els 2 vius que **sí** eren buits dels tests (§6):
+- canviar `astimezone(MADRID_TZ)` per la zona del servidor: cap test no provava el canvi de dia a mitjanit de Madrid, i el servidor (Render, CI) va en UTC;
+- canviar `domain[1:-1]` per `domain[1:-2]`: cap test no provava un domini amb un sol caràcter després del punt (`ana@x.c`).
+
+**Accessibilitat** (axe-core 4 amb Playwright, regles WCAG 2.1 A i AA, 11 pantalles amb el backend real i el login `demo@evolt.test`):
+
+| Resultat | Detall |
+|---|---|
+| Només 1 tipus d'error: `color-contrast` | 58 elements a 10 de les 11 pantalles (`/pots` en té 0) |
+| `--color-muted: #6c7a96` sobre blanc = **4,31:1** (cal 4,5:1) | 54 elements: etiquetes, dates, textos d'ajuda |
+| `--color-income: #16a34a` sobre blanc = **3,29:1** | 4 elements: imports positius |
+| Amb `#64728c` (4,85:1) i `#15803d` (5,02:1) a `style.css` | **0 errors** a les 11 pantalles (provat en local i desfet) |
+
+La resta de regles (etiquetes dels camps, noms dels botons, `lang`, rols ARIA) passen a totes les pantalles. El canvi de colors el decideix el PO, perquè canvia els mockups.
+
 ## 5. Traçabilitat AC → prova (Sprint 2)
 
 Font dels AC: les targetes del Trello (checklist «Acceptance Criteria»). Estat a 21/11.
@@ -159,8 +195,10 @@ Els tres defectes que va trobar la prova del 19/11 (l'error sobre el botó, la c
 | 2 | Els usuaris registrats amb telèfon abans de la T13.2 no tenen el camp `phone` i la cerca per telèfon no els troba | Revisió (QA) | #197 |
 | 2 | `AMOUNT_TOO_SMALL` no quadra amb l'arrodoniment de l'import rebut: 0,01 $ a euros dona error, però l'arrodoniment en donaria 1 cèntim | Revisió (backend) | #193 |
 | 2 | Dues PR treuen la mateixa funció `format_euros()` a dos mòduls diferents (`money_text.py` i `money_format.py`): la regla quedaria duplicada | Revisió (QA) | #199, #201 |
+| 2 | Dos buits dels tests de l'Sprint 1: el canvi de dia del límit de recàrrega a mitjanit de Madrid i el límit `ana@x.c` del domini (el codi és correcte, però cap test no ho comprovava) | **Testing de mutació** (QA, §4.3) | Tests nous a `test_topup_daily_limit.py` i `test_identifier.py` |
+| 2 | El text secundari (`#6c7a96`, 4,31:1) i els imports positius (`#16a34a`, 3,29:1) no arriben al contrast mínim de WCAG AA (4,5:1): 58 elements a 10 pantalles | **axe** (QA, §4.3) | `style.css` (proposta al PO) |
 
-**Recompte:** 20 defectes. 4 els va trobar una prova (tests, script o navegador), 14 la revisió, 1 totes dues i 1 el desplegament. Cap defecte de codi no ha arribat a `develop`. Tots es van trobar a la PR, menys els dos de la #178, que es van trobar a `story/us-25` perquè s'hi va fusionar sense revisió.
+**Recompte:** 22 defectes. 6 els va trobar una prova (tests, script, navegador, mutació o axe), 14 la revisió, 1 totes dues i 1 el desplegament. Cap defecte trobat a la revisió no ha arribat a `develop`. Tots es van trobar a la PR, menys els dos de la #178, que es van trobar a `story/us-25` perquè s'hi va fusionar sense revisió. Els dos de les proves puntuals del 21/11 eren a `develop` des de l'Sprint 1: les proves de cada PR no els podien veure.
 
 Com és habitual, la revisió de disseny i de codi troba més defectes que les proves unitàries. Per això la revisió és obligatòria i la revisió de QA executa els AC.
 
@@ -178,14 +216,14 @@ Com és habitual, la revisió de disseny i de codi troba més defectes que les p
 | Anàlisi dinàmica | Eina | Executant el codi | Al CI | Cobertura (§4) i tests de concurrència (els que van trobar 2 defectes del §6) |
 | Assistent d'IA | Autor amb IA | Prompts de revisió i de tests | Mentre s'escriu | Permès amb mode L0/L1/L2 a cada tasca; l'autor respon de cada línia |
 | Bot de revisió amb IA | Eina (consultiva) | Comentaris a la PR | En obrir la PR | No en fem servir com a filtre: bloquegen els tests i la persona revisora |
-| Testing de mutació | Eina + persona | Es canvia el codi i es tornen a passar els tests | Cada nit | No el tenim (§8) |
+| Testing de mutació | Eina + persona | Es canvia el codi i es tornen a passar els tests | Cada nit | Una vegada a mà el 21/11, en 3 mòduls del backend: va trobar 2 buits dels tests (§4.3). Encara no és al CI (§8) |
 
 ### 7.2 Quadrants del testing àgil
 
 | | Guien el desenvolupament | Critiquen el producte |
 |---|---|---|
 | **Negoci** | **Q2:** proves d'acceptació de `docs/proves-*.md` (una fila per AC, amb ID) i la taula AC → prova del §5 | **Q3:** la revisió de QA al navegador de cada història (§5.1) i la demo amb el PO, que accepta la història |
-| **Tecnologia** | **Q1:** tests unitaris i de contracte de l'API (pytest) i de ViewModels (Vitest), a cada commit | **Q4:** seguretat (llista del §2 i CodeQL), concurrència i regles de Firestore. Falten rendiment, accessibilitat automàtica i auditoria de dependències (§8) |
+| **Tecnologia** | **Q1:** tests unitaris i de contracte de l'API (pytest) i de ViewModels (Vitest), a cada commit | **Q4:** seguretat (llista del §2 i CodeQL), concurrència i regles de Firestore. Accessibilitat (axe) i auditoria de dependències fetes una vegada a mà (§4.3). Falten rendiment i que corrin soles (§8) |
 
 ### 7.3 Què corre a cada punt del pipeline
 
@@ -223,7 +261,7 @@ Amb assistents d'IA hi ha tres riscos nous: menys comprensió del codi generat, 
 | «La IA ja ho ha mirat» | Cap PR es fusiona sense l'aprovació d'una persona que no l'ha escrita |
 | Filtració de dades | Cap secret ni dada real al repositori ni als prompts; la clau del compte de servei de Firestore només és a Render |
 
-**Cobertura no és qualitat.** Per això a més de la cobertura mirem quins defectes han trobat els tests (§6) i proposem el testing de mutació (§8).
+**Cobertura no és qualitat.** Per això a més de la cobertura mirem quins defectes han trobat els tests (§6) i hem provat el testing de mutació (§4.3): amb un 95 % de cobertura del backend (sense Firestore), encara hi havia 2 casos que cap test no comprovava.
 
 ## 8. Què no fem encara, i el pla
 
@@ -232,9 +270,9 @@ Amb assistents d'IA hi ha tres riscos nous: menys comprensió del codi generat, 
 | Firestore no corre al CI | Cal l'emulador (Java) al runner | Job `backend-firestore` amb l'emulador: QA el defineix, DevOps el connecta. Puja la cobertura del backend (les 455 línies sense cobrir són sobretot de Firestore) |
 | Les vistes no tenen tests (0 %) | Es proven millor en un navegador real | E2E amb Playwright del flux principal (login → Inici → guardiola: aportar i retirar) contra els mocks, al CI |
 | Preproducció | No hi ha encara un segon entorn | `develop` desplegat com a preproducció (DevOps, skill `ci-cd`) |
-| Auditoria de dependències (Q4) | SAST ja hi és (CodeQL), però no es miren les vulnerabilitats conegudes de les dependències | `npm audit` i `pip-audit` al CI, informatius |
-| Testing de mutació | La cobertura no diu si els tests detecten errors | Provar `mutmut` en un servei del backend (p. ex. les recàrregues) i donar el % de mutants morts |
-| Accessibilitat automàtica (Q4) | Els tests miren `aria-*` a mà | axe o Lighthouse amb l'E2E |
+| Auditoria de dependències (Q4) | Feta una vegada (§4.3): 0 a producció, 19 a les eines de desenvolupament | `npm audit --omit=dev` i `pip-audit` al CI, informatius; `npm audit fix` (9 de 19) després de la demo; `vitest` 5 i `vue-tsc` 3 a l'Sprint 3 |
+| Testing de mutació | Fet una vegada en 3 mòduls (§4.3): 91 %, 100 % dels no equivalents | Passar-lo als serveis nous de l'Sprint 2 (guardioles, enviaments, divises), on hi ha més càlculs d'imports; al CI, cada nit, perquè triga minuts |
+| Accessibilitat automàtica (Q4) | Feta una vegada (§4.3): només falla el contrast de 2 colors | Canviar els 2 colors si el PO ho accepta, i axe dins de l'E2E perquè no torni a passar |
 
 ## 9. Com reproduir les xifres
 
@@ -255,6 +293,20 @@ pip install pytest-cov
 firebase emulators:start --only firestore          # terminal 1, i deixar-lo engegat
 (cd backend && FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 TEST_STORAGE=firestore python -m pytest tests/ -q)   # terminal 2
 # Sense FIRESTORE_EMULATOR_HOST, test_firestore.py s'omet i els tests no van a l'emulador.
+
+# dependències (§4.3)
+pip install pip-audit && pip-audit -r backend/requirements.txt
+(cd frontend && npm audit --omit=dev && npm audit)
+
+# mutació (§4.3), en una còpia de backend/ per no deixar-hi la carpeta mutants/
+pip install mutmut
+# a la còpia, afegir a pyproject.toml:
+#   [tool.mutmut]
+#   source_paths = ["app/"]
+#   only_mutate = ["app/services/topup_service.py", "app/services/identifier.py", "app/services/password_policy.py"]
+TZ=UTC mutmut run && mutmut results    # TZ=UTC: com el CI i Render
 ```
+
+L'accessibilitat es prova amb `@axe-core/playwright` (regles `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`) sobre el frontend i el backend engegats en local; encara no hi ha script al repositori, perquè anirà amb l'E2E (§8).
 
 PowerShell (Windows), per a l'emulador: `$env:FIRESTORE_EMULATOR_HOST="127.0.0.1:8080"; $env:TEST_STORAGE="firestore"; python -m pytest tests/ -q`, a la mateixa terminal i amb l'emulador engegat en una altra.
