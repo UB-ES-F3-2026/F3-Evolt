@@ -24,19 +24,19 @@
 |---|---|---|---|---|
 | **FRONTEND** | Martí (PO) + Izan | Totes les pantalles (29 de les 31 h FE; T26.2 → QA) + T14.4 | 14 + 15 = **29** | ≤30 ✔ |
 | **BACKEND** | Alicia + Junhao | Contractes E i backend (29 de les 33 h BE; T19.1/T14.2 → DevOps, T26.1 → QA) | 15 + 14 = **29** | ≤30 ✔ |
-| **QA** | Huabin | 8 revisions R (L0) + T26.1 + T26.2 | **14** | ≤15 ✔ |
-| **DEVOPS** | Jiajun | TR06.3 + T19.1 + T14.2 | **4** | ≤15 ✔ (infrapassat, fallback) |
+| **QA** | Huabin | 6 revisions R (L0) + T26.1 + T26.2 (Huabin revisa també T20.3 amb Jiajun, que en porta l'hora) | **12** | ≤15 ✔ |
+| **DEVOPS** | Jiajun | TR06.3 + T19.1 + T14.2 + T20.3 + T26.3 | **6** | ≤15 ✔ |
 | **Total** | 6 | 31 tasques | **76** | 90 disponibles ✔ |
 
-**Hores per persona (≤15 h):** Martí **14** · Izan **15** · Alicia **15** · Junhao **14** · Huabin **14** · Jiajun **4** = **76** ✔
+**Hores per persona (≤15 h):** Martí **14** · Izan **15** · Alicia **15** · Junhao **14** · Huabin **12** · Jiajun **6** = **76** ✔
 
 ## 3. Blocs com a etiqueta (ritual de revisió creuada, L0)
 
 | Bloc (etiqueta) | Històries | Punts | Hores | Hores disp. | Revisió creuada (assignats de les R) |
 |---|---|---|---|---|---|
-| **Estalvi** | US-19, US-20, US-15 | 9 | 25 | 30 | Huabin (QA) + **Martí** (FE amb menys feina al bloc: 4 h vs 7 h d'Izan) |
+| **Estalvi** | US-19, US-20, US-15 | 9 | 25 | 30 | Huabin (QA) + **Martí** (FE amb menys feina al bloc: 4 h vs 7 h d'Izan; T20.3 R va a Jiajun) |
 | **Pagaments** | US-13, US-14 | 7 | 24 | 30 | Huabin (QA) + **Martí** (Izan hi ha fet les pantalles; Martí només la integració) |
-| **Multidivisa** | US-25, US-26, US-27 | 11 | 26 | 30 | Huabin (QA) + **Izan** (no ha construït res del bloc) |
+| **Multidivisa** | US-25, US-26, US-27 | 11 | 26 | 30 | Huabin (QA) + **Izan** (no ha construït res del bloc; T26.3 R va a Jiajun, T25.4 i T27.3 segueixen sent de Huabin + Izan) |
 | Pendent S1 | TR06.3 | — | 1 | — | — |
 | **Total** | 8 històries | 27 | **76** | **90** | cap >15 h/persona ✔ |
 
@@ -52,7 +52,7 @@
 | T19.4 | Revisar US-19 | Estalvi | **R · L0** | 1 | — | **Huabin + Martí** |
 | T20.1 | Percentatge i «Objectiu assolit» (backend) | Estalvi | G | 2 | Junhao (BE) | — |
 | T20.2 | Barra de progrés (detall + llista) | Estalvi | G | 4 | Martí (FE) | — |
-| T20.3 | Revisar US-20 | Estalvi | **R · L0** | 1 | — | **Huabin + Martí** |
+| T20.3 | Revisar US-20 | Estalvi | **R · L0** | 1 | — | **Huabin + Jiajun** |
 | T15.1 | Contracte de sol·licituds + proves | Estalvi | E | 1 | Junhao (BE) | — |
 | T15.2 | Sol·licituds amb estats i caducitat (backend) | Estalvi | G | 3 | Junhao (BE) | — |
 | T15.3 | Pantalles «Demanar diners» i «Sol·licituds enviades» | Estalvi | G | 4 | Izan (FE) | — |
@@ -72,13 +72,13 @@
 | T25.4 | Revisar US-25 | Multidivisa | **R · L0** | 2 | — | **Huabin + Izan** |
 | T26.1 | Eliminar subcompte només amb saldo 0 (backend) | Multidivisa | G | 1 | Huabin (QA, amb tests) | — |
 | T26.2 | Botó «Eliminar subcompte» amb 2 confirmacions (UI) | Multidivisa | G | 2 | Huabin (QA: escriu els diàlegs i els testa) | — |
-| T26.3 | Revisar US-26 | Multidivisa | **R · L0** | 1 | — | **Huabin + Izan** |
+| T26.3 | Revisar US-26 | Multidivisa | **R · L0** | 1 | — | **Jiajun + Izan** |
 | T27.1 | Canvi atòmic amb tipus i comissió (backend) | Multidivisa | G | 4 | Alicia (BE) | — |
 | T27.2 | Pantalles «Canviar» i resum | Multidivisa | G | 4 | Martí (FE) | — |
 | T27.3 | Revisar US-27 | Multidivisa | **R · L0** | 2 | — | **Huabin + Izan** |
 | TR06.3 | Auto-desplegament de main i prova (#144) | — | I | 1 | Jiajun (DevOps) | — |
 
-**Totals:** Martí 14 (T20.2+T25.3+T27.2+T14.4) · Izan 15 (T19.3+T15.3+T13.3+T14.3) · Junhao 14 (T19.2+T20.1+T15.2+T13.2+T13.1+T15.1) · Alicia 15 (T14.1+T25.1+T25.2+T27.1) · Huabin 14 (11 R + T26.1 + T26.2) · Jiajun 4 (TR06.3+T19.1+T14.2) = **76** ✔ (cap >15).
+**Totals:** Martí 14 (T20.2+T25.3+T27.2+T14.4) · Izan 15 (T19.3+T15.3+T13.3+T14.3) · Junhao 14 (T19.2+T20.1+T15.2+T13.2+T13.1+T15.1) · Alicia 15 (T14.1+T25.1+T25.2+T27.1) · Huabin 12 (9 R + T26.1 + T26.2) · Jiajun 6 (TR06.3+T19.1+T14.2+T20.3+T26.3) = **76** ✔ (cap >15).
 
 ## 5. Repartiment FrontEnd per fitxers (evitar conflictes)
 
@@ -120,13 +120,13 @@
 
 **A ratificar al Sprint Planning:** parelles per rol (FE/BE/QA/DevOps); qui és **Scrum Master** (probablement Izan); valors de les 3 decisions del PO; hores de cerimònies; modes L0/L1/L2 (no definits al repo).
 
-**Desviacions forçades (documentades):** 1) **T26.2 → Huabin**: FE a 14/15 h, sense marge per a 2 h més (Huabin ja fa el flux d'esborrat). 2) **T19.1 → Jiajun**: és `docs/api.md` + test-spec, no codi d'aplicació. 3) **T14.2 → Jiajun** (plumbing) i **T26.1 → Huabin** (tests): allibera 3 h del backend perquè cap BE passi de 15 h. 4) **Jiajun a 4 h** (molt infrapassat) → suport CI/CD on-call i **fallback del parell BACKEND**.
+**Desviacions forçades (documentades):** 1) **T26.2 → Huabin**: FE a 14/15 h, sense marge per a 2 h més (Huabin ja fa el flux d'esborrat). 2) **T19.1 → Jiajun**: és `docs/api.md` + test-spec, no codi d'aplicació. 3) **T14.2 → Jiajun** (plumbing) i **T26.1 → Huabin** (tests): allibera 3 h del backend perquè cap BE passi de 15 h. 4) **Jiajun a 6 h** → suport CI/CD on-call i **fallback del parell BACKEND**.
 
 **Plans de suport:**
-- **QA (Huabin, 14 h):** proves dels 4 contractes (amb els autors) → proves de l'esborrat (T26.1) → diàlegs de confirmació (T26.2) → execució de l'acceptació al navegador de les 8 R en ordre de camí crític (Estalvi → Pagaments → Multidivisa) abans que el PO accepti.
-- **DevOps (Jiajun, 4 h + on-call):** TR06.3 auto-desplegament de main i `/api/health`; T19.1 (contracte US-19/20); T14.2 notificacions; CI/merge de les PR de contracte i verificació a Render.
+- **QA (Huabin, 12 h):** proves dels 4 contractes (amb els autors) → proves de l'esborrat (T26.1) → diàlegs de confirmació (T26.2) → execució de l'acceptació al navegador de les 6 R en ordre de camí crític (Estalvi → Pagaments → Multidivisa) abans que el PO accepti.
+- **DevOps (Jiajun, 6 h + on-call):** TR06.3 auto-desplegament de main i `/api/health`; T19.1 (contracte US-19/20); T14.2 notificacions; revisions R T20.3 (US-20) i T26.3 (US-26); CI/merge de les PR de contracte i verificació a Render.
 
-**Si cau algú:** primer **es retorna la US-15 (9 h) al pendent** (buffer del PDF); després absorbeix el **fallback** nominat dins de 15 h: **FRONTEND → Jiajun** (11 h de marge) · **BACKEND → Jiajun** · **QA → Junhao** · **DEVOPS → Alicia**. Dues baixes → replanificació amb el PO.
+**Si cau algú:** primer **es retorna la US-15 (9 h) al pendent** (buffer del PDF); després absorbeix el **fallback** nominat dins de 15 h: **FRONTEND → Jiajun** (9 h de marge) · **BACKEND → Jiajun** · **QA → Junhao** · **DEVOPS → Alicia**. Dues baixes → replanificació amb el PO.
 
 ## 9. Mapping per aplicar després
 
@@ -137,7 +137,7 @@
 | US-19, US-20 | @YAYUUUN, @Junhaoozhang, @IzanFarreny47, @sudo-Itramplay, @123huabin123 | `<trello-id-…>` |
 | US-15 | @Junhaoozhang, @IzanFarreny47, @123huabin123, @sudo-Itramplay | `<trello-id-…>` |
 | US-13, US-14 | @Junhaoozhang, @IzanFarreny47, @Aliciaa415, @YAYUUUN, @sudo-Itramplay, @123huabin123 | `<trello-id-…>` |
-| US-25, US-26, US-27 | @Aliciaa415, @sudo-Itramplay, @123huabin123 | `<trello-id-…>` |
+| US-25, US-26, US-27 | @Aliciaa415, @sudo-Itramplay, @123huabin123, @YAYUUUN | `<trello-id-…>` |
 | TR06.3 (#144) | @YAYUUUN | `<trello-id-yayuuun>` |
 
 **GitHub Issues #146–#175** (aplicats i verificats; un assignat per tasca, dues assignacions a les R):
@@ -149,7 +149,7 @@ gh issue edit 148 --add-assignee IzanFarreny47                           # T19.3
 gh issue edit 149 --add-assignee 123huabin123 --add-assignee sudo-Itramplay   # T19.4 R
 gh issue edit 150 --add-assignee Junhaoozhang                            # T20.1
 gh issue edit 151 --add-assignee sudo-Itramplay                          # T20.2
-gh issue edit 152 --add-assignee 123huabin123 --add-assignee sudo-Itramplay   # T20.3 R
+gh issue edit 152 --add-assignee 123huabin123 --add-assignee YAYUUUN         # T20.3 R
 gh issue edit 153 --add-assignee Junhaoozhang                            # T15.1
 gh issue edit 154 --add-assignee Junhaoozhang                            # T15.2
 gh issue edit 155 --add-assignee IzanFarreny47                           # T15.3
@@ -169,7 +169,7 @@ gh issue edit 168 --add-assignee sudo-Itramplay                          # T25.3
 gh issue edit 169 --add-assignee 123huabin123 --add-assignee IzanFarreny47   # T25.4 R
 gh issue edit 170 --add-assignee 123huabin123                            # T26.1
 gh issue edit 171 --add-assignee 123huabin123                            # T26.2
-gh issue edit 172 --add-assignee 123huabin123 --add-assignee IzanFarreny47   # T26.3 R
+gh issue edit 172 --add-assignee YAYUUUN --add-assignee IzanFarreny47        # T26.3 R
 gh issue edit 173 --add-assignee Aliciaa415                              # T27.1
 gh issue edit 174 --add-assignee sudo-Itramplay                          # T27.2
 gh issue edit 175 --add-assignee 123huabin123 --add-assignee IzanFarreny47   # T27.3 R
