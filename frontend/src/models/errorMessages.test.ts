@@ -35,7 +35,8 @@ describe('toUserMessage', () => {
   it.each([
     ['CURRENCY_EXISTS', 'Ja tens un subcompte en aquesta divisa.'],
     ['CURRENCY_NOT_SUPPORTED', 'Aquesta divisa no és a la llista de divises disponibles.'],
-  ])('gives the currency code %s the text of US-25', (code, text) => {
+    ['SUBACCOUNT_NOT_FOUND', "No s'ha trobat el subcompte."],
+  ])('gives the multidivisa code %s its text of docs/api.md §12', (code, text) => {
     expect(toUserMessage({ code, message: 'x' })).toBe(text)
   })
 

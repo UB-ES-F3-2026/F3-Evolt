@@ -36,9 +36,11 @@ const MESSAGES: Record<ApiErrorCode, string> = {
   UNAUTHENTICATED: 'Cal iniciar sessió.',
   SESSION_EXPIRED: "La sessió s'ha tancat per inactivitat.",
   RESET_LINK_EXPIRED: 'Aquest enllaç ha caducat.',
-  // Provisional until the sub-accounts contract lands (issues #166/#167).
+  // Multidivisa (docs/api.md §12, US-25/US-27/T27.2).
   CURRENCY_EXISTS: 'Ja tens un subcompte en aquesta divisa.',
   CURRENCY_NOT_SUPPORTED: 'Aquesta divisa no és a la llista de divises disponibles.',
+  // §12.10 of docs/api.md leaves this literal pending the PO (US-26 gives no text).
+  SUBACCOUNT_NOT_FOUND: "No s'ha trobat el subcompte.",
 }
 
 export function messageForCode(code: ApiErrorCode, details?: ApiError['details']): string {
