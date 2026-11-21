@@ -116,14 +116,13 @@ Tres proves que encara no són al CI (§8). S'han fet una vegada a mà perquè e
 
 **Testing de mutació** (`mutmut` 3 sobre `topup_service.py`, `identifier.py` i `password_policy.py`, amb tots els tests del backend):
 
-| | Mutants | Morts | Vius | Puntuació |
-|---|---|---|---|---|
-| Abans | 140 | 126 | 14 | 90 % |
-| Amb els 2 tests nous | 140 | 128 | 12 | 91 % (**100 %** dels no equivalents) |
+| Mutants | Morts | Vius | Puntuació |
+|---|---|---|---|
+| 140 | 126 | 14 | **90 %** (126 de 128 no equivalents, el 98 %) |
 
 Els 12 que queden vius són **equivalents** (cap test no els pot matar perquè no canvien el que veu ningú): 8 canvien el text d'`InvalidIdentifier`, que els serveis capturen i substitueixen pel seu; 1 canvia `partition` per `rpartition`, que dona el mateix perquè abans es comprova que només hi ha una `@`; 1 canvia el text intern d'un `LookupError`; 2 canvien el separador de milers de `_format_euros`, que en aquest missatge no pot sortir mai (com a màxim queden 500 €, perquè una recàrrega no passa de 500 €).
 
-Els 2 vius que **sí** eren buits dels tests (§6):
+Els 2 vius que **sí** són buits dels tests (§6). Es van provar en local dos tests que els maten (91 %, el 100 % dels no equivalents), però encara no són al repositori (§8):
 - canviar `astimezone(MADRID_TZ)` per la zona del servidor: cap test no provava el canvi de dia a mitjanit de Madrid, i el servidor (Render, CI) va en UTC;
 - canviar `domain[1:-1]` per `domain[1:-2]`: cap test no provava un domini amb un sol caràcter després del punt (`ana@x.c`).
 
@@ -195,7 +194,7 @@ Els tres defectes que va trobar la prova del 19/11 (l'error sobre el botó, la c
 | 2 | Els usuaris registrats amb telèfon abans de la T13.2 no tenen el camp `phone` i la cerca per telèfon no els troba | Revisió (QA) | #197 |
 | 2 | `AMOUNT_TOO_SMALL` no quadra amb l'arrodoniment de l'import rebut: 0,01 $ a euros dona error, però l'arrodoniment en donaria 1 cèntim | Revisió (backend) | #193 |
 | 2 | Dues PR treuen la mateixa funció `format_euros()` a dos mòduls diferents (`money_text.py` i `money_format.py`): la regla quedaria duplicada | Revisió (QA) | #199, #201 |
-| 2 | Dos buits dels tests de l'Sprint 1: el canvi de dia del límit de recàrrega a mitjanit de Madrid i el límit `ana@x.c` del domini (el codi és correcte, però cap test no ho comprovava) | **Testing de mutació** (QA, §4.3) | Tests nous a `test_topup_daily_limit.py` i `test_identifier.py` |
+| 2 | Dos buits dels tests de l'Sprint 1: el canvi de dia del límit de recàrrega a mitjanit de Madrid i el límit `ana@x.c` del domini (el codi és correcte, però cap test no ho comprovava) | **Testing de mutació** (QA, §4.3) | `test_topup_daily_limit.py`, `test_identifier.py` (pendent, §8) |
 | 2 | El text secundari (`#6c7a96`, 4,31:1) i els imports positius (`#16a34a`, 3,29:1) no arriben al contrast mínim de WCAG AA (4,5:1): 58 elements a 10 pantalles | **axe** (QA, §4.3) | `style.css` (proposta al PO) |
 
 **Recompte:** 22 defectes. 6 els va trobar una prova (tests, script, navegador, mutació o axe), 14 la revisió, 1 totes dues i 1 el desplegament. Cap defecte trobat a la revisió no ha arribat a `develop`. Tots es van trobar a la PR, menys els dos de la #178, que es van trobar a `story/us-25` perquè s'hi va fusionar sense revisió. Els dos de les proves puntuals del 21/11 eren a `develop` des de l'Sprint 1: les proves de cada PR no els podien veure.
@@ -216,7 +215,7 @@ Com és habitual, la revisió de disseny i de codi troba més defectes que les p
 | Anàlisi dinàmica | Eina | Executant el codi | Al CI | Cobertura (§4) i tests de concurrència (els que van trobar 2 defectes del §6) |
 | Assistent d'IA | Autor amb IA | Prompts de revisió i de tests | Mentre s'escriu | Permès amb mode L0/L1/L2 a cada tasca; l'autor respon de cada línia |
 | Bot de revisió amb IA | Eina (consultiva) | Comentaris a la PR | En obrir la PR | No en fem servir com a filtre: bloquegen els tests i la persona revisora |
-| Testing de mutació | Eina + persona | Es canvia el codi i es tornen a passar els tests | Cada nit | Una vegada a mà el 21/11, en 3 mòduls del backend: va trobar 2 buits dels tests (§4.3). Encara no és al CI (§8) |
+| Testing de mutació | Eina + persona | Es canvia el codi i es tornen a passar els tests | Cada nit | Una vegada a mà el 21/11, en 3 mòduls del backend: 90 %, i va trobar 2 buits dels tests (§4.3). Encara no és al CI (§8) |
 
 ### 7.2 Quadrants del testing àgil
 
@@ -271,7 +270,7 @@ Amb assistents d'IA hi ha tres riscos nous: menys comprensió del codi generat, 
 | Les vistes no tenen tests (0 %) | Es proven millor en un navegador real | E2E amb Playwright del flux principal (login → Inici → guardiola: aportar i retirar) contra els mocks, al CI |
 | Preproducció | No hi ha encara un segon entorn | `develop` desplegat com a preproducció (DevOps, skill `ci-cd`) |
 | Auditoria de dependències (Q4) | Feta una vegada (§4.3): 0 a producció, 19 a les eines de desenvolupament | `npm audit --omit=dev` i `pip-audit` al CI, informatius; `npm audit fix` (9 de 19) després de la demo; `vitest` 5 i `vue-tsc` 3 a l'Sprint 3 |
-| Testing de mutació | Fet una vegada en 3 mòduls (§4.3): 91 %, 100 % dels no equivalents | Passar-lo als serveis nous de l'Sprint 2 (guardioles, enviaments, divises), on hi ha més càlculs d'imports; al CI, cada nit, perquè triga minuts |
+| Testing de mutació | Fet una vegada en 3 mòduls (§4.3): 90 %, amb 2 buits dels tests | Afegir els 2 tests que els tapen (canvi de dia a mitjanit de Madrid i `ana@x.c`). Passar-lo als serveis nous de l'Sprint 2 (guardioles, enviaments, divises), on hi ha més càlculs d'imports; al CI, cada nit, perquè triga minuts |
 | Accessibilitat automàtica (Q4) | Feta una vegada (§4.3): només falla el contrast de 2 colors | Canviar els 2 colors si el PO ho accepta, i axe dins de l'E2E perquè no torni a passar |
 
 ## 9. Com reproduir les xifres
