@@ -159,6 +159,21 @@ describe('mockContribute (docs/api.md §9.4)', () => {
     expect(result.pot).toMatchObject({ id: 'pot-03', balance: 8000, percentage: 100, goalStatus: 'achieved' })
   })
 
+  it('caps below the target at 99 %: 7999 of 8000 is 99 and in_progress (docs/api.md §11.1, US-20)', () => {
+    const pot = mockCreatePot({ name: 'Just sota', target: 8000 })
+    const result = mockContribute(pot.id, { amount: 7999 })
+
+    // 7999 of 8000 is 99.98 %, but a bar that says 100 % would also say the goal is reached.
+    expect(result.pot).toMatchObject({ balance: 7999, percentage: 99, goalStatus: 'in_progress' })
+  })
+
+  it('keeps the real value above the target: 125 and achieved (docs/api.md §11.1, US-20)', () => {
+    const pot = mockCreatePot({ name: 'De sobres', target: 8000 })
+    const result = mockContribute(pot.id, { amount: 10000 })
+
+    expect(result.pot).toMatchObject({ balance: 10000, percentage: 125, goalStatus: 'achieved' })
+  })
+
   it('allows moving exactly the whole main balance (A-06)', () => {
     const result = mockContribute('pot-02', { amount: mockHome().balance })
 

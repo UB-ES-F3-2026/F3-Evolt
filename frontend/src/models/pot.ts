@@ -12,6 +12,12 @@ export const POT_COLORS = ['purple', 'blue', 'teal', 'orange', 'pink', 'yellow']
 
 export type PotColor = (typeof POT_COLORS)[number]
 
+/** State of a pot's goal, as the backend names it in `goalStatus` (docs/api.md §11.1). */
+export type GoalStatus = 'in_progress' | 'achieved'
+
+/** The values `goalStatus` can take in the contract (docs/api.md §11.1). */
+const GOAL_STATUSES: readonly GoalStatus[] = ['in_progress', 'achieved']
+
 /** The colour of a pot created without choosing one (docs/api.md §9.3). */
 export const DEFAULT_POT_COLOR: PotColor = 'purple'
 
@@ -32,12 +38,12 @@ export interface Pot {
   target: number | null
   color: PotColor
   /**
-   * Goal progress as the backend sends it since US-20 (docs/api.md §9.1, issue #150);
-   * absent on answers from before, so both fields are optional.
-   * `goalStatus` keeps the raw API value: `potGoalStatus` narrows it.
+   * Goal progress as the backend sends it since US-20 (docs/api.md §11.1, issue #150);
+   * absent on answers from before, so both fields are optional. The frontend paints
+   * them, it never derives them: `percentage` and `goalStatus` come from the API.
    */
   percentage?: number | null
-  goalStatus?: string | null
+  goalStatus?: GoalStatus | null
 }
 
 /** A pot as the API sends it, before `color` is checked. */
@@ -47,9 +53,9 @@ export interface PotJson {
   balance: number
   target: number | null
   color: string
-  /** Same goal progress fields of the contract (§9.1, issue #150); optional until the backend sends them. */
+  /** Same goal progress fields of the contract (§11.1, issue #150); optional until the backend sends them. */
   percentage?: number | null
-  goalStatus?: string | null
+  goalStatus?: GoalStatus | null
 }
 
 /** GET /api/pots (docs/api.md §9.2). */
@@ -106,6 +112,11 @@ export function isPotColor(value: string): value is PotColor {
   return (POT_COLORS as readonly string[]).includes(value)
 }
 
+/** Guards a `goalStatus` that arrives as raw JSON: an unknown value is not a status. */
+function isGoalStatus(value: unknown): value is GoalStatus {
+  return typeof value === 'string' && (GOAL_STATUSES as readonly string[]).includes(value)
+}
+
 export function fromApiPot(json: PotJson): Pot {
   return {
     id: json.id,
@@ -114,8 +125,11 @@ export function fromApiPot(json: PotJson): Pot {
     target: json.target ?? null,
     color: isPotColor(json.color) ? json.color : DEFAULT_POT_COLOR,
     // Pass-through: `undefined` keeps the field absent, as with answers from before US-20.
+    // No check: the contract guarantees `percentage` is an integer, and `goalStatus`
+    // below is the only field the API could send with an unknown value.
     percentage: json.percentage,
-    goalStatus: json.goalStatus,
+    // A bad value from the server is not a status: null (absent) is not the same as unknown.
+    goalStatus: json.goalStatus === undefined ? undefined : (isGoalStatus(json.goalStatus) ? json.goalStatus : null),
   }
 }
 

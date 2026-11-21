@@ -3,20 +3,20 @@
  * the 3 pots of ./seed.ts and any other account with none, as with the backend.
  *
  * US-20 (issue #150): like the backend, every pot that leaves the mocks carries
- * the goal progress fields `percentage` and `goalStatus` of §9.1.
+ * the goal progress fields `percentage` and `goalStatus` of §11.1.
  */
 
 import {
   DEFAULT_POT_COLOR,
   isPotColor,
   type ContributionJson,
+  type GoalStatus,
   type PotColor,
   type PotJson,
   type PotMovementJson,
   type PotMovementsJson,
   type PotsJson,
 } from '@/models/pot'
-import { computePercentage, goalStatusFor, type GoalStatus } from '@/models/potGoal'
 import { mockBalance, mockError, recordAccountMovement } from './index'
 import { madridDaysAgoAt, toContractDate } from './madridTime'
 import { mockCurrentUser, onMockUserChange } from './mockUser'
@@ -41,19 +41,30 @@ onMockUserChange(startPots)
 type PotJsonWithProgress = PotJson & { percentage: number | null; goalStatus: GoalStatus | null }
 
 /**
- * US-20 (issue #150): the backend computes the goal progress of §9.1 and sends it
- * on every read. Round half-up percentage, achieved from the target balance on;
- * a pot without a target has neither field, so both are null.
+ * US-20 (issue #150): the mock plays the backend, so the goal progress rule
+ * lives here (docs/api.md §11.1). Round half-up, but below the target the
+ * number never shows 100 % (79,99 € of 80,00 € → 99); from the target on the
+ * real value stands (100 at equality, more above). No goal → both null.
  */
-function withProgress(pot: PotJson): PotJsonWithProgress {
-  const { target } = pot
-  const hasGoal = target !== null && target > 0
-  return {
-    ...pot,
-    percentage: hasGoal ? computePercentage(pot.balance, target) : null,
-    // Same rule as the backend, shared with potGoalStatus via the helper.
-    goalStatus: goalStatusFor(pot.balance, target),
+function goalProgressOf(
+  balance: number,
+  target: number | null,
+): { percentage: number | null; goalStatus: GoalStatus | null } {
+  if (target === null || target <= 0) {
+    return { percentage: null, goalStatus: null }
   }
+  // Half-up, never banker's rounding: 62,5 % of 8000 is 63, not 62.
+  const rounded = Math.floor((balance * 100) / target + 0.5)
+  if (balance >= target) {
+    return { percentage: rounded, goalStatus: 'achieved' }
+  }
+  // Below the target a full bar would say «assolit»: 79,99 € of 80,00 € is 99, not 100.
+  return { percentage: Math.min(99, rounded), goalStatus: 'in_progress' }
+}
+
+/** A pot as the backend sends it since US-20 (issue #150): with its goal progress. */
+function withProgress(pot: PotJson): PotJsonWithProgress {
+  return { ...pot, ...goalProgressOf(pot.balance, pot.target) }
 }
 
 /** The pots of whoever is logged in: the seed ones for the demo user, none for anyone else. */
