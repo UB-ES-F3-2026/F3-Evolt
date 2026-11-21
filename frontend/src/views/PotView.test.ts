@@ -9,8 +9,24 @@ import PotView from './PotView.vue'
 // the real viewmodel runs: mount triggers `load` onMounted (US-20).
 vi.mock('@/services/potsService', () => ({ getPots: vi.fn(), getPotMovements: vi.fn() }))
 
-const vacances: Pot = { id: 'pot-01', name: 'Vacances', balance: 15000, target: 100000, color: 'blue' }
-const emergencies: Pot = { id: 'pot-02', name: 'Emergències', balance: 42000, target: null, color: 'blue' }
+const vacances: Pot = {
+  id: 'pot-01',
+  name: 'Vacances',
+  balance: 15000,
+  target: 100000,
+  color: 'blue',
+  percentage: 15,
+  goalStatus: 'in_progress',
+}
+const emergencies: Pot = {
+  id: 'pot-02',
+  name: 'Emergències',
+  balance: 42000,
+  target: null,
+  color: 'blue',
+  percentage: null,
+  goalStatus: null,
+}
 
 beforeEach(() => {
   vi.mocked(getPots).mockReset()
@@ -35,7 +51,7 @@ async function mountView(pot: Pot): Promise<VueWrapper> {
 }
 
 describe('PotView', () => {
-  it('shows the goal progress for a pot with a target', async () => {
+  it('shows the goal progress for a pot with a target (OP-01)', async () => {
     const wrapper = await mountView(vacances)
 
     expect(wrapper.find('[role="progressbar"]').exists()).toBe(true)
@@ -44,7 +60,7 @@ describe('PotView', () => {
     expect(wrapper.text()).toContain('Aportar')
   })
 
-  it('shows no progress for a pot without a target, but keeps «Aportar»', async () => {
+  it('shows no progress for a pot without a target, but keeps «Aportar» (OP-02)', async () => {
     const wrapper = await mountView(emergencies)
 
     expect(wrapper.find('[role="progressbar"]').exists()).toBe(false)

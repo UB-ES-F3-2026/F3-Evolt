@@ -11,12 +11,14 @@ function pot(overrides: Partial<Pot> = {}): Pot {
     balance: 15000,
     target: 100000,
     color: 'blue',
+    percentage: 15,
+    goalStatus: 'in_progress',
     ...overrides,
   }
 }
 
 describe('PotRow', () => {
-  it('shows a mini progress bar under the name when the pot has a goal', () => {
+  it('shows a mini progress bar under the name when the pot has a goal (OP-07)', () => {
     const row = mount(PotRow, {
       props: { pot: pot() },
       global: { stubs: { RouterLink: RouterLinkStub } },
@@ -32,9 +34,11 @@ describe('PotRow', () => {
     })
   })
 
-  it('renders no progress bar when the pot has no goal', () => {
+  it('renders no progress bar when the pot has no goal (OP-07)', () => {
     const row = mount(PotRow, {
-      props: { pot: pot({ id: 'pot-02', name: 'Emergències', target: null }) },
+      props: {
+        pot: pot({ id: 'pot-02', name: 'Emergències', target: null, percentage: null, goalStatus: null }),
+      },
       global: { stubs: { RouterLink: RouterLinkStub } },
     })
 

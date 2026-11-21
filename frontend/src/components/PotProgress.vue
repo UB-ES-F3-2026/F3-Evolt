@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import MoneyAmount from '@/components/MoneyAmount.vue'
-import { potGoalStatus, potPercentage } from '@/models/potGoal'
 import type { Pot } from '@/models/pot'
 
 const props = withDefaults(
@@ -16,18 +15,31 @@ const props = withDefaults(
   { hidden: false, compact: false },
 )
 
-const percent = computed(() => potPercentage(props.pot))
+// docs/api.md §11.1: the backend owns the rule, so the component paints its values
+// and never recomputes them from `balance` and `target`.
+const percent = computed(() => props.pot.percentage ?? null)
+const goalStatus = computed(() => props.pot.goalStatus ?? null)
+// Only an answer that carries both fields has progress to paint (absent before US-20).
+// §11.1 sends both `null` without a goal, so a malformed answer with fields but no
+// target is not trusted either: it would paint «X de 0,00 €».
+const showProgress = computed(
+  () =>
+    props.pot.target !== null &&
+    props.pot.target > 0 &&
+    percent.value !== null &&
+    goalStatus.value !== null,
+)
 const clampedPercent = computed(() => Math.max(0, Math.min(100, percent.value ?? 0)))
-// Only shown when `percent` is non-null, which already means a valid target.
-const targetCents = computed((): number => (percent.value === null ? 0 : (props.pot.target ?? 0)))
-const isAchieved = computed(() => potGoalStatus(props.pot) === 'achieved')
+// Only rendered when `showProgress`, which means the API sent a pot with a goal.
+const targetCents = computed((): number => props.pot.target ?? 0)
+const isAchieved = computed(() => goalStatus.value === 'achieved')
 const badgeText = computed(() => (isAchieved.value ? 'Objectiu assolit' : 'En progrés'))
 </script>
 
 <template>
-  <!-- Sense objectiu no es renderitza res: ni barra, ni percentatge, ni etiqueta.
-       `percent` és null quan no hi ha objectiu, així que el helper decideix. -->
-  <div v-if="!compact && percent !== null" class="progress">
+  <!-- Sense objectiu, o quan l'API encara no envia el progrés, no es renderitza res:
+       ni barra, ni percentatge, ni etiqueta. Només es pinten els valors de l'API. -->
+  <div v-if="!compact && showProgress" class="progress">
     <p class="progress-amounts">
       <MoneyAmount :cents="pot.balance" :hidden="hidden" /> de
       <MoneyAmount :cents="targetCents" :hidden="hidden" />
@@ -53,7 +65,7 @@ const badgeText = computed(() => (isAchieved.value ? 'Objectiu assolit' : 'En pr
     </div>
   </div>
 
-  <div v-else-if="compact && percent !== null" class="mini">
+  <div v-else-if="compact && showProgress" class="mini">
     <div
       class="mini-track"
       role="progressbar"
