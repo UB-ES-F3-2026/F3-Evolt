@@ -9,6 +9,9 @@ Read **[`AGENTS.md`](AGENTS.md)** — it is the source of truth for architecture
 - Load the matching lazy skill from `.claude/skills/` (or `.opencode/skills/`) when the task needs it.
 - Prefer clear, traceable solutions over clever shortcuts.
 - Never bypass layers (no API call from a View, no `seed.py` access from a backend service).
+- Never invent a screen, button, message or list behaviour: if the story or its mockup does not define it, ask the PO (`user-stories`).
+- `develop` never breaks: a task PR goes into its story branch, and only whole stories reach `develop` (`gitflow`).
+- Every test says what it proves (AC or rule); every AC maps to a test (`qa-strategy`).
 
 ## Stack
 
@@ -27,7 +30,9 @@ Read **[`AGENTS.md`](AGENTS.md)** — it is the source of truth for architecture
 | `shared-module` | reusable models, components, helpers |
 | `code-style` | naming and file shape |
 | `comments-docs` | comments policy |
-| `gitflow` | branches, develop/main, PR base |
+| `user-stories` | writing, splitting and refining stories; Definition of Ready; nothing invented |
+| `qa-strategy` | what to test, test naming, coverage and quality metrics |
+| `gitflow` | story branches, task branches, develop/main, PR base |
 | `pr-conventions` | pull requests |
 | `commit-conventions` | commit messages |
 | `ci-cd` | GitHub Actions, lint, branch protection, deploy |
