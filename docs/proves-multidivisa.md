@@ -22,6 +22,11 @@ Cada història té dues taules:
 
 L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.md` §8.2](api.md#82-sessió)). «Usuari 1» és `demo@evolt.test` i «usuari 2», `buit@evolt.test`, totes dues amb la contrasenya `Evolt2026` (P13).
 
+Sense botó «Aportar», un subcompte només té saldo i moviments si s'hi fa un canvi (US-27). Per això:
+
+- **A pytest**, les proves de la US-26 que en necessiten (EL-04 i EL-07) els preparen directament al repositori, perquè la T26.1 no depengui de la T27.1.
+- **Al navegador**, la US-27 ha d'arribar abans que la US-26.
+
 Els imports van en la unitat menor de cada divisa ([`api.md` §12.1](api.md#121-divises-i-tipus-de-canvi)): cèntims d'euro, cèntims de dòlar o iens sencers.
 
 ## Dades de partida
@@ -77,19 +82,21 @@ Una divisa fora de la llista no es pot triar des de la pantalla: només la prova
 
 ## US-26 · Eliminar subcompte en divisa
 
-### API (T26.1)
+### API (T26.1: eliminar i l'historial)
 
 | Id | Situació inicial | Acció | Resultat esperat |
 |---|---|---|---|
 | **EL-01** | DV-03 fet | `POST /api/subaccounts/sub-01/delete` | `200` `{ "status": "ok" }`. `GET /api/subaccounts` només torna `main`, i `totalInEuros` continua sent `379521`. |
 | **EL-02** | EL-01 fet | `POST /api/subaccounts` amb `"USD"` | `201` amb `id: "sub-02"` i `balance: 0`: la divisa torna a estar disponible. `GET /api/subaccounts/sub-02/movements` torna `{ "items": [] }`. |
 | **EL-03** | Seed | `POST /api/subaccounts/main/delete` | `422 MAIN_ACCOUNT_NOT_DELETABLE`, «El compte en euros no es pot eliminar.». Té `379521`, però es comprova abans que el saldo. |
-| **EL-04** | CV-14 fet (USD a 0,01 $) | `POST /api/subaccounts/sub-01/delete` | `422 SUBACCOUNT_NOT_EMPTY`, «Només pots eliminar un subcompte amb saldo 0.». El subcompte continua amb `balance: 1`. |
+| **EL-04** | USD a 0,01 $ (al navegador, CV-14; a pytest, preparat al repositori) | `POST /api/subaccounts/sub-01/delete` | `422 SUBACCOUNT_NOT_EMPTY`, «Només pots eliminar un subcompte amb saldo 0.». El subcompte continua amb `balance: 1`. |
 | **EL-05** | Seed | `POST /api/subaccounts/sub-99/delete` | `404 SUBACCOUNT_NOT_FOUND`. |
 | **EL-06** | DV-03 fet (de l'usuari 1) | L'usuari 2 fa `POST /api/subaccounts/sub-01/delete` | `404 SUBACCOUNT_NOT_FOUND`, la mateixa resposta que EL-05. L'usuari 1 encara té `sub-01`. |
-| **EL-07** | CV-06 fet, i després EL-01 | `GET /api/movements` i `GET /api/subaccounts/sub-01/movements` | Els dos moviments del compte principal es queden: `mov-31`, «Canvi a Dòlar nord-americà», `29405`, i `mov-32`, «Canvi de Dòlar nord-americà», `28542`. L'historial del subcompte eliminat respon `404 SUBACCOUNT_NOT_FOUND` (P61). |
+| **EL-07** | CV-06 fet, i després EL-01 (a pytest, els moviments es preparen al repositori) | `GET /api/movements` i `GET /api/subaccounts/sub-01/movements` | Els dos moviments del compte principal es queden: `mov-31`, «Canvi EUR → USD», `29405`, i `mov-32`, «Canvi USD → EUR», `28542`. L'historial del subcompte eliminat respon `404 SUBACCOUNT_NOT_FOUND` (P61). |
 | **EL-08** | EL-01 fet | `POST /api/subaccounts/sub-01/delete` un altre cop | `404 SUBACCOUNT_NOT_FOUND`. |
-| **EL-09** | Sense sessió | `POST /api/subaccounts/sub-01/delete` | `401 UNAUTHENTICATED`. |
+| **EL-09** | Sense sessió | `POST /api/subaccounts/sub-01/delete` i `GET /api/subaccounts/sub-01/movements` | `401 UNAUTHENTICATED` a totes dues. |
+| **EL-10** | Seed | `GET /api/subaccounts/main/movements` | `404 SUBACCOUNT_NOT_FOUND`, «No s'ha trobat el subcompte.»: l'historial del compte en euros és `GET /api/movements`. |
+| **EL-11** | DV-03 fet (de l'usuari 1) | L'usuari 2 fa `GET /api/subaccounts/sub-01/movements` | `404 SUBACCOUNT_NOT_FOUND`. |
 
 ### Pantalla (T26.2)
 
@@ -100,8 +107,8 @@ Una divisa fora de la llista no es pot triar des de la pantalla: només la prova
 | **ELP-03** | Amb l'USD a 0,01 $ (CV-14), toca «Eliminar subcompte». | «Abans d'eliminar-lo has de deixar el saldo a 0», amb «D'acord». No s'elimina. |
 | **ELP-04** | Amb l'USD a 0,00 $, toca «Eliminar subcompte». | «Segur que vols eliminar aquest subcompte?», amb «Cancel·lar» i «Eliminar». |
 | **ELP-05** | Toca «Eliminar». | El tic «Subcompte eliminat». L'app torna sola a «Inici» i l'USD ja no hi és. A «Afegir divisa», l'USD torna a estar disponible. |
-| **ELP-06** | Després d'eliminar un USD amb canvis fets, obre «Moviments». | Els moviments «Canvi a Dòlar nord-americà» del compte principal continuen a l'historial. |
-| **ELP-07** | Mira el detall d'un subcompte en divisa. | No hi ha cap botó «Aportar» (decisió del PO). El mockup `US-26-detall-subcompte` encara el mostra. |
+| **ELP-06** | Després d'eliminar un USD amb canvis fets, obre «Moviments». | Els moviments en euros dels canvis («Canvi EUR → USD» i «Canvi USD → EUR») continuen a l'historial. |
+| **ELP-07** | Mira el detall d'un subcompte en divisa. | No hi ha cap botó «Aportar» (decisió del PO, #189). |
 
 ---
 
@@ -113,8 +120,8 @@ Una divisa fora de la llista no es pot triar des de la pantalla: només la prova
 |---|---|---|---|
 | **CV-01** | DV-03 fet | `POST /api/exchanges` amb `{ "fromCurrency": "EUR", "toCurrency": "USD", "amount": 10000 }` | `201` `{ from: { id: "main", currency: "EUR", balance: 369371, isMain: true, rateBps: 10000 }, to: { id: "sub-01", currency: "USD", balance: 10961, isMain: false, rateBps: 9123 }, amount: 10000, commission: 150, received: 10961 }`. |
 | **CV-02** | CV-01 fet | `GET /api/subaccounts` | `main` amb `369371`, `sub-01` amb `10961` i `totalInEuros: 379371`: ha baixat `150`, la comissió. |
-| **CV-03** | CV-01 fet | `GET /api/home` i `GET /api/movements` | `balance: 369371`. El primer moviment és `mov-31`: «Canvi a Dòlar nord-americà», `expense`, `10150`, `icon: "transfer"`, `counterparty: null`, `status: "completed"` i `reference: "EVT-000031"`. |
-| **CV-04** | CV-01 fet | `GET /api/subaccounts/sub-01/movements` | Una entrada: `smov-01`, `10961`, `income`, amb el concepte de P60 («Canvi de Euro», pendent del PO). |
+| **CV-03** | CV-01 fet | `GET /api/home` i `GET /api/movements` | `balance: 369371`. El primer moviment és `mov-31`: «Canvi EUR → USD», `expense`, `10150`, `icon: "transfer"`, `counterparty: null`, `status: "completed"` i `reference: "EVT-000031"`. |
+| **CV-04** | CV-01 fet | `GET /api/subaccounts/sub-01/movements` | Una entrada: `smov-01`, `10961`, «Canvi EUR → USD», `income`. |
 | **CV-05** | DV-03 fet | `POST /api/exchanges` d'EUR a USD amb `amount: 1000` | `201` amb `commission: 50`, el mínim (l'1,5 % serien `15`), i `received: 1096`. El compte principal queda a `378471`. |
 | **CV-06** | DV-03 fet | D'EUR a USD amb `amount: 28970`, i després d'USD a EUR amb `amount: 31286` (exemple de la US-26) | El primer: `commission: 435`, `received: 31755` (l'USD a 317,55 $). El segon: `commission: 469`, `received: 28542`; l'USD queda a `0` i el compte principal a `378658`. |
 | **CV-07** | DV-03 fet | D'EUR a EUR amb `amount: 1000` | `422 SAME_CURRENCY`. No canvia res. |
@@ -147,7 +154,7 @@ Una divisa fora de la llista no es pot triar des de la pantalla: només la prova
 | **CVP-06** | Amb EUR → USD i `10`, toca «Continuar». | «Comissió: 0,50 €». |
 | **CVP-07** | Amb EUR → USD, prova de canviar tot el saldo (3.795,21 €). | «No tens prou saldo», en vermell sota el botó. |
 | **CVP-08** | Des del resum de CVP-05, toca «Confirmar canvi». | El tic «Canvi fet», i l'app torna a «Inici»: l'EUR a 3.693,71 €, l'USD a 109,61 $ i «Total ≈ 3.793,71 €». |
-| **CVP-09** | A «Inici», mira «Últims moviments». | El primer és «Canvi a Dòlar nord-americà», −101,50 €. |
+| **CVP-09** | A «Inici», mira «Últims moviments». | El primer és «Canvi EUR → USD», −101,50 €. |
 | **CVP-10** | Amb el JPY creat, canvia 10,00 € a JPY. | El resum diu «Rebràs exactament 1.754 ¥» i «Comissió: 0,50 €». |
 
 ---
@@ -176,4 +183,4 @@ Una divisa fora de la llista no es pot triar des de la pantalla: només la prova
 | US-27 · Èxit: tic «Canvi fet» i torna a Inici amb els dos saldos i el total actualitzats | CV-01, CV-02, CV-03, CV-04, CVP-08, CVP-09 |
 | US-27 · Tot o res: o canvien els dos saldos i els dos moviments, o no en canvia cap | CV-12, CV-19, CV-20 |
 
-Proves que no surten d'un criteri, sinó del contracte: DV-09 i DV-10 (format del cos i ids), DV-14 (ids únics i comptes de cada usuari), DV-15, EL-09 i CV-23 (sense sessió), DV-16 (reinici de dades), EL-05, EL-06 i EL-08 (subcomptes inexistents, d'altres usuaris o ja eliminats), CV-09 i CV-17 (import i format), CV-21 (límit de recàrrega) i CV-22 (canvi sense l'EUR).
+Proves que no surten d'un criteri, sinó del contracte: DV-09 i DV-10 (format del cos i ids), DV-14 (ids únics i comptes de cada usuari), DV-15, EL-09 i CV-23 (sense sessió), DV-16 (reinici de dades), EL-05, EL-06, EL-08 i EL-11 (subcomptes inexistents, d'altres usuaris o ja eliminats), EL-10 (l'historial del compte en euros), CV-09 i CV-17 (import i format), CV-21 (límit de recàrrega) i CV-22 (canvi sense l'EUR).
