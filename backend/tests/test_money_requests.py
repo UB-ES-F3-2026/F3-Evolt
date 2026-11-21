@@ -177,7 +177,7 @@ def test_at_most_one_million_euros(client: TestClient, seed: SeedData) -> None:
     response = _create(client, {**DINNER, "amount": 100_000_001})
 
     assert response.status_code == 422
-    assert response.json() == {"code": "AMOUNT_OVER_LIMIT", "message": "L'import màxim és de 1.000.000,00 €."}
+    assert response.json() == {"code": "AMOUNT_OVER_LIMIT", "message": "L'import màxim és d'1.000.000,00 €."}
 
 
 @pytest.mark.parametrize("concept", ["", "   ", "x" * 141])

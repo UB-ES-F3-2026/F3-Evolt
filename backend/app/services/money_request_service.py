@@ -88,7 +88,7 @@ def create_request(
     if amount <= 0:
         raise ApiError(INVALID_AMOUNT)
     if amount > MAX_REQUEST_AMOUNT:
-        raise ApiError(AMOUNT_OVER_LIMIT, message=f"L'import màxim és de {format_euros(MAX_REQUEST_AMOUNT)}.")
+        raise ApiError(AMOUNT_OVER_LIMIT, message=f"L'import màxim és d'{format_euros(MAX_REQUEST_AMOUNT)}.")
     concept = raw_concept.strip()
     if not concept or len(concept) > MAX_REQUEST_CONCEPT:
         raise ApiError(INVALID_CONCEPT)
