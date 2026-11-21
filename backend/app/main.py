@@ -21,7 +21,7 @@ from app.config import STORAGE_FIRESTORE, load_app_settings
 from app.data.seed import build_seed
 from app.middleware import SimulationMiddleware, load_simulation_settings
 from app.repositories.atomic import MemoryAtomic
-from app.routers import auth, dev, health, home, movements, pots, topups
+from app.routers import auth, dev, health, home, money_requests, movements, pots, topups, users
 from app.services.errors import (
     ERROR_MESSAGES,
     ERROR_STATUS,
@@ -191,6 +191,8 @@ def create_app() -> FastAPI:
     app.include_router(topups.router, prefix="/api")
     app.include_router(auth.router, prefix="/api")
     app.include_router(pots.router, prefix="/api")
+    app.include_router(users.router, prefix="/api")
+    app.include_router(money_requests.router, prefix="/api")
     # Eines de desenvolupament: fora quan ENABLE_DEV_ROUTES=false (desplegament).
     if app_settings.dev_routes_enabled:
         app.include_router(dev.router, prefix="/api")

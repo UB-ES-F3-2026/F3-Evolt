@@ -17,6 +17,7 @@ from app.config import STORAGE_FIRESTORE
 from app.repositories import (
     AccountRepository,
     ClosedOutboxRepository,
+    MoneyRequestRepository,
     MovementReportRepository,
     MovementRepository,
     OutboxRepository,
@@ -109,6 +110,14 @@ def movement_report_repository(request: Request) -> MovementReportRepository:
 
         return FirestoreMovementReportRepository(client)
     return MovementReportRepository(request.app.state.seed)
+
+
+def money_request_repository(request: Request) -> MoneyRequestRepository:
+    if client := _firestore(request):
+        from app.repositories.firestore import FirestoreMoneyRequestRepository
+
+        return FirestoreMoneyRequestRepository(client)
+    return MoneyRequestRepository(request.app.state.seed)
 
 
 def atomic(request: Request) -> Atomic:
