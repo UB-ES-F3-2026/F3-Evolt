@@ -553,7 +553,7 @@ Estimació: SP 3 · VP 5 · Prioritat Alta
 La pantalla d'una guardiola amb objectiu mostra el saldo i l'objectiu (per exemple "120,00 € de 500,00 €"), una barra de progrés i el percentatge
 La part plena de la barra, en lila, correspon al percentatge: amb un 24 %, la barra està plena una quarta part aproximadament
 Si el saldo és menor que l'objectiu, surt l'etiqueta grisa "En progrés"
-Mentre el saldo sigui més petit que l'objectiu, el percentatge queda capat a 99: amb "79,99 € de 80,00 €" surt "99 %" i l'etiqueta "En progrés"; el 100 % i l'etiqueta verda "Objectiu assolit" només quan el saldo arriba a l'objectiu
+El backend capa el percentatge a 99 a cada lectura mentre el saldo sigui més petit que l'objectiu: amb "79,99 € de 80,00 €" l'API envia "99 %" i l'etiqueta "En progrés", i la pantalla només pinta el que arriba (no el recalcula ni el torna a capar); el 100 % i l'etiqueta verda "Objectiu assolit" només quan el saldo arriba a l'objectiu
 Si el saldo arriba o passa l'objectiu, la barra es posa verda i surt l'etiqueta verda "Objectiu assolit"
 A la llista de guardioles, cada guardiola amb objectiu té una barra petita sota el nom
 Les guardioles sense objectiu no tenen barra, només el saldo
@@ -1181,7 +1181,7 @@ Estimació: SP 3 · VP 5 · Prioritat Mitjana
 **Checklist Acceptance Criteria:**
 
 ```
-Fins al límit del mes (1.000 € per al client estàndard i 5.000 € per al client premium), els canvis de divisa tenen 0 % de comissió i al resum surt "0 % de comissió"
+Fins al límit del mes (1.000 € per al client estàndard i 5.000 € per al client premium), els canvis de divisa tenen 0 % de comissió i al resum surt "Sense comissió"
 Un cop passat el límit, la pantalla de resum mostra en vermell la comissió que se suma (per exemple "Comissió: 2,50 €") abans de tocar "Confirmar canvi"
 Als moviments posteriors al límit, la comissió cobrada surt en gris sota l'import
 ```
