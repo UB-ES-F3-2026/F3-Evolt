@@ -84,6 +84,8 @@ Cada US té:
 - Enfoc en el **Què** (resultat final), no el **Com** (aproximació tècnica)
 - Incloure criteris funcionals i no funcionals quan sigui rellevant
 - Les US **fines** detallen els passos de principi a fi amb les pantalles (per a l'equip i per a QA)
+- Cada US amb pantalla porta un **mockup** de cada pantalla, i els AC defineixen cada botó (també «Cancel·lar»), cada missatge, els estats buit i d'error i quants elements surten a les llistes. Ningú s'inventa una pantalla (skill `user-stories`)
+- **Backlog Refinement:** durant l'sprint, reunions curtes per revisar i ajustar les properes US; si en desenvolupar falta alguna cosa, es pregunta al PO i s'actualitza la US abans de programar-la
 
 ### INVEST (qualitat de cada US)
 
@@ -182,7 +184,7 @@ L'estàndard d'arquitectura, skills, commits i PRs viu al **`AGENTS.md` arrel** 
 - **SOLID** i **DRY**
 - Skills AI lazy: `.claude/skills/` i `.opencode/skills/` (Vue, FastAPI, gitflow…)
 - Commits: Conventional Commits + `US-XX`
-- Branches: `develop` = base de PR; `feature/<slug>`, `fix/<slug>`, `refactor/<slug>`; `hotfix/<slug>` des de `main`; `main` = demo/release
-- PR: una US / una tasca tècnica per PR
+- Branches: `develop` = integració, mai trencada; una branca `story/us-<id>-<slug>` per història, amb les seves tasques `feature/<frontend|backend|devops>/<tNN-N-slug>`; `fix/<slug>`, `refactor/<slug>`; `hotfix/<slug>` des de `main`; `main` = producció
+- PR: cada tasca, cap a la branca de la seva història; la història sencera, en una PR cap a `develop` quan està acabada i acceptada pel PO
 
 Producte i backlog: aquest directori `docs/P1/`.
