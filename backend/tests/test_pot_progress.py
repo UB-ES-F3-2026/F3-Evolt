@@ -36,15 +36,21 @@ def _contribute(client: TestClient, pot_id: str, amount: int) -> dict:
         (1, 8, 13),  # 12,5
         (10, 2000, 1),  # 0,5
         (3, 2000, 0),  # 0,15
-        (7999, 8000, 100),  # 99,9875
+        (7999, 8000, 99),  # 99,9875: es queda a 99 fins a arribar-hi (decisió de PO, #194)
         (0, 30000, 0),
     ],
 )
 def test_percentage_rounds_halves_up_and_stays_in_progress_below_target(
     balance: int, target: int, percentage: int
 ) -> None:
-    # O-07: per sota de l'objectiu sempre és «En progrés», també amb 7999 de 8000 (100 %).
+    # O-07: per sota de l'objectiu sempre és «En progrés».
     assert pot_progress(balance, target) == (percentage, GOAL_IN_PROGRESS)
+
+
+@pytest.mark.parametrize(("balance", "target"), [(7999, 8000), (99_960, 100_000), (999, 1000)])
+def test_never_100_before_reaching_the_target(balance: int, target: int) -> None:
+    # Decisió de PO (#194): 79,99 € de 80,00 € és «99 %» i «En progrés», no 100 %.
+    assert pot_progress(balance, target) == (99, GOAL_IN_PROGRESS)
 
 
 def test_reaching_the_target_exactly_is_achieved() -> None:
