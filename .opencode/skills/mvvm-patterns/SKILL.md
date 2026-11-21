@@ -74,6 +74,16 @@ export function useContributeViewModel(potId: string) {
 }
 ```
 
+## Before building a screen
+
+The screen comes from its story and its mockup, never from the developer
+(skill `user-stories`). Before writing the View, check that they define every
+element, every button (Cancel and Back included), every message word for word,
+the loading / empty / error states and, for lists, how many items, the order
+and the paging. If something is missing, ask the PO and note it in the issue;
+do not fill it with your own design. In Sprint 1 the pots list was built
+without any definition, and that was the professor's first complaint.
+
 ## Vue rules
 
 1. **SFC View is thin:** template + props/emit + calls to ViewModel actions. No `if (balance > amount)` business branches beyond trivial display.
@@ -140,6 +150,8 @@ async function submit() {
 
 ## Self-check
 
+- [ ] Every element, button, message and state on screen comes from the story or its mockup; nothing invented
+- [ ] Each AC the screen owns has a ViewModel test that names it (skill `qa-strategy`)
 - [ ] The `.vue` file has no `fetch`, never imports `services/`, and imports from `models/` only types (plus pure display helpers in `components/`)
 - [ ] The ViewModel is a composable `useXxxViewModel` with named actions (verbs)
 - [ ] `models/` stays pure TypeScript (no `ref`/`reactive`, no HTTP)
