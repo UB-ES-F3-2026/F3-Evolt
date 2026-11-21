@@ -3,7 +3,8 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
-from pydantic import BaseModel, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr, field_validator
+from pydantic.alias_generators import to_camel
 
 from app.models import POT_COLORS, Pot, PotMovement
 from app.repositories import AccountRepository, MovementRepository, PotRepository
@@ -11,6 +12,7 @@ from app.repositories.atomic import Atomic
 from app.routers.current_user import current_user_id
 from app.routers.dependencies import account_repository, atomic, movement_repository, pot_repository
 from app.routers.schemas import MovementResponse
+from app.services.pot_progress import pot_progress
 from app.services.pot_service import (
     ContributionResult,
     contribute,
@@ -23,22 +25,33 @@ router = APIRouter(tags=["pots"])
 
 
 class PotResponse(BaseModel):
-    """Objecte `Pot` del contracte (§9.1), sense el camp intern `user_id`."""
+    """Objecte `Pot` del contracte (§9.1), sense el camp intern `user_id`.
+
+    `percentage` i `goalStatus` (§11.1) no es desen: surten del saldo d'aquest moment.
+    Les dues claus hi són sempre, també quan valen `null`.
+    """
+
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
     id: str
     name: str
     balance: int
     target: int | None
     color: str
+    percentage: int | None
+    goal_status: str | None
 
     @classmethod
     def from_pot(cls, pot: Pot) -> "PotResponse":
+        progress = pot_progress(pot.balance, pot.target)
         return cls(
             id=pot.id,
             name=pot.name,
             balance=pot.balance,
             target=pot.target,
             color=pot.color,
+            percentage=progress.percentage,
+            goal_status=progress.goal_status,
         )
 
 
