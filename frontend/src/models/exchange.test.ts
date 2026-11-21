@@ -5,6 +5,7 @@ import {
   estimateMinor,
   exchangePreview,
   formatCommissionLabel,
+  minimumCommissionSrcMinor,
   parseKeypadAmount,
   rateLabelCount,
   rateRoundedMinor,
@@ -30,6 +31,7 @@ describe('convertMinor (US-27)', () => {
 })
 
 describe('exchangePreview (US-27)', () => {
+  // CV-01: 100,00 € → 109,61 $ with the 1,50 € commission (§12.7).
   it('previews «100,00 € → 109,61 $» with the 1,50 € commission', () => {
     const preview = exchangePreview(10000, 'EUR', 'USD', 125050)
     expect(preview.exactReceivedMinor).toBe(10961)
@@ -54,7 +56,20 @@ describe('exchangePreview (US-27)', () => {
   })
 })
 
-describe('commissionSrcMinor (US-27)', () => {
+describe('minimumCommissionSrcMinor (§12.7)', () => {
+  // The 0,50 € floor in each currency's minor unit, rounded UP (§12.7 table).
+  it.each<[CurrencyCode, number]>([
+    ['EUR', 50],
+    ['USD', 55],
+    ['GBP', 43],
+    ['CHF', 49],
+    ['JPY', 88],
+  ])('converts the 0,50 € floor into %s minor units (%i)', (code, expected) => {
+    expect(minimumCommissionSrcMinor(code)).toBe(expected)
+  })
+})
+
+describe('commissionSrcMinor (§12.7)', () => {
   it('takes 1,5 % of 100,00 € → 1,50 €', () => {
     expect(commissionSrcMinor(10000, 'EUR')).toBe(150)
   })
@@ -64,8 +79,38 @@ describe('commissionSrcMinor (US-27)', () => {
   })
 
   it('computes a USD commission in USD minor units', () => {
-    // 50,00 $ = 45,62 € → 1,5 % = 68,43 € → 68 € → 0,68 € = 75 $ minor.
+    // §12.7: 1,5 % of 50,00 $ = 0,75 $ = 75 minor, above the 55 minimum.
     expect(commissionSrcMinor(5000, 'USD')).toBe(75)
+  })
+
+  it('charges 1,5 % of 10.000 ¥ → 150 ¥, above the 88 ¥ minimum', () => {
+    // §12.7: max(arrodonir(10000 × 150 / 10000), mínim[JPY]) = max(150, 88) = 150.
+    // The old EUR round trip drifted to 151; the contract's formula is exact here.
+    expect(commissionSrcMinor(10000, 'JPY')).toBe(150)
+  })
+
+  it('charges the CHF minimum of 49 cents, not 48', () => {
+    // §12.7: 1,5 % of 0,01 CHF rounds to 0, so the floor applies:
+    // ⌈50 × 10000 / 10355⌉ = ⌈48,28⌉ = 49 (the old EUR round trip said 48).
+    expect(commissionSrcMinor(1, 'CHF')).toBe(49)
+  })
+
+  // Commission values pinned by docs/proves-multidivisa.md.
+  it.each<[string, number, CurrencyCode, number]>([
+    ['CV-05 · 10,00 € stays on the 0,50 € minimum', 1000, 'EUR', 50],
+    ['CV-06a · 289,70 € → 4,35 €', 28970, 'EUR', 435],
+    ['CV-06b · 312,86 $ → 4,69 $', 31286, 'USD', 469],
+    ['CV-12 · 3.795,21 € → 56,93 €', 379521, 'EUR', 5693],
+    ['CV-13 · 107,99 $ → 1,62 $', 10799, 'USD', 162],
+    ['CV-16 · 100 ¥ stays on the 88 ¥ minimum', 100, 'JPY', 88],
+    ['CV-11 · 1 EUR minor unit (1 cèntim) stays on the 0,50 € minimum', 1, 'EUR', 50],
+  ])('pins %s', (_case, amount, code, expected) => {
+    expect(commissionSrcMinor(amount, code)).toBe(expected)
+  })
+
+  it('pins CV-11 · 1 EUR minor unit → 2 ¥', () => {
+    // 1 × 10000 / 5700 = 1,75… → half-up = 2.
+    expect(convertMinor(1, 'EUR', 'JPY')).toBe(2)
   })
 })
 

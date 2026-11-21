@@ -15,7 +15,7 @@
  * `money.ts`.
  */
 
-import { currencyByCode, type CurrencyCode } from './currency'
+import { currencyByCode, type CurrencyCode, type Subaccount, type SubaccountJson } from './currency'
 import { formatMinor, halfUpDiv } from './money'
 // Backward-compat type re-exports only — no second definition anywhere:
 export type { CurrencyCode, SubaccountOption } from './currency'
@@ -36,27 +36,43 @@ export interface ExchangeDraft {
   amountMinor: number
 }
 
-// The contract objects of US-27 (docs/api.md, issue #166). They live here, next
-// to the currency data they carry, and the service only re-exports them.
+// The exchange contract objects (docs/api.md §12.7, T27.1) — US-27 is the
+// screen that uses them. They live here, next to the currency data they carry,
+// and the service only re-exports them.
 
-/** One owned sub-account, as `GET /api/currencies` returns it. */
-export interface SubaccountJson {
-  code: CurrencyCode
-  balanceMinor: number
-  isMain: boolean
-}
-
-/** The body of `POST /api/exchanges`. */
+/** The body of `POST /api/exchanges` (§12.7): `amount` is minor units of `fromCurrency`. */
 export interface ExchangeRequestJson {
-  srcCurrency: CurrencyCode
-  tgtCurrency: CurrencyCode
-  amountMinor: number
+  fromCurrency: CurrencyCode
+  toCurrency: CurrencyCode
+  amount: number
 }
 
-/** What `POST /api/exchanges` answers: both balances after the exchange. */
+/**
+ * What `POST /api/exchanges` answers (§12.7), exactly as it travels on the wire:
+ * both accounts as the API rows (`currency`, not `code`), with their new balance,
+ * plus the figures already applied (`amount` and `commission` in the source minor
+ * unit, `received` in the target one).
+ */
 export interface ExchangeResultJson {
-  srcBalanceMinor: number
-  tgtBalanceMinor: number
+  from: SubaccountJson
+  to: SubaccountJson
+  amount: number
+  commission: number
+  received: number
+}
+
+/**
+ * The app-level result of `POST /api/exchanges`: what the app works with after
+ * mapping the wire rows through `fromApiSubaccount` — the same fields, with each
+ * account carrying `code`. The screen shows these numbers (the confirmed balances
+ * included); it never recomputes them.
+ */
+export interface ExchangeResult {
+  from: Subaccount
+  to: Subaccount
+  amount: number
+  commission: number
+  received: number
 }
 
 // What the keypad can produce: digits and at most a decimal mark with 1 or 2
@@ -110,13 +126,31 @@ export function estimateMinor(amountMinor: number, src: CurrencyCode, tgt: Curre
 }
 
 /**
- * The exchange commission, in SOURCE minor units: 1,5 % of the amount, with a
- * minimum of 0,50 €, always computed in euros and converted back.
+ * The 0,50 € minimum in source minor units, rounded UP so it never dips below
+ * 0,50 € (§12.7): `⌈50 × 10000 / rateBps[origen]⌉`, computed with integer
+ * ceiling math (`⌊(n + d - 1) / d⌋`) so no float decides a minimum.
+ * `minimumCommissionSrcMinor('CHF')` → `49` (0,49 CHF ja valen 0,5074 €).
+ */
+export function minimumCommissionSrcMinor(src: CurrencyCode): number {
+  const rateBps = currencyByCode(src).rateBps
+  return Math.floor((50 * 10000 + rateBps - 1) / rateBps)
+}
+
+/**
+ * The exchange commission, in SOURCE minor units: 1,5 % of the amount or the
+ * per-currency minimum, whichever is larger (§12.7).
+ *
+ * It is computed straight in the source currency — never converted to euros and
+ * back — because the 0,50 € floor must be worth at least 0,50 € *before*
+ * rounding: the round trip would drift the floor by a minor unit (48 CHF cents
+ * instead of 49).
+ *
+ * The backend service owns this rule; this is the frontend's copy for the
+ * «Continuar» preview and the mock (skill middle-services). If §12.7 changes,
+ * both move together.
  */
 export function commissionSrcMinor(amountMinor: number, src: CurrencyCode): number {
-  const amountEur = convertMinor(amountMinor, src, 'EUR')
-  const commissionEur = Math.max(halfUpDiv(150 * amountEur, 10000), 50)
-  return convertMinor(commissionEur, 'EUR', src)
+  return Math.max(halfUpDiv(amountMinor * 150, 10000), minimumCommissionSrcMinor(src))
 }
 
 /** What the «Continuar» summary screen shows, before any API call. */

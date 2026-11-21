@@ -1,7 +1,12 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { isApiError } from '@/models/apiError'
-import { currencyByCode, isCurrencyCode, isMainCurrency, type Subaccount } from '@/models/currency'
+import {
+  currencyByCode,
+  isCurrencyCode,
+  isMainCurrency,
+  type SubaccountList,
+} from '@/models/currency'
 import { EXCHANGE_INSUFFICIENT_BALANCE_MESSAGE, toUserMessage } from '@/models/errorMessages'
 import {
   exchangePreview,
@@ -15,7 +20,7 @@ import { getSubaccounts } from '@/services/subaccountsService'
 import {
   postExchange,
   type ExchangeRequestJson,
-  type ExchangeResultJson,
+  type ExchangeResult,
 } from '@/services/exchangeService'
 
 // Long enough to read the confirmation before going back to Home.
@@ -24,8 +29,8 @@ export const CONFIRMATION_MS = 1500
 export interface ExchangeSummaryDependencies {
   /** What «Canviar» left in `history.state`; null when someone opens the screen directly. */
   draft: ExchangeDraft | null
-  getSubaccounts: () => Promise<Subaccount[]>
-  confirmExchange: (request: ExchangeRequestJson) => Promise<ExchangeResultJson>
+  getSubaccounts: () => Promise<SubaccountList>
+  confirmExchange: (request: ExchangeRequestJson) => Promise<ExchangeResult>
   goHome: () => Promise<unknown>
   goToExchange: () => Promise<unknown>
   pause: (ms: number) => Promise<void>
@@ -56,7 +61,7 @@ export function useExchangeSummaryViewModel(
   const isConfirming = ref(false)
   const confirmed = ref(false)
   const submitError = ref<string | null>(null)
-  const newBalances = ref<ExchangeResultJson | null>(null)
+  const newBalances = ref<ExchangeResult | null>(null)
 
   const preview = computed(() => {
     if (draft === null) return null
@@ -112,14 +117,16 @@ export function useExchangeSummaryViewModel(
   const newBalanceRows = computed(() => {
     if (draft === null || newBalances.value === null) return []
     const { srcCurrency: src, tgtCurrency: tgt } = draft
+    // §12.7 echoes both accounts already updated: print the server's balances, not a recomputation.
+    const { from, to } = newBalances.value
     return [
       {
         label: isMainCurrency(src) ? 'Compte en euros' : `${src} · ${currencyByCode(src).name}`,
-        value: formatMinor(newBalances.value.srcBalanceMinor, src),
+        value: formatMinor(from.balance, src),
       },
       {
         label: isMainCurrency(tgt) ? 'Compte en euros' : `${tgt} · ${currencyByCode(tgt).name}`,
-        value: formatMinor(newBalances.value.tgtBalanceMinor, tgt),
+        value: formatMinor(to.balance, tgt),
       },
     ]
   })
@@ -136,7 +143,7 @@ export function useExchangeSummaryViewModel(
       const subaccounts = await dependencies.getSubaccounts()
       // Fetched fresh: the server balance decides, whatever «Canviar» showed.
       originBalance.value =
-        subaccounts.find((subaccount) => subaccount.code === draft.srcCurrency)?.balance ?? 0
+        subaccounts.items.find((subaccount) => subaccount.code === draft.srcCurrency)?.balance ?? 0
     } catch (failure) {
       loadError.value = toUserMessage(failure)
     } finally {
@@ -153,9 +160,9 @@ export function useExchangeSummaryViewModel(
 
     try {
       newBalances.value = await dependencies.confirmExchange({
-        srcCurrency: draft.srcCurrency,
-        tgtCurrency: draft.tgtCurrency,
-        amountMinor: draft.amountMinor,
+        fromCurrency: draft.srcCurrency,
+        toCurrency: draft.tgtCurrency,
+        amount: draft.amountMinor,
       })
       confirmed.value = true
       // The tick and the new balances stay on screen while the ViewModel waits.

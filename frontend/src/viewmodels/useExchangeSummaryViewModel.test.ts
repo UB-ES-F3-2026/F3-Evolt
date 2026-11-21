@@ -1,8 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 import { messageForCode } from '@/models/errorMessages'
 import type { ExchangeDraft } from '@/models/exchange'
-import type { Subaccount } from '@/models/currency'
-import type { ExchangeResultJson } from '@/services/exchangeService'
+import {
+  totalInEurosMinor,
+  type Subaccount,
+  type SubaccountList,
+} from '@/models/currency'
+import type { ExchangeResult } from '@/services/exchangeService'
 import {
   CONFIRMATION_MS,
   useExchangeSummaryViewModel,
@@ -11,14 +15,28 @@ import {
 
 const eurToUsd: ExchangeDraft = { srcCurrency: 'EUR', tgtCurrency: 'USD', amountMinor: 10000 }
 
-// What the backend answers to 100,00 € to USD (US-27, criterion 9).
-const exchanged: ExchangeResultJson = { srcBalanceMinor: 114900, tgtBalanceMinor: 42716 }
+// The §12.7 answer to 100,00 € to USD (US-27, criterion 9): both accounts already
+// updated by the server, plus the figures it applied.
+const exchanged: ExchangeResult = {
+  from: { id: 'main', code: 'EUR', balance: 114900, isMain: true, rateBps: 10000 },
+  to: { id: 'sub-01', code: 'USD', balance: 42716, isMain: false, rateBps: 9123 },
+  amount: 10000,
+  commission: 150,
+  received: 10961,
+}
 
-function subaccounts(eurBalanceMinor: number): Subaccount[] {
-  return [
-    { id: 'sub-01', code: 'EUR', balance: eurBalanceMinor },
-    { id: 'sub-02', code: 'USD', balance: 31755 },
-  ]
+function eurAccount(balanceMinor: number): Subaccount {
+  return { id: 'main', code: 'EUR', balance: balanceMinor, isMain: true, rateBps: 10000 }
+}
+
+function usdAccount(balanceMinor: number): Subaccount {
+  return { id: 'sub-01', code: 'USD', balance: balanceMinor, isMain: false, rateBps: 9123 }
+}
+
+/** GET /api/subaccounts (§12.3): the rows plus the server total, which this screen does not read. */
+function subaccounts(eurBalanceMinor: number): SubaccountList {
+  const items = [eurAccount(eurBalanceMinor), usdAccount(31755)]
+  return { items, totalInEuros: totalInEurosMinor(items) }
 }
 
 function fakeDependencies(overrides: Partial<ExchangeSummaryDependencies> = {}) {
@@ -54,11 +72,17 @@ describe('useExchangeSummaryViewModel', () => {
   })
 
   it('quotes the rate per 100 ¥ when the origin is JPY and keeps whole yen', async () => {
+    const jpyItems: Subaccount[] = [
+      { id: 'sub-01', code: 'JPY', balance: 20000, isMain: false, rateBps: 5700 },
+    ]
     const viewModel = useExchangeSummaryViewModel(
       fakeDependencies({
         draft: { srcCurrency: 'JPY', tgtCurrency: 'EUR', amountMinor: 10000 },
         getSubaccounts: vi.fn(() =>
-          Promise.resolve<Subaccount[]>([{ id: 'sub-01', code: 'JPY', balance: 20000 }]),
+          Promise.resolve<SubaccountList>({
+            items: jpyItems,
+            totalInEuros: totalInEurosMinor(jpyItems),
+          }),
         ),
       }),
     )
@@ -103,7 +127,7 @@ describe('useExchangeSummaryViewModel', () => {
     expect(dependencies.confirmExchange).not.toHaveBeenCalled()
   })
 
-  it('exchanges once, shows the tick and only then goes back to Home (US-27, criterion 9)', async () => {
+  it('sends the §12.7 body once, shows the tick and only then goes back to Home (US-27, criterion 9)', async () => {
     // Recorded by hand: the tick has to stay on screen before the ViewModel navigates.
     const order: string[] = []
     const dependencies = fakeDependencies({
@@ -122,10 +146,11 @@ describe('useExchangeSummaryViewModel', () => {
     await viewModel.confirm()
 
     expect(dependencies.confirmExchange).toHaveBeenCalledOnce()
+    // §12.7 request: the wire field names, not the screen's `src`/`tgt`/`amountMinor`.
     expect(dependencies.confirmExchange).toHaveBeenCalledWith({
-      srcCurrency: 'EUR',
-      tgtCurrency: 'USD',
-      amountMinor: 10000,
+      fromCurrency: 'EUR',
+      toCurrency: 'USD',
+      amount: 10000,
     })
     expect(viewModel.confirmed.value).toBe(true)
     expect(viewModel.newBalances.value).toEqual(exchanged)
@@ -133,6 +158,7 @@ describe('useExchangeSummaryViewModel', () => {
       'Compte en euros',
       'USD · Dòlar nord-americà',
     ])
+    // The rows print `from.balance` and `to.balance` from the response.
     expect(viewModel.newBalanceRows.value[0]?.value).toMatch(/^1\.149,00\s€$/)
     expect(viewModel.newBalanceRows.value[1]?.value).toMatch(/^427,16\s\$$/)
     expect(dependencies.pause).toHaveBeenCalledWith(CONFIRMATION_MS)
@@ -157,6 +183,22 @@ describe('useExchangeSummaryViewModel', () => {
     expect(viewModel.confirmed.value).toBe(false)
     expect(viewModel.newBalances.value).toBeNull()
     expect(viewModel.isConfirming.value).toBe(false)
+    expect(dependencies.goHome).not.toHaveBeenCalled()
+  })
+
+  it("shows the shared Catalan text of any other rejection (§12.7 SUBACCOUNT_NOT_FOUND)", async () => {
+    const dependencies = fakeDependencies({
+      confirmExchange: vi.fn(() =>
+        Promise.reject({ code: 'SUBACCOUNT_NOT_FOUND', message: 'x' }),
+      ),
+    })
+    const viewModel = useExchangeSummaryViewModel(dependencies)
+    await viewModel.start()
+
+    await viewModel.confirm()
+
+    expect(viewModel.submitError.value).toBe("No s'ha trobat el subcompte.")
+    expect(viewModel.confirmed.value).toBe(false)
     expect(dependencies.goHome).not.toHaveBeenCalled()
   })
 
