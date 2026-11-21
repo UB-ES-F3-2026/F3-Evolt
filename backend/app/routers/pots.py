@@ -12,7 +12,7 @@ from app.repositories.atomic import Atomic
 from app.routers.current_user import current_user_id
 from app.routers.dependencies import account_repository, atomic, movement_repository, pot_repository
 from app.routers.schemas import MovementResponse
-from app.services.pot_progress import pot_progress
+from app.services.pot_progress import GoalStatus, pot_progress
 from app.services.pot_service import (
     ContributionResult,
     contribute,
@@ -39,7 +39,7 @@ class PotResponse(BaseModel):
     target: int | None
     color: str
     percentage: int | None
-    goal_status: str | None
+    goal_status: GoalStatus | None
 
     @classmethod
     def from_pot(cls, pot: Pot) -> "PotResponse":
