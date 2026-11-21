@@ -14,6 +14,7 @@ from google.cloud import firestore
 from app.data.seed import SeedData, build_seed
 from app.repositories.firestore import _tx
 from app.repositories.firestore.account import ACCOUNTS, account_to_dict
+from app.repositories.firestore.money_request import MONEY_REQUEST_COUNTER, MONEY_REQUESTS, money_request_to_dict
 from app.repositories.firestore.movement import MOVEMENTS, NUMBER_COUNTER, SEQ_COUNTER, movement_to_dict
 from app.repositories.firestore.movement_report import MOVEMENT_REPORTS, REPORT_COUNTER
 from app.repositories.firestore.outbox import OUTBOX, OUTBOX_COUNTER
@@ -27,17 +28,26 @@ from app.repositories.firestore.pot import (
     pot_to_dict,
 )
 from app.repositories.firestore.session import SESSIONS
-from app.repositories.firestore.user import USER_COUNTER, USER_IDENTIFIERS, USERS, identifier_key, user_to_dict
+from app.repositories.firestore.user import (
+    USER_COUNTER,
+    USER_IDENTIFIERS,
+    USERNAMES,
+    USERS,
+    identifier_key,
+    user_to_dict,
+)
 from app.repositories.firestore.verification_code import VERIFICATION_CODES
 
 COLLECTIONS = (
     USERS,
     USER_IDENTIFIERS,
+    USERNAMES,
     ACCOUNTS,
     POTS,
     POT_MOVEMENTS,
     MOVEMENTS,
     MOVEMENT_REPORTS,
+    MONEY_REQUESTS,
     SESSIONS,
     VERIFICATION_CODES,
     OUTBOX,
@@ -75,6 +85,8 @@ def write_seed(client: firestore.Client, seed: SeedData) -> None:
             client.collection(USER_IDENTIFIERS).document(identifier_key(user.identifier)),
             {"user_id": user.id},
         )
+        if user.username:
+            batch.set(client.collection(USERNAMES).document(user.username), {"user_id": user.id})
     for user_id, account in seed.accounts.items():
         batch.set(client.collection(ACCOUNTS).document(str(user_id)), account_to_dict(account))
     for number, pot in enumerate(seed.pots, start=1):
@@ -83,6 +95,8 @@ def write_seed(client: firestore.Client, seed: SeedData) -> None:
         batch.set(client.collection(POT_MOVEMENTS).document(entry.id), pot_movement_to_dict(entry))
     for movement in seed.movements:
         batch.set(client.collection(MOVEMENTS).document(movement.id), movement_to_dict(movement))
+    for money_request in seed.money_requests:
+        batch.set(client.collection(MONEY_REQUESTS).document(money_request.id), money_request_to_dict(money_request))
     batch.set(
         _tx.counters_ref(client),
         {
@@ -93,6 +107,7 @@ def write_seed(client: firestore.Client, seed: SeedData) -> None:
             POT_MOVEMENT_COUNTER: seed.next_pot_movement_number,
             OUTBOX_COUNTER: 1,
             REPORT_COUNTER: seed.next_report_number,
+            MONEY_REQUEST_COUNTER: seed.next_money_request_number,
         },
     )
     batch.commit()

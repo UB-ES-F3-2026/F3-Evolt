@@ -1,6 +1,7 @@
 """Repositoris en memòria (T07.4). Única capa que llegeix i escriu les dades del seed; els serveis no accedeixen mai a seed.py directament."""
 
 from app.repositories.account import AccountRepository
+from app.repositories.money_request import MoneyRequestRepository
 from app.repositories.movement import MovementRepository
 from app.repositories.movement_report import MovementReportRepository
 from app.repositories.outbox import ClosedOutboxRepository, OutboxRepository
@@ -11,6 +12,7 @@ from app.repositories.user import UserRepository
 from app.repositories.verification_code import VerificationCodeRepository
 
 __all__ = [
+    "MoneyRequestRepository",
     "ClosedOutboxRepository",
     "AccountRepository",
     "MovementReportRepository",

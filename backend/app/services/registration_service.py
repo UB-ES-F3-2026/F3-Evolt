@@ -9,6 +9,7 @@ Ordre de les validacions (s'aturen al primer error):
 Tot o res: primer es valida tot i només al final s'escriu.
 
 En acabar, l'usuari rep el codi de verificació a la bústia simulada (T02.1).
+L'`@usuari` es decideix aquí, encara que el compte quedi pendent (T13.2, §13.9).
 El hash es fa fora de l'`atomic` (TR01.1): només la comprovació del duplicat i
 les escriptures hi van a dins.
 """
@@ -16,7 +17,7 @@ les escriptures hi van a dins.
 import threading
 from datetime import datetime
 
-from app.models import STATUS_PENDING, User
+from app.models import IDENTIFIER_PHONE, STATUS_PENDING, User
 from app.repositories import (
     AccountRepository,
     OutboxRepository,
@@ -33,6 +34,7 @@ from app.services.errors import (
 from app.services.identifier import InvalidIdentifier, normalize_identifier
 from app.services.password_hashing import hash_password
 from app.services.password_policy import fits_password_hash, is_strong_password
+from app.services.username import email_username_base, first_free
 from app.services.verification_service import issue_code
 
 # El registre no demana nom (US-01). El camp existeix al model per a l'usuari del seed.
@@ -85,6 +87,11 @@ def register(
             # haver acabat mentre es feia el hash.
             if users.find_by_identifier(identifier.value) is not None:
                 raise ApiError(ALREADY_REGISTERED)
+            # L'@usuari surt del correu (decisió de PO), amb un número si ja hi és.
+            # Amb telèfon queda buit i es mostra com a `usuari<id>`. Es llegeix abans
+            # d'escriure: a Firestore, una transacció llegeix tot abans d'escriure.
+            base = email_username_base(identifier.value, identifier.type)
+            username = first_free(base, users.is_username_taken) if base else ""
             # Escriptures que han d'anar juntes (a Firestore, a la mateixa
             # transacció): no ha de quedar mai un usuari sense compte o sense codi.
             user = users.add(
@@ -93,6 +100,8 @@ def register(
                 identifier_type=identifier.type,
                 password_hash=password_hash,
                 status=STATUS_PENDING,
+                username=username,
+                phone=identifier.value if identifier.type == IDENTIFIER_PHONE else None,
             )
             accounts.create_for_user(user.id)
             issue_code(user, codes, outbox, now)
