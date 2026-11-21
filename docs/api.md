@@ -1550,7 +1550,7 @@ Els codis són a la taula de l'[apartat 5](#taula-de-codis). Els missatges són 
 ```json
 {
   "code": "INSUFFICIENT_BALANCE",
-  "message": "No tens prou saldo per fer aquesta aportació."
+  "message": "No tens prou saldo."
 }
 ```
 
@@ -2225,7 +2225,7 @@ Missatges:
 | `SUBACCOUNT_NOT_EMPTY` | «Només pots eliminar un subcompte amb saldo 0.» (US-26) |
 | `SAME_CURRENCY` | «Origen i destí no poden ser el mateix subcompte.», el text de la pantalla (PR #180, decisió del PO) |
 | `AMOUNT_TOO_SMALL` | «L'import és massa petit per canviar.» (US-27) |
-| `INSUFFICIENT_BALANCE` | «No tens prou saldo.», el text únic per a tots els casos que proposa la P85 de la #196. Avui és «No tens prou saldo per fer aquesta aportació.» |
+| `INSUFFICIENT_BALANCE` | «No tens prou saldo.», el text únic per a tots els casos: aportació, enviament i canvi (P85 de la #196, decisió del PO). El frontend tria el text pel `code`. |
 | `INVALID_AMOUNT` | «L'import ha de ser més gran que 0.» (ja existeix) |
 
 - El `404` segueix la P11 ([apartat 7](#7-propostes-del-contracte)), que el preveu per als recursos que no existeixen.
