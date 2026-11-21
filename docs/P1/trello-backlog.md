@@ -553,6 +553,7 @@ Estimació: SP 3 · VP 5 · Prioritat Alta
 La pantalla d'una guardiola amb objectiu mostra el saldo i l'objectiu (per exemple "120,00 € de 500,00 €"), una barra de progrés i el percentatge
 La part plena de la barra, en lila, correspon al percentatge: amb un 24 %, la barra està plena una quarta part aproximadament
 Si el saldo és menor que l'objectiu, surt l'etiqueta grisa "En progrés"
+Mentre el saldo sigui més petit que l'objectiu, el percentatge queda capat a 99: amb "79,99 € de 80,00 €" surt "99 %" i l'etiqueta "En progrés"; el 100 % i l'etiqueta verda "Objectiu assolit" només quan el saldo arriba a l'objectiu
 Si el saldo arriba o passa l'objectiu, la barra es posa verda i surt l'etiqueta verda "Objectiu assolit"
 A la llista de guardioles, cada guardiola amb objectiu té una barra petita sota el nom
 Les guardioles sense objectiu no tenen barra, només el saldo
@@ -812,7 +813,7 @@ PER: que em torni el que em deu.
 Perfil: client estàndard.
 
 Assumptes:
-- Estats: pendent, pagada, rebutjada i caducada
+- Estats: pendent, pagada, rebutjada i caducada (a l'Sprint 2 només se'n veuen "Pendent" i "Caducada"; "Pagada" i "Rebutjada" arriben amb la US-16)
 - Una sol·licitud sense resposta caduca als 7 dies
 
 Estimació: SP 3 · VP 6 · Prioritat Mitjana
@@ -821,9 +822,9 @@ Estimació: SP 3 · VP 6 · Prioritat Mitjana
 **Checklist Acceptance Criteria:**
 
 ```
-Amb el botó "Demanar diners" trio el destinatari, escric l'import i un concepte; en tocar el botó lila "Enviar sol·licitud", el destinatari rep la notificació "<nom> et demana X €"
+A "Inici" entro pel menú hamburguesa a "Sol·licituds enviades" i el botó "Demanar diners" viu allà dins (no hi ha cap targeta a Inici): trio el destinatari, escric l'import i un concepte; en tocar el botó lila "Enviar sol·licitud", el destinatari rep la notificació "<nom> et demana 30,00 €: <concepte>."
 A "Sol·licituds enviades" veig cada sol·licitud amb el seu estat en una etiqueta de color: "Pendent" (gris), "Pagada" (verd), "Rebutjada" (vermell) o "Caducada" (gris clar)
-Les sol·licituds pendents tenen el botó "Cancel·lar", que demana confirmació i la treu de la llista
+Les sol·licituds pendents tenen el botó "Cancel·lar", que demana confirmació i l'esborra: la fila desapareix de la llista per sempre (no hi ha cap estat "Cancel·lada")
 Si en 7 dies ningú respon, la sol·licitud passa sola a "Caducada"
 ```
 
@@ -986,7 +987,8 @@ Estimació: SP 5 · VP 8 · Prioritat Alta
 A la pantalla "Pagaments" puc triar un destinatari de la llista o amb la cerca (US-13)
 En triar-lo s'obre la pantalla "Enviar", amb la foto i el nom del destinatari a dalt, un teclat numèric per escriure l'import (més gran que 0 i per sota del límit diari) i una casella opcional "Concepte"
 En tocar el botó lila "Continuar" s'obre la pantalla "Confirmar" amb el resum: foto i nom del destinatari, import en gran i concepte
-Si en tocar "Confirmar enviament" no tinc prou saldo, surt en vermell "No tens prou saldo" i no s'envia res
+Si a la pantalla "Enviar" no tinc prou saldo, surt en vermell "No tens prou saldo." i "Continuar" queda desactivat; no s'envia res
+Si l'import supera el que queda del límit diari, a la pantalla "Enviar" surt en vermell "Has superat el límit diari de 1.000,00 €." i "Continuar" queda desactivat; no s'envia res (a "Confirmar enviament" el servidor ho torna a comprovar com a backstop)
 Si tinc saldo, surt un tic verd amb "Has enviat X € a <nom>", els diners arriben a l'instant i el saldo ja surt actualitzat
 Tots dos reben una notificació: "Has enviat X € a <nom>" i "<nom> t'ha enviat X €"
 En tornar a "Inici", el pagament surt a la llista de moviments de tots dos: en vermell amb "−" per a qui envia i en verd amb "+" per a qui rep
@@ -1086,6 +1088,8 @@ A la pantalla d'un subcompte hi ha el botó vermell "Eliminar subcompte"
 Si el subcompte té saldo, surt una finestra amb el text "Abans d'eliminar-lo has de deixar el saldo a 0" i no s'elimina
 Si el saldo és 0, surt una finestra que pregunta "Segur que vols eliminar aquest subcompte?" amb els botons "Cancel·lar" i "Eliminar" (en vermell)
 En confirmar, l'app torna a "Inici" i el subcompte ja no surt a la llista
+El detall del subcompte no té botó "Aportar" (decisió del PO): el saldo només s'omple amb "Canviar" (US-27)
+En eliminar-lo, els moviments en euros dels canvis es queden a "Moviments"/Inici; el moviment en divisa només vivia a l'historial del subcompte i desapareix amb ell
 ```
 
 ---
@@ -1115,7 +1119,7 @@ Estimació: SP 5 · VP 7 · Prioritat Alta
 ```
 A la pantalla "Canviar" trio el subcompte d'origen (a dalt) i el de destí (a sota)
 Amb un teclat numèric escric l'import que vull canviar, i a sota surt en gris quant rebré aproximadament
-En tocar "Continuar" surt la pantalla de resum amb el tipus de canvi (per exemple "1 € = 1,08 $"), la comissió (o "Sense comissió") i l'import exacte que rebré
+En tocar "Continuar" surt la pantalla de resum amb el tipus de canvi (per exemple "1 € = 1,08 $"), la comissió, que s'aplica sempre (1,5 % amb un mínim de 0,50 €), i l'import exacte que rebré
 En tocar el botó lila "Confirmar canvi", si tinc prou saldo a l'origen surt un tic verd amb "Canvi fet"; si no, surt en vermell "No tens prou saldo"
 En tornar a "Inici", els saldos dels dos subcomptes ja surten actualitzats
 ```
@@ -1177,7 +1181,7 @@ Estimació: SP 3 · VP 5 · Prioritat Mitjana
 **Checklist Acceptance Criteria:**
 
 ```
-Fins al límit del mes (1.000 € per al client estàndard i 5.000 € per al client premium), els canvis de divisa tenen 0 % de comissió i al resum surt "Sense comissió"
+Fins al límit del mes (1.000 € per al client estàndard i 5.000 € per al client premium), els canvis de divisa tenen 0 % de comissió i al resum surt "0 % de comissió"
 Un cop passat el límit, la pantalla de resum mostra en vermell la comissió que se suma (per exemple "Comissió: 2,50 €") abans de tocar "Confirmar canvi"
 Als moviments posteriors al límit, la comissió cobrada surt en gris sota l'import
 ```
