@@ -31,6 +31,13 @@ export interface Pot {
   balance: number
   target: number | null
   color: PotColor
+  /**
+   * Goal progress as the backend sends it since US-20 (docs/api.md §9.1, issue #150);
+   * absent on answers from before, so both fields are optional.
+   * `goalStatus` keeps the raw API value: `potGoalStatus` narrows it.
+   */
+  percentage?: number | null
+  goalStatus?: string | null
 }
 
 /** A pot as the API sends it, before `color` is checked. */
@@ -40,6 +47,9 @@ export interface PotJson {
   balance: number
   target: number | null
   color: string
+  /** Same goal progress fields of the contract (§9.1, issue #150); optional until the backend sends them. */
+  percentage?: number | null
+  goalStatus?: string | null
 }
 
 /** GET /api/pots (docs/api.md §9.2). */
@@ -103,6 +113,9 @@ export function fromApiPot(json: PotJson): Pot {
     balance: json.balance,
     target: json.target ?? null,
     color: isPotColor(json.color) ? json.color : DEFAULT_POT_COLOR,
+    // Pass-through: `undefined` keeps the field absent, as with answers from before US-20.
+    percentage: json.percentage,
+    goalStatus: json.goalStatus,
   }
 }
 

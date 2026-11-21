@@ -1,6 +1,9 @@
 /**
  * In-memory pots, shaped exactly like docs/api.md §9. The demo user starts with
  * the 3 pots of ./seed.ts and any other account with none, as with the backend.
+ *
+ * US-20 (issue #150): like the backend, every pot that leaves the mocks carries
+ * the goal progress fields `percentage` and `goalStatus` of §9.1.
  */
 
 import {
@@ -13,6 +16,7 @@ import {
   type PotMovementsJson,
   type PotsJson,
 } from '@/models/pot'
+import { computePercentage, goalStatusFor, type GoalStatus } from '@/models/potGoal'
 import { mockBalance, mockError, recordAccountMovement } from './index'
 import { madridDaysAgoAt, toContractDate } from './madridTime'
 import { mockCurrentUser, onMockUserChange } from './mockUser'
@@ -32,6 +36,25 @@ let history: StoredPotMovement[] = []
 let nextEntryNumber = 0
 startPots()
 onMockUserChange(startPots)
+
+/** A pot as the backend sends it since US-20 (issue #150): with its goal progress. */
+type PotJsonWithProgress = PotJson & { percentage: number | null; goalStatus: GoalStatus | null }
+
+/**
+ * US-20 (issue #150): the backend computes the goal progress of §9.1 and sends it
+ * on every read. Round half-up percentage, achieved from the target balance on;
+ * a pot without a target has neither field, so both are null.
+ */
+function withProgress(pot: PotJson): PotJsonWithProgress {
+  const { target } = pot
+  const hasGoal = target !== null && target > 0
+  return {
+    ...pot,
+    percentage: hasGoal ? computePercentage(pot.balance, target) : null,
+    // Same rule as the backend, shared with potGoalStatus via the helper.
+    goalStatus: goalStatusFor(pot.balance, target),
+  }
+}
 
 /** The pots of whoever is logged in: the seed ones for the demo user, none for anyone else. */
 function startPots(): void {
@@ -54,7 +77,7 @@ function startPots(): void {
 
 /** GET /api/pots — in creation order (P23). Copies, so callers cannot change the state. */
 export function mockPots(): PotsJson {
-  return { items: pots.map((pot) => ({ ...pot })) }
+  return { items: pots.map((pot) => withProgress(pot)) }
 }
 
 /** `totalSaved` of GET /api/home: the sum of every pot's balance (docs/api.md §4.1). */
@@ -88,7 +111,7 @@ export function mockCreatePot(body: { name?: unknown; target?: unknown; color?: 
     color: color ?? DEFAULT_POT_COLOR,
   }
   pots.push(pot)
-  return { ...pot }
+  return withProgress(pot)
 }
 
 /** A strict JSON integer, or nothing: `"300"` and `300.5` are format errors (P5). */
@@ -134,7 +157,8 @@ export function mockContribute(potId: string, body: { amount?: unknown }): Contr
   const { balance, movement } = recordAccountMovement(`Aportació a ${pot.name}`, 'expense', 'savings', amount, now)
   pot.balance += amount
   history.push(toStoredEntry(nextEntryNumber++, pot.id, now, 'Aportació', amount))
-  return { balance, pot: { ...pot }, movement }
+  // US-20 (issue #150): the contribution answer carries the pot's fresh progress.
+  return { balance, pot: withProgress(pot), movement }
 }
 
 /** A pot that does not exist gets the same answer as one of another user (§9.4). */
