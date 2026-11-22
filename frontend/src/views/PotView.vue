@@ -7,6 +7,7 @@ import ErrorState from '@/components/ErrorState.vue'
 import LoadingIndicator from '@/components/LoadingIndicator.vue'
 import MoneyAmount from '@/components/MoneyAmount.vue'
 import MovementRow from '@/components/MovementRow.vue'
+import PotProgress from '@/components/PotProgress.vue'
 import { useBalanceVisibility } from '@/viewmodels/useBalanceVisibility'
 import { usePotViewModel } from '@/viewmodels/usePotViewModel'
 
@@ -40,6 +41,7 @@ onMounted(load)
           Objectiu:
           <MoneyAmount :cents="pot.target" :hidden="isHidden" />
         </p>
+        <PotProgress :pot="pot" :hidden="isHidden" />
         <router-link :to="{ name: 'contribute', params: { potId: pot.id } }" class="contribute">
           Aportar
         </router-link>
@@ -101,7 +103,8 @@ onMounted(load)
 }
 
 .target {
-  margin: 0 0 1rem;
+  /* The progress bar below brings its own top margin, so no extra gap here. */
+  margin: 0;
   font-size: 0.875rem;
   color: var(--color-muted);
 }
