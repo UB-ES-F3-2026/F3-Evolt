@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=390">
+  <title>Guardioles · Llista amb progrés · F3-Evolt</title>
+  <style>
+    :root {
+      --color-bg: #f7f9fc;
+      --color-surface: #ffffff;
+      --color-text: #1a2233;
+      --color-muted: #6c7a96;
+      --color-border: #e6ebf4;
+      --color-primary: #4f46e5;
+      --color-income: #16a34a;
+      --color-error: #dc2626;
+      --color-pot-blue: #2563eb;
+      --color-pot-orange: #ea580c;
+      --color-pot-pink: #db2777;
+      --radius: 0.75rem;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--color-bg);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--color-text);
+      -webkit-font-smoothing: antialiased;
+    }
+    .screen {
+      width: 390px;
+      height: 844px;
+      overflow: hidden;
+      margin: 0 auto;
+      background: var(--color-bg);
+      display: flex;
+      flex-direction: column;
+    }
+    /* App bar (estructura US-19: títol a la barra, enllaç de tornada al contingut) */
+    .appbar {
+      position: relative;
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex: none;
+    }
+    .appbar-title {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--color-text);
+      white-space: nowrap;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 2px;
+      font-size: 14px;
+      color: var(--color-primary);
+      text-decoration: none;
+    }
+    .appbar-action {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-primary);
+      background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+      padding: 6px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    .content {
+      flex: 1;
+      overflow: hidden;
+      padding: 8px 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 8px 16px;
+      box-shadow: 0 1px 2px rgba(26, 34, 51, 0.04);
+    }
+    ul.rows {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 64px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--color-border);
+      text-decoration: none;
+      color: var(--color-text);
+    }
+    ul.rows li.row:last-child { border-bottom: none; }
+    .row-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+      background: color-mix(in srgb, var(--pot-color) 14%, var(--color-surface));
+      color: var(--pot-color);
+    }
+    .row-name-col {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .row-name {
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    /* Barra petita (PotProgress compact) */
+    .mini-track {
+      width: 100%;
+      max-width: 150px;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--color-border);
+      overflow: hidden;
+    }
+    .mini-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--color-primary);
+    }
+    .mini-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .mini-percent {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .amount {
+      flex-shrink: 0;
+      font-size: 15px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .chevron {
+      flex-shrink: 0;
+      color: var(--color-muted);
+    }
+  </style>
+</head>
+<body>
+  <!--
+    Estàtic (mockup visual) · US-20 · llista «Guardioles» amb barres petites — estats NO representats aquí:
+    - Carregant… (isLoading) i Error + botó «Reintentar»
+    - Buit: «Encara no tens cap guardiola» + «Crear guardiola»
+    - Fila assolida: barra petita plena i verda + «115 %» (pot ser més del 100 %)
+    - Les tres files són el seed: pot-01 Vacances (blue, 15 %), pot-02 Emergències (orange, sense
+      objectiu: sense barra ni percentatge), pot-03 Regal d'aniversari (pink, 63 %)
+  -->
+  <div class="screen">
+    <header class="appbar">
+      <h1 class="appbar-title">Guardioles</h1>
+      <a class="appbar-action" href="#">Crear guardiola</a>
+    </header>
+    <main class="content">
+      <a class="back-link" href="#"><span aria-hidden="true">←</span> Inici</a>
+
+      <section class="card">
+        <ul class="rows">
+
+          <li class="row">
+            <span class="row-icon" style="--pot-color: var(--color-pot-blue)" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 17h3v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-3a3.16 3.16 0 0 0 2-2h1a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1h-1a5 5 0 0 0-2-4V3a4 4 0 0 0-3.2 1.6l-.3.4H11a6 6 0 0 0-6 6v1a5 5 0 0 0 2 4v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1z"/>
+                <path d="M16 10h.01"/>
+                <path d="M2 8v1a2 2 0 0 0 2 2h1"/>
+              </svg>
+            </span>
+            <div class="row-name-col">
+              <span class="row-name">Vacances</span>
+              <div
+                class="mini-track"
+                role="progressbar"
+                aria-label="Progrés de Vacances cap a l'objectiu"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="15"
+                aria-valuetext="15 % de l'objectiu"
+              >
+                <div class="mini-fill" style="width: 15%"></div>
+              </div>
+              <div class="mini-meta">
+                <span class="mini-percent">15&nbsp;%</span>
+              </div>
+            </div>
+            <span class="amount">150,00&nbsp;€</span>
+            <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m9 18 6-6-6-6"/>
+            </svg>
+          </li>
+
+          <li class="row">
+            <span class="row-icon" style="--pot-color: var(--color-pot-orange)" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 17h3v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-3a3.16 3.16 0 0 0 2-2h1a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1h-1a5 5 0 0 0-2-4V3a4 4 0 0 0-3.2 1.6l-.3.4H11a6 6 0 0 0-6 6v1a5 5 0 0 0 2 4v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1z"/>
+                <path d="M16 10h.01"/>
+                <path d="M2 8v1a2 2 0 0 0 2 2h1"/>
+              </svg>
+            </span>
+            <div class="row-name-col">
+              <span class="row-name">Emergències</span>
+            </div>
+            <span class="amount">100,00&nbsp;€</span>
+            <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m9 18 6-6-6-6"/>
+            </svg>
+          </li>
+
+          <li class="row">
+            <span class="row-icon" style="--pot-color: var(--color-pot-pink)" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 17h3v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-3a3.16 3.16 0 0 0 2-2h1a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1h-1a5 5 0 0 0-2-4V3a4 4 0 0 0-3.2 1.6l-.3.4H11a6 6 0 0 0-6 6v1a5 5 0 0 0 2 4v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1z"/>
+                <path d="M16 10h.01"/>
+                <path d="M2 8v1a2 2 0 0 0 2 2h1"/>
+              </svg>
+            </span>
+            <div class="row-name-col">
+              <span class="row-name">Regal d'aniversari</span>
+              <div
+                class="mini-track"
+                role="progressbar"
+                aria-label="Progrés de Regal d'aniversari cap a l'objectiu"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="63"
+                aria-valuetext="63 % de l'objectiu"
+              >
+                <div class="mini-fill" style="width: 63%"></div>
+              </div>
+              <div class="mini-meta">
+                <span class="mini-percent">63&nbsp;%</span>
+              </div>
+            </div>
+            <span class="amount">50,00&nbsp;€</span>
+            <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m9 18 6-6-6-6"/>
+            </svg>
+          </li>
+
+        </ul>
+      </section>
+
+    </main>
+  </div>
+</body>
+</html>

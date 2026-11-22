@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>US-14 · Inici amb els dos saldos actualitzats</title>
+<style>
+:root{--color-bg:#f7f9fc;--color-surface:#fff;--color-text:#1a2233;--color-muted:#6c7a96;--color-border:#e6ebf4;--color-primary:#4f46e5;--color-income:#16a34a;--color-expense:#dc2626;--color-error:#dc2626;--color-icon-bg:#eef0fb;--radius:.75rem;--annot:#b45309}
+*{box-sizing:border-box}
+body{margin:0;background:var(--color-bg);color:var(--color-text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.screen{position:relative;width:390px;height:844px;overflow:hidden;margin:0 auto;background:var(--color-bg);display:flex;flex-direction:column}
+.appbar{display:flex;align-items:center;gap:16px;padding:16px 20px;background:var(--color-surface);border-bottom:1px solid var(--color-border)}
+.appbar-title{margin:0;font-size:20px;font-weight:700;white-space:nowrap}
+.appbar .menu{margin-left:auto;display:grid;place-items:center;padding:6px;border-radius:50%;color:var(--color-muted)}
+.content{flex:1;overflow:hidden;padding:16px 20px;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--color-surface);border-radius:var(--radius);padding:16px 20px}
+.section-header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.label{margin:0;font-size:13px;font-weight:600;color:var(--color-muted)}
+.balance{margin:4px 0 6px;font-size:32px;font-weight:700;font-variant-numeric:tabular-nums}
+.saved{margin:0;font-size:13px;color:var(--color-muted)}
+.saved b{color:var(--color-text);font-weight:600}
+.actions{display:flex;gap:8px;margin-top:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border-radius:var(--radius);font-size:14px;font-weight:600;border:1px solid var(--color-primary)}
+.pill-primary{background:var(--color-primary);color:var(--color-surface)}
+.pill-outline{background:var(--color-surface);color:var(--color-primary)}
+.see-all{font-size:13px;color:var(--color-primary);font-weight:600}
+ul.movements{list-style:none;margin:6px 0 0;padding:0}
+.movement{display:flex;align-items:center;gap:12px;padding:10px 0}
+.movement-icon{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--color-bg);color:var(--color-muted)}
+.movement-details{flex:1;min-width:0}
+.movement-concept{margin:0;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.movement-date{font-size:12px;color:var(--color-muted)}
+.amount{flex:none;font-weight:600;font-variant-numeric:tabular-nums}
+.income{color:var(--color-income)}
+.expense{color:var(--color-expense)}
+.annot{position:absolute;left:20px;right:20px;bottom:20px;display:flex;gap:10px;padding:10px 12px;background:var(--color-surface);border:1px solid var(--annot);border-left:4px solid var(--annot);border-radius:12px;box-shadow:0 6px 16px rgba(26,34,51,.12);font-size:13px;line-height:1.35}
+.annot-num{flex:none;width:20px;height:20px;margin-top:1px;border-radius:50%;background:var(--annot);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
+.annot-text{margin:0}
+.annot-note{display:block;margin-top:3px;font-size:12px;color:var(--color-muted)}
+</style>
+</head>
+<body>
+<!--
+  US-14 · Tornar a Inici després de l'enviament — el pagament ja és a tots dos comptes.
+
+  És Inici (HomeView.vue) de la sessió que ha enviat: saldo 3.775,21 € (3.795,21 − 20,00)
+  i el moviment nou «El sopar de divendres» amb «−20,00 €» en vermell, icona transfer i
+  contrapartida «Usuari nou». Inici refetcheja GET /api/home en muntar-se.
+
+  A sota, la mateixa transferència vista des de la sessió del destinatari: 20,00 € i
+  «+20,00 €» en verd (GET /api/home amb el seu token). No hi ha push: són dues sessions.
+-->
+<div class="screen">
+  <header class="appbar">
+    <h1 class="appbar-title">Inici</h1>
+    <span class="menu" aria-label="Menú" title="Menú"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg></span>
+  </header>
+  <main class="content" style="padding-bottom:132px">
+    <section class="card">
+      <div class="section-header">
+        <h2 class="label">Saldo disponible</h2>
+        <span style="color:var(--color-muted)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg></span>
+      </div>
+      <p class="balance">3.775,21 €</p>
+      <p class="saved">Total estalviat a guardioles: <b>300,00 €</b></p>
+      <div class="actions">
+        <span class="pill pill-primary">+ Afegir diners</span>
+        <span class="pill pill-outline">Guardioles</span>
+      </div>
+    </section>
+    <section class="card">
+      <div class="section-header">
+        <h2 class="label">Últims moviments</h2>
+        <span class="see-all">Veure tots</span>
+      </div>
+      <ul class="movements">
+        <li class="movement">
+          <span class="movement-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg></span>
+          <span class="movement-details"><p class="movement-concept">El sopar de divendres</p><span class="movement-date">15 de nov. · 21:15</span></span>
+          <span class="amount expense">−20,00 €</span>
+        </li>
+        <li class="movement">
+          <span class="movement-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg></span>
+          <span class="movement-details"><p class="movement-concept">Restaurant La Plaça</p><span class="movement-date">14 de nov. · 21:15</span></span>
+          <span class="amount expense">−23,50 €</span>
+        </li>
+      </ul>
+    </section>
+    <section class="card" style="border:1px dashed var(--color-border)">
+      <div class="section-header">
+        <h2 class="label">Sessió buit@evolt.test · Inici</h2>
+      </div>
+      <p class="balance" style="font-size:26px">20,00 €</p>
+      <ul class="movements" style="margin-top:0">
+        <li class="movement" style="border-top:1px solid var(--color-border);padding-bottom:0">
+          <span class="movement-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg></span>
+          <span class="movement-details"><p class="movement-concept">El sopar de divendres</p><span class="movement-date">15 de nov. · 21:15</span></span>
+          <span class="amount income">+20,00 €</span>
+        </li>
+      </ul>
+    </section>
+  </main>
+  <div class="annot" role="note">
+    <span class="annot-num">1</span>
+    <p class="annot-text">La mateixa transferència, vista des de les dues sessions<span class="annot-note">Qui envia: 3.775,21 € i −20,00 € en vermell. Qui rep: 20,00 € i +20,00 € en verd. No hi ha push: cada Inici refetcheja GET /api/home en muntar-se.</span></p>
+  </div>
+</div>
+</body>
+</html>

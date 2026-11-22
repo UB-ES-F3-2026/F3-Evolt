@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retirar de Vacances · F3-Evolt</title>
+<style>
+:root{
+  --color-bg:#f7f9fc;
+  --color-surface:#ffffff;
+  --color-text:#1a2233;
+  --color-muted:#6c7a96;
+  --color-border:#e6ebf4;
+  --color-primary:#4f46e5;
+  --color-income:#16a34a;
+  --color-expense:#dc2626;
+  --color-error:#dc2626;
+  --radius:0.75rem;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--color-bg);
+  color:var(--color-text);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:16px;
+  line-height:1.5;
+}
+/* --- Pantalla 390x844 --- */
+.screen{
+  width:390px;
+  height:844px;
+  background:var(--color-bg);
+  overflow:hidden;
+  margin:0 auto;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+}
+/* --- Barra superior --- */
+.appbar{
+  background:var(--color-surface);
+  border-bottom:1px solid var(--color-border);
+  padding:14px 16px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:none;
+}
+.back-link{
+  display:inline-block;
+  margin-bottom:2px;
+  font-size:14px;
+  color:var(--color-primary);
+  text-decoration:none;
+}
+.appbar-title{
+  font-size:17px;
+  font-weight:600;
+  margin:0;
+}
+/* --- Contingut --- */
+.content{
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  flex:1;
+}
+.card{
+  background:var(--color-surface);
+  border-radius:var(--radius);
+  padding:20px;
+}
+/* --- Fila de saldos (dl.balances del formulari; aquí, una sola fila C4) --- */
+.balances{
+  margin:0 0 20px;
+}
+.balance-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:16px;
+  padding:6px 0;
+}
+.balance-row dt{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:var(--color-muted);
+}
+.balance-row dd{
+  margin:0;
+  font-weight:600;
+  font-variant-numeric:tabular-nums;
+}
+/* --- Camp d'import (patró de ContributeView) --- */
+.label{
+  display:block;
+  margin-bottom:4px;
+  font-size:14px;
+  color:var(--color-muted);
+}
+.field{
+  display:flex;
+  align-items:center;
+  margin-bottom:12px;
+  border:1px solid var(--color-error);
+  border-radius:var(--radius);
+  background:var(--color-surface);
+}
+.input{
+  flex:1;
+  min-width:0;
+  padding:12px;
+  border:none;
+  border-radius:var(--radius);
+  background:transparent;
+  color:var(--color-text);
+  font-family:inherit;
+  font-size:24px;
+  font-weight:600;
+  font-variant-numeric:tabular-nums;
+  outline:none;
+}
+.currency{
+  padding-right:12px;
+  font-size:24px;
+  font-weight:600;
+  color:var(--color-muted);
+}
+/* --- Error en vermell sota el camp (role="alert") --- */
+.error{
+  margin:0 0 16px;
+  font-size:14px;
+  color:var(--color-error);
+}
+/* --- Botó «Confirmar» desactivat (opacitat 0,5, com .button:disabled) --- */
+.button{
+  padding:12px;
+  border:none;
+  border-radius:var(--radius);
+  background:var(--color-primary);
+  color:var(--color-surface);
+  font-family:inherit;
+  font-size:16px;
+  font-weight:600;
+  cursor:not-allowed;
+  opacity:0.5;
+  width:100%;
+  min-height:48px;
+}
+/* --- Enllaç «Cancel·lar» --- */
+.cancel{
+  display:block;
+  margin-top:12px;
+  font-size:14px;
+  text-align:center;
+  color:var(--color-text);
+}
+</style>
+</head>
+<body>
+<!--
+  US-19 · Pantalla «Retirar de Vacances» (WithdrawView) — maqueta estàtica.
+  Estat representat: validació en viu amb un import de 200 > saldo 150,00 €,
+  motiu «La guardiola no té prou saldo per aquesta retirada.» (INSUFFICIENT_POT_BALANCE),
+  amb «Confirmar» desactivat.
+
+  Estats NO representats aquí (es documenten al doc, no als mockups):
+  - Carregant: «Carregant…» (LoadingIndicator)
+  - Error de càrrega: «No s'ha trobat la guardiola.» + «Reintentar»
+  - Import buit: sense error, «Confirmar» desactivat
+  - «Enviant…» mentre s'envia
+  - Èxit: tic verd «Has retirat 30,00 € de Vacances» + «Saldo disponible: … · Vacances: …» (maqueta US-19-retirada-feta.html)
+  - Error del servidor / xarxa sota el botó (role="alert")
+-->
+<div class="screen">
+  <header class="appbar">
+    <h1 class="appbar-title">Retirar de Vacances</h1>
+  </header>
+  <main class="content">
+    <a class="back-link" href="#"><span aria-hidden="true">←</span> Inici</a>
+    <form class="card" action="#" method="post">
+      <!-- Fila de dalt: el saldo de la guardiola (C4); el saldo del compte no es mostra aquí -->
+      <dl class="balances">
+        <div class="balance-row">
+          <dt>Saldo de la guardiola</dt>
+          <dd>150,00&nbsp;€</dd>
+        </div>
+      </dl>
+
+      <label class="label" for="withdrawal-amount">Import</label>
+      <div class="field">
+        <input id="withdrawal-amount" class="input" type="text" inputmode="decimal"
+               autocomplete="off" placeholder="0,00" value="200"
+               aria-invalid="true" aria-describedby="withdrawal-error">
+        <span class="currency" aria-hidden="true">€</span>
+      </div>
+      <p id="withdrawal-error" class="error" role="alert">La guardiola no té prou saldo per aquesta retirada.</p>
+
+      <button class="button" type="submit" disabled>Confirmar</button>
+      <a class="cancel" href="#">Cancel·lar</a>
+    </form>
+  </main>
+</div>
+</body>
+</html>
