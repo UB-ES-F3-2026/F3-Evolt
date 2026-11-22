@@ -1,4 +1,5 @@
-"""Subcomptes en divisa: llistar i crear (US-25, docs/api.md §12.2 a §12.4).
+"""Subcomptes en divisa: llistar, crear, eliminar i veure'n l'historial
+(US-25 i US-26, docs/api.md §12.2 a §12.6).
 
 Ordre de les validacions en crear (s'aturen al primer error, §12.4):
   1. Format del cos (`currency` string) → el router, VALIDATION_ERROR.
@@ -8,13 +9,31 @@ Ordre de les validacions en crear (s'aturen al primer error, §12.4):
 Un error no crea res ni gasta cap id. El router fa la creació dins
 d'`atomic.run(...)`: de dues peticions alhora per a la mateixa divisa, la segona
 ja veu el subcompte de la primera i rep CURRENCY_EXISTS.
+
+Eliminar (§12.5) també va dins d'`atomic.run(...)`, perquè la comprovació del
+saldo i l'esborrat no es puguin separar d'un canvi que arribi alhora (T27.1).
 """
 
 from dataclasses import dataclass
 
-from app.models import CURRENCIES, MAIN_CURRENCY, MAIN_SUBACCOUNT_ID, Subaccount, rate_bps, total_in_euros
+from app.models import (
+    CURRENCIES,
+    MAIN_CURRENCY,
+    MAIN_SUBACCOUNT_ID,
+    Subaccount,
+    SubaccountMovement,
+    rate_bps,
+    total_in_euros,
+)
 from app.repositories import AccountRepository, SubaccountRepository
-from app.services.errors import CURRENCY_EXISTS, CURRENCY_NOT_SUPPORTED, ApiError
+from app.services.errors import (
+    CURRENCY_EXISTS,
+    CURRENCY_NOT_SUPPORTED,
+    MAIN_ACCOUNT_NOT_DELETABLE,
+    SUBACCOUNT_NOT_EMPTY,
+    SUBACCOUNT_NOT_FOUND,
+    ApiError,
+)
 
 
 @dataclass(frozen=True)
@@ -72,6 +91,41 @@ def create_subaccount(user_id: int, currency: str, subaccounts: SubaccountReposi
     if currency == MAIN_CURRENCY or any(sub.currency == currency for sub in subaccounts.list_by_user(user_id)):
         raise ApiError(CURRENCY_EXISTS)
     return AccountInCurrency.from_subaccount(subaccounts.add(user_id=user_id, currency=currency))
+
+
+def delete_subaccount(user_id: int, subaccount_id: str, subaccounts: SubaccountRepository) -> None:
+    """Elimina un subcompte en divisa de l'usuari que té saldo 0 (US-26, §12.5).
+
+    Ordre de les validacions (s'aturen al primer error):
+      1. No existeix o és d'un altre usuari → SUBACCOUNT_NOT_FOUND.
+      2. És el compte principal → MAIN_ACCOUNT_NOT_DELETABLE, tingui el saldo que tingui.
+      3. El saldo no és exactament 0 → SUBACCOUNT_NOT_EMPTY.
+    `main` existeix sempre i és de l'usuari, així que el pas 1 no l'atura mai: per
+    això es mira primer, abans de buscar-lo al repositori (on no hi és, §12.11).
+    Només s'esborra el subcompte: el seu historial es queda desat, i els moviments
+    del compte principal no es toquen.
+    """
+    if subaccount_id == MAIN_SUBACCOUNT_ID:
+        raise ApiError(MAIN_ACCOUNT_NOT_DELETABLE)
+    subaccount = subaccounts.get_by_user(user_id, subaccount_id)
+    if subaccount is None:
+        raise ApiError(SUBACCOUNT_NOT_FOUND)
+    if subaccount.balance != 0:
+        raise ApiError(SUBACCOUNT_NOT_EMPTY)
+    subaccounts.delete(subaccount.id)
+
+
+def list_subaccount_movements(
+    user_id: int, subaccount_id: str, subaccounts: SubaccountRepository
+) -> list[SubaccountMovement]:
+    """Historial d'un subcompte en divisa de l'usuari, del més recent al més antic (§12.6).
+
+    `main` respon SUBACCOUNT_NOT_FOUND: l'historial del compte en euros és
+    `GET /api/movements` (decisió del PO). Un subcompte eliminat, també.
+    """
+    if subaccounts.get_by_user(user_id, subaccount_id) is None:
+        raise ApiError(SUBACCOUNT_NOT_FOUND)
+    return subaccounts.list_movements(subaccount_id)
 
 
 def _main_account(user_id: int, accounts: AccountRepository) -> AccountInCurrency:
