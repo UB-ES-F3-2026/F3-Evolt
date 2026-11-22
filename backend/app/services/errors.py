@@ -36,6 +36,14 @@ INSUFFICIENT_POT_BALANCE = "INSUFFICIENT_POT_BALANCE"
 # Moviments (docs/api.md §5 i §10.6).
 MOVEMENT_NOT_FOUND = "MOVEMENT_NOT_FOUND"
 INVALID_DESCRIPTION = "INVALID_DESCRIPTION"
+# Multidivisa (docs/api.md §5 i §12.10). La resta de codis arriben amb la T27.1.
+CURRENCY_NOT_SUPPORTED = "CURRENCY_NOT_SUPPORTED"
+CURRENCY_EXISTS = "CURRENCY_EXISTS"
+SUBACCOUNT_NOT_FOUND = "SUBACCOUNT_NOT_FOUND"
+MAIN_ACCOUNT_NOT_DELETABLE = "MAIN_ACCOUNT_NOT_DELETABLE"
+SUBACCOUNT_NOT_EMPTY = "SUBACCOUNT_NOT_EMPTY"
+# Pagaments (docs/api.md §5 i §13.8).
+RECIPIENT_NOT_FOUND = "RECIPIENT_NOT_FOUND"
 
 # Codi d'error → estat HTTP de la resposta.
 ERROR_STATUS: dict[str, int] = {
@@ -62,6 +70,12 @@ ERROR_STATUS: dict[str, int] = {
     INSUFFICIENT_POT_BALANCE: 422,
     MOVEMENT_NOT_FOUND: 404,
     INVALID_DESCRIPTION: 422,
+    CURRENCY_NOT_SUPPORTED: 422,
+    CURRENCY_EXISTS: 422,
+    SUBACCOUNT_NOT_FOUND: 404,
+    MAIN_ACCOUNT_NOT_DELETABLE: 422,
+    SUBACCOUNT_NOT_EMPTY: 422,
+    RECIPIENT_NOT_FOUND: 404,
 }
 
 # Missatge per defecte de cada codi (docs/api.md §5). El contracte els marca
@@ -91,6 +105,15 @@ ERROR_MESSAGES: dict[str, str] = {
     INSUFFICIENT_POT_BALANCE: "La guardiola no té prou saldo per aquesta retirada.",
     MOVEMENT_NOT_FOUND: "No s'ha trobat el moviment.",
     INVALID_DESCRIPTION: "Explica què passa amb el moviment (com a màxim 500 caràcters).",
+    # Textos literals de la US-25.
+    CURRENCY_NOT_SUPPORTED: "Aquesta divisa no és a la llista de divises disponibles.",
+    CURRENCY_EXISTS: "Ja tens un subcompte en aquesta divisa.",
+    # Decisió del PO (#193).
+    SUBACCOUNT_NOT_FOUND: "No s'ha trobat el subcompte.",
+    # Textos literals de la US-26.
+    MAIN_ACCOUNT_NOT_DELETABLE: "El compte en euros no es pot eliminar.",
+    SUBACCOUNT_NOT_EMPTY: "Només pots eliminar un subcompte amb saldo 0.",
+    RECIPIENT_NOT_FOUND: "No hem trobat aquest destinatari.",
 }
 
 
