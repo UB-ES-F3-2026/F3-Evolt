@@ -174,6 +174,13 @@ async function main() {
 // The unit tests import the pure functions above without running anything.
 if (process.env.PROJECT_STATUS_TEST !== '1') {
   main().catch((error) => {
+    // A board problem (missing permission, rate limit) is not a code problem: warn and stay
+    // green in Actions, so the "Kanban" check never looks like a broken build (review on #218).
+    // Locally (--pr) the error still exits 1, so a replay that fails is visible.
+    if (process.env.GITHUB_ACTIONS === 'true') {
+      console.log(`::warning title=Kanban not updated::${error.message}`)
+      return
+    }
     console.error(error.message)
     process.exit(1)
   })
