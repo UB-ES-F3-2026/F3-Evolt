@@ -62,6 +62,32 @@ export interface SubaccountsJson {
   items: SubaccountJson[]
 }
 
+/** The id of the main euro account in every multi-currency answer (docs/api.md §12.2). */
+export const MAIN_SUBACCOUNT_ID = 'main'
+
+/**
+ * One entry of a currency sub-account's history (US-26, docs/api.md §12.6).
+ * `amount` is in the minor unit of the sub-account's currency, always > 0;
+ * `type` says whether money came in or went out of the sub-account.
+ */
+export interface SubaccountMovement {
+  id: string
+  amount: number
+  concept: string
+  date: string
+  type: 'income' | 'expense'
+}
+
+/** GET /api/subaccounts/{subaccountId}/movements (docs/api.md §12.6). */
+export interface SubaccountMovementsJson {
+  items: SubaccountMovement[]
+}
+
+/** POST /api/subaccounts/{subaccountId}/delete (docs/api.md §12.5). */
+export interface DeleteSubaccountJson {
+  status: 'ok'
+}
+
 /** Maps one row; unknown currency codes are an API contract break, so it throws. */
 export function fromApiSubaccount(json: SubaccountJson): Subaccount {
   if (!isCurrencyCode(json.currency)) {
