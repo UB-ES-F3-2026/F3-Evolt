@@ -142,6 +142,31 @@ Note: calling the deployed API (`GET /api/health`, `/api/movements`, ...) does
 **not** trigger a deploy. Only a push to the branch (native) or a POST to the
 hook deploys.
 
+## Release with seed changes
+
+With `STORAGE=firestore`, the backend writes the seed **only when the database is empty**
+(`ensure_seeded` at start-up). Production was seeded in Sprint 1, so a release that changes
+`backend/app/data/seed.py` does not reach production by itself. Sprint 2 is one: US-13 adds
+the eight seed users with `@usuari` and phone, and the demo needs them (search and send money).
+
+And `POST /api/dev/reset` never exists on real Firestore, on purpose.
+
+**Run this once, right after the release reaches `main`.** It must be someone who has the
+service-account key (it lives only in Render and never in the repo):
+
+```bash
+cd backend
+pip install -r requirements.txt
+# The project id is the backend's FIRESTORE_PROJECT_ID on Render; write it twice.
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json   python -m app.data.firestore_seed --project <project-id> --confirm <project-id>
+```
+
+- It **deletes every collection** of that project and writes the seed again: accounts
+  registered in production, sessions, movements and pots are lost. Fine for the demo data.
+- If `--project` and `--confirm` differ, it connects to nothing and deletes nothing.
+- No restart is needed: the backend reads Firestore on every request. Everyone logs in again.
+- Then check `/api/health`, log in with the seed user and search for `@izanfarreny47`.
+
 ## First deploy checklist
 
 1. Hosting live per the example above (#107/#108; both public URLs answer).
