@@ -79,17 +79,22 @@ def send_password_reset(user: User, link: str, now: datetime, outbox: OutboxRepo
 # mateixa operació tot o res que mou els saldos: si l'enviament falla, no queda cap avís.
 
 
-def send_transfer_sent(sender: User, recipient_name: str, amount: int, now: datetime, outbox: OutboxRepository) -> None:
-    """Avís a qui envia: «Has enviat 20,00 € a Usuari nou.»"""
-    outbox.add(
-        OutboxMessage(
-            to=sender.identifier,
-            channel=_channel(sender),
-            type=MESSAGE_TRANSFER_SENT,
-            text=f"Has enviat {format_euros(amount)} a {recipient_name}.",
-            date=now,
-        )
+def send_transfer_sent(
+    sender: User, recipient_name: str, amount: int, now: datetime, outbox: OutboxRepository
+) -> OutboxMessage:
+    """Avís a qui envia: «Has enviat 20,00 € a Usuari nou.»
+
+    Torna el missatge perquè l'enviament el pugui treure si després falla l'avís a qui rep.
+    """
+    message = OutboxMessage(
+        to=sender.identifier,
+        channel=_channel(sender),
+        type=MESSAGE_TRANSFER_SENT,
+        text=f"Has enviat {format_euros(amount)} a {recipient_name}.",
+        date=now,
     )
+    outbox.add(message)
+    return message
 
 
 def send_transfer_received(

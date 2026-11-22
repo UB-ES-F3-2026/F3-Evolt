@@ -385,6 +385,7 @@ def test_en25_amount_is_checked_before_the_balance(client: TestClient) -> None:
         (AccountRepository, "set_balance", 0),  # el saldo de qui envia
         (AccountRepository, "set_balance", 1),  # el saldo de qui rep
         (OutboxRepository, "add", 0),  # l'avís a qui envia
+        (OutboxRepository, "add", 1),  # l'avís a qui rep: el de qui envia també es treu
     ],
 )
 def test_en27_error_halfway_changes_nothing(
