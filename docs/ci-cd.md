@@ -149,6 +149,41 @@ Notes:
 | Both jobs red right after checkout | YAML syntax broken | `python3 -c "import yaml; yaml.safe_load(open('.github/workflows/ci.yml'))"` |
 | No run at all | Push touched only filtered paths — **must not happen**: the workflow has no `paths:` filters | Remove the filter |
 
+## Kanban automation
+
+`.github/workflows/project-status.yml` (name `Kanban`) moves the issues a PR links to across the
+[Kanban Evolt](https://github.com/orgs/UB-ES-F3-2026/projects/4) board, so nobody has to drag cards.
+The logic is in `.github/scripts/project-status.mjs`, and its tests run in the `frontend` CI job.
+
+**A PR links an issue** with `Refs #N`, `Closes #N`, `Fixes #N` or `Resolves #N` in its body.
+A bare `#N` or `issue #N` does not count, because PRs also cite other issues (dependencies, reviews).
+
+| PR event | Task issue (`T…`, docs, fixes) | Story issue (`US-…`) |
+|---|---|---|
+| Opened or ready for review | → **In review** | Story PR (base `develop` or `main`) → **In review**; task PR → **In progress** |
+| Opened as draft, or back to draft | → **In progress** | Task PR → **In progress** |
+| Merged | → **Done** | Story PR → **Done**; task PR → **In progress** |
+| Closed without merging | nothing | nothing |
+
+A card never leaves **Done**, and a story never goes back from **In review**. An issue that is
+not on the board is added. The workflow does not close issues: the team closes them after
+filling in the hours and the AI note.
+
+**Token.** `GITHUB_TOKEN` cannot write an organization project, so the job needs the repository
+secret `PROJECT_TOKEN`. Without it, the job only logs a notice and stays green.
+
+1. A team member with write access to the board creates a token. A fine-grained token has
+   resource owner `UB-ES-F3-2026`, repository `F3-Evolt`, and the permissions
+   *Organization → Projects: Read and write*, *Pull requests: Read* and *Issues: Read*. A classic
+   token needs the `project` and `repo` scopes.
+2. `gh secret set PROJECT_TOKEN` (paste the token; it is never printed or committed).
+
+**Replay a PR locally** (read-only with `--dry-run`):
+
+```bash
+PROJECT_TOKEN=$(gh auth token) node .github/scripts/project-status.mjs --pr 205 --dry-run
+```
+
 ## Related docs
 
 - See [`docs/branch-protection.md`](branch-protection.md): required status check `ci`, no pushes straight to `develop`/`main`.

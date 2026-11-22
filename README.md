@@ -101,7 +101,7 @@ feat(savings): create pot with target US-17
 - Technical tasks outside a story, docs and fixes → PR base `develop`, only if complete on their own
 - Only `hotfix/<slug>` goes from `main` → PR base `main`
 - Title mirrors the commit
-- Body maps work to acceptance criteria
+- Body maps work to acceptance criteria and links its issue: `Refs #N` (task) or `Closes #N` (story), so the Kanban moves it
 - Architecture checklist + DoD before request for review
 - Tests pass; the author self-reviews, then one teammate reviews, approves and merges
 
