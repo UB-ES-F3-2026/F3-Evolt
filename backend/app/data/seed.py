@@ -40,6 +40,7 @@ from app.models import (
     Pot,
     PotMovement,
     Session,
+    Subaccount,
     User,
     VerificationCode,
     now_madrid,
@@ -152,6 +153,10 @@ class SeedData:
     # dades els esborra (docs/api.md §10.4).
     movement_reports: list[MovementReport] = field(default_factory=list)
     next_report_number: int = field(default=1)
+    # Subcomptes en divisa (T25.2, docs/api.md §12.11). El seed no en té cap: el compte
+    # en euros és l'`Account` de cada usuari, i els nous comencen per sub-01.
+    subaccounts: list[Subaccount] = field(default_factory=list)
+    next_subaccount_number: int = field(default=1)
 
 
 def _days_ago_at(now: datetime, days_ago: int, hhmm: str) -> datetime:
@@ -188,6 +193,11 @@ def pot_id(number: int) -> str:
 def pot_movement_id(number: int) -> str:
     """Id opac de les entrades de l'historial (docs/api.md §9.5). El frontend no l'ha d'interpretar."""
     return f"pmov-{number:02d}"
+
+
+def subaccount_id(number: int) -> str:
+    """Id opac dels subcomptes en divisa (docs/api.md §12.2). El frontend no l'ha d'interpretar."""
+    return f"sub-{number:02d}"
 
 
 def build_seed(now: datetime | None = None) -> SeedData:
