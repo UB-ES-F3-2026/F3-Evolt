@@ -1,4 +1,4 @@
-"""Endpoints dels subcomptes en divisa (US-25, docs/api.md §12.3 i §12.4)."""
+"""Endpoints dels subcomptes en divisa (US-25 i US-26, docs/api.md §12.3 a §12.6)."""
 
 from typing import Annotated
 
@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, ConfigDict, StrictStr
 from pydantic.alias_generators import to_camel
 
+from app.models import SubaccountMovement
 from app.repositories import AccountRepository, SubaccountRepository
 from app.repositories.atomic import Atomic
 from app.routers.current_user import current_user_id
@@ -14,6 +15,8 @@ from app.services.subaccount_service import (
     AccountInCurrency,
     SubaccountList,
     create_subaccount,
+    delete_subaccount,
+    list_subaccount_movements,
     list_subaccounts,
 )
 
@@ -58,6 +61,39 @@ class SubaccountListResponse(BaseModel):
         )
 
 
+class DeleteSubaccountResponse(BaseModel):
+    """Cos de `POST /api/subaccounts/{subaccountId}/delete`: `{ status: "ok" }` (§12.5)."""
+
+    status: str = "ok"
+
+
+class SubaccountMovementResponse(BaseModel):
+    """Entrada de l'historial (§12.6), sense els camps interns `subaccount_id` i `seq`."""
+
+    id: str
+    amount: int
+    concept: str
+    date: str
+    type: str
+
+    @classmethod
+    def from_entry(cls, entry: SubaccountMovement) -> "SubaccountMovementResponse":
+        return cls(
+            id=entry.id,
+            amount=entry.amount,
+            concept=entry.concept,
+            # isoformat() conserva el desplaçament de Madrid (+02:00 / +01:00) que demana §1.
+            date=entry.date.isoformat(),
+            type=entry.type,
+        )
+
+
+class SubaccountMovementListResponse(BaseModel):
+    """Cos de `GET /api/subaccounts/{subaccountId}/movements`: `{ items }`."""
+
+    items: list[SubaccountMovementResponse]
+
+
 class CreateSubaccountRequest(BaseModel):
     """Cos de la petició: `{ currency }` (§12.4).
 
@@ -88,3 +124,26 @@ def post_subaccount(
     # alhora per a la mateixa divisa, només en guanya una (§12.4).
     created = run.run(lambda: create_subaccount(user_id, body.currency, subaccounts))
     return SubaccountResponse.from_account(created)
+
+
+@router.post("/subaccounts/{subaccount_id}/delete")
+def post_delete_subaccount(
+    subaccount_id: str,
+    user_id: Annotated[int, Depends(current_user_id)],
+    subaccounts: Annotated[SubaccountRepository, Depends(subaccount_repository)],
+    run: Annotated[Atomic, Depends(atomic)],
+) -> DeleteSubaccountResponse:
+    # Comprovar el saldo i esborrar van junts: un canvi que arribi alhora (T27.1) no
+    # pot deixar diners en un subcompte que ja s'ha esborrat (§12.5).
+    run.run(lambda: delete_subaccount(user_id, subaccount_id, subaccounts))
+    return DeleteSubaccountResponse()
+
+
+@router.get("/subaccounts/{subaccount_id}/movements")
+def get_subaccount_movements(
+    subaccount_id: str,
+    user_id: Annotated[int, Depends(current_user_id)],
+    subaccounts: Annotated[SubaccountRepository, Depends(subaccount_repository)],
+) -> SubaccountMovementListResponse:
+    entries = list_subaccount_movements(user_id, subaccount_id, subaccounts)
+    return SubaccountMovementListResponse(items=[SubaccountMovementResponse.from_entry(entry) for entry in entries])
