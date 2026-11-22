@@ -13,6 +13,7 @@ const API_ERROR_CODES = [
   'INSUFFICIENT_BALANCE',
   'POT_NOT_FOUND',
   'MOVEMENT_NOT_FOUND',
+  'RECIPIENT_NOT_FOUND',
   'INVALID_DESCRIPTION',
   'VALIDATION_ERROR',
   'INTERNAL_ERROR',
@@ -28,6 +29,9 @@ const API_ERROR_CODES = [
   'UNAUTHENTICATED',
   'SESSION_EXPIRED',
   'RESET_LINK_EXPIRED',
+  // Multi-currency (US-25). Provisional until the sub-accounts contract lands (issues #166/#167).
+  'CURRENCY_EXISTS',
+  'CURRENCY_NOT_SUPPORTED',
 ] as const
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number]

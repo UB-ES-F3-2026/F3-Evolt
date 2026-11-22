@@ -104,7 +104,8 @@ def test_simultaneous_registrations_with_the_same_email_create_one_user(seed):
     assert results.count("created") == 1
     assert results.count(ALREADY_REGISTERED) == threads_count - 1
     assert [u.identifier for u in seed.users.values()].count("ana@x.com") == 1
-    assert seed.next_user_id == 4
+    # El seed té 8 usuaris (T13.2): el nou és el 9 i el següent seria el 10.
+    assert seed.next_user_id == 10
 
 
 def test_register_sends_a_verification_code(seed):
