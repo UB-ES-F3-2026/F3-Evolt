@@ -65,6 +65,9 @@ jobs:
         run: npm run type-check
       - name: Unit tests
         run: npm run test
+      - name: Kanban automation tests
+        working-directory: .
+        run: node --test .github/scripts/project-status.test.mjs
       - name: Build
         run: npm run build
 

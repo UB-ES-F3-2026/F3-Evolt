@@ -1,17 +1,22 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { onSessionEnded, touchSession } from '@/services/session'
+import AddCurrencyView from '@/views/AddCurrencyView.vue'
 import ContributeView from '@/views/ContributeView.vue'
 import CreatePotView from '@/views/CreatePotView.vue'
+import CurrenciesView from '@/views/CurrenciesView.vue'
 import ForgotPasswordView from '@/views/ForgotPasswordView.vue'
 import HomeView from '@/views/HomeView.vue'
 import LoginView from '@/views/LoginView.vue'
 import MovementDetailView from '@/views/MovementDetailView.vue'
 import MovementsView from '@/views/MovementsView.vue'
 import NewPasswordView from '@/views/NewPasswordView.vue'
+import PaymentsView from '@/views/PaymentsView.vue'
 import PotView from '@/views/PotView.vue'
 import PotsView from '@/views/PotsView.vue'
 import RegisterView from '@/views/RegisterView.vue'
+import SubaccountView from '@/views/SubaccountView.vue'
 import ReportProblemView from '@/views/ReportProblemView.vue'
+import SendPaymentView from '@/views/SendPaymentView.vue'
 import TopUpView from '@/views/TopUpView.vue'
 import VerifyView from '@/views/VerifyView.vue'
 import { accessGuard } from './accessGuard'
@@ -29,6 +34,18 @@ const router = createRouter({
     { path: '/pots/new', name: 'create-pot', component: CreatePotView },
     { path: '/pots/:potId', name: 'pot', component: PotView, props: true },
     { path: '/pots/:potId/contribute', name: 'contribute', component: ContributeView, props: true },
+    { path: '/pagaments', name: 'payments', component: PaymentsView },
+    // The recipient travels in `?to=<id>`, so a reload keeps it (US-13).
+    {
+      path: '/pagaments/enviar',
+      name: 'send-payment',
+      component: SendPaymentView,
+      props: (route) => ({ to: typeof route.query.to === 'string' ? route.query.to : undefined }),
+    },
+    { path: '/divises', name: 'currencies', component: CurrenciesView },
+    { path: '/divises/afegir', name: 'add-currency', component: AddCurrencyView },
+    // US-26: one currency account (EUR or a sub-account). The static «afegir» above always wins.
+    { path: '/divises/:subaccountId', name: 'subaccount', component: SubaccountView, props: true },
     { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
     { path: '/register', name: 'register', component: RegisterView, meta: { public: true } },
     { path: '/verify', name: 'verify', component: VerifyView, meta: { public: true } },
