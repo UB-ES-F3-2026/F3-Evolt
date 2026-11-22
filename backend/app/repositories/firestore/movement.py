@@ -16,7 +16,14 @@ from google.cloud import firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
 
 from app.data.seed import movement_id, movement_reference
-from app.models import KIND_TOPUP, MADRID_TZ, MOVEMENT_STATUS_COMPLETED, Movement, MovementFilters
+from app.models import (
+    KIND_TOPUP,
+    KIND_TRANSFER_OUT,
+    MADRID_TZ,
+    MOVEMENT_STATUS_COMPLETED,
+    Movement,
+    MovementFilters,
+)
 from app.repositories.firestore import _tx
 
 MOVEMENTS = "movements"
@@ -106,6 +113,14 @@ class FirestoreMovementRepository:
             movement.amount
             for movement in self._by_account(account_id)
             if movement.kind == KIND_TOPUP and movement.date.astimezone(MADRID_TZ).date() == day
+        )
+
+    def sum_transfers_sent_on_day(self, account_id: int, day: date) -> int:
+        """Enviaments fets en el dia natural de Madrid, com a la memòria (T14.1)."""
+        return sum(
+            movement.amount
+            for movement in self._by_account(account_id)
+            if movement.kind == KIND_TRANSFER_OUT and movement.date.astimezone(MADRID_TZ).date() == day
         )
 
     def _filtered(self, account_id: int, filters: MovementFilters | None) -> list[Movement]:

@@ -14,7 +14,11 @@ ICONS = frozenset({"topup", "salary", "transfer", "shopping", "food", "transport
 # Camp intern, no exposat a l'API (contracte, apartat 6).
 KIND_TOPUP = "topup"
 KIND_OTHER = "other"
-KINDS = frozenset({KIND_TOPUP, KIND_OTHER})
+# Enviaments (US-14, docs/api.md §13.9): el límit diari suma els "transfer_out" d'avui,
+# sense dependre del concepte, que l'escriu qui envia.
+KIND_TRANSFER_OUT = "transfer_out"
+KIND_TRANSFER_IN = "transfer_in"
+KINDS = frozenset({KIND_TOPUP, KIND_OTHER, KIND_TRANSFER_OUT, KIND_TRANSFER_IN})
 
 # Com es mostra sempre una recàrrega de prova (docs/api.md §4.3).
 TOPUP_CONCEPT = "Recàrrega"
@@ -38,8 +42,9 @@ class Movement:
     reference.
     Camps interns (mai a les respostes):
       - account_id: compte al qual pertany.
-      - kind: "topup" a les recàrregues, "other" a la resta. Serveix per sumar
-        les recàrregues d'un dia sense dependre del concepte.
+      - kind: "topup" a les recàrregues, "transfer_out" i "transfer_in" als
+        enviaments (§13.9), "other" a la resta. Serveix per sumar les recàrregues
+        o els enviaments d'un dia sense dependre del concepte.
       - seq: ordre de creació (creixent). Desempata quan dues dates coincideixen:
         va primer el de seq més gran (P4).
     """
