@@ -50,7 +50,7 @@ ci: run CI on story branches
 Short description of the change.
 
 ## Why
-Story and task: US-XX, TXX.X (issue #N).
+Story and task: US-XX, TXX.X. Refs #N (the task issue: the Kanban moves it).
 
 ## How
 Layers touched (View / ViewModel / Model, or Router / Service / Repository).
@@ -77,7 +77,7 @@ UI: next to the story's mockup; empty / loading / error states.
 
 ```markdown
 ## Story
-US-XX: value statement. Trello card / issue #N. Mockup: link.
+US-XX: value statement. Trello card. Mockup: link. Closes #N (the story issue: the Kanban moves it).
 
 ## Task PRs in this story
 - #… backend: …

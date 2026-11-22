@@ -18,7 +18,10 @@ PR / push to develop, main or story/**
         │
         └──► ci   ← gate job: fails unless backend AND frontend are success
 
-push to main (ci green) ──► Deploy   (see docs/deploy.md)
+push to main (ci green) ──► Deploy   only with DEPLOY_ENABLED; today deploys are manual,
+                                      and never together with Render auto-deploy (docs/deploy.md)
+
+any PR event ──► Kanban   moves the issues it links (Refs #N) on the board; not a gate
 ```
 
 The two jobs run in parallel; `ci` waits with `if: always()` and points at
