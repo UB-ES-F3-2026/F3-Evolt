@@ -49,9 +49,6 @@ TRANSFER_SENT_CONCEPT = "Transferència enviada"
 TRANSFER_RECEIVED_CONCEPT = "Transferència rebuda"
 TRANSFER_ICON = "transfer"
 
-# Text únic de «sense prou saldo» a l'aportació, l'enviament i el canvi (P85).
-INSUFFICIENT_BALANCE_TEXT = "No tens prou saldo."
-
 # Dos enviaments alhora podrien llegir el mateix saldo o el mateix límit. El router
 # ja ho fa dins d'`atomic.run(...)`; el pany protegeix també les crides directes al
 # servei, com a l'aportació.
@@ -111,7 +108,7 @@ def send_money(
         sender_account = _account_of(sender_id, accounts)
         recipient_account = _account_of(recipient.id, accounts)
         if amount > sender_account.balance:
-            raise ApiError(INSUFFICIENT_BALANCE, message=INSUFFICIENT_BALANCE_TEXT)
+            raise ApiError(INSUFFICIENT_BALANCE)
 
         date = now or now_madrid()
         left_today = remaining_today(sender_id, accounts, movements, date)
