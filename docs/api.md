@@ -18,6 +18,7 @@ Contracte compartit entre el backend (FastAPI) i el frontend per a les històrie
 8. [Accés (US-01 a US-04)](#8-accés-us-01-a-us-04)
 9. [Guardioles (US-17 i US-18)](#9-guardioles-us-17-i-us-18)
 10. [Moviments: filtres, detall i informe (US-10 i US-11)](#10-moviments-filtres-detall-i-informe-us-10-i-us-11)
+12. [Multidivisa: subcomptes i canvi (US-25, US-26 i US-27)](#12-multidivisa-subcomptes-i-canvi-us-25-us-26-i-us-27)
 13. [Pagaments: cercar usuaris i enviar diners (US-13 i US-14)](#13-pagaments-cercar-usuaris-i-enviar-diners-us-13-i-us-14)
 
 ---
@@ -168,6 +169,11 @@ Exemple:
 | `GET /api/pots/{potId}/movements` | `200` | US-18 · [9.5](#95-get-apipotspotidmovements) |
 | `GET /api/movements/{movementId}` | `200` | US-11 · [10.3](#103-get-apimovementsmovementid) |
 | `POST /api/movements/{movementId}/reports` | `201` | US-11 · [10.4](#104-post-apimovementsmovementidreports) |
+| `GET /api/subaccounts` | `200` | US-25 · [12.3](#123-get-apisubaccounts) |
+| `POST /api/subaccounts` | `201` | US-25 · [12.4](#124-post-apisubaccounts) |
+| `POST /api/subaccounts/{subaccountId}/delete` | `200` | US-26 · [12.5](#125-post-apisubaccountssubaccountiddelete) |
+| `GET /api/subaccounts/{subaccountId}/movements` | `200` | US-26 · [12.6](#126-get-apisubaccountssubaccountidmovements) |
+| `POST /api/exchanges` | `201` | US-27 · [12.7](#127-post-apiexchanges) |
 | `GET /api/users` | `200` | US-13 · [13.2](#132-get-apiusers) |
 | `GET /api/users/{userId}` | `200` | US-13 · [13.3](#133-get-apiusersuserid) |
 | `POST /api/transfers` | `201` | US-14 · [13.4](#134-post-apitransfers) |
@@ -566,6 +572,20 @@ Codis dels moviments (Sprint 1, [apartat 10](#10-moviments-filtres-detall-i-info
 | `MOVEMENT_NOT_FOUND` | 404 | El moviment no existeix o és d'un altre usuari | — |
 | `INVALID_DESCRIPTION` | 422 | La descripció de l'informe és buida, només té espais o passa de 500 caràcters | — |
 
+Codis de multidivisa (Sprint 2, [apartat 12](#12-multidivisa-subcomptes-i-canvi-us-25-us-26-i-us-27)):
+
+| `code` | HTTP | Quan | `details` |
+|---|---|---|---|
+| `CURRENCY_NOT_SUPPORTED` | 422 | La divisa d'un subcompte nou no és a la llista ([12.1](#121-divises-i-tipus-de-canvi)) | — |
+| `CURRENCY_EXISTS` | 422 | L'usuari ja té un compte en aquesta divisa | — |
+| `SUBACCOUNT_NOT_FOUND` | 404 | El subcompte no existeix o és d'un altre usuari, o el canvi fa servir una divisa que no és un compte de l'usuari | — |
+| `MAIN_ACCOUNT_NOT_DELETABLE` | 422 | Es vol eliminar el compte en euros | — |
+| `SUBACCOUNT_NOT_EMPTY` | 422 | Es vol eliminar un subcompte amb el saldo diferent de 0 | — |
+| `SAME_CURRENCY` | 422 | L'origen i el destí d'un canvi són la mateixa divisa | — |
+| `AMOUNT_TOO_SMALL` | 422 | L'import d'un canvi, convertit, no arriba a una unitat menor del destí | — |
+
+- `INVALID_AMOUNT` i `INSUFFICIENT_BALANCE` també valen per al canvi ([12.7](#127-post-apiexchanges)): `amount ≤ 0`, o l'import més la comissió supera el saldo de l'origen.
+
 Codis dels pagaments (Sprint 2, [apartat 13](#13-pagaments-cercar-usuaris-i-enviar-diners-us-13-i-us-14)):
 
 | `code` | HTTP | Quan | `details` |
@@ -716,6 +736,25 @@ Propostes dels moviments (T10.1, PR #120):
 | P43 | [10.4](#104-post-apimovementsmovementidreports) | Codi propi `INVALID_DESCRIPTION` (`422`) per a una descripció buida, només amb espais o de més de 500 caràcters. La descripció es desa sense els espais dels extrems. |
 | P44 | [10.5](#105-justificant-pdf) | El justificant PDF es genera al navegador amb jsPDF (llicència MIT), sense Cloud Function ni cap ruta (decisió de PO). |
 | P45 | [10.7](#107-model-intern-dels-moviments) | Seed: els noms fictius de la contrapart de la taula de 10.7, i el moviment més recent de l'usuari 1 (`mov-30`) en estat `pending`. |
+
+Propostes de multidivisa (T25.1), per validar a la revisió de la PR:
+
+| # | Apartat | Proposta |
+|---|---|---|
+| P50 | [12.1](#121-divises-i-tipus-de-canvi) | Tipus fixos i format `rateBps` de la pantalla de la US-25 (`models/currency.ts`): `EUR` 10000, `USD` 9123, `GBP` 11680, `CHF` 10355 i `JPY` 5700. |
+| P51 | [12.1](#121-divises-i-tipus-de-canvi) | Conversió amb enters i arrodoniment mig cap amunt. El total en euros arrodoneix cada compte per separat i després els suma. |
+| P52 | [12.2](#122-objecte-subaccount) | Objecte `Subaccount` `{ id, currency, balance, isMain, rateBps }`. El compte en euros és el compte principal, amb l'`id` `"main"`; els subcomptes en divisa són `sub-01`, `sub-02`… |
+| P53 | [12.3](#123-get-apisubaccounts) | `GET /api/subaccounts` respon `{ items, totalInEuros }`: l'EUR primer i després per ordre de creació. El total el calcula el servidor. |
+| P54 | [12.4](#124-post-apisubaccounts) | Ordre de les validacions en crear: format → `CURRENCY_NOT_SUPPORTED` → `CURRENCY_EXISTS`. Els codis distingeixen majúscules. |
+| P55 | [12.5](#125-post-apisubaccountssubaccountiddelete) | Eliminar respon `200` `{ status: "ok" }`, amb l'ordre `SUBACCOUNT_NOT_FOUND` → `MAIN_ACCOUNT_NOT_DELETABLE` → `SUBACCOUNT_NOT_EMPTY`. |
+| P56 | [12.6](#126-get-apisubaccountssubaccountidmovements) | Historial d'un subcompte en divisa a `GET /api/subaccounts/{subaccountId}/movements`, amb entrades `{ id, amount, concept, date, type }` i ids `smov-01`, `smov-02`…. El compte en euros fa servir `GET /api/movements`. La ruta la fa la T26.1, i les entrades, la T27.1. |
+| P57 | [12.7](#127-post-apiexchanges) | El canvi rep `{ fromCurrency, toCurrency, amount }` i respon `201` amb `{ from, to, amount, commission, received }`, sense els moviments. |
+| P58 | [12.7](#127-post-apiexchanges) | La comissió es calcula en la divisa d'origen: `max(arrodonir(amount × 1,5 %), mínim)`, amb el mínim de 0,50 € convertit arrodonint cap amunt. |
+| P59 | [12.7](#127-post-apiexchanges) | Ordre de les validacions del canvi: format → `SAME_CURRENCY` → `SUBACCOUNT_NOT_FOUND` → `INVALID_AMOUNT` → `AMOUNT_TOO_SMALL` → `INSUFFICIENT_BALANCE`. |
+| P60 | [12.8](#128-moviments-dun-canvi-i-efecte-sobre-altres-rutes) | Dos moviments per canvi, un a cada compte, tots dos amb el concepte «Canvi <origen> → <destí>» (p. ex. «Canvi EUR → USD»). El del compte en euros és un `Movement` normal (`icon: "transfer"`); el d'un subcompte en divisa només surt al seu historial. |
+| P61 | [12.5](#125-post-apisubaccountssubaccountiddelete) | En eliminar un subcompte, el seu historial es queda desat, però ja no es pot consultar. |
+| P62 | [12.10](#1210-errors) | `SUBACCOUNT_NOT_FOUND` diu «No s'ha trobat el subcompte.», i `SAME_CURRENCY`, el text de la pantalla (PR #180): «Origen i destí no poden ser el mateix subcompte.». |
+| P63 | [12.11](#1211-model-intern-de-multidivisa) | El compte en euros és l'`Account` actual, sense duplicar-ne el saldo, i el seed no té subcomptes en divisa. |
 
 Propostes dels pagaments (T13.1, US-13 i US-14). Comencen a la P64 perquè les P47–P49 són de la retirada i el progrés (T19.1, PR #177) i les P50–P63, de la multidivisa (T25.1, PR #193):
 
@@ -1879,6 +1918,367 @@ Aquest apartat és per al backend. El frontend no en depèn.
     | `mov-18` | Transferència enviada | Laia Vidal |
     | `mov-24` | Bizum rebut | Pau Ferrer |
     | `mov-29` | Bizum enviat | Núria Soler |
+
+---
+
+## 12. Multidivisa: subcomptes i canvi (US-25, US-26 i US-27)
+
+Subcomptes en altres divises: llistar-los, crear-ne, eliminar-los, veure'n l'historial i canviar diners entre ells. Tasca: T25.1 (issue #166). Històries: `docs/us/US-25.md`, `US-26.md` i `US-27.md`.
+
+| Tasca | Què implementa d'aquest apartat |
+|---|---|
+| T25.2 (backend) | [12.1](#121-divises-i-tipus-de-canvi), [12.2](#122-objecte-subaccount), [12.3](#123-get-apisubaccounts), [12.4](#124-post-apisubaccounts) i el seed de [12.11](#1211-model-intern-de-multidivisa) |
+| T26.1 (backend) | [12.5](#125-post-apisubaccountssubaccountiddelete) i la ruta de [12.6](#126-get-apisubaccountssubaccountidmovements), que llegeix l'historial |
+| T27.1 (backend) | [12.7](#127-post-apiexchanges) i [12.8](#128-moviments-dun-canvi-i-efecte-sobre-altres-rutes): el canvi crea els moviments i les entrades de l'historial de 12.6 |
+| T25.3, T26.2, T27.2 (frontend) | Les pantalles que criden aquestes rutes |
+
+Totes les rutes d'aquest apartat són **rutes protegides**: necessiten la sessió ([apartat 8.2](#82-sessió)), i sense sessió responen `401 UNAUTHENTICATED`. Cada usuari només veu i modifica els seus comptes. Segueixen les convencions de l'[apartat 1](#1-convencions-generals), amb una diferència: els imports d'un subcompte són enters en la **unitat menor de la seva divisa** (cèntims, o iens sencers al JPY), no sempre en cèntims d'euro.
+
+Els exemples d'aquest apartat fan servir les xifres de les històries: el compte en euros amb `125050` (1.250,50 €, US-25) i un subcompte en dòlars amb `31755` (317,55 $, US-26). Les proves d'acceptació ([`docs/proves-multidivisa.md`](proves-multidivisa.md)) parteixen del seed. Les dates d'exemple són del 19/11/2026 (`+01:00`, horari d'hivern).
+
+### 12.1 Divises i tipus de canvi
+
+La llista de divises és **tancada** i els tipus són fixos: no es consulta cap API de tipus de canvi (US-25).
+
+| Codi | Nom | Símbol | Decimals | `rateBps` | Equivalència |
+|---|---|---|---|---|---|
+| `EUR` | Euro | € | 2 | `10000` | 1 € = 1 € |
+| `USD` | Dòlar nord-americà | $ | 2 | `9123` | 1 $ = 0,9123 € |
+| `GBP` | Lliura esterlina | £ | 2 | `11680` | 1 £ = 1,1680 € |
+| `CHF` | Franc suís | CHF | 2 | `10355` | 1 CHF = 1,0355 € |
+| `JPY` | Ien japonès | ¥ | 0 | `5700` | 1 ¥ = 0,0057 € |
+
+Els valors i el format són els de la pantalla que ja hi ha a la branca de la US-25 (`frontend/src/models/currency.ts`, T25.3) **[PROPOSTA — pendent de validar]**.
+
+- **Unitat menor:** el cèntim a les divises amb 2 decimals, i el ien sencer al JPY, que no té decimals. `1234` en JPY és «1.234 ¥» (US-25).
+- **`rateBps`:** quants cèntims d'euro val una unitat menor de la divisa, multiplicat per 10.000. Per això el JPY és `5700`: 1 ¥ val 0,57 cèntims d'euro.
+- **Conversió** d'`amount` unitats menors de la divisa `A` a la divisa `B` **[PROPOSTA — pendent de validar]**:
+
+  ```
+  convertit = arrodonir(amount × rateBps[A] / rateBps[B])
+  ```
+
+  - Tot es calcula amb enters, mai amb decimals. `arrodonir(n / d)` és `⌊(2n + d) / (2d)⌋`: la meitat, cap amunt.
+  - Exemple: 100,00 € en dòlars és `10000 × 10000 / 9123 = 10961,30…`, que s'arrodoneix a `10961` (109,61 $).
+- **Total aproximat en euros** («Total ≈ … €», US-25) **[PROPOSTA — pendent de validar]**: cada compte es converteix a cèntims d'euro i s'arrodoneix per separat (`arrodonir(balance × rateBps / 10000)`), i després se sumen. Exemple: `125050` € i `31755` $ donen `125050 + 28970 = 154020` («Total ≈ 1.540,20 €»).
+
+### 12.2 Objecte `Subaccount`
+
+Un compte de l'usuari en una divisa. És el mateix objecte a totes les respostes d'aquest apartat **[PROPOSTA — pendent de validar]**.
+
+| Camp | Tipus | Notes |
+|---|---|---|
+| `id` | string | Identificador opac. El compte principal en euros és `"main"`. Els subcomptes en divisa són `sub-01`, `sub-02`…, per ordre de creació i únics a tot el sistema, com les guardioles. |
+| `currency` | string | Un codi de la llista de [12.1](#121-divises-i-tipus-de-canvi). |
+| `balance` | integer | Saldo en la unitat menor de la divisa, `≥ 0`. Un subcompte nou té `0`. |
+| `isMain` | boolean | `true` només al compte principal en euros, que no s'elimina mai (US-25 i US-26). |
+| `rateBps` | integer | El tipus fix de la divisa ([12.1](#121-divises-i-tipus-de-canvi)). El resum del canvi el fa servir per al «Rebràs exactament» (US-27). |
+
+- **El compte en euros és el compte principal**, no un compte a part. El seu `balance` és el mateix que el de `GET /api/home`, i els seus moviments són els de `GET /api/movements`. Tots els usuaris el tenen des del registre.
+- Com a molt hi ha cinc comptes: l'EUR i les quatre altres divises. La llista tancada ja és el topall (US-25).
+
+Exemples:
+
+```json
+{ "id": "main", "currency": "EUR", "balance": 125050, "isMain": true, "rateBps": 10000 }
+```
+
+```json
+{ "id": "sub-01", "currency": "USD", "balance": 31755, "isMain": false, "rateBps": 9123 }
+```
+
+### 12.3 `GET /api/subaccounts`
+
+Els comptes de l'usuari: la card «Divises» d'Inici i la pantalla `/divises` (US-25).
+
+**Resposta `200`:** `{ items, totalInEuros }` **[PROPOSTA — pendent de validar]**
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `items` | `Subaccount[]` | Tots els comptes de l'usuari. El primer és sempre el compte principal en euros; després, els subcomptes en divisa per ordre de creació. Mai és buida. |
+| `totalInEuros` | integer | El total aproximat, en cèntims d'euro, calculat com diu [12.1](#121-divises-i-tipus-de-canvi). |
+
+- El total el calcula el servidor amb la taula de tipus fixa (T25.2), perquè cap pantalla el calculi diferent.
+- Un subcompte nou, a `0`, no canvia el total (US-25).
+
+**Resposta** (xifres de les històries):
+
+```json
+{
+  "items": [
+    { "id": "main", "currency": "EUR", "balance": 125050, "isMain": true, "rateBps": 10000 },
+    { "id": "sub-01", "currency": "USD", "balance": 31755, "isMain": false, "rateBps": 9123 }
+  ],
+  "totalInEuros": 154020
+}
+```
+
+### 12.4 `POST /api/subaccounts`
+
+Crea un subcompte en una divisa nova («Afegir divisa», US-25).
+
+**Cos de la petició:** `{ currency }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `currency` | string | Codi de la divisa. Obligatori. Distingeix majúscules: `"usd"` no és a la llista. |
+
+**Resposta `201`:** el `Subaccount` creat, sol, amb `balance: 0`.
+
+**Ordre de les validacions**, el que ja fa servir la pantalla (`frontend/src/mocks/currencies.ts`) **[PROPOSTA — pendent de validar]**. S'aturen al primer error:
+
+1. Format del cos: falta `currency` o no és un string → `VALIDATION_ERROR`.
+2. El codi no és a la llista de [12.1](#121-divises-i-tipus-de-canvi) → `CURRENCY_NOT_SUPPORTED`.
+3. L'usuari ja té un compte en aquesta divisa, també si és l'`EUR` principal → `CURRENCY_EXISTS`. El servidor ho valida encara que la pantalla ja mostri la fila en gris (US-25).
+
+**Regles:**
+
+- Un sol subcompte per divisa i usuari. Si arriben dues peticions alhora per a la mateixa divisa, només en guanya una, i l'altra rep `CURRENCY_EXISTS`.
+- Un error no crea res ni gasta cap `id`.
+
+**Petició:**
+
+```http
+POST /api/subaccounts HTTP/1.1
+Content-Type: application/json
+
+{
+  "currency": "USD"
+}
+```
+
+**Resposta `201`:**
+
+```json
+{ "id": "sub-01", "currency": "USD", "balance": 0, "isMain": false, "rateBps": 9123 }
+```
+
+### 12.5 `POST /api/subaccounts/{subaccountId}/delete`
+
+Elimina un subcompte en divisa que té saldo 0 («Eliminar subcompte», US-26). És `POST` i no `DELETE` perquè el CORS i l'`apiClient` només admeten `GET` i `POST`.
+
+- **Cos de la petició:** cap.
+- **Resposta `200`:** `{ status }`, amb `status` sempre `"ok"`, com a [8.9](#89-post-apiauthlogout) **[PROPOSTA — pendent de validar]**.
+
+**Ordre de les validacions** **[PROPOSTA — pendent de validar]**. S'aturen al primer error:
+
+1. El subcompte no existeix o és d'un altre usuari → `SUBACCOUNT_NOT_FOUND`. La resposta és la mateixa en tots dos casos, com a `POT_NOT_FOUND`.
+2. És el compte principal (`main`) → `MAIN_ACCOUNT_NOT_DELETABLE`. Es comprova abans que el saldo: l'EUR no s'elimina mai, tingui el saldo que tingui.
+3. El saldo no és exactament 0 → `SUBACCOUNT_NOT_EMPTY`. N'hi ha prou amb `1` (0,01 $).
+
+**Regles:**
+
+- Només s'esborra el subcompte. Els moviments del compte principal que han fet els seus canvis es queden a `GET /api/movements`, amb el seu import (US-26).
+- Les entrades de l'historial del subcompte ([12.6](#126-get-apisubaccountssubaccountidmovements)) es queden desades, però ja no es poden consultar: la ruta de l'historial respon `SUBACCOUNT_NOT_FOUND` **[PROPOSTA — pendent de validar]**.
+- La divisa torna a estar disponible. Un `POST /api/subaccounts` amb la mateixa divisa en crea un de nou, amb un `id` nou, saldo `0` i l'historial buit.
+- El total de [12.3](#123-get-apisubaccounts) no canvia, perquè el saldo era 0.
+
+### 12.6 `GET /api/subaccounts/{subaccountId}/movements`
+
+L'historial d'un subcompte en divisa: «Últims moviments» al detall del subcompte (mockup `US-26-detall-subcompte`) **[PROPOSTA — pendent de validar]**.
+
+**Resposta `200`:** `{ items }`, de l'entrada més recent a la més antiga, sense paginació.
+
+Cada entrada:
+
+| Camp | Tipus | Notes |
+|---|---|---|
+| `id` | string | Identificador opac. Format `smov-01`, `smov-02`… |
+| `amount` | integer | En la unitat menor de la divisa del subcompte, sempre `> 0`. |
+| `concept` | string | El de [12.8](#128-moviments-dun-canvi-i-efecte-sobre-altres-rutes). |
+| `date` | string | ISO 8601 amb desplaçament. |
+| `type` | `"income"` \| `"expense"` | Des del punt de vista del subcompte: entren o surten diners. |
+
+- Un subcompte nou té l'historial buit (`{ "items": [] }`). La pantalla mostra «Encara no tens moviments» (mockup).
+- El saldo d'un subcompte és sempre la suma del seu historial.
+- Si dues entrades tenen la mateixa data, va primer la creada més tard, com a P4.
+- Només és per als subcomptes en divisa. L'historial del compte en euros és `GET /api/movements` ([4.2](#42-get-apimovements)), que ja existeix, i amb `main` aquesta ruta respon `SUBACCOUNT_NOT_FOUND` (decisió del PO).
+- El subcompte no existeix, és d'un altre usuari o s'ha eliminat → `SUBACCOUNT_NOT_FOUND`.
+
+**Resposta** (`sub-01`, després del canvi de [12.7](#127-post-apiexchanges)):
+
+```json
+{
+  "items": [
+    {
+      "id": "smov-01",
+      "amount": 10961,
+      "concept": "Canvi EUR → USD",
+      "date": "2026-11-19T10:00:00+01:00",
+      "type": "income"
+    }
+  ]
+}
+```
+
+### 12.7 `POST /api/exchanges`
+
+Canvia diners d'un compte de l'usuari a un altre de la mateixa persona en una altra divisa («Confirmar canvi», US-27). El nom de la ruta és el que ja fa servir la pantalla (PR #180) **[PROPOSTA — pendent de validar]**.
+
+**Cos de la petició:** `{ fromCurrency, toCurrency, amount }` **[PROPOSTA — pendent de validar]**
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `fromCurrency` | string | Divisa del compte d'origen. Obligatori. |
+| `toCurrency` | string | Divisa del compte de destí. Obligatori. |
+| `amount` | integer | Import a canviar, en la unitat menor de la divisa d'origen. Obligatori. Enter JSON estricte, com a P5. |
+
+**Càlcul** **[PROPOSTA — pendent de validar]**:
+
+| Valor | Fórmula | 100,00 € a dòlars |
+|---|---|---|
+| Import convertit (`received`) | `arrodonir(amount × rateBps[origen] / rateBps[destí])` | `10961` (109,61 $) |
+| Comissió (`commission`) | `max(arrodonir(amount × 150 / 10000), mínim[origen])` | `150` (1,50 €) |
+| Càrrec a l'origen | `amount + commission` | `10150` (101,50 €) |
+
+- **La comissió** és de l'1,5 % amb un mínim de 0,50 €, **sempre**: aquest sprint no hi ha canvis sense comissió (decisió del PO, issues #166 i #173). Es calcula en la divisa d'origen, arrodonida a la unitat menor. La paga l'origen i es queda al sistema: no l'ingressa cap compte.
+- **El mínim de 0,50 €** es converteix a la divisa d'origen arrodonint **cap amunt**, perquè mai valgui menys de 0,50 €: `mínim[origen] = ⌈50 × 10000 / rateBps[origen]⌉`.
+
+  | Divisa d'origen | `EUR` | `USD` | `GBP` | `CHF` | `JPY` |
+  |---|---|---|---|---|---|
+  | Comissió mínima | `50` (0,50 €) | `55` (0,55 $) | `43` (0,43 £) | `49` (0,49 CHF) | `88` (88 ¥) |
+
+- **Exemples de les històries**, que quadren amb aquest càlcul:
+  - **US-27:** 100,00 € a dòlars, amb 1.250,50 € i 317,55 $. La comissió és d'1,50 €, l'EUR queda a 1.149,00 € (`114900`), el USD a 427,16 $ (`42716`) i el total a 1.538,70 € (`153870`).
+  - **US-26:** 312,86 $ a euros. La comissió és `arrodonir(31286 × 150 / 10000) = 469` (4,69 $), més gran que el mínim de 0,55 $. El càrrec és `31755`, tot el saldo, i el subcompte queda a 0,00 $. L'EUR rep `28542` (285,42 €).
+  - **El mínim:** 10,00 € a dòlars. L'1,5 % són 0,15 €, així que la comissió és de 0,50 € i el càrrec, de 10,50 €.
+
+**Ordre de les validacions**, el de la pantalla (PR #180) amb els codis de l'API **[PROPOSTA — pendent de validar]**. S'aturen al primer error:
+
+1. Format del cos: falta un camp, les divises no són strings o `amount` no és un enter JSON estricte → `VALIDATION_ERROR`.
+2. `fromCurrency` i `toCurrency` són la mateixa → `SAME_CURRENCY`.
+3. Alguna de les dues divises no és un compte de l'usuari, també si el codi no és a la llista → `SUBACCOUNT_NOT_FOUND`.
+4. `amount ≤ 0` → `INVALID_AMOUNT`, el mateix codi que a la recàrrega i a l'aportació.
+5. `amount × rateBps[origen] < rateBps[destí]` → `AMOUNT_TOO_SMALL`: l'import convertit, **exacte i abans d'arrodonir**, no arriba a una unitat menor del destí. És la regla literal de la US-27 i la que fa la pantalla (PR #180). Exemple: 0,01 $ són 0,9123 cèntims d'euro, que no arriben a 1 cèntim, i per tant és massa petit, encara que arrodonit donaria 1. Si l'import passa aquesta comprovació, el convertit exacte és com a mínim 1, i `received` mai no és 0.
+6. `amount + commission` és més gran que el saldo de l'origen → `INSUFFICIENT_BALANCE`. Exemple: canviar tot el saldo, sense marge per a la comissió.
+
+**Regles:**
+
+- **Tot o res** (US-27). Un canvi fa quatre escriptures: el saldo de l'origen, el del destí i un moviment a cadascun ([12.8](#128-moviments-dun-canvi-i-efecte-sobre-altres-rutes)). O es fan totes, o no se'n fa cap. Si hi ha un error, no canvia res.
+- Dos canvis alhora des del mateix compte s'apliquen un darrere l'altre. El segon es valida amb el saldo que ha deixat el primer: cap saldo pot quedar negatiu.
+- Canviar exactament tot el saldo (l'import més la comissió) està permès. L'origen queda a `0`.
+- No hi ha cap límit diari de canvi, i un canvi no compta per al límit diari de recàrrega.
+
+**Resposta `201`:** `{ from, to, amount, commission, received }` **[PROPOSTA — pendent de validar]**
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `from` | `Subaccount` | El compte d'origen, amb el saldo nou. |
+| `to` | `Subaccount` | El compte de destí, amb el saldo nou. |
+| `amount` | integer | L'import canviat, en la unitat menor de l'origen. |
+| `commission` | integer | La comissió aplicada, en la unitat menor de l'origen. |
+| `received` | integer | El que ha rebut el destí, en la seva unitat menor. |
+
+- Els tipus aplicats són el `rateBps` de `from` i el de `to`.
+- La resposta no porta els moviments: després del tic «Canvi fet», l'app torna a Inici i hi torna a demanar les dades (US-27).
+
+**Petició** (exemple de la US-27):
+
+```http
+POST /api/exchanges HTTP/1.1
+Content-Type: application/json
+
+{
+  "fromCurrency": "EUR",
+  "toCurrency": "USD",
+  "amount": 10000
+}
+```
+
+**Resposta `201`:**
+
+```json
+{
+  "from": { "id": "main", "currency": "EUR", "balance": 114900, "isMain": true, "rateBps": 10000 },
+  "to": { "id": "sub-01", "currency": "USD", "balance": 42716, "isMain": false, "rateBps": 9123 },
+  "amount": 10000,
+  "commission": 150,
+  "received": 10961
+}
+```
+
+### 12.8 Moviments d'un canvi i efecte sobre altres rutes
+
+Cada canvi crea **dos moviments**, un a cada compte i en la seva divisa (US-27) **[PROPOSTA — pendent de validar]**:
+
+| Compte | `type` | `amount` |
+|---|---|---|
+| Origen | `expense` | L'import més la comissió |
+| Destí | `income` | L'import convertit |
+
+- **Concepte:** el mateix als dos moviments, «Canvi <codi d'origen> → <codi de destí>», p. ex. «Canvi EUR → USD» (decisió del PO).
+
+- **Compte principal en euros.** Si l'EUR és l'origen o el destí, el seu moviment és un `Movement` normal ([apartat 3](#3-objecte-movement)) i surt a `GET /api/home` i a `GET /api/movements`, com al mockup `US-27-inici-despres-canvi` (−101,50 €). Porta `icon: "transfer"`, `counterparty: null`, `status: "completed"`, una `reference` nova i el `kind` intern `"other"`.
+- **Subcompte en divisa.** El seu moviment només surt al seu historial ([12.6](#126-get-apisubaccountssubaccountidmovements)). `GET /api/movements` continua tenint només moviments en euros, i l'objecte `Movement` no canvia.
+- Un canvi entre dues divises sense l'EUR (p. ex. de dòlars a lliures) no crea cap moviment al compte principal.
+- La comissió va dins del moviment d'origen. Així cada saldo continua sent la suma dels seus moviments.
+
+Després d'un canvi:
+
+- `GET /api/home`: el `balance` canvia si l'EUR és l'origen o el destí.
+- `GET /api/subaccounts`: canvien els dos saldos, i el `totalInEuros` baixa més o menys el valor de la comissió, segons l'arrodoniment.
+- El límit diari de recàrrega no canvia.
+
+Exemple amb el canvi de la US-27:
+
+| | EUR (`main`) | USD (`sub-01`) | `totalInEuros` |
+|---|---|---|---|
+| Abans | `125050` | `31755` | `154020` |
+| Després | `114900` | `42716` | `153870` |
+
+### 12.9 Fora de l'abast
+
+- **Aportar a un subcompte:** aquest sprint no hi ha botó «Aportar» (decisió del PO a la US-26). Un subcompte només s'omple i es buida amb un canvi, i no hi ha cap ruta `POST /api/subaccounts/{subaccountId}/topups`.
+- Els pagaments en divisa (US-28) i el canvi sense comissió (US-29).
+- Tipus de canvi variables o d'una API externa.
+
+### 12.10 Errors
+
+Els codis són a la taula de l'[apartat 5](#taula-de-codis). Els missatges són els literals de les històries: el frontend decideix a partir del `code`.
+
+| `code` | HTTP | Ruta | Quan |
+|---|---|---|---|
+| `VALIDATION_ERROR` | 422 | `POST /api/subaccounts`, `POST /api/exchanges` | El cos està mal format |
+| `CURRENCY_NOT_SUPPORTED` | 422 | `POST /api/subaccounts` | La divisa no és a la llista |
+| `CURRENCY_EXISTS` | 422 | `POST /api/subaccounts` | L'usuari ja té un compte en aquesta divisa |
+| `SUBACCOUNT_NOT_FOUND` | 404 | Les de `/api/subaccounts/{subaccountId}/…`, `POST /api/exchanges` | El compte no existeix o és d'un altre usuari. Al canvi, una de les divises no és un compte de l'usuari |
+| `MAIN_ACCOUNT_NOT_DELETABLE` | 422 | `POST /api/subaccounts/{subaccountId}/delete` | Es vol eliminar el compte en euros |
+| `SUBACCOUNT_NOT_EMPTY` | 422 | `POST /api/subaccounts/{subaccountId}/delete` | El saldo no és exactament 0 |
+| `SAME_CURRENCY` | 422 | `POST /api/exchanges` | L'origen i el destí són la mateixa divisa |
+| `INVALID_AMOUNT` | 422 | `POST /api/exchanges` | `amount ≤ 0` (ja existeix) |
+| `AMOUNT_TOO_SMALL` | 422 | `POST /api/exchanges` | L'import convertit no arriba a una unitat menor del destí |
+| `INSUFFICIENT_BALANCE` | 422 | `POST /api/exchanges` | L'import més la comissió supera el saldo de l'origen (ja existeix, [9.7](#97-errors)) |
+
+Missatges:
+
+| `code` | `message` |
+|---|---|
+| `CURRENCY_NOT_SUPPORTED` | «Aquesta divisa no és a la llista de divises disponibles.» (US-25) |
+| `CURRENCY_EXISTS` | «Ja tens un subcompte en aquesta divisa.» (US-25) |
+| `SUBACCOUNT_NOT_FOUND` | «No s'ha trobat el subcompte.» (decisió del PO) |
+| `MAIN_ACCOUNT_NOT_DELETABLE` | «El compte en euros no es pot eliminar.» (US-26) |
+| `SUBACCOUNT_NOT_EMPTY` | «Només pots eliminar un subcompte amb saldo 0.» (US-26) |
+| `SAME_CURRENCY` | «Origen i destí no poden ser el mateix subcompte.», el text de la pantalla (PR #180, decisió del PO) |
+| `AMOUNT_TOO_SMALL` | «L'import és massa petit per canviar.» (US-27) |
+| `INSUFFICIENT_BALANCE` | «No tens prou saldo.», el text únic per a tots els casos: aportació, enviament i canvi (P85 de la #196, decisió del PO). El frontend tria el text pel `code`. |
+| `INVALID_AMOUNT` | «L'import ha de ser més gran que 0.» (ja existeix) |
+
+- El `404` segueix la P11 ([apartat 7](#7-propostes-del-contracte)), que el preveu per als recursos que no existeixen.
+
+### 12.11 Model intern de multidivisa
+
+Aquest apartat és per al backend. El frontend no en depèn. Tot és **[PROPOSTA — pendent de validar]**.
+
+- **El compte en euros és l'`Account` actual.** No es desa cap subcompte EUR: `GET /api/subaccounts` el construeix a partir del compte principal de l'usuari, amb l'`id` `"main"`. Així el saldo no es duplica.
+- **Subcomptes en divisa:** un model nou amb `id`, `user_id`, `currency`, `balance` i l'ordre de creació, amb les validacions al model: divisa de la llista, que no sigui l'`EUR`, i saldo enter `≥ 0`.
+- **Historial:** un model nou, com l'historial de les guardioles ([9.8](#98-model-intern-de-lestalvi)), amb el subcompte al qual pertany. En eliminar un subcompte, les seves entrades no s'esborren.
+- **Taula de divises i regla de la comissió en un sol mòdul** (skill `middle-services`): els codis, els `rateBps`, la comissió (`150` punts bàsics) i el mínim (`50` cèntims d'euro), i les funcions de conversió, comissió i total. La US-29 (canvi sense comissió) el podrà ampliar sense tocar els serveis.
+- **Tot o res**, com l'aportació ([9.8](#98-model-intern-de-lestalvi)): es valida tot abans d'escriure i les quatre escriptures van dins d'`atomic.run(...)`. Si una falla, es desfan les anteriors.
+- **Amb Firestore** (TR01.1): les col·leccions `subaccounts` i `subaccount_movements`, amb els ids dels comptadors. Els dos comptes d'un canvi es llegeixen i s'escriuen dins de la mateixa transacció.
+- **Invariants:**
+  - el saldo de cada compte és la suma dels seus moviments;
+  - un canvi no crea ni destrueix diners més enllà de la comissió: l'import convertit val en euros el mateix que l'import, amb una diferència d'1 cèntim com a molt per l'arrodoniment.
+- **Seed:** cap usuari té subcomptes en divisa. L'usuari 1 parteix de l'EUR amb `379521` i l'usuari 2, amb `0`. Els subcomptes i les entrades noves comencen per `sub-01` i `smov-01`, i els comptadors es reinicien amb el seed (`POST /api/dev/reset`).
 
 ---
 
