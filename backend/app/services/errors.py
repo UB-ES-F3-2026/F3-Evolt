@@ -41,6 +41,8 @@ CURRENCY_EXISTS = "CURRENCY_EXISTS"
 SUBACCOUNT_NOT_FOUND = "SUBACCOUNT_NOT_FOUND"
 MAIN_ACCOUNT_NOT_DELETABLE = "MAIN_ACCOUNT_NOT_DELETABLE"
 SUBACCOUNT_NOT_EMPTY = "SUBACCOUNT_NOT_EMPTY"
+# Pagaments (docs/api.md §5 i §13.8).
+RECIPIENT_NOT_FOUND = "RECIPIENT_NOT_FOUND"
 
 # Codi d'error → estat HTTP de la resposta.
 ERROR_STATUS: dict[str, int] = {
@@ -71,6 +73,7 @@ ERROR_STATUS: dict[str, int] = {
     SUBACCOUNT_NOT_FOUND: 404,
     MAIN_ACCOUNT_NOT_DELETABLE: 422,
     SUBACCOUNT_NOT_EMPTY: 422,
+    RECIPIENT_NOT_FOUND: 404,
 }
 
 # Missatge per defecte de cada codi (docs/api.md §5). El contracte els marca
@@ -107,6 +110,7 @@ ERROR_MESSAGES: dict[str, str] = {
     # Textos literals de la US-26.
     MAIN_ACCOUNT_NOT_DELETABLE: "El compte en euros no es pot eliminar.",
     SUBACCOUNT_NOT_EMPTY: "Només pots eliminar un subcompte amb saldo 0.",
+    RECIPIENT_NOT_FOUND: "No hem trobat aquest destinatari.",
 }
 
 

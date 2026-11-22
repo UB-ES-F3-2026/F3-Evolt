@@ -196,7 +196,8 @@ def test_seed_password_hash_matches_the_seed_password(seed):
 
 
 def test_new_users_start_after_the_seed_users(seed):
-    assert seed.next_user_id == max(seed.users) + 1 == 3
+    # 8 usuaris des de la T13.2 (docs/api.md §13.9).
+    assert seed.next_user_id == max(seed.users) + 1 == 9
 
 
 # --- Model User -------------------------------------------------------------------------

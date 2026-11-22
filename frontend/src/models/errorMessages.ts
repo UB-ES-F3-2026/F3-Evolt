@@ -18,6 +18,7 @@ const MESSAGES: Record<ApiErrorCode, string> = {
   INSUFFICIENT_BALANCE: 'No tens prou saldo per fer aquesta aportació.',
   POT_NOT_FOUND: "No s'ha trobat la guardiola.",
   MOVEMENT_NOT_FOUND: "No s'ha trobat el moviment.",
+  RECIPIENT_NOT_FOUND: 'No hem trobat aquest destinatari.',
   INVALID_DESCRIPTION: `Explica què passa amb el moviment (com a màxim ${MAX_REPORT_LENGTH} caràcters).`,
   VALIDATION_ERROR: 'Les dades no són vàlides. Revisa-les i torna-ho a provar.',
   INTERNAL_ERROR: "S'ha produït un error inesperat. Torna-ho a provar més tard.",
