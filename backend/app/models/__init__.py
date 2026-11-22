@@ -50,7 +50,7 @@ from app.models.pot import (
     PotMovement,
 )
 from app.models.session import Session
-from app.models.subaccount import Subaccount
+from app.models.subaccount import Subaccount, SubaccountMovement
 from app.models.text import fold_text
 from app.models.user import (
     IDENTIFIER_EMAIL,
@@ -72,6 +72,7 @@ __all__ = [
     "MAIN_CURRENCY",
     "MAIN_SUBACCOUNT_ID",
     "Subaccount",
+    "SubaccountMovement",
     "rate_bps",
     "total_in_euros",
     "Movement",

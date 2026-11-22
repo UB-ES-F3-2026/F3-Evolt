@@ -14,10 +14,14 @@ export interface CurrenciesDependencies {
   getSubaccounts: () => Promise<Subaccount[]>
   goToAdd: () => unknown
   goChange: () => unknown
+  /** US-26: each row opens its account's detail. */
+  goToSubaccount: (subaccountId: string) => unknown
 }
 
 /** One line of the currencies list: only the sub-accounts the person already owns. */
 export interface CurrencyRow {
+  /** The account's id (`main` for EUR), for its detail (US-26). */
+  id: string
   code: CurrencyCode
   name: string
   symbol: string
@@ -41,6 +45,7 @@ export function useCurrenciesViewModel(dependencies: CurrenciesDependencies = de
       if (subaccount === undefined) return []
       return [
         {
+          id: subaccount.id,
           code: currency.code,
           name: currency.name,
           symbol: currency.symbol,
@@ -73,6 +78,7 @@ export function useCurrenciesViewModel(dependencies: CurrenciesDependencies = de
     load,
     goToAdd: dependencies.goToAdd,
     goChange: dependencies.goChange,
+    goToSubaccount: dependencies.goToSubaccount,
   }
 }
 
@@ -83,5 +89,6 @@ function defaultDependencies(): CurrenciesDependencies {
     goToAdd: () => router.push({ name: 'add-currency' }),
     // Owned by US-27: the route does not exist yet, so it is pushed by raw path.
     goChange: () => router.push('/canviar'),
+    goToSubaccount: (subaccountId) => router.push({ name: 'subaccount', params: { subaccountId } }),
   }
 }

@@ -9,7 +9,7 @@ import MoneyAmount from '@/components/MoneyAmount.vue'
 import { useBalanceVisibility } from '@/viewmodels/useBalanceVisibility'
 import { useCurrenciesViewModel } from '@/viewmodels/useCurrenciesViewModel'
 
-const { rows, totalCents, isLoading, error, load, goToAdd, goChange } = useCurrenciesViewModel()
+const { rows, totalCents, isLoading, error, load, goToAdd, goChange, goToSubaccount } = useCurrenciesViewModel()
 const { isHidden } = useBalanceVisibility()
 
 // Every visit reloads, so a currency added on the picker shows up when coming back.
@@ -38,6 +38,8 @@ onMounted(load)
             :symbol="row.symbol"
             :amount-text="row.amountText"
             :hidden="isHidden"
+            selectable
+            @select="goToSubaccount(row.id)"
           />
         </ul>
         <p class="total-line">
