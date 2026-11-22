@@ -40,6 +40,8 @@ CURRENCY_NOT_SUPPORTED = "CURRENCY_NOT_SUPPORTED"
 CURRENCY_EXISTS = "CURRENCY_EXISTS"
 # Pagaments (docs/api.md §5 i §13.8).
 RECIPIENT_NOT_FOUND = "RECIPIENT_NOT_FOUND"
+SELF_TRANSFER = "SELF_TRANSFER"
+TRANSFER_LIMIT_EXCEEDED = "TRANSFER_LIMIT_EXCEEDED"
 
 # Codi d'error → estat HTTP de la resposta.
 ERROR_STATUS: dict[str, int] = {
@@ -68,6 +70,8 @@ ERROR_STATUS: dict[str, int] = {
     CURRENCY_NOT_SUPPORTED: 422,
     CURRENCY_EXISTS: 422,
     RECIPIENT_NOT_FOUND: 404,
+    SELF_TRANSFER: 422,
+    TRANSFER_LIMIT_EXCEEDED: 422,
 }
 
 # Missatge per defecte de cada codi (docs/api.md §5). El contracte els marca
@@ -92,7 +96,8 @@ ERROR_MESSAGES: dict[str, str] = {
     TOO_MANY_ATTEMPTS: "Has fet massa intents. Demana un codi nou.",
     INVALID_POT_NAME: "El nom de la guardiola no pot estar buit.",
     INVALID_TARGET: "L'objectiu ha de ser més gran que 0.",
-    INSUFFICIENT_BALANCE: "No tens prou saldo per fer aquesta aportació.",
+    # Un sol text a l'aportació, l'enviament i el canvi (P85).
+    INSUFFICIENT_BALANCE: "No tens prou saldo.",
     POT_NOT_FOUND: "No s'ha trobat la guardiola.",
     MOVEMENT_NOT_FOUND: "No s'ha trobat el moviment.",
     INVALID_DESCRIPTION: "Explica què passa amb el moviment (com a màxim 500 caràcters).",
@@ -100,6 +105,9 @@ ERROR_MESSAGES: dict[str, str] = {
     CURRENCY_NOT_SUPPORTED: "Aquesta divisa no és a la llista de divises disponibles.",
     CURRENCY_EXISTS: "Ja tens un subcompte en aquesta divisa.",
     RECIPIENT_NOT_FOUND: "No hem trobat aquest destinatari.",
+    # Textos de la US-14 i de §13.5 i §13.8.
+    SELF_TRANSFER: "No et pots enviar diners a tu mateix.",
+    TRANSFER_LIMIT_EXCEEDED: "Has superat el límit diari d'enviament.",
 }
 
 
