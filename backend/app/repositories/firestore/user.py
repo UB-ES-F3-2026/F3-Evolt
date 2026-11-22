@@ -6,6 +6,9 @@
   que arribin dos registres alhora: `create` falla si el document ja existeix.
   L'id del document és el hash de l'identificador, perquè un email pot tenir
   caràcters que Firestore no admet en un id (com `/`).
+- Col·lecció `usernames`: un document per `@usuari` (l'id del document és el
+  mateix `@usuari`, que només té `a-z`, `0-9`, `.`, `_` i `-`). Fa que dos
+  registres alhora no es quedin el mateix, com `user_identifiers` (T13.2).
 - L'id nou surt del comptador `next_user_id`.
 """
 
@@ -13,12 +16,14 @@ import hashlib
 from datetime import datetime
 
 from google.cloud import firestore
+from google.cloud.firestore_v1.base_query import FieldFilter
 
-from app.models import USER_STATUSES, User
+from app.models import STATUS_ACTIVE, USER_STATUSES, User
 from app.repositories.firestore import _tx
 
 USERS = "users"
 USER_IDENTIFIERS = "user_identifiers"
+USERNAMES = "usernames"
 USER_COUNTER = "next_user_id"
 
 
@@ -27,6 +32,7 @@ class FirestoreUserRepository:
         self._client = client
         self._users = client.collection(USERS)
         self._identifiers = client.collection(USER_IDENTIFIERS)
+        self._usernames = client.collection(USERNAMES)
 
     def get(self, user_id: int) -> User | None:
         snapshot = _tx.get(self._users.document(str(user_id)))
@@ -47,6 +53,8 @@ class FirestoreUserRepository:
         identifier_type: str,
         password_hash: str,
         status: str,
+        username: str = "",
+        phone: str | None = None,
     ) -> User:
         user = User(
             id=0,  # provisional: el model valida els camps abans de gastar cap id
@@ -55,11 +63,25 @@ class FirestoreUserRepository:
             identifier_type=identifier_type,
             password_hash=password_hash,
             status=status,
+            username=username,
+            phone=phone,
         )
         user.id = _tx.allocate(self._client, USER_COUNTER)
         _tx.create(self._identifiers.document(identifier_key(identifier)), {"user_id": user.id})
+        if username:
+            # Falla en fer el commit si un altre registre ja s'ha quedat aquest @usuari.
+            _tx.create(self._usernames.document(username), {"user_id": user.id})
         _tx.create(self._users.document(str(user.id)), user_to_dict(user))
         return user
+
+    def list_active(self) -> list[User]:
+        """Usuaris actius, en ordre d'id (T13.2). Es filtren al backend (§13.9)."""
+        snapshots = _tx.query(self._users.where(filter=FieldFilter("status", "==", STATUS_ACTIVE)))
+        return sorted((user_from_dict(snapshot.to_dict()) for snapshot in snapshots), key=lambda user: user.id)
+
+    def is_username_taken(self, username: str) -> bool:
+        """Els `usuari<id>` dels que no en tenen no hi són: és una forma reservada (§13.9)."""
+        return _tx.get(self._usernames.document(username)).exists
 
     def set_status(self, user_id: int, status: str) -> None:
         if status not in USER_STATUSES:
@@ -93,6 +115,8 @@ def user_to_dict(user: User) -> dict:
         "xp": user.xp,
         "failed_logins": user.failed_logins,
         "locked_until": user.locked_until,
+        "username": user.username,
+        "phone": user.phone,
     }
 
 
@@ -107,4 +131,7 @@ def user_from_dict(data: dict) -> User:
         xp=data.get("xp", 0),
         failed_logins=data.get("failed_logins", 0),
         locked_until=_tx.to_madrid(data.get("locked_until")),
+        # Els usuaris desats abans de la T13.2 no tenen aquests camps.
+        username=data.get("username", ""),
+        phone=data.get("phone"),
     )

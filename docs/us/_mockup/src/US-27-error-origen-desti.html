@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Origen igual a destí</title>
+  <style>
+    :root {
+      --color-bg: #f7f9fc;
+      --color-surface: #ffffff;
+      --color-text: #1a2233;
+      --color-muted: #6c7a96;
+      --color-border: #e6ebf4;
+      --color-primary: #4f46e5;
+      --color-income: #16a34a;
+      --color-expense: #dc2626;
+      --color-icon-bg: #eef0fb;
+      --radius: 0.75rem;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 390px;
+      height: 844px;
+      overflow: hidden;
+    }
+    body {
+      background: var(--color-bg);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--color-text);
+      -webkit-font-smoothing: antialiased;
+    }
+    .screen {
+      width: 390px;
+      height: 844px;
+      display: flex;
+      flex-direction: column;
+    }
+    .appbar {
+      height: 56px;
+      flex: 0 0 56px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--color-bg);
+    }
+    .appbar h1 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+    .back {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 0;
+      background: transparent;
+      padding: 8px;
+      font-size: 24px;
+      line-height: 1;
+      color: var(--color-text);
+    }
+    .content {
+      flex: 1;
+      overflow: hidden;
+      padding: 4px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+    .label {
+      margin: 0 0 8px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--color-text);
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 2px solid var(--color-primary);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+    .row + .row { margin-top: 8px; }
+    .row-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+    .row-amount {
+      font-size: 15px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--color-text);
+    }
+    .row-disabled {
+      border: 1px solid var(--color-border);
+      background: var(--color-bg);
+    }
+    .row-disabled .row-name,
+    .row-disabled .row-amount { color: var(--color-muted); }
+    .badge {
+      flex: none;
+      margin-left: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: var(--color-icon-bg);
+      color: var(--color-muted);
+    }
+    .amount-display {
+      font-size: 30px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--color-text);
+      padding-bottom: 6px;
+      border-bottom: 1.5px solid var(--color-border);
+    }
+    .estimate {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.3;
+      color: var(--color-muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .key {
+      height: 48px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      background: var(--color-surface);
+      font-family: inherit;
+      font-size: 19px;
+      font-weight: 500;
+      color: var(--color-text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-primary {
+      width: 100%;
+      height: 46px;
+      border: 0;
+      border-radius: var(--radius);
+      background: var(--color-primary);
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <!--
+    US-27 · Origen i destí no poden coincidir (390×844, PNG 780×1688).
+    Al selector de destí, la fila del subcompte que ja és l'origen surt en gris amb
+    «és l'origen» i no respon a cap toc; «Continuar» no s'activa. Si la petició arribés
+    al servidor, respondria 422 SAME_CURRENCY.
+  -->
+  <div class="screen">
+    <header class="appbar">
+      <button type="button" class="back" aria-label="Enrere">←</button>
+      <h1>Canviar</h1>
+    </header>
+    <main class="content">
+      <section class="card">
+        <p class="label">Subcompte d'origen</p>
+        <div class="row">
+          <span class="row-name">EUR · Euro</span>
+          <span class="row-amount">1.250,50 €</span>
+        </div>
+      </section>
+      <section class="card">
+        <p class="label">Subcompte de destí</p>
+        <div class="row row-disabled" aria-disabled="true">
+          <span class="row-name">EUR · Euro</span>
+          <span style="display:flex; align-items:center;">
+            <span class="row-amount">1.250,50 €</span>
+            <span class="badge">és l'origen</span>
+          </span>
+        </div>
+        <div class="row">
+          <span class="row-name">USD · Dòlar nord-americà</span>
+          <span class="row-amount">317,55 $</span>
+        </div>
+      </section>
+      <section class="card">
+        <p class="label">Import</p>
+        <div class="amount-display">100,00</div>
+      </section>
+      <p class="estimate">Rebràs aproximadament 110,00 $</p>
+      <div class="keypad" aria-hidden="true">
+        <div class="key">1</div>
+        <div class="key">2</div>
+        <div class="key">3</div>
+        <div class="key">4</div>
+        <div class="key">5</div>
+        <div class="key">6</div>
+        <div class="key">7</div>
+        <div class="key">8</div>
+        <div class="key">9</div>
+        <div class="key">,</div>
+        <div class="key">0</div>
+        <div class="key">⌫</div>
+      </div>
+      <button type="button" class="btn-primary">Continuar</button>
+    </main>
+  </div>
+</body>
+</html>

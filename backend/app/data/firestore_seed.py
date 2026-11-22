@@ -1,7 +1,8 @@
 """Seed i reinici a Firestore (TR01.1, docs/api.md §4.4 i §8.13).
 
 Les dades són les mateixes de `build_seed()`: usuaris, comptes, guardioles amb el
-seu historial i moviments, i els comptadors per als ids nous.
+seu historial, moviments, subcomptes en divisa i el seu historial (cap, T25.2 i T26.1), i
+els comptadors per als ids nous.
 
 - `ensure_seeded`: a l'arrencada, només si la base de dades és buida. Les dades
   es conserven entre reinicis del backend.
@@ -27,12 +28,28 @@ from app.repositories.firestore.pot import (
     pot_to_dict,
 )
 from app.repositories.firestore.session import SESSIONS
-from app.repositories.firestore.user import USER_COUNTER, USER_IDENTIFIERS, USERS, identifier_key, user_to_dict
+from app.repositories.firestore.subaccount import (
+    SUBACCOUNT_COUNTER,
+    SUBACCOUNT_MOVEMENT_COUNTER,
+    SUBACCOUNT_MOVEMENTS,
+    SUBACCOUNTS,
+    subaccount_movement_to_dict,
+    subaccount_to_dict,
+)
+from app.repositories.firestore.user import (
+    USER_COUNTER,
+    USER_IDENTIFIERS,
+    USERNAMES,
+    USERS,
+    identifier_key,
+    user_to_dict,
+)
 from app.repositories.firestore.verification_code import VERIFICATION_CODES
 
 COLLECTIONS = (
     USERS,
     USER_IDENTIFIERS,
+    USERNAMES,
     ACCOUNTS,
     POTS,
     POT_MOVEMENTS,
@@ -42,6 +59,8 @@ COLLECTIONS = (
     VERIFICATION_CODES,
     OUTBOX,
     PASSWORD_RESET_TOKENS,
+    SUBACCOUNTS,
+    SUBACCOUNT_MOVEMENTS,
     _tx.COUNTERS,
 )
 
@@ -75,6 +94,8 @@ def write_seed(client: firestore.Client, seed: SeedData) -> None:
             client.collection(USER_IDENTIFIERS).document(identifier_key(user.identifier)),
             {"user_id": user.id},
         )
+        if user.username:
+            batch.set(client.collection(USERNAMES).document(user.username), {"user_id": user.id})
     for user_id, account in seed.accounts.items():
         batch.set(client.collection(ACCOUNTS).document(str(user_id)), account_to_dict(account))
     for number, pot in enumerate(seed.pots, start=1):
@@ -83,6 +104,10 @@ def write_seed(client: firestore.Client, seed: SeedData) -> None:
         batch.set(client.collection(POT_MOVEMENTS).document(entry.id), pot_movement_to_dict(entry))
     for movement in seed.movements:
         batch.set(client.collection(MOVEMENTS).document(movement.id), movement_to_dict(movement))
+    for subaccount in seed.subaccounts:
+        batch.set(client.collection(SUBACCOUNTS).document(subaccount.id), subaccount_to_dict(subaccount))
+    for entry in seed.subaccount_movements:
+        batch.set(client.collection(SUBACCOUNT_MOVEMENTS).document(entry.id), subaccount_movement_to_dict(entry))
     batch.set(
         _tx.counters_ref(client),
         {
@@ -93,6 +118,8 @@ def write_seed(client: firestore.Client, seed: SeedData) -> None:
             POT_MOVEMENT_COUNTER: seed.next_pot_movement_number,
             OUTBOX_COUNTER: 1,
             REPORT_COUNTER: seed.next_report_number,
+            SUBACCOUNT_COUNTER: seed.next_subaccount_number,
+            SUBACCOUNT_MOVEMENT_COUNTER: seed.next_subaccount_movement_number,
         },
     )
     batch.commit()
