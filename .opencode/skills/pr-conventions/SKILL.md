@@ -98,6 +98,7 @@ Found while integrating, and the test that now covers each one.
 Story PR checklist (all must be true before it merges):
 
 - [ ] Every task PR of the story is merged into the story branch
+- [ ] Self-review: the author read the whole story diff and ran every test before asking for review
 - [ ] Latest `develop` merged into the story branch; CI green after that
 - [ ] The whole flow works from the story branch, and its acceptance tests pass
 - [ ] The PO accepted the story on the story branch
