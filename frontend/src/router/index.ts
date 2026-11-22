@@ -13,6 +13,7 @@ import NewPasswordView from '@/views/NewPasswordView.vue'
 import PotView from '@/views/PotView.vue'
 import PotsView from '@/views/PotsView.vue'
 import RegisterView from '@/views/RegisterView.vue'
+import SubaccountView from '@/views/SubaccountView.vue'
 import ReportProblemView from '@/views/ReportProblemView.vue'
 import TopUpView from '@/views/TopUpView.vue'
 import VerifyView from '@/views/VerifyView.vue'
@@ -33,6 +34,8 @@ const router = createRouter({
     { path: '/pots/:potId/contribute', name: 'contribute', component: ContributeView, props: true },
     { path: '/divises', name: 'currencies', component: CurrenciesView },
     { path: '/divises/afegir', name: 'add-currency', component: AddCurrencyView },
+    // US-26: one currency account (EUR or a sub-account). The static «afegir» above always wins.
+    { path: '/divises/:subaccountId', name: 'subaccount', component: SubaccountView, props: true },
     { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
     { path: '/register', name: 'register', component: RegisterView, meta: { public: true } },
     { path: '/verify', name: 'verify', component: VerifyView, meta: { public: true } },
