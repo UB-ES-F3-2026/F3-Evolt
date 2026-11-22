@@ -50,6 +50,23 @@ class SubaccountRepository:
         self._seed.subaccounts.append(subaccount)
         return subaccount
 
+    def set_balance(self, subaccount_id: str, balance: int) -> None:
+        """Assigna el saldo d'un subcompte (T27.1).
+
+        És un SET i no un delta, com `PotRepository.set_balance`: l'aritmètica la
+        decideix el servei, que també manté l'invariant «el saldo és la suma de
+        l'historial». Un id desconegut és error de programació (KeyError).
+        """
+        if not isinstance(balance, int) or isinstance(balance, bool):
+            raise TypeError("balance ha de ser un enter en la unitat menor de la divisa")
+        if balance < 0:
+            raise ValueError("un subcompte no pot tenir saldo negatiu")
+        for sub in self._seed.subaccounts:
+            if sub.id == subaccount_id:
+                sub.balance = balance
+                return
+        raise KeyError(subaccount_id)
+
     def delete(self, subaccount_id: str) -> None:
         """Esborra el subcompte (T26.1, §12.5). Les entrades del seu historial es queden.
 
@@ -79,7 +96,7 @@ class SubaccountRepository:
         date: datetime,
         type: str,
     ) -> SubaccountMovement:
-        """Crea i desa una entrada de l'historial, i la retorna (la farà servir el canvi, T27.1).
+        """Crea i desa una entrada de l'historial, i la retorna (la fa servir el canvi, T27.1).
 
         No toca el saldo del subcompte: el manté el servei. Tot o res: si la
         construcció falla (__post_init__), no es desa res i el comptador no avança.
@@ -97,3 +114,12 @@ class SubaccountRepository:
         self._seed.next_subaccount_movement_number = number + 1
         self._seed.subaccount_movements.append(entry)
         return entry
+
+    def remove_movement(self, entry: SubaccountMovement) -> None:
+        """Treu una entrada acabada de crear, per desfer un canvi que ha fallat (T27.1).
+
+        Si és l'última que s'ha creat, el comptador torna enrere i no queda cap forat.
+        """
+        self._seed.subaccount_movements.remove(entry)
+        if entry.seq == self._seed.next_subaccount_movement_number - 1:
+            self._seed.next_subaccount_movement_number = entry.seq

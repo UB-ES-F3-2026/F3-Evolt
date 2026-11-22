@@ -11,7 +11,10 @@ from app.models.currency import (
     MAIN_CURRENCY,
     MAIN_SUBACCOUNT_ID,
     Currency,
+    commission,
+    convert,
     rate_bps,
+    reaches_one_unit,
     total_in_euros,
 )
 from app.models.movement import (
@@ -73,7 +76,10 @@ __all__ = [
     "MAIN_SUBACCOUNT_ID",
     "Subaccount",
     "SubaccountMovement",
+    "commission",
+    "convert",
     "rate_bps",
+    "reaches_one_unit",
     "total_in_euros",
     "Movement",
     "MovementFilters",
