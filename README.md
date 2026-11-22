@@ -103,7 +103,7 @@ feat(savings): create pot with target US-17
 - Title mirrors the commit
 - Body maps work to acceptance criteria
 - Architecture checklist + DoD before request for review
-- Tests pass; ≥1 teammate review
+- Tests pass; the author self-reviews, then one teammate reviews, approves and merges
 
 ---
 
