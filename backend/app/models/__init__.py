@@ -59,6 +59,8 @@ from app.models.user import (
     STATUS_ACTIVE,
     STATUS_PENDING,
     USER_STATUSES,
+    USERNAME_FALLBACK_PREFIX,
+    USERNAME_PATTERN,
     User,
 )
 from app.models.verification import CODE_LENGTH, VerificationCode
@@ -96,6 +98,8 @@ __all__ = [
     "STATUS_ACTIVE",
     "STATUS_PENDING",
     "USER_STATUSES",
+    "USERNAME_FALLBACK_PREFIX",
+    "USERNAME_PATTERN",
     "KINDS",
     "KIND_OTHER",
     "KIND_TOPUP",

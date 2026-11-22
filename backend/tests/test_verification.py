@@ -78,7 +78,8 @@ def _error(seed, code: str, now: datetime) -> str:
 def test_code_is_valid_until_9_59(seed):
     # V-04
     token = _verify(seed, _code(seed), _at(9, 59))
-    assert seed.sessions[token].user_id == 3
+    # El primer usuari nou després dels 8 del seed (T13.2).
+    assert seed.sessions[token].user_id == 9
 
 
 def test_code_expires_at_minute_10(seed):

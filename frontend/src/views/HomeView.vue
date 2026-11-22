@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { Coins, Eye, EyeOff, PiggyBank, Plus } from '@lucide/vue'
+import { Coins, Eye, EyeOff, PiggyBank, Plus, Send } from '@lucide/vue'
 import AppShell from '@/components/AppShell.vue'
 import CurrencyRow from '@/components/CurrencyRow.vue'
 import EmptyState from '@/components/EmptyState.vue'
@@ -61,6 +61,10 @@ onMounted(() => {
           <router-link :to="{ name: 'topup' }" class="add-money">
             <Plus :size="18" />
             Afegir diners
+          </router-link>
+          <router-link :to="{ name: 'payments' }" class="send-link">
+            <Send :size="18" />
+            Enviar diners
           </router-link>
           <router-link :to="{ name: 'pots' }" class="pots-link">
             <PiggyBank :size="18" />
@@ -174,6 +178,7 @@ onMounted(() => {
 }
 
 .add-money,
+.send-link,
 .pots-link {
   display: inline-flex;
   align-items: center;
@@ -189,6 +194,7 @@ onMounted(() => {
   color: var(--color-surface);
 }
 
+.send-link,
 .pots-link {
   background: var(--color-surface);
   color: var(--color-primary);

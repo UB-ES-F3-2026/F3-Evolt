@@ -2,7 +2,9 @@
 
 - Usuari 1: compte amb saldo, 3 guardioles i 30 moviments (ingressos i despeses).
 - Usuari 2: compte sense moviments ni guardioles, saldo 0.
-- Tots dos estan actius i tenen credencials fictícies per iniciar sessió (T01.2,
+- Usuaris 3 a 8: un per a cada membre de l'equip, amb el seu àlies com a `@usuari`
+  (T13.2, docs/api.md §13.9). Compte a 0, sense moviments ni guardioles.
+- Tots estan actius i tenen credencials fictícies per iniciar sessió (T01.2,
   docs/api.md §8.13).
 
 Regles del contracte que es compleixen aquí:
@@ -54,6 +56,24 @@ EMPTY_USER_ID = 2
 # reservat i no arriba a cap bústia real.
 DEMO_IDENTIFIER = "demo@evolt.test"
 EMPTY_IDENTIFIER = "buit@evolt.test"
+
+# @usuari i telèfon fictici dels usuaris 1 i 2 (docs/api.md §13.9, P75).
+DEMO_USERNAME = "demo"
+DEMO_PHONE = "+34611223307"
+EMPTY_USERNAME = "buit"
+EMPTY_PHONE = "+34611223308"
+
+# Usuaris 3 a 8: (nom, email, @usuari, telèfon). Àlies d'equip (decisió de PO) i
+# telèfons fictius que segueixen el mockup de US-13 («611 22 33 02» és Huabin).
+_TEAM_USERS = [
+    ("Alicia", "alicia@evolt.test", "aliciaa415", "+34611223301"),
+    ("Huabin", "huabin@evolt.test", "123huabin123", "+34611223302"),
+    ("Izan", "izan@evolt.test", "izanfarreny47", "+34611223303"),
+    ("Jiajun", "jiajun@evolt.test", "yayuuun", "+34611223304"),
+    ("Junhao", "junhao@evolt.test", "junhaozhang", "+34611223305"),
+    ("Martí", "marti@evolt.test", "sudo-itramplay", "+34611223306"),
+]
+FIRST_TEAM_USER_ID = 3
 SEED_PASSWORD = "Evolt2026"
 # Hash de bcrypt de SEED_PASSWORD, calculat una vegada i escrit aquí: bcrypt és
 # lent a propòsit (~0,25 s) i build_seed() es crida a cada test i a cada reinici.
@@ -213,6 +233,8 @@ def build_seed(now: datetime | None = None) -> SeedData:
             password_hash=SEED_PASSWORD_HASH,
             status=STATUS_ACTIVE,
             xp=120,
+            username=DEMO_USERNAME,
+            phone=DEMO_PHONE,
         ),
         EMPTY_USER_ID: User(
             id=EMPTY_USER_ID,
@@ -222,8 +244,21 @@ def build_seed(now: datetime | None = None) -> SeedData:
             password_hash=SEED_PASSWORD_HASH,
             status=STATUS_ACTIVE,
             xp=0,
+            username=EMPTY_USERNAME,
+            phone=EMPTY_PHONE,
         ),
     }
+    for user_id, (name, email, username, phone) in enumerate(_TEAM_USERS, start=FIRST_TEAM_USER_ID):
+        users[user_id] = User(
+            id=user_id,
+            name=name,
+            identifier=email,
+            identifier_type=IDENTIFIER_EMAIL,
+            password_hash=SEED_PASSWORD_HASH,
+            status=STATUS_ACTIVE,
+            username=username,
+            phone=phone,
+        )
 
     movements: list[Movement] = []
     for number, (days_ago, hhmm, concept, mov_type, icon, amount) in enumerate(
@@ -253,9 +288,10 @@ def build_seed(now: datetime | None = None) -> SeedData:
     # El saldo es calcula a partir dels moviments, així sempre és coherent.
     demo_balance = sum(m.signed_amount for m in movements)
 
+    # Tots els usuaris tenen el seu compte principal; només el de l'usuari 1 té saldo.
     accounts = {
-        DEMO_USER_ID: Account(id=DEMO_USER_ID, user_id=DEMO_USER_ID, balance=demo_balance),
-        EMPTY_USER_ID: Account(id=EMPTY_USER_ID, user_id=EMPTY_USER_ID, balance=0),
+        user_id: Account(id=user_id, user_id=user_id, balance=demo_balance if user_id == DEMO_USER_ID else 0)
+        for user_id in users
     }
 
     pots = [
