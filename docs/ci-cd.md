@@ -170,7 +170,9 @@ not on the board is added. The workflow does not close issues: the team closes t
 filling in the hours and the AI note.
 
 **Token.** `GITHUB_TOKEN` cannot write an organization project, so the job needs the repository
-secret `PROJECT_TOKEN`. Without it, the job only logs a notice and stays green.
+secret `PROJECT_TOKEN`. Without it, the job only logs a notice and stays green. If the board
+cannot be updated (a missing permission, a rate limit), the job shows a warning and also stays
+green: a board problem never looks like a broken build.
 
 1. A team member with write access to the board creates a token. A fine-grained token has
    resource owner `UB-ES-F3-2026`, repository `F3-Evolt`, and the permissions
