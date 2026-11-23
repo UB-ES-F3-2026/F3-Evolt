@@ -66,7 +66,7 @@ The required one is **`ci`** (the gate job that goes red whenever `backend` or
 
 ## Apply the protection
 
-Both branches get the **same payload**. Write it once:
+Both branches get the **same payload**, except `strict`: `true` on `develop`, `false` on `main`. Write it once:
 
 ```bash
 cat <<'EOF' > /tmp/protection.json
@@ -88,6 +88,9 @@ gh api -X PUT repos/UB-ES-F3-2026/F3-Evolt/branches/develop/protection \
   --input /tmp/protection.json
 gh api -X PUT repos/UB-ES-F3-2026/F3-Evolt/branches/main/protection \
   --input /tmp/protection.json
+# main keeps strict off (its only PR is the release from develop):
+gh api -X PATCH repos/UB-ES-F3-2026/F3-Evolt/branches/main/protection/required_status_checks \
+  -F strict=false -f "contexts[]=ci"
 ```
 
 GitHub answers with the whole protection settings as JSON — check that
