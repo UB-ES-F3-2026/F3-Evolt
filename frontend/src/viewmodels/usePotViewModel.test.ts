@@ -74,4 +74,17 @@ describe('usePotViewModel', () => {
     expect(viewModel.pot.value).toBeNull()
     expect(viewModel.error.value).toBe(messageForCode('POT_NOT_FOUND'))
   })
+
+  it.each([
+    [18000, true],
+    [0, false],
+  ])('REP-01, REP-11: with %i cents in the pot, «Retirar» is enabled: %s', async (balance, enabled) => {
+    vi.mocked(getPots).mockResolvedValue([{ ...vacances, balance }])
+    vi.mocked(getPotMovements).mockResolvedValue([])
+    const viewModel = usePotViewModel('pot-01')
+
+    await viewModel.load()
+
+    expect(viewModel.canWithdraw.value).toBe(enabled)
+  })
 })

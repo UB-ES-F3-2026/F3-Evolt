@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_POT_COLOR, fromApiPot, fromApiPots } from './pot'
+import { AMOUNT_FORMAT_MESSAGE, messageForCode } from './errorMessages'
+import { DEFAULT_POT_COLOR, fromApiPot, fromApiPots, potAmountError } from './pot'
 
 describe('fromApiPot', () => {
   it('keeps the fields of the contract', () => {
@@ -22,5 +23,24 @@ describe('fromApiPot', () => {
 describe('fromApiPots', () => {
   it('turns a missing list into an empty one', () => {
     expect(fromApiPots(undefined)).toEqual([])
+  })
+})
+
+describe('potAmountError', () => {
+  it.each([
+    ['', null],
+    ['  ', null],
+    ['30', null],
+    ['150,00', null],
+    ['0', messageForCode('INVALID_AMOUNT')],
+    ['-5', messageForCode('INVALID_AMOUNT')],
+    ['abc', AMOUNT_FORMAT_MESSAGE],
+    ['150,01', messageForCode('INSUFFICIENT_POT_BALANCE')],
+  ])('reads %j with a limit of 150,00 € as %j', (typed, expected) => {
+    expect(potAmountError(typed, 15000, 'INSUFFICIENT_POT_BALANCE')).toBe(expected)
+  })
+
+  it('does not check the limit while it is unknown', () => {
+    expect(potAmountError('999999', null, 'INSUFFICIENT_BALANCE')).toBeNull()
   })
 })
