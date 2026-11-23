@@ -20,6 +20,7 @@ from google.cloud import firestore
 from app.data.seed import SeedData, build_seed
 from app.repositories.firestore import _tx
 from app.repositories.firestore.account import ACCOUNTS, account_to_dict
+from app.repositories.firestore.money_request import MONEY_REQUEST_COUNTER, MONEY_REQUESTS, money_request_to_dict
 from app.repositories.firestore.movement import MOVEMENTS, NUMBER_COUNTER, SEQ_COUNTER, movement_to_dict
 from app.repositories.firestore.movement_report import MOVEMENT_REPORTS, REPORT_COUNTER
 from app.repositories.firestore.outbox import OUTBOX, OUTBOX_COUNTER
@@ -60,6 +61,7 @@ COLLECTIONS = (
     POT_MOVEMENTS,
     MOVEMENTS,
     MOVEMENT_REPORTS,
+    MONEY_REQUESTS,
     SESSIONS,
     VERIFICATION_CODES,
     OUTBOX,
@@ -109,6 +111,8 @@ def write_seed(client: firestore.Client, seed: SeedData) -> None:
         batch.set(client.collection(POT_MOVEMENTS).document(entry.id), pot_movement_to_dict(entry))
     for movement in seed.movements:
         batch.set(client.collection(MOVEMENTS).document(movement.id), movement_to_dict(movement))
+    for money_request in seed.money_requests:
+        batch.set(client.collection(MONEY_REQUESTS).document(money_request.id), money_request_to_dict(money_request))
     for subaccount in seed.subaccounts:
         batch.set(client.collection(SUBACCOUNTS).document(subaccount.id), subaccount_to_dict(subaccount))
     for entry in seed.subaccount_movements:
@@ -123,6 +127,7 @@ def write_seed(client: firestore.Client, seed: SeedData) -> None:
             POT_MOVEMENT_COUNTER: seed.next_pot_movement_number,
             OUTBOX_COUNTER: 1,
             REPORT_COUNTER: seed.next_report_number,
+            MONEY_REQUEST_COUNTER: seed.next_money_request_number,
             SUBACCOUNT_COUNTER: seed.next_subaccount_number,
             SUBACCOUNT_MOVEMENT_COUNTER: seed.next_subaccount_movement_number,
         },
