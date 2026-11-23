@@ -294,7 +294,7 @@ def test_more_than_the_balance_changes_nothing(client: TestClient) -> None:
     assert response.status_code == 422
     assert response.json() == {
         "code": "INSUFFICIENT_BALANCE",
-        "message": "No tens prou saldo per fer aquesta aportació.",
+        "message": "No tens prou saldo.",
     }
     assert _state(_seed(client)) == before
 
