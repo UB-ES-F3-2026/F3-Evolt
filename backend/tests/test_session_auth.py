@@ -23,6 +23,8 @@ PROTECTED = [
     ("GET", "/api/home"),
     ("GET", "/api/movements"),
     ("POST", "/api/topups"),
+    # T19.2: la retirada de 10,00 € de Vacances (150,00 €) també necessita sessió.
+    ("POST", "/api/pots/pot-01/withdrawals"),
     # T13.2 (CU-21): la cerca i un usuari concret també necessiten sessió.
     ("GET", "/api/users"),
     ("GET", "/api/users/usr-04"),
