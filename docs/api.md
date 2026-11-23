@@ -2762,7 +2762,7 @@ L'usuari 2 té ara saldo `2000` i un moviment `mov-32`: `"El sopar de divendres"
 - Arribar **exactament** al límit està permès: després d'enviar `2000` avui, encara es poden enviar `98000`.
 - Només compten els enviaments **fets** per l'usuari. Els diners rebuts no hi compten.
 - És un límit **diferent** del de les recàrregues ([4.3](#43-post-apitopups)): enviar no gasta límit de recàrrega, i recarregar no gasta límit d'enviament. Per això té un codi propi (P71).
-- `TRANSFER_LIMIT_EXCEEDED` porta `details.remainingToday`: el que encara es pot enviar avui, en cèntims (`0` si ja s'ha arribat al límit). La pantalla mostra «Has superat el límit diari de 1.000,00 €. Avui encara pots enviar 980,00 €.».
+- `TRANSFER_LIMIT_EXCEEDED` porta `details.remainingToday`: el que encara es pot enviar avui, en cèntims (`0` si ja s'ha arribat al límit). La pantalla no el mostra: diu exactament «Has superat el límit diari de 1.000,00 €.», el mateix a «Enviar» i a «Confirmar» (US-14).
 
 ```json
 {
@@ -2774,7 +2774,7 @@ L'usuari 2 té ara saldo `2000` i un moviment `mov-32`: `"El sopar de divendres"
 
 #### `GET /api/transfers/limit`
 
-Quant pot enviar encara avui l'usuari de la sessió. «Enviar» ho demana en obrir-se, com el saldo, per mostrar «Has superat el límit diari de 1.000,00 €. Avui encara pots enviar 980,00 €.» i desactivar «Continuar» **abans** de confirmar (decisió de PO a la US-14). (P84)
+Quant pot enviar encara avui l'usuari de la sessió. «Enviar» ho demana en obrir-se, com el saldo, per mostrar «Has superat el límit diari de 1.000,00 €.» i desactivar «Continuar» **abans** de confirmar (decisió de PO a la US-14). (P84)
 
 **Resposta `200`:** `{ dailyLimit, remainingToday }`
 
@@ -2841,7 +2841,7 @@ Textos de les pantalles de US-13 i US-14, en vermell:
 | `RECIPIENT_NOT_FOUND` | «No hem trobat aquest destinatari.» (nou) |
 | `SELF_TRANSFER` | «No et pots enviar diners a tu mateix.» (nou) |
 | `INSUFFICIENT_BALANCE` | «No tens prou saldo.» El mateix text a totes les pantalles, perquè el frontend tria el text pel `code` (P85). |
-| `TRANSFER_LIMIT_EXCEEDED` | «Has superat el límit diari de 1.000,00 €. Avui encara pots enviar X €.», amb `details.remainingToday` (nou) |
+| `TRANSFER_LIMIT_EXCEEDED` | «Has superat el límit diari de 1.000,00 €.» (nou). La resposta porta `details.remainingToday`, però la pantalla no el mostra (US-14) |
 
 ### 13.9 Model intern
 
