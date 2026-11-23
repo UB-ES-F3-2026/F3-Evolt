@@ -1,8 +1,7 @@
 """Tests de T20.1: percentatge i estat de l'objectiu de les guardioles (docs/api.md §11.1).
 
-Proves O-01 a O-08 de docs/proves-estalvi.md. La O-04 (retirar torna la guardiola a
-«En progrés») necessita la retirada de la T19.2 (US-19): s'afegeix quan les dues
-històries es trobin a `develop`.
+Proves O-01 a O-08 de docs/proves-estalvi.md, inclosa la O-04 (retirar torna la
+guardiola a «En progrés»), que es pot provar des que la US-19 és a `develop`.
 
 Executar des de backend/:  python -m pytest tests/test_pot_progress.py
 """
@@ -94,6 +93,21 @@ def test_contributing_past_the_target_shows_the_real_percentage(client: TestClie
     pot = _contribute(client, "pot-03", 2000)
 
     assert (pot["balance"], pot["percentage"], pot["goalStatus"]) == (10000, 125, "achieved")
+
+
+def test_withdrawing_below_the_target_returns_the_pot_to_in_progress(client: TestClient) -> None:
+    # O-04 (US-19 + US-20): retirar torna la guardiola de «Objectiu assolit» a «En progrés».
+    _contribute(client, "pot-03", 3000)
+    _contribute(client, "pot-03", 2000)  # 10000 de 8000: 125 % i «Objectiu assolit».
+
+    response = client.post("/api/pots/pot-03/withdrawals", json={"amount": 3000})
+
+    assert response.status_code == 201
+    pot = response.json()["pot"]
+    # 7000 de 8000 és 87,5: arrodonit mig cap amunt, 88, i mai assolit sota l'objectiu.
+    assert (pot["balance"], pot["percentage"], pot["goalStatus"]) == (7000, 88, GOAL_IN_PROGRESS)
+    # La lectura posterior (la llista de la pantalla) dona exactament el mateix.
+    assert _pots(client)["pot-03"] == pot
 
 
 def test_new_pots_start_at_zero_or_without_progress(client: TestClient) -> None:
