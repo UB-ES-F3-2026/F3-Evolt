@@ -35,9 +35,12 @@ POT_NOT_FOUND = "POT_NOT_FOUND"
 # Moviments (docs/api.md §5 i §10.6).
 MOVEMENT_NOT_FOUND = "MOVEMENT_NOT_FOUND"
 INVALID_DESCRIPTION = "INVALID_DESCRIPTION"
-# Multidivisa (docs/api.md §5 i §12.10). La resta de codis arriben amb la T26.1 i la T27.1.
+# Multidivisa (docs/api.md §5 i §12.10). La resta de codis arriben amb la T27.1.
 CURRENCY_NOT_SUPPORTED = "CURRENCY_NOT_SUPPORTED"
 CURRENCY_EXISTS = "CURRENCY_EXISTS"
+SUBACCOUNT_NOT_FOUND = "SUBACCOUNT_NOT_FOUND"
+MAIN_ACCOUNT_NOT_DELETABLE = "MAIN_ACCOUNT_NOT_DELETABLE"
+SUBACCOUNT_NOT_EMPTY = "SUBACCOUNT_NOT_EMPTY"
 # Pagaments (docs/api.md §5 i §13.8).
 RECIPIENT_NOT_FOUND = "RECIPIENT_NOT_FOUND"
 SELF_TRANSFER = "SELF_TRANSFER"
@@ -69,6 +72,9 @@ ERROR_STATUS: dict[str, int] = {
     INVALID_DESCRIPTION: 422,
     CURRENCY_NOT_SUPPORTED: 422,
     CURRENCY_EXISTS: 422,
+    SUBACCOUNT_NOT_FOUND: 404,
+    MAIN_ACCOUNT_NOT_DELETABLE: 422,
+    SUBACCOUNT_NOT_EMPTY: 422,
     RECIPIENT_NOT_FOUND: 404,
     SELF_TRANSFER: 422,
     TRANSFER_LIMIT_EXCEEDED: 422,
@@ -104,6 +110,11 @@ ERROR_MESSAGES: dict[str, str] = {
     # Textos literals de la US-25.
     CURRENCY_NOT_SUPPORTED: "Aquesta divisa no és a la llista de divises disponibles.",
     CURRENCY_EXISTS: "Ja tens un subcompte en aquesta divisa.",
+    # Decisió del PO (#193).
+    SUBACCOUNT_NOT_FOUND: "No s'ha trobat el subcompte.",
+    # Textos literals de la US-26.
+    MAIN_ACCOUNT_NOT_DELETABLE: "El compte en euros no es pot eliminar.",
+    SUBACCOUNT_NOT_EMPTY: "Només pots eliminar un subcompte amb saldo 0.",
     RECIPIENT_NOT_FOUND: "No hem trobat aquest destinatari.",
     # Textos de la US-14 i de §13.5 i §13.8.
     SELF_TRANSFER: "No et pots enviar diners a tu mateix.",

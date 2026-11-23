@@ -31,9 +31,12 @@ const API_ERROR_CODES = [
   'UNAUTHENTICATED',
   'SESSION_EXPIRED',
   'RESET_LINK_EXPIRED',
-  // Multi-currency (US-25). Provisional until the sub-accounts contract lands (issues #166/#167).
+  // Multi-currency (US-25 and US-26, docs/api.md §12.10).
   'CURRENCY_EXISTS',
   'CURRENCY_NOT_SUPPORTED',
+  'SUBACCOUNT_NOT_FOUND',
+  'MAIN_ACCOUNT_NOT_DELETABLE',
+  'SUBACCOUNT_NOT_EMPTY',
 ] as const
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number]

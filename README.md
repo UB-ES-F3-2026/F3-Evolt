@@ -101,9 +101,9 @@ feat(savings): create pot with target US-17
 - Technical tasks outside a story, docs and fixes → PR base `develop`, only if complete on their own
 - Only `hotfix/<slug>` goes from `main` → PR base `main`
 - Title mirrors the commit
-- Body maps work to acceptance criteria
+- Body maps work to acceptance criteria and links its issue: `Refs #N` (task) or `Closes #N` (story), so the Kanban moves it
 - Architecture checklist + DoD before request for review
-- Tests pass; ≥1 teammate review
+- Tests pass; the author self-reviews, then one teammate reviews, approves and merges
 
 ---
 
@@ -134,7 +134,10 @@ The frontend runs on [Render](https://render.com) as a free **Static Site**
 
 - **Public URL:** https://f3-evolt.onrender.com
 - **Branch:** `main` (the demo line); redeploy manually from the Render
-  dashboard until automatic deploys exist (TR06.3)
+  dashboard until automatic deploys exist (TR06.3). **Known technical debt:**
+  Render native auto-deploy and the `deploy.yml` hook must never be enabled at
+  the same time, or each push deploys twice — see
+  [`docs/deploy.md`](docs/deploy.md#known-technical-debt-native-auto-deploy-vs-deploy-hook).
 
 | Render setting | Value |
 |----------------|-------|
@@ -298,7 +301,10 @@ The backend runs on [Render](https://render.com) (free plan) as a Web Service:
 
 - **Public URL:** https://evolt-api.onrender.com (e.g. [`/api/health`](https://evolt-api.onrender.com/api/health))
 - **Branch:** `main` (the demo line); redeploy manually from the Render
-  dashboard until automatic deploys exist (TR06.3)
+  dashboard until automatic deploys exist (TR06.3). **Known technical debt:**
+  Render native auto-deploy and the `deploy.yml` hook must never be enabled at
+  the same time, or each push deploys twice — see
+  [`docs/deploy.md`](docs/deploy.md#known-technical-debt-native-auto-deploy-vs-deploy-hook).
 
 | Render setting | Value |
 |----------------|-------|

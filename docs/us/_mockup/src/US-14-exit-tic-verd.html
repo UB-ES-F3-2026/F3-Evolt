@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>US-14 · èxit amb tic verd</title>
+<style>
+:root{--color-bg:#f7f9fc;--color-surface:#fff;--color-text:#1a2233;--color-muted:#6c7a96;--color-border:#e6ebf4;--color-primary:#4f46e5;--color-income:#16a34a;--color-error:#dc2626;--radius:.75rem;--annot:#b45309}
+*{box-sizing:border-box}
+body{margin:0;background:var(--color-bg);color:var(--color-text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.screen{position:relative;width:390px;height:844px;overflow:hidden;margin:0 auto;background:var(--color-bg);display:flex;flex-direction:column}
+.appbar{display:flex;align-items:center;gap:16px;padding:16px 20px;background:var(--color-surface);border-bottom:1px solid var(--color-border)}
+.appbar-back{display:inline-block;padding:6px 12px;border:1px solid var(--color-primary);border-radius:var(--radius);color:var(--color-primary);font-size:14px;white-space:nowrap}
+.appbar-title{margin:0;font-size:20px;font-weight:700;white-space:nowrap}
+.appbar .menu{margin-left:auto;display:grid;place-items:center;padding:6px;border-radius:50%;color:var(--color-muted)}
+.content{flex:1;overflow:hidden;padding:16px 20px;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--color-surface);border-radius:var(--radius);padding:16px 20px}
+.success{display:flex;flex-direction:column;align-items:center;gap:12px;padding:32px 20px;text-align:center}
+.tick-circle{display:grid;place-items:center;width:72px;height:72px;border-radius:50%;background:var(--color-income);color:#fff}
+.success-text{margin:0;font-size:18px;font-weight:700}
+.saved-line{margin:0;font-size:14px;color:var(--color-muted)}
+.annot{position:absolute;left:20px;right:20px;bottom:20px;display:flex;gap:10px;padding:10px 12px;background:var(--color-surface);border:1px solid var(--annot);border-left:4px solid var(--annot);border-radius:12px;box-shadow:0 6px 16px rgba(26,34,51,.12);font-size:13px;line-height:1.35}
+.annot-num{flex:none;width:20px;height:20px;margin-top:1px;border-radius:50%;background:var(--annot);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
+.annot-text{margin:0}
+.annot-note{display:block;margin-top:3px;font-size:12px;color:var(--color-muted)}
+</style>
+</head>
+<body>
+<!--
+  US-14 · «Confirmar» — èxit amb tic verd.
+
+  És un estat INLINE dins de la mateixa pantalla, no una ruta nova: el patró de
+  TopUpView.vue i ContributeView.vue (section.card.success + role="status"). El formulari
+  ha desaparegut, es veu el tic verd, «Has enviat 20,00 € a Usuari nou» i el saldo nou que
+  retorna el 201. Al cap de 1.500 ms la pantalla torna sola a Inici.
+-->
+<div class="screen">
+  <header class="appbar">
+    <span class="appbar-back">← Inici</span>
+    <h1 class="appbar-title">Confirmar</h1>
+    <span class="menu" aria-label="Menú" title="Menú"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg></span>
+  </header>
+  <main class="content" style="padding-bottom:118px">
+    <section class="card success" role="status" style="flex:1;justify-content:center">
+      <span class="tick-circle"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
+      <p class="success-text">Has enviat 20,00 € a Usuari nou</p>
+      <p class="saved-line">Saldo disponible: 3.775,21 €</p>
+    </section>
+  </main>
+  <div class="annot" role="note">
+    <span class="annot-num">1</span>
+    <p class="annot-text">Èxit inline sense cap botó: 1.500 ms i torna sol a Inici<span class="annot-note">No és una ruta (/pagaments/fet no existeix). És el mateix patró que «Afegir diners» i les aportacions a guardioles.</span></p>
+  </div>
+</div>
+</body>
+</html>

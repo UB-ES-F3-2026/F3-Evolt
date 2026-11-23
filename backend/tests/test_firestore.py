@@ -43,6 +43,7 @@ from app.repositories import (  # noqa: E402
     MovementRepository,
     OutboxRepository,
     PotRepository,
+    SubaccountRepository,
     UserRepository,
 )
 from app.repositories.atomic import FirestoreAtomic  # noqa: E402
@@ -54,6 +55,7 @@ from app.repositories.firestore import (  # noqa: E402
     FirestorePasswordResetTokenRepository,
     FirestorePotRepository,
     FirestoreSessionRepository,
+    FirestoreSubaccountRepository,
     FirestoreUserRepository,
     FirestoreVerificationCodeRepository,
 )
@@ -463,3 +465,59 @@ def test_closed_outbox_writes_nothing_to_firestore(project, monkeypatch) -> None
         client.post("/api/auth/forgot-password", json={"identifier": DEMO_IDENTIFIER})
 
     assert list(firestore.Client(project=project).collection("outbox").list_documents()) == []
+
+
+# --- Historial i eliminació de subcomptes (T26.1, §12.5 i §12.6) ----------------------
+
+
+def test_subaccount_history_and_delete_match_memory(db, seed) -> None:
+    # Les mateixes operacions a la memòria i a Firestore donen el mateix historial:
+    # ids `smov-NN`, del més recent al més antic i, amb la mateixa data, primer la
+    # creada més tard (P4). Eliminar el subcompte no esborra l'historial (§12.11).
+    def play(repository) -> list[tuple[str, int, str, str]]:
+        sub = repository.add(user_id=DEMO_USER_ID, currency="USD")
+        repository.add_movement(subaccount_id=sub.id, amount=31755, concept="Canvi EUR → USD", date=NOW, type="income")
+        repository.add_movement(subaccount_id=sub.id, amount=100, concept="Canvi USD → EUR", date=NOW, type="expense")
+        repository.add_movement(
+            subaccount_id=sub.id, amount=5, concept="Canvi EUR → USD", date=NOW - timedelta(days=1), type="income"
+        )
+        history = [(e.id, e.amount, e.type, e.date.isoformat()) for e in repository.list_movements(sub.id)]
+        repository.delete(sub.id)
+        assert repository.get_by_user(DEMO_USER_ID, sub.id) is None
+        assert [e.id for e in repository.list_movements(sub.id)] == ["smov-02", "smov-01", "smov-03"]
+        return history
+
+    firestore_history = play(FirestoreSubaccountRepository(db))
+
+    assert firestore_history == play(SubaccountRepository(seed))
+    assert firestore_history[0] == ("smov-02", 100, "expense", "2026-11-03T10:00:00+01:00")
+
+
+@pytest.mark.parametrize("subaccount_id", ["sub-99", "__x__", "x" * 1600])
+def test_unknown_or_unsafe_subaccount_id_is_not_found(app_client, subaccount_id: str) -> None:
+    # Un id que Firestore no admet (`__…`, més de 1.500 bytes) no existeix mai: 404, no un 500.
+    headers = _login(app_client)
+    not_found = {"code": "SUBACCOUNT_NOT_FOUND", "message": "No s'ha trobat el subcompte."}
+
+    assert app_client.post(f"/api/subaccounts/{subaccount_id}/delete", headers=headers).json() == not_found
+    assert app_client.get(f"/api/subaccounts/{subaccount_id}/movements", headers=headers).json() == not_found
+
+
+def test_simultaneous_deletions_of_a_subaccount_only_one_wins(app_client) -> None:
+    headers = _login(app_client)
+    app_client.post("/api/subaccounts", json={"currency": "USD"}, headers=headers)
+    barrier = threading.Barrier(4)
+    codes: list[int] = []
+
+    def delete() -> None:
+        barrier.wait()
+        codes.append(app_client.post("/api/subaccounts/sub-01/delete", headers=headers).status_code)
+
+    threads = [threading.Thread(target=delete) for _ in range(4)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    assert sorted(codes) == [200, 404, 404, 404]
+    assert [item["id"] for item in app_client.get("/api/subaccounts", headers=headers).json()["items"]] == ["main"]

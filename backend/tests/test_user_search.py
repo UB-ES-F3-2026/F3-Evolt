@@ -54,7 +54,14 @@ def _register_and_verify(client: TestClient, identifier: str) -> None:
 
 
 def _user_by_identifier(client: TestClient, identifier: str):
-    return next(user for user in _seed(client).users.values() if user.identifier == identifier)
+    # Pel repositori, no pel seed: així també funciona amb TEST_STORAGE=firestore,
+    # on `app.state.seed` no existeix (CU-20 es prova als dos emmagatzematges).
+    firestore = getattr(client.app.state, "firestore", None)
+    if firestore is not None:
+        from app.repositories.firestore import FirestoreUserRepository
+
+        return FirestoreUserRepository(firestore).find_by_identifier(identifier)
+    return UserRepository(_seed(client)).find_by_identifier(identifier)
 
 
 # --- Llista inicial (§13.2) ---------------------------------------------------------------

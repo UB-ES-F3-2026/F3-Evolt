@@ -13,6 +13,7 @@ function fakeDependencies(overrides: Partial<CurrenciesDependencies> = {}) {
     getSubaccounts: vi.fn(() => Promise.resolve(owned)),
     goToAdd: vi.fn(),
     goChange: vi.fn(),
+    goToSubaccount: vi.fn(),
     ...overrides,
   }
 }
@@ -76,5 +77,16 @@ describe('useCurrenciesViewModel', () => {
 
     expect(dependencies.goToAdd).toHaveBeenCalledTimes(1)
     expect(dependencies.goChange).toHaveBeenCalledTimes(1)
+  })
+
+  it('US-26: each row carries its account id, and opens its detail', async () => {
+    const dependencies = fakeDependencies()
+    const viewModel = useCurrenciesViewModel(dependencies)
+
+    await viewModel.load()
+    viewModel.goToSubaccount(viewModel.rows.value[1].id)
+
+    expect(viewModel.rows.value.map((row) => row.id)).toEqual(['sub-eur', 'sub-usd'])
+    expect(dependencies.goToSubaccount).toHaveBeenCalledWith('sub-usd')
   })
 })

@@ -1,20 +1,42 @@
 /**
- * In-memory currency sub-accounts (US-25). Every account owns EUR; the foreign ones start empty.
+ * In-memory currency sub-accounts (US-25 and US-26). Every account owns EUR; the foreign ones start empty.
+ * Same ids as the backend (docs/api.md §12.2): the main euro account is `main`,
+ * and the foreign sub-accounts are `sub-01`, `sub-02`… in creation order.
  */
 
-import { isCurrencyCode, type SubaccountJson, type SubaccountsJson } from '@/models/currency'
+import {
+  MAIN_SUBACCOUNT_ID,
+  isCurrencyCode,
+  type DeleteSubaccountJson,
+  type SubaccountJson,
+  type SubaccountMovement,
+  type SubaccountMovementsJson,
+  type SubaccountsJson,
+} from '@/models/currency'
 import { mockBalance, mockError } from './index'
 import { onMockUserChange } from './mockUser'
 
+interface StoredMovement {
+  subaccountId: string
+  entry: SubaccountMovement
+  /** Creation order, for the tie-break when two dates are equal (P4). */
+  seq: number
+}
+
 let subaccounts: SubaccountJson[] = []
-let nextNumber = 0
+let nextNumber = 1
+// Kept when a sub-account is deleted (§12.11): only the route stops showing them.
+let history: StoredMovement[] = []
+let nextMovementNumber = 1
 startSubaccounts()
 onMockUserChange(startSubaccounts)
 
-/** Every account starts with only the EUR sub-account, with the live balance of the mocks. */
+/** Every account starts with only the main EUR account, with the live balance of the mocks. */
 function startSubaccounts(): void {
-  subaccounts = [{ id: subaccountId(1), currency: 'EUR', balance: mockBalance() }]
-  nextNumber = 2
+  subaccounts = [{ id: MAIN_SUBACCOUNT_ID, currency: 'EUR', balance: mockBalance() }]
+  nextNumber = 1
+  history = []
+  nextMovementNumber = 1
 }
 
 /**
@@ -61,6 +83,72 @@ export function mockAddSubaccount(body: { currency?: unknown }): SubaccountJson 
   }
   subaccounts.push(subaccount)
   return { ...subaccount }
+}
+
+/**
+ * POST /api/subaccounts/{subaccountId}/delete (US-26, docs/api.md §12.5), in the
+ * contract's order: the main account → not deletable, whatever its balance;
+ * unknown → not found; any balance but exactly 0 → not empty.
+ * Only the sub-account goes: its history stays stored, and the currency can be added again.
+ */
+export function mockDeleteSubaccount(subaccountIdToDelete: string): DeleteSubaccountJson {
+  if (subaccountIdToDelete === MAIN_SUBACCOUNT_ID) {
+    throw mockError('MAIN_ACCOUNT_NOT_DELETABLE', 'El compte en euros no es pot eliminar.')
+  }
+  const index = subaccounts.findIndex((subaccount) => subaccount.id === subaccountIdToDelete)
+  if (index === -1) {
+    throw mockError('SUBACCOUNT_NOT_FOUND', "No s'ha trobat el subcompte.")
+  }
+  if (subaccounts[index].balance !== 0) {
+    throw mockError('SUBACCOUNT_NOT_EMPTY', 'Només pots eliminar un subcompte amb saldo 0.')
+  }
+  subaccounts.splice(index, 1)
+  return { status: 'ok' }
+}
+
+/**
+ * GET /api/subaccounts/{subaccountId}/movements (US-26, docs/api.md §12.6): newest
+ * first, and the later one first on a tie (P4). Only for foreign sub-accounts:
+ * `main`, an unknown id or a deleted one → not found.
+ */
+export function mockSubaccountMovements(subaccountIdToRead: string): SubaccountMovementsJson {
+  const exists = subaccounts.some(
+    (subaccount) => subaccount.id === subaccountIdToRead && subaccount.id !== MAIN_SUBACCOUNT_ID,
+  )
+  if (!exists) {
+    throw mockError('SUBACCOUNT_NOT_FOUND', "No s'ha trobat el subcompte.")
+  }
+  const items = history
+    .filter((stored) => stored.subaccountId === subaccountIdToRead)
+    .sort((a, b) => Date.parse(b.entry.date) - Date.parse(a.entry.date) || b.seq - a.seq)
+    .map((stored) => ({ ...stored.entry }))
+  return { items }
+}
+
+/**
+ * Without «Aportar» (#189) and before the exchange (US-27), no API call puts money
+ * in a sub-account. Tests (and anyone trying the screens with the mocks) use this
+ * to stand in for an exchange: it sets the balance and records the entry.
+ */
+export function mockRecordSubaccountMovement(
+  subaccountIdToChange: string,
+  entry: Omit<SubaccountMovement, 'id'>,
+): SubaccountMovement {
+  const subaccount = subaccounts.find((candidate) => candidate.id === subaccountIdToChange)
+  if (subaccount === undefined || subaccount.id === MAIN_SUBACCOUNT_ID) {
+    throw new Error(`Not a foreign sub-account: ${subaccountIdToChange}`)
+  }
+  const balance = subaccount.balance + (entry.type === 'income' ? entry.amount : -entry.amount)
+  if (balance < 0) throw new Error('A sub-account never goes below 0')
+  subaccount.balance = balance
+  const stored: StoredMovement = {
+    subaccountId: subaccount.id,
+    entry: { id: `smov-${String(nextMovementNumber).padStart(2, '0')}`, ...entry },
+    seq: nextMovementNumber,
+  }
+  nextMovementNumber += 1
+  history.push(stored)
+  return { ...stored.entry }
 }
 
 /** Same opaque id format as the backend. */

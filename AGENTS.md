@@ -28,7 +28,7 @@ Junior developers with real knowledge of patterns. We want:
 |------|------------|
 | **Frontend** | Vue 3 + TypeScript (strict), Vite, Vue Router, Vitest. No Pinia. |
 | **Backend** | Python + FastAPI, pytest. Data lives in memory (seeded at start-up) by default, or in Cloud Firestore with `STORAGE=firestore` (TR01.1). |
-| **Contract** | `docs/api.md`. It changes only through a PR reviewed by backend and frontend. |
+| **Contract** | `docs/api.md`. It changes only through a reviewed PR (one reviewer, §5). |
 
 ### 2.2 Project layout
 
@@ -266,7 +266,7 @@ Full rules: skill `commit-conventions`.
 - Only `hotfix/<slug>` starts from `main`; PR base `main`, then sync `develop`
 - Body: what, why, AC mapping, screenshots if UI
 - Checklist: DoD + architecture checklist
-- ≥1 teammate review (per course DoD proposal)
+- The author self-reviews first (whole diff read, tests run) and says so in the PR; then **one** teammate, never the author, reviews, approves and merges it. No second approval
 - Tests pass before merge
 - Required status check: the `ci` GitHub Actions job must be green
 - Release: `develop` → `main` at the end of the sprint, after checking pre-production
@@ -282,7 +282,7 @@ Full rules: skills `pr-conventions` + `gitflow`.
 3. Acceptance criteria verified, each one mapped to a test (skill `qa-strategy`)
 4. Help/doc text updated if user-facing
 5. Product Owner accepts, on the story branch, before the story reaches `develop`
-6. PR reviewed by another member
+6. PR self-reviewed by its author, then reviewed, approved and merged by one other member
 7. CI green: the `ci` GitHub Actions check passes on the PR (Ruff, pytest, ESLint, type-check, Vitest, build), and `develop` stays deployable. Environments and deploys: skill `ci-cd`.
 8. No critical open bugs for that story
 9. **Architecture checklist** (layers respected, no API call from a View, shared rules not duplicated)
