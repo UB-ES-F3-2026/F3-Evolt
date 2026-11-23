@@ -8,7 +8,12 @@ els comptadors per als ids nous.
   es conserven entre reinicis del backend.
 - `reset`: per a `POST /api/dev/reset`. Esborra **totes** les col·leccions i hi
   torna a escriure el seed: només amb l'emulador o el projecte de desenvolupament.
+- `main`: el mateix `reset` a mà, per a una release que canvia el seed
+  (docs/deploy.md, «Release with seed changes»). Demana el projecte dues vegades.
 """
+
+import argparse
+import sys
 
 from google.cloud import firestore
 
@@ -123,3 +128,25 @@ def write_seed(client: firestore.Client, seed: SeedData) -> None:
         },
     )
     batch.commit()
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Torna un projecte de Firestore al seed: esborra **totes** les dades.
+
+    Només per a una release que canvia el seed (docs/deploy.md). El projecte s'ha
+    d'escriure dues vegades: si no coincideixen, no es connecta ni s'esborra res.
+    """
+    parser = argparse.ArgumentParser(prog="python -m app.data.firestore_seed")
+    parser.add_argument("--project", required=True, help="id del projecte de Firestore")
+    parser.add_argument("--confirm", required=True, help="el mateix id, una altra vegada")
+    args = parser.parse_args(argv)
+    if args.confirm != args.project:
+        print("--project i --confirm no coincideixen: no s'esborra res.", file=sys.stderr)
+        return 2
+    reset(firestore.Client(project=args.project))
+    print(f"Seed escrit de nou a {args.project}: totes les dades anteriors s'han esborrat.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
