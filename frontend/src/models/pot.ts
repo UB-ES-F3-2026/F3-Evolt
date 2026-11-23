@@ -6,11 +6,20 @@
  * - `color` is a closed list; an unknown value falls back to the default one.
  */
 
+import type { ApiErrorCode } from './apiError'
+import { AMOUNT_FORMAT_MESSAGE, messageForCode } from './errorMessages'
+import { eurosToCents } from './money'
 import { fromApiMovement, type Movement, type MovementJson, type MovementType } from './movement'
 
 export const POT_COLORS = ['purple', 'blue', 'teal', 'orange', 'pink', 'yellow'] as const
 
 export type PotColor = (typeof POT_COLORS)[number]
+
+/** State of a pot's goal, as the backend names it in `goalStatus` (docs/api.md §11.1). */
+export type GoalStatus = 'in_progress' | 'achieved'
+
+/** The values `goalStatus` can take in the contract (docs/api.md §11.1). */
+const GOAL_STATUSES: readonly GoalStatus[] = ['in_progress', 'achieved']
 
 /** The colour of a pot created without choosing one (docs/api.md §9.3). */
 export const DEFAULT_POT_COLOR: PotColor = 'purple'
@@ -31,6 +40,13 @@ export interface Pot {
   balance: number
   target: number | null
   color: PotColor
+  /**
+   * Goal progress as the backend sends it since US-20 (docs/api.md §11.1, issue #150);
+   * absent on answers from before, so both fields are optional. The frontend paints
+   * them, it never derives them: `percentage` and `goalStatus` come from the API.
+   */
+  percentage?: number | null
+  goalStatus?: GoalStatus | null
 }
 
 /** A pot as the API sends it, before `color` is checked. */
@@ -40,6 +56,9 @@ export interface PotJson {
   balance: number
   target: number | null
   color: string
+  /** Same goal progress fields of the contract (§11.1, issue #150); optional until the backend sends them. */
+  percentage?: number | null
+  goalStatus?: GoalStatus | null
 }
 
 /** GET /api/pots (docs/api.md §9.2). */
@@ -92,8 +111,17 @@ export interface Contribution {
   movement: Movement
 }
 
+/** POST /api/pots/{potId}/withdrawals answer (docs/api.md §11.2): the same shape as a contribution. */
+export type WithdrawalJson = ContributionJson
+export type Withdrawal = Contribution
+
 export function isPotColor(value: string): value is PotColor {
   return (POT_COLORS as readonly string[]).includes(value)
+}
+
+/** Guards a `goalStatus` that arrives as raw JSON: an unknown value is not a status. */
+function isGoalStatus(value: unknown): value is GoalStatus {
+  return typeof value === 'string' && (GOAL_STATUSES as readonly string[]).includes(value)
 }
 
 export function fromApiPot(json: PotJson): Pot {
@@ -103,6 +131,12 @@ export function fromApiPot(json: PotJson): Pot {
     balance: json.balance,
     target: json.target ?? null,
     color: isPotColor(json.color) ? json.color : DEFAULT_POT_COLOR,
+    // Pass-through: `undefined` keeps the field absent, as with answers from before US-20.
+    // No check: the contract guarantees `percentage` is an integer, and `goalStatus`
+    // below is the only field the API could send with an unknown value.
+    percentage: json.percentage,
+    // A bad value from the server is not a status: null (absent) is not the same as unknown.
+    goalStatus: json.goalStatus === undefined ? undefined : (isGoalStatus(json.goalStatus) ? json.goalStatus : null),
   }
 }
 
@@ -122,6 +156,27 @@ export function fromApiPotMovements(jsonList: PotMovementJson[] | null | undefin
 
 export function fromApiContribution(json: ContributionJson): Contribution {
   return { balance: json.balance, pot: fromApiPot(json.pot), movement: fromApiMovement(json.movement) }
+}
+
+export const fromApiWithdrawal: (json: WithdrawalJson) => Withdrawal = fromApiContribution
+
+/**
+ * Why an amount typed in euros cannot move between the account and a pot, or null if it can.
+ * The backend owns these rules (docs/api.md §9.4 and §11.2); the screens repeat them only to
+ * answer before sending. `limit` is the most that can move (the main balance to contribute,
+ * the pot balance to withdraw), null while it is unknown; going over it reads as `overLimit`.
+ * An empty field is not an error yet: the button just stays disabled.
+ */
+export function potAmountError(typed: string, limit: number | null, overLimit: ApiErrorCode): string | null {
+  const text = typed.trim()
+  if (text === '') return null
+  // eurosToCents only reads digits, so a minus sign would read as a format error: US-18 asks for this text.
+  if (text.startsWith('-')) return messageForCode('INVALID_AMOUNT')
+  const cents = eurosToCents(text)
+  if (cents === null) return AMOUNT_FORMAT_MESSAGE
+  if (cents <= 0) return messageForCode('INVALID_AMOUNT')
+  if (limit !== null && cents > limit) return messageForCode(overLimit)
+  return null
 }
 
 /** A history entry drawn with the same row as the account movements, with the pot icon. */

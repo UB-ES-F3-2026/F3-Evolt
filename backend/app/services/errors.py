@@ -27,11 +27,12 @@ RESET_LINK_EXPIRED = "RESET_LINK_EXPIRED"
 INVALID_CODE = "INVALID_CODE"
 CODE_EXPIRED = "CODE_EXPIRED"
 TOO_MANY_ATTEMPTS = "TOO_MANY_ATTEMPTS"
-# Estalvi (docs/api.md §5 i §9.7).
+# Estalvi (docs/api.md §5, §9.7 i §11.5).
 INVALID_POT_NAME = "INVALID_POT_NAME"
 INVALID_TARGET = "INVALID_TARGET"
 INSUFFICIENT_BALANCE = "INSUFFICIENT_BALANCE"
 POT_NOT_FOUND = "POT_NOT_FOUND"
+INSUFFICIENT_POT_BALANCE = "INSUFFICIENT_POT_BALANCE"
 # Moviments (docs/api.md §5 i §10.6).
 MOVEMENT_NOT_FOUND = "MOVEMENT_NOT_FOUND"
 INVALID_DESCRIPTION = "INVALID_DESCRIPTION"
@@ -45,6 +46,11 @@ SAME_CURRENCY = "SAME_CURRENCY"
 AMOUNT_TOO_SMALL = "AMOUNT_TOO_SMALL"
 # Pagaments (docs/api.md §5 i §13.8).
 RECIPIENT_NOT_FOUND = "RECIPIENT_NOT_FOUND"
+# Sol·licituds (docs/api.md §5 i §14.7).
+SELF_REQUEST = "SELF_REQUEST"
+INVALID_CONCEPT = "INVALID_CONCEPT"
+REQUEST_NOT_FOUND = "REQUEST_NOT_FOUND"
+REQUEST_NOT_PENDING = "REQUEST_NOT_PENDING"
 
 # Codi d'error → estat HTTP de la resposta.
 ERROR_STATUS: dict[str, int] = {
@@ -68,6 +74,7 @@ ERROR_STATUS: dict[str, int] = {
     INVALID_TARGET: 422,
     INSUFFICIENT_BALANCE: 422,
     POT_NOT_FOUND: 404,
+    INSUFFICIENT_POT_BALANCE: 422,
     MOVEMENT_NOT_FOUND: 404,
     INVALID_DESCRIPTION: 422,
     CURRENCY_NOT_SUPPORTED: 422,
@@ -78,6 +85,10 @@ ERROR_STATUS: dict[str, int] = {
     SAME_CURRENCY: 422,
     AMOUNT_TOO_SMALL: 422,
     RECIPIENT_NOT_FOUND: 404,
+    SELF_REQUEST: 422,
+    INVALID_CONCEPT: 422,
+    REQUEST_NOT_FOUND: 404,
+    REQUEST_NOT_PENDING: 422,
 }
 
 # Missatge per defecte de cada codi (docs/api.md §5). El contracte els marca
@@ -105,6 +116,7 @@ ERROR_MESSAGES: dict[str, str] = {
     # Un sol text a l'aportació, l'enviament i el canvi (P85).
     INSUFFICIENT_BALANCE: "No tens prou saldo.",
     POT_NOT_FOUND: "No s'ha trobat la guardiola.",
+    INSUFFICIENT_POT_BALANCE: "La guardiola no té prou saldo per aquesta retirada.",
     MOVEMENT_NOT_FOUND: "No s'ha trobat el moviment.",
     INVALID_DESCRIPTION: "Explica què passa amb el moviment (com a màxim 500 caràcters).",
     # Textos literals de la US-25.
@@ -120,6 +132,10 @@ ERROR_MESSAGES: dict[str, str] = {
     # Text literal de la US-27.
     AMOUNT_TOO_SMALL: "L'import és massa petit per canviar.",
     RECIPIENT_NOT_FOUND: "No hem trobat aquest destinatari.",
+    SELF_REQUEST: "No et pots demanar diners a tu mateix.",
+    INVALID_CONCEPT: "El concepte ha de tenir entre 1 i 140 caràcters.",
+    REQUEST_NOT_FOUND: "Aquesta sol·licitud ja no existeix.",
+    REQUEST_NOT_PENDING: "Només es poden cancel·lar les sol·licituds pendents.",
 }
 
 

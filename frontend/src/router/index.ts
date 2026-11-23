@@ -11,6 +11,8 @@ import HomeView from '@/views/HomeView.vue'
 import LoginView from '@/views/LoginView.vue'
 import MovementDetailView from '@/views/MovementDetailView.vue'
 import MovementsView from '@/views/MovementsView.vue'
+import MoneyRequestsView from '@/views/MoneyRequestsView.vue'
+import NewMoneyRequestView from '@/views/NewMoneyRequestView.vue'
 import NewPasswordView from '@/views/NewPasswordView.vue'
 import PaymentsView from '@/views/PaymentsView.vue'
 import PotView from '@/views/PotView.vue'
@@ -21,6 +23,8 @@ import ReportProblemView from '@/views/ReportProblemView.vue'
 import SendPaymentView from '@/views/SendPaymentView.vue'
 import TopUpView from '@/views/TopUpView.vue'
 import VerifyView from '@/views/VerifyView.vue'
+import WithdrawCancelledView from '@/views/WithdrawCancelledView.vue'
+import WithdrawView from '@/views/WithdrawView.vue'
 import { accessGuard } from './accessGuard'
 
 const router = createRouter({
@@ -38,6 +42,13 @@ const router = createRouter({
     { path: '/pots/new', name: 'create-pot', component: CreatePotView },
     { path: '/pots/:potId', name: 'pot', component: PotView, props: true },
     { path: '/pots/:potId/contribute', name: 'contribute', component: ContributeView, props: true },
+    { path: '/pots/:potId/withdraw', name: 'withdraw', component: WithdrawView, props: true },
+    {
+      path: '/pots/:potId/withdraw/cancelled',
+      name: 'withdraw-cancelled',
+      component: WithdrawCancelledView,
+      props: true,
+    },
     { path: '/pagaments', name: 'payments', component: PaymentsView },
     // The recipient travels in `?to=<id>`, so a reload keeps it (US-13).
     {
@@ -46,6 +57,9 @@ const router = createRouter({
       component: SendPaymentView,
       props: (route) => ({ to: typeof route.query.to === 'string' ? route.query.to : undefined }),
     },
+    // US-15: reached from the menu of every screen; «Demanar diners» lives inside the list.
+    { path: '/requests', name: 'money-requests', component: MoneyRequestsView },
+    { path: '/requests/new', name: 'new-money-request', component: NewMoneyRequestView },
     { path: '/divises', name: 'currencies', component: CurrenciesView },
     { path: '/divises/afegir', name: 'add-currency', component: AddCurrencyView },
     // US-26: one currency account (EUR or a sub-account). The static «afegir» above always wins.
