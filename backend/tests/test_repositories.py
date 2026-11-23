@@ -17,6 +17,7 @@ from app.data.seed import (
 from app.models import KIND_OTHER, KIND_TOPUP, TYPE_EXPENSE, TYPE_INCOME, OutboxMessage
 from app.repositories import (
     AccountRepository,
+    ClosedOutboxRepository,
     MovementRepository,
     OutboxRepository,
     PasswordResetTokenRepository,
@@ -487,3 +488,26 @@ def test_outbox_lists_newest_first_and_filters(seed):
     assert [m.to for m in outbox.list()] == ["a@x.com", "b@x.com", "a@x.com"][::-1]
     assert len(outbox.list("a@x.com")) == 2
     assert outbox.list("ningu@x.com") == []
+
+
+def test_outbox_remove_takes_out_only_that_message(seed):
+    # Per desfer un enviament que falla a mitges (T14.1): un missatge igual d'abans es queda.
+    outbox = OutboxRepository(seed)
+    first = OutboxMessage(to="a@x.com", channel="email", type="transfer_sent", text="t", date=NOW)
+    second = OutboxMessage(to="a@x.com", channel="email", type="transfer_sent", text="t", date=NOW)
+    outbox.add(first)
+    outbox.add(second)
+
+    outbox.remove(second)
+
+    assert outbox.list() == [first]
+    assert outbox.list()[0] is first
+
+
+def test_closed_outbox_remove_does_nothing():
+    outbox = ClosedOutboxRepository()
+    message = OutboxMessage(to="a@x.com", channel="email", type="transfer_sent", text="t", date=NOW)
+
+    outbox.remove(message)
+
+    assert outbox.list() == []

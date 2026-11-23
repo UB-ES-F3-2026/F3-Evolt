@@ -264,6 +264,19 @@ def test_outbox_keeps_the_order(db) -> None:
     assert outbox.list("a@x.com") == memory.list("a@x.com")
 
 
+def test_outbox_remove_outside_a_transaction(db) -> None:
+    # Dins d'una transacció no cal (no s'escriu res); fora, es treu l'últim missatge igual (T14.1).
+    outbox = FirestoreOutboxRepository(db)
+    first = OutboxMessage(to="a@x.com", channel="email", type="transfer_sent", text="1", date=NOW)
+    second = OutboxMessage(to="a@x.com", channel="email", type="transfer_sent", text="2", date=NOW)
+    outbox.add(first)
+    outbox.add(second)
+
+    outbox.remove(second)
+
+    assert outbox.list("a@x.com") == [first]
+
+
 def test_tokens_are_stored_only_as_hashes(db) -> None:
     session = FirestoreSessionRepository(db).create(DEMO_USER_ID, NOW)
     reset = FirestorePasswordResetTokenRepository(db).replace(DEMO_USER_ID, NOW)
