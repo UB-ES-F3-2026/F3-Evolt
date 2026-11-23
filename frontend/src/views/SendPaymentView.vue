@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
 import AppShell from '@/components/AppShell.vue'
 import ErrorState from '@/components/ErrorState.vue'
 import LoadingIndicator from '@/components/LoadingIndicator.vue'
@@ -21,13 +21,18 @@ const {
   load,
   pressKey,
   continueToConfirm,
-} = useSendPaymentViewModel(props.to)
+} = useSendPaymentViewModel(() => props.to)
 
 // The keypad of the mockup (US-14-import-teclat): digits, the decimal comma and backspace.
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '0', '⌫']
 
 // The recipient, the balance and the limit are asked on every visit, so a reload keeps them.
 onMounted(load)
+// Another `?to=` while this screen is open (the same view is reused): ask the new recipient (#212).
+watch(
+  () => props.to,
+  () => load(),
+)
 </script>
 
 <template>
