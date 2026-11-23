@@ -249,7 +249,7 @@ Com més tard és el punt, més cara és la prova i menys sovint corre. El CI de
 |---|---|---|
 | Aprovació obligatòria | Algú que no és l'autor ha mirat el canvi | ✅ a `develop` i `main` · a `story/*` és una norma de l'equip, a propòsit: una regla de PR bloquejaria el push del merge de `develop` a la història (pas 4 del gitflow, skill `ci-cd`). La #178 es va fusionar sense revisió i tenia 2 errors |
 | Checks obligatoris | Lint, tests i build han passat | ✅ `ci` obligatori a `develop` i `main` |
-| Branca al dia abans de fusionar | La combinació s'ha provat sobre l'últim `develop` | ⚠️ acordat per l'equip el 17/11 (proposta de QA a la #145), però `docs/branch-protection.md` encara diu `strict: false` |
+| Branca al dia abans de fusionar | La combinació s'ha provat sobre l'últim `develop` | ✅ `strict` actiu a `develop` des del 23/11 (acord de l'equip del 17/11, proposta de QA a la #145) |
 | Comentaris resolts | Cap problema bloquejant es perd | Revisió manual |
 | CODEOWNERS | Les zones sensibles les revisa qui les coneix | No el fem servir |
 

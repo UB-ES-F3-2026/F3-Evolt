@@ -19,12 +19,15 @@ sprint work) and **`main`** (the demo/release line).
 | `enforce_admins` | `true` | Admins follow the same rules — no "works on my machine because I'm admin" |
 | Force pushes | blocked | Nobody can rewrite history on a protected branch by accident |
 | Deletion | blocked | `develop`/`main` cannot be deleted, ever |
-| `strict` (up-to-date requirement) | `false` | A PR does **not** need to be rebased onto the latest `develop` to merge |
+| `strict` (up-to-date requirement) | `develop`: `true` · `main`: `false` | A PR into `develop` must contain the latest `develop` before it merges; `main` only receives the release PR from `develop` |
 
-That `strict: false` is a deliberate trade-off: for a small team it avoids the
-churn of rebasing a PR every time someone else merges first; the cost is that a
-PR can merge without being up to date, so read the diff against the branch
-before reviewing.
+`strict` on `develop` is on since 2026-11-23 (team decision of 17/11, after the
+Sprint 1 review asked that `develop` never breaks). If `develop` moved after the
+PR's last CI run, GitHub shows **"This branch is out-of-date"**: merge `develop`
+into the branch (story branches: `git merge origin/develop`, skill `gitflow`), let
+`ci` run again, then merge. Conflicts are solved on the branch, never on `develop`.
+`main` stays at `false`: its only PR is the release from `develop`, which is up to
+date by definition.
 
 ---
 
@@ -68,7 +71,7 @@ Both branches get the **same payload**. Write it once:
 ```bash
 cat <<'EOF' > /tmp/protection.json
 {
-  "required_status_checks": { "strict": false, "contexts": ["ci"] },
+  "required_status_checks": { "strict": true, "contexts": ["ci"] },
   "enforce_admins": true,
   "required_pull_request_reviews": { "dismiss_stale_reviews": false, "required_approving_review_count": 1 },
   "restrictions": null,
