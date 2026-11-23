@@ -67,7 +67,7 @@ export default tseslint.config(
   {
     // Plain TypeScript cannot read `.vue` module types (vue-tsc uses its own
     // plugin), so these are tooling false positives, not unsafe code.
-    files: ['src/main.ts', 'src/router/index.ts'],
+    files: ['src/main.ts', 'src/router/index.ts', 'src/views/ConfirmPaymentView.test.ts'],
     rules: {
       '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
