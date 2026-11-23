@@ -2579,6 +2579,7 @@ El `name` que ja existia és el nom visible; buit (`""`) vol dir que no en té, 
 - Si ja existeix, s'hi afegeix el primer número lliure a partir de `2`: `anna.puigevolt2`, `anna.puigevolt3`…
 - Registre amb telèfon, o una part local que es queda buida: `usuari` seguit de l'id de l'usuari (`usuari9`). No es fa servir el telèfon, perquè l'`@usuari` és visible per a tothom.
 - La forma `usuari` + xifres queda reservada per a aquest cap: una part local que ja la té hi afegeix `_` (`usuari9@x.com` → `usuari9_`), perquè no xoqui amb l'usuari 9. També és la que es mostra als usuaris creats abans de la T13.2, que no en tenen cap de desat.
+- Com que és reservada, cap `@usuari` del registre pot coincidir amb un `usuari<xifres>` mostrat: `is_username_taken` només comprova els `@usuari` desats (a Firestore, la col·lecció `usernames`), on la forma de reserva mai no arriba, així que dos usuaris no poden compartir `@usuari`.
 - L'`@usuari` es decideix en el registre, encara que el compte quedi pendent: així no canvia en verificar.
 - Editar-lo al perfil no és d'aquest sprint.
 
