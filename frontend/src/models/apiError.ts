@@ -35,6 +35,9 @@ const API_ERROR_CODES = [
   'SUBACCOUNT_NOT_FOUND',
   'MAIN_ACCOUNT_NOT_DELETABLE',
   'SUBACCOUNT_NOT_EMPTY',
+  // Currency exchange (US-27, docs/api.md §12.7).
+  'AMOUNT_TOO_SMALL',
+  'SAME_CURRENCY',
 ] as const
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number]

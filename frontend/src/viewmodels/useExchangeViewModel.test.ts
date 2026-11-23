@@ -2,20 +2,13 @@ import { nextTick } from 'vue'
 import { describe, expect, it, vi } from 'vitest'
 import { messageForCode } from '@/models/errorMessages'
 import type { CurrencyCode } from '@/models/exchange'
-import type { Subaccount, SubaccountList } from '@/models/currency'
+import type { Subaccount } from '@/models/currency'
 import { useExchangeViewModel, type ExchangeDependencies } from './useExchangeViewModel'
 
-// `rateBps` mirrors the §12 currency table; the screen itself never reads it,
-// but the fakes keep the real rows so the data stays plausible.
-const EUR_MAIN: Subaccount = { id: 'sub-01', code: 'EUR', balance: 125050, isMain: true, rateBps: 10000 }
-const EUR_LOW: Subaccount = { id: 'sub-01', code: 'EUR', balance: 10149, isMain: true, rateBps: 10000 }
-const USD: Subaccount = { id: 'sub-02', code: 'USD', balance: 31755, isMain: false, rateBps: 9123 }
-const GBP: Subaccount = { id: 'sub-03', code: 'GBP', balance: 48000, isMain: false, rateBps: 11680 }
-
-/** The §12.3 answer shape: rows plus the server total (the screen ignores the total). */
-function subaccountList(items: Subaccount[]): SubaccountList {
-  return { items, totalInEuros: 154020 }
-}
+const EUR_MAIN: Subaccount = { id: 'sub-01', code: 'EUR', balance: 125050 }
+const EUR_LOW: Subaccount = { id: 'sub-01', code: 'EUR', balance: 10149 }
+const USD: Subaccount = { id: 'sub-02', code: 'USD', balance: 31755 }
+const GBP: Subaccount = { id: 'sub-03', code: 'GBP', balance: 48000 }
 
 // Screen copy of the keypad: the shared message says «en euros», wrong outside EUR.
 const FORMAT_MESSAGE_CASES: [CurrencyCode, string][] = [
@@ -25,7 +18,7 @@ const FORMAT_MESSAGE_CASES: [CurrencyCode, string][] = [
 
 function fakeDependencies(overrides: Partial<ExchangeDependencies> = {}) {
   return {
-    getSubaccounts: vi.fn(() => Promise.resolve(subaccountList([EUR_MAIN, USD]))),
+    getSubaccounts: vi.fn(() => Promise.resolve([EUR_MAIN, USD])),
     goToSummary: vi.fn(() => Promise.resolve()),
     goToCurrencies: vi.fn(() => Promise.resolve()),
     ...overrides,
@@ -49,8 +42,8 @@ describe('useExchangeViewModel', () => {
     expect(viewModel.tgtCurrency.value).toBe('USD')
     expect(viewModel.needsTwoSubaccounts.value).toBe(false)
     expect(viewModel.options.value).toEqual([
-      { code: 'EUR', name: 'Euro', balanceMinor: 125050, isMain: true },
-      { code: 'USD', name: 'Dòlar nord-americà', balanceMinor: 31755, isMain: false },
+      { code: 'EUR', name: 'Euro', balanceMinor: 125050 },
+      { code: 'USD', name: 'Dòlar nord-americà', balanceMinor: 31755 },
     ])
   })
 
@@ -107,7 +100,7 @@ describe('useExchangeViewModel', () => {
 
   it('says there is not enough balance when the amount plus commission exceeds it (US-27)', async () => {
     const { viewModel, dependencies } = await loadedViewModel({
-      getSubaccounts: vi.fn(() => Promise.resolve(subaccountList([EUR_LOW, USD]))),
+      getSubaccounts: vi.fn(() => Promise.resolve([EUR_LOW, USD])),
     })
 
     viewModel.amount.value = '100,00'
@@ -120,7 +113,7 @@ describe('useExchangeViewModel', () => {
 
   it('flags the shortfall so the view can place the message under the button (US-27)', async () => {
     const { viewModel } = await loadedViewModel({
-      getSubaccounts: vi.fn(() => Promise.resolve(subaccountList([EUR_LOW, USD]))),
+      getSubaccounts: vi.fn(() => Promise.resolve([EUR_LOW, USD])),
     })
 
     expect(viewModel.insufficient.value).toBe(false)
@@ -154,7 +147,7 @@ describe('useExchangeViewModel', () => {
     'asks for a valid amount without mentioning euros when the origin is %s (US-27)',
     async (origin, expected) => {
       const { viewModel } = await loadedViewModel({
-        getSubaccounts: vi.fn(() => Promise.resolve(subaccountList([EUR_MAIN, { ...USD, code: origin }]))),
+        getSubaccounts: vi.fn(() => Promise.resolve([EUR_MAIN, { ...USD, code: origin }])),
       })
 
       viewModel.srcCurrency.value = origin
@@ -167,7 +160,7 @@ describe('useExchangeViewModel', () => {
 
   it('never leaves origin and target on the same subaccount (US-27)', async () => {
     const { viewModel } = await loadedViewModel({
-      getSubaccounts: vi.fn(() => Promise.resolve(subaccountList([EUR_MAIN, USD, GBP]))),
+      getSubaccounts: vi.fn(() => Promise.resolve([EUR_MAIN, USD, GBP])),
     })
 
     viewModel.srcCurrency.value = 'USD'
@@ -180,7 +173,7 @@ describe('useExchangeViewModel', () => {
 
   it('asks for a second subaccount when only one is loaded (US-27)', async () => {
     const { viewModel, dependencies } = await loadedViewModel({
-      getSubaccounts: vi.fn(() => Promise.resolve(subaccountList([EUR_MAIN]))),
+      getSubaccounts: vi.fn(() => Promise.resolve([EUR_MAIN])),
     })
 
     expect(viewModel.needsTwoSubaccounts.value).toBe(true)

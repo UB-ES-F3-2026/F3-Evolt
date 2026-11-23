@@ -41,6 +41,9 @@ const MESSAGES: Record<ApiErrorCode, string> = {
   SUBACCOUNT_NOT_FOUND: "No s'ha trobat el subcompte.",
   MAIN_ACCOUNT_NOT_DELETABLE: 'El compte en euros no es pot eliminar.',
   SUBACCOUNT_NOT_EMPTY: 'Només pots eliminar un subcompte amb saldo 0.',
+  // Currency exchange (US-27, docs/api.md §12.7).
+  AMOUNT_TOO_SMALL: "L'import és massa petit per canviar.",
+  SAME_CURRENCY: 'Origen i destí no poden ser el mateix subcompte.',
 }
 
 export function messageForCode(code: ApiErrorCode, details?: ApiError['details']): string {
@@ -58,3 +61,10 @@ export function toUserMessage(failure: unknown): string {
 
 /** An amount typed in euros that is not a number with at most 2 decimals (top-up, pot target). */
 export const AMOUNT_FORMAT_MESSAGE = 'Escriu un import en euros, amb 2 decimals com a màxim.'
+
+/**
+ * The exchange's own shortfall text (US-27): the shared `INSUFFICIENT_BALANCE`
+ * message speaks of a pot contribution, which is wrong on «Canviar» and on the
+ * summary. Decided from the code, never from the message.
+ */
+export const EXCHANGE_INSUFFICIENT_BALANCE_MESSAGE = 'No tens prou saldo'

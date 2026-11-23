@@ -1,11 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { messageForCode } from '@/models/errorMessages'
 import type { ExchangeDraft } from '@/models/exchange'
-import {
-  totalInEurosMinor,
-  type Subaccount,
-  type SubaccountList,
-} from '@/models/currency'
+import type { Subaccount } from '@/models/currency'
 import type { ExchangeResult } from '@/services/exchangeService'
 import {
   CONFIRMATION_MS,
@@ -18,25 +14,24 @@ const eurToUsd: ExchangeDraft = { srcCurrency: 'EUR', tgtCurrency: 'USD', amount
 // The §12.7 answer to 100,00 € to USD (US-27, criterion 9): both accounts already
 // updated by the server, plus the figures it applied.
 const exchanged: ExchangeResult = {
-  from: { id: 'main', code: 'EUR', balance: 114900, isMain: true, rateBps: 10000 },
-  to: { id: 'sub-01', code: 'USD', balance: 42716, isMain: false, rateBps: 9123 },
+  from: { id: 'main', code: 'EUR', balance: 114900 },
+  to: { id: 'sub-01', code: 'USD', balance: 42716 },
   amount: 10000,
   commission: 150,
   received: 10961,
 }
 
 function eurAccount(balanceMinor: number): Subaccount {
-  return { id: 'main', code: 'EUR', balance: balanceMinor, isMain: true, rateBps: 10000 }
+  return { id: 'main', code: 'EUR', balance: balanceMinor }
 }
 
 function usdAccount(balanceMinor: number): Subaccount {
-  return { id: 'sub-01', code: 'USD', balance: balanceMinor, isMain: false, rateBps: 9123 }
+  return { id: 'sub-01', code: 'USD', balance: balanceMinor }
 }
 
-/** GET /api/subaccounts (§12.3): the rows plus the server total, which this screen does not read. */
-function subaccounts(eurBalanceMinor: number): SubaccountList {
-  const items = [eurAccount(eurBalanceMinor), usdAccount(31755)]
-  return { items, totalInEuros: totalInEurosMinor(items) }
+/** GET /api/subaccounts (§12.3): the rows this screen reads the origin balance from. */
+function subaccounts(eurBalanceMinor: number): Subaccount[] {
+  return [eurAccount(eurBalanceMinor), usdAccount(31755)]
 }
 
 function fakeDependencies(overrides: Partial<ExchangeSummaryDependencies> = {}) {
@@ -72,18 +67,11 @@ describe('useExchangeSummaryViewModel', () => {
   })
 
   it('quotes the rate per 100 ¥ when the origin is JPY and keeps whole yen', async () => {
-    const jpyItems: Subaccount[] = [
-      { id: 'sub-01', code: 'JPY', balance: 20000, isMain: false, rateBps: 5700 },
-    ]
+    const jpyItems: Subaccount[] = [{ id: 'sub-01', code: 'JPY', balance: 20000 }]
     const viewModel = useExchangeSummaryViewModel(
       fakeDependencies({
         draft: { srcCurrency: 'JPY', tgtCurrency: 'EUR', amountMinor: 10000 },
-        getSubaccounts: vi.fn(() =>
-          Promise.resolve<SubaccountList>({
-            items: jpyItems,
-            totalInEuros: totalInEurosMinor(jpyItems),
-          }),
-        ),
+        getSubaccounts: vi.fn(() => Promise.resolve(jpyItems)),
       }),
     )
 

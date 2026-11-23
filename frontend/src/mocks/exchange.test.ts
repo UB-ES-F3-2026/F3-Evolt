@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest'
 import type { ApiErrorCode } from '@/models/apiError'
+import { fromApiSubaccounts, type CurrencyCode, type Subaccount } from '@/models/currency'
 import { formatCents, formatSignedCents } from '@/models/money'
 import { mockBalance, mockHome } from './index'
 import { mockPostExchange } from './exchange'
-import { createCurrenciesState, mockSubaccounts } from './currencies'
+import { mockAddSubaccount, mockSetSubaccountBalance, mockSubaccounts } from './currencies'
 import { setMockCurrentUser } from './mockUser'
 
 // The mock keeps its state for the whole file, like `npm run dev` keeps it until a reload.
@@ -13,7 +14,23 @@ import { setMockCurrentUser } from './mockUser'
 /** The untrusted body the mock receives, exactly as the service forwards it (§12.7). */
 type ExchangeBody = Parameters<typeof mockPostExchange>[0]
 
-createCurrenciesState(['EUR', 'USD'], { USD: 31755 })
+/**
+ * Test seed: opens one foreign sub-account per balance entry and writes its balance.
+ * The EUR main account always exists, and its balance is read live from `mockBalance()`.
+ */
+function seedSubaccounts(balances: Partial<Record<CurrencyCode, number>>): void {
+  for (const [code, balance] of Object.entries(balances) as [CurrencyCode, number][]) {
+    mockAddSubaccount({ currency: code })
+    mockSetSubaccountBalance(code, balance)
+  }
+}
+
+/** The list as the service maps it, so it compares with the app shapes of `ExchangeResult`. */
+function appSubaccounts(): Subaccount[] {
+  return fromApiSubaccounts(mockSubaccounts().items)
+}
+
+seedSubaccounts({ USD: 31755 })
 
 /**
  * Runs a rejected exchange and asserts the two invariants of «tot o res»: the error
@@ -33,17 +50,13 @@ describe('the seeded sub-accounts (US-27)', () => {
     expect(mockSubaccounts().items).toEqual([
       {
         id: 'main',
-        code: 'EUR',
+        currency: 'EUR',
         balance: 379521,
-        isMain: true,
-        rateBps: 10000,
       },
       {
         id: 'sub-01',
-        code: 'USD',
+        currency: 'USD',
         balance: 31755,
-        isMain: false,
-        rateBps: 9123,
       },
     ])
   })
@@ -143,22 +156,18 @@ describe('mockPostExchange (§12.7 response, US-27)', () => {
         id: 'main',
         code: 'EUR',
         balance: 369371,
-        isMain: true,
-        rateBps: 10000,
       },
       to: {
         id: 'sub-01',
         code: 'USD',
         balance: 42716,
-        isMain: false,
-        rateBps: 9123,
       },
       amount: 10000,
       commission: 150,
       received: 10961,
     })
     // The next read of the list reports the same two balances.
-    expect(mockSubaccounts().items).toEqual([result.from, result.to])
+    expect(appSubaccounts()).toEqual([result.from, result.to])
   })
 
   it('shows «Canvi a Dòlar nord-americà» first in home and in the list, as an expense', () => {
@@ -190,15 +199,11 @@ describe('mockPostExchange (§12.7 response, US-27)', () => {
         id: 'sub-01',
         code: 'USD',
         balance: 32566,
-        isMain: false,
-        rateBps: 9123,
       },
       to: {
         id: 'main',
         code: 'EUR',
         balance: 378494,
-        isMain: true,
-        rateBps: 10000,
       },
       amount: 10000,
       commission: 150,
@@ -232,7 +237,7 @@ describe('each account sees its own sub-accounts (US-27)', () => {
 
     // Single sub-account: the «Canviar» screen has nothing to exchange with.
     expect(mockSubaccounts().items).toEqual([
-      { id: 'main', code: 'EUR', balance: 0, isMain: true, rateBps: 10000 },
+      { id: 'main', currency: 'EUR', balance: 0 },
     ])
 
     setMockCurrentUser(null)
@@ -242,19 +247,17 @@ describe('each account sees its own sub-accounts (US-27)', () => {
     expect(mockSubaccounts().items).toEqual([
       {
         id: 'main',
-        code: 'EUR',
+        currency: 'EUR',
         balance: 379521,
-        isMain: true,
-        rateBps: 10000,
       },
     ])
-    createCurrenciesState(['EUR', 'USD'], { USD: 31755 })
+    seedSubaccounts({ USD: 31755 })
   })
 })
 
 describe('the commission is charged in the source currency (§12.7)', () => {
   it('charges 1,5 % of 10.000 ¥ → 150 ¥, above the 88 ¥ minimum', () => {
-    createCurrenciesState(['EUR', 'USD', 'JPY'], { USD: 31755, JPY: 100000 })
+    seedSubaccounts({ JPY: 100000 })
 
     const result = mockPostExchange({
       fromCurrency: 'JPY',
@@ -270,16 +273,12 @@ describe('the commission is charged in the source currency (§12.7)', () => {
       id: 'sub-02',
       code: 'JPY',
       balance: 89850,
-      isMain: false,
-      rateBps: 5700,
     })
     expect(result.to).toEqual({
       id: 'main',
       code: 'EUR',
       balance: 385221,
-      isMain: true,
-      rateBps: 10000,
     })
-    expect(mockSubaccounts().items).toContainEqual(result.from)
+    expect(appSubaccounts()).toContainEqual(result.from)
   })
 })

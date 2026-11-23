@@ -8,7 +8,7 @@
 
 import { messageForCode } from '@/models/errorMessages'
 import { exchangePreview, type ExchangePreview, type ExchangeResult } from '@/models/exchange'
-import { currencyByCode, type Subaccount } from '@/models/currency'
+import { currencyByCode, fromApiSubaccount, type Subaccount } from '@/models/currency'
 import { mockError, recordAccountMovement } from './index'
 import { mockSetSubaccountBalance, mockSubaccounts } from './currencies'
 
@@ -60,11 +60,15 @@ export function mockPostExchange(body: {
   //    ever holds validated codes, so a row is found only for an owned, real currency:
   //    `"BTC"` never reaches the rate table.
   const owned = mockSubaccounts().items
-  const fromRow = owned.find((row) => row.code === fromCurrency)
-  const toRow = owned.find((row) => row.code === toCurrency)
-  if (fromRow === undefined || toRow === undefined) {
+  const fromJson = owned.find((row) => row.currency === fromCurrency)
+  const toJson = owned.find((row) => row.currency === toCurrency)
+  if (fromJson === undefined || toJson === undefined) {
     throw mockError('SUBACCOUNT_NOT_FOUND', messageForCode('SUBACCOUNT_NOT_FOUND'))
   }
+  // The state only stores codes `mockAddSubaccount` already checked, so this mapping is
+  // the same one the service does on the §12.7 wire body, and it never throws here.
+  const fromRow = fromApiSubaccount(fromJson)
+  const toRow = fromApiSubaccount(toJson)
   // 4. Zero or negative only once the pair is known to be owned (§12.7-4, CV-09).
   if (amount <= 0) {
     throw mockError('INVALID_AMOUNT', messageForCode('INVALID_AMOUNT'))
