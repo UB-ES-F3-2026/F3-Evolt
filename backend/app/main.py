@@ -24,6 +24,7 @@ from app.repositories.atomic import MemoryAtomic
 from app.routers import (
     auth,
     dev,
+    exchanges,
     health,
     home,
     money_requests,
@@ -206,6 +207,7 @@ def create_app() -> FastAPI:
     app.include_router(users.router, prefix="/api")
     app.include_router(money_requests.router, prefix="/api")
     app.include_router(subaccounts.router, prefix="/api")
+    app.include_router(exchanges.router, prefix="/api")
     app.include_router(transfers.router, prefix="/api")
     # Eines de desenvolupament: fora quan ENABLE_DEV_ROUTES=false (desplegament).
     if app_settings.dev_routes_enabled:
