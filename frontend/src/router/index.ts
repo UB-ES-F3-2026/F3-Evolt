@@ -19,6 +19,7 @@ import ReportProblemView from '@/views/ReportProblemView.vue'
 import SendPaymentView from '@/views/SendPaymentView.vue'
 import TopUpView from '@/views/TopUpView.vue'
 import VerifyView from '@/views/VerifyView.vue'
+import WithdrawCancelledView from '@/views/WithdrawCancelledView.vue'
 import WithdrawView from '@/views/WithdrawView.vue'
 import { accessGuard } from './accessGuard'
 
@@ -36,6 +37,12 @@ const router = createRouter({
     { path: '/pots/:potId', name: 'pot', component: PotView, props: true },
     { path: '/pots/:potId/contribute', name: 'contribute', component: ContributeView, props: true },
     { path: '/pots/:potId/withdraw', name: 'withdraw', component: WithdrawView, props: true },
+    {
+      path: '/pots/:potId/withdraw/cancelled',
+      name: 'withdraw-cancelled',
+      component: WithdrawCancelledView,
+      props: true,
+    },
     { path: '/pagaments', name: 'payments', component: PaymentsView },
     // The recipient travels in `?to=<id>`, so a reload keeps it (US-13).
     {

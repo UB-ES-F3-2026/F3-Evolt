@@ -49,11 +49,11 @@ describe('WithdrawView', () => {
     expect(linkTo(screen, '← Inici')).toBe('/')
   })
 
-  it('«Cancel·lar» goes back to the pot detail without withdrawing (REP-12 still to be defined by the PO)', () => {
+  it('REP-12: «Cancel·lar» opens the «Retirada cancel·lada» notice without withdrawing', () => {
     const state = viewModel()
     const screen = mountWith(state)
 
-    expect(linkTo(screen, 'Cancel·lar')).toEqual({ name: 'pot', params: { potId: 'pot-01' } })
+    expect(linkTo(screen, 'Cancel·lar')).toEqual({ name: 'withdraw-cancelled', params: { potId: 'pot-01' } })
     expect(state.submit).not.toHaveBeenCalled()
   })
 
