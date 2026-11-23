@@ -25,7 +25,8 @@ const avatar = computed(() => initials(props.user))
       <span class="avatar" aria-hidden="true">{{ avatar }}</span>
       <div class="details">
         <p class="name">{{ name }}</p>
-        <p class="username">{{ username }}</p>
+        <!-- Without a name the @username is already the name: it is not repeated below (#212). -->
+        <p v-if="user.name !== null" class="username">{{ username }}</p>
       </div>
     </component>
   </li>
