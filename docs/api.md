@@ -805,7 +805,7 @@ Propostes dels pagaments (T13.1, US-13 i US-14, PR #196). Comencen a la P64 perq
 | P84 | [13.5](#get-apitransferslimit) | `GET /api/transfers/limit` → `{ dailyLimit, remainingToday }`, perquè «Enviar» pugui avisar del límit abans de confirmar (revisió de l'Izan a la #196). La numeració salta a P84 perquè les P76–P83 són de la #198. |
 | P85 | [13.8](#138-errors) | `INSUFFICIENT_BALANCE` té un sol text, «No tens prou saldo.», a l'aportació, a l'enviament i al canvi de divises (revisió del Huabin a la #196). |
 
-Propostes de les sol·licituds (T15.1, US-15):
+Propostes de les sol·licituds (T15.1, US-15, PR #238):
 
 | # | Apartat | Proposta |
 |---|---|---|
@@ -2936,7 +2936,7 @@ Una sol·licitud **no mou diners**: ni saldos, ni moviments, ni `totalSaved`, ni
 
 ### 14.1 Objecte `MoneyRequest`
 
-**[PROPOSTA — pendent de validar]** (P76, P77)
+L'objecte que la pantalla pinta a `/requests`. (P76, P77)
 
 | Camp | Tipus | Notes |
 |---|---|---|
@@ -2969,7 +2969,7 @@ Una sol·licitud **no mou diners**: ni saldos, ni moviments, ni `totalSaved`, ni
 
 ### 14.2 `POST /api/money-requests`
 
-Envia una sol·licitud de diners a un altre usuari (US-15). **[PROPOSTA — pendent de validar]** (P78, P79)
+Envia una sol·licitud de diners a un altre usuari (US-15). (P78, P79)
 
 **Cos de la petició:** `{ toUserId, amount, concept }`
 
@@ -3029,7 +3029,7 @@ Les sol·licituds **enviades** per l'usuari de la sessió (US-15). Les rebudes s
 
 ### 14.4 `POST /api/money-requests/{requestId}/cancel`
 
-Cancel·la una sol·licitud **pendent**: s'esborra i no torna a sortir mai a `/requests` (decisió de PO, 18/11). **[PROPOSTA — pendent de validar]** (P80)
+Cancel·la una sol·licitud **pendent**: s'esborra i no torna a sortir mai a `/requests` (decisió de PO, 18/11). (P80)
 
 **Cos de la petició:** cap.
 
@@ -3048,7 +3048,7 @@ Cancel·la una sol·licitud **pendent**: s'esborra i no torna a sortir mai a `/r
 
 ### 14.5 Caducitat
 
-Una sol·licitud sense resposta caduca als 7 dies (US-15). **[PROPOSTA — pendent de validar]** (P81)
+Una sol·licitud sense resposta caduca als 7 dies (US-15). (P81)
 
 - Es compta per **dies naturals de Madrid** ([apartat 1](#què-vol-dir-avui)): una sol·licitud del 14 de novembre (a qualsevol hora) es veu «Caducada» des de les **00:00 del 21 de novembre**. Aquest moment és el seu `expiresAt`.
 - `status` es calcula en cada lectura: `"expired"` si la sol·licitud està desada com a pendent i ara és `≥ expiresAt`; si no, l'estat desat.
@@ -3062,7 +3062,7 @@ Una sol·licitud sense resposta caduca als 7 dies (US-15). **[PROPOSTA — pende
 
 ### 14.6 Avís a la bústia simulada
 
-Crear una sol·licitud deixa un missatge al destinatari a la bústia simulada ([8.12](#812-get-apidevoutbox)). Dins de l'app no hi ha cap llista d'avisos. **[PROPOSTA — pendent de validar]** (P82)
+Crear una sol·licitud deixa un missatge al destinatari a la bústia simulada ([8.12](#812-get-apidevoutbox)). Dins de l'app no hi ha cap llista d'avisos. (P82)
 
 | `type` | A qui | `text` (exemple de 14.2) |
 |---|---|---|
