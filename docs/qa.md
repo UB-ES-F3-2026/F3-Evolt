@@ -146,15 +146,15 @@ Les proves de multidivisa (US-25, US-26 i US-27) són a `docs/proves-multidivisa
 | Història | AC al Trello | Proves definides | Codi | Provat per QA |
 |---|---|---|---|---|
 | US-19 Retirar diners | 7 | RE-01…RE-21 (API), REP-01…REP-12 (pantalla) a la #177 | **A `develop`** (#231, 23/11): contracte #177, backend #195, frontend #190 i #232 (REP-12), tests amb Firestore #230 | **Sí, de punta a punta** (§5.1, i REP-01…REP-12 a la #231) · **acceptada pel PO** |
-| US-20 Progrés | 8 | O-01…O-08 (API), OP-01…OP-09 (pantalla) a la #177 | **A `develop`** (#229, 23/11): backend #194 i #203, frontend #179 | Jiajun (22/11) i Huabin (OP-01…OP-09 a la #229, amb la OP-06 de retirar) · **acceptada pel PO** |
+| US-20 Progrés | 8 | O-01…O-09 (API), OP-01…OP-09 (pantalla) a la #177 | **A `develop`** (#229, 23/11): backend #194 i #203, frontend #179 | Jiajun (22/11); Huabin, OP-01…OP-09 a `d160625` i, amb la US-19 ja dins, també la OP-06 a `b3696ad` i a la regressió (§5.2); Junhao, OP-06 a `b08187c` · **acceptada pel PO** |
 | US-25 Afegir subcompte | 6 | DV-01…DV-16 (API), DVP-01…DVP-07 (pantalla) a la #193 | **A `develop`** (#209, 22/11): contracte #193, backend #206, frontend #178 | Izan (#178), Huabin (#209) · **acceptada pel PO** |
-| US-26 Eliminar subcompte | 6 | EL-01…EL-11 (API), ELP-01…ELP-07 (pantalla) a la #193 | **A `develop`** (#215, 22/11): backend #207, frontend #208 | Jiajun (T26.3), Alicia (backend) · **acceptada pel PO**. ELP-06 al navegador espera la US-27 (al backend, EL-07) |
-| US-27 Canvi de divises | 7 | CV-01…CV-23 (API), CVP-01…CVP-10 (pantalla) a la #193 | Backend #222 i frontend #180 fusionats a `story/us-27` (23/11). Falta la PR d'història | Huabin (CVP-01…CVP-10 a la #180) |
+| US-26 Eliminar subcompte | 6 | EL-01…EL-11 (API), ELP-01…ELP-07 (pantalla) a la #193 | **A `develop`** (#215, 22/11): backend #207, frontend #208 | Jiajun (T26.3), Alicia (backend) · **acceptada pel PO**. ELP-06 provada a la #242, ja amb la US-27 |
+| US-27 Canvi de divises | 7 | CV-01…CV-23 (API), CVP-01…CVP-10 (pantalla) a la #193 | **A `develop`** (#242, 23/11): backend #222, frontend #180 | Huabin (CVP-01…CVP-10 a la #180 i la #242, en memòria i amb Firestore) · **acceptada pel PO** |
 | US-13 Cercar usuari | 7 | CU-01…CU-23 (API), CUP-01…CUP-11 (pantalla) a la #196 | **A `develop`** (#205, 22/11): contracte #196, backend #197, frontend #200; pendents del PO a la #236 i la #240 | **Sí, de punta a punta** (#197 + #200) · **acceptada pel PO** |
 | US-14 Enviar diners | 9 | EN-01…EN-36 (API), ENP-01…ENP-11 (pantalla) a la #196 | **A `develop`** (#239, 23/11): avisos #201, enviament #213 i #223, pantalles #233, text del límit #234 | Huabin (#201, #233, i ENP + T14.4 sobre `develop`) · **acceptada pel PO** |
 | US-15 Sol·licitar diners | 10 | SO-01…SO-25 (API), SOP-01…SOP-11 (pantalla) a la #198 | **A `develop`** (#238, 23/11): contracte #198, backend #199, frontend #235 | Huabin (#199, #235 i SOP-01…SOP-11 a la #238) · **acceptada pel PO** |
 
-A 23/11 hi ha **7 de les 8 històries a `develop`** (US-13, US-14, US-15, US-19, US-20, US-25 i US-26). Només falta la PR d'història de la US-27.
+A 23/11 hi ha **les 8 històries a `develop`**, totes acceptades pel PO.
 
 ### 5.1 US-19 · Retirar diners (#190 i #195, 19–20/11)
 
@@ -174,16 +174,16 @@ Els tres defectes que va trobar la prova del 19/11 (l'error sobre el botó, la c
 
 ### 5.2 Regressió de `develop` abans de la release (23/11)
 
-Sobre `develop` a `947a729` (les 7 històries juntes), abans de pujar a `main`:
+Sobre `develop` a `8db6d22` (les 8 històries juntes, després de la #242), abans de pujar a `main`:
 
 | Prova | Resultat |
 |---|---|
-| Backend en memòria (`pytest`, `ruff`, `compileall`) | 1.020 ✅, 1 omès |
-| Backend amb l'emulador de Firestore | 789 ✅, **1 fallit** (`test_en30_transfers_give_no_xp`, §6: el test, no el codi) |
-| Frontend (`vitest`, ESLint, build) | 626 ✅ |
-| Navegador amb el backend real, en memòria i amb Firestore | Recorregut de les 7 històries (cerca, enviar i rebre, sol·licitar, divises, retirar i progrés) i de les pantalles de l'Sprint 1: tot ✅, sense errors de JavaScript ni respostes 5xx |
+| Backend en memòria (`pytest`, `ruff`, `compileall`) | 1.070 ✅, 1 omès |
+| Backend amb l'emulador de Firestore | 831 ✅, **5 fallits**: 4 de `test_exchanges.py` i `test_en30_transfers_give_no_xp` (§6: els tests, no el codi) |
+| Frontend (`vitest`, ESLint, `vue-tsc`, build) | 740 ✅ |
+| Navegador amb el backend real, en memòria i amb Firestore, cada recorregut amb dades noves | Les 8 històries: cerca, enviar i rebre (ENP i T14.4), sol·licitar, divises, canvi (CVP-01…CVP-10), retirar i progrés, i les pantalles de l'Sprint 1. Tot ✅, sense errors de JavaScript ni respostes 5xx. «Canviar» ja obre la pantalla de canvi |
 
-Conegut per a la demo: a `develop`, «Canviar» de `/divises` encara obre una pantalla en blanc. L'arregla la US-27 (#180).
+Abans, a `947a729` (7 històries, sense la US-27), el mateix recorregut també va sortir bé, però «Canviar» encara obria una pantalla en blanc.
 
 ## 6. Han servit els tests? Defectes trobats
 
@@ -220,7 +220,7 @@ Conegut per a la demo: a `develop`, «Canviar» de `/divises` encara obre una pa
 | 2 | El contracte (§13.5) i l'ENP-03 deien «… Avui encara pots enviar 980,00 €.», però la US-14 diu exactament «Has superat el límit diari de 1.000,00 €.» | Revisió (frontend) | #233 → arreglat a la #234 |
 | 2 | 6 tests de `test_pot_withdrawals.py` llegien el seed de memòria i fallaven amb Firestore (com CU-20) | **Test** (suite sobre l'emulador, QA) | #224 → arreglat a la #230 |
 | 2 | `test_en30_transfers_give_no_xp` llegeix el seed de memòria i falla amb Firestore | **Test** (suite sobre l'emulador, QA) | #239 (pendent: `memory_only`) |
-| 2 | 4 tests de `test_exchanges.py` llegeixen el seed de memòria i fallen amb Firestore | **Test** (suite sobre l'emulador, QA) | #180 (pendent, abans de la PR de la US-27) |
+| 2 | 4 tests de `test_exchanges.py` llegeixen el seed de memòria i fallen amb Firestore | **Test** (suite sobre l'emulador, QA) | #180; encara fallen a `develop` després de la #242 (pendent) |
 | 2 | «Retirada cancel·lada»: el temporitzador comença abans de carregar els saldos; si la càrrega triga o falla, l'avís no es veu | Revisió (QA) | #232 (pendent) |
 | 2 | A la variant de selecció de `UserRow` («Demanar diners») l'`@usuari` d'un usuari sense nom encara es repeteix | Revisió (QA) | #236, #238 (pendent) |
 | 2 | «Pendent» i «Caducada» tenen la mateixa etiqueta grisa, i la T15.3 demana un color per estat | Revisió (QA) | #235 (pendent, #155) |
