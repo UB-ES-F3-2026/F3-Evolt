@@ -9,9 +9,13 @@ const props = withDefaults(
     user: UserSummary
     /** Where tapping the row goes. Without it, the row only shows who the person is. */
     to?: RouteLocationRaw
+    /** Set it to make the row a choice (the recipient of «Demanar diners», US-15): true when chosen. */
+    selected?: boolean
   }>(),
-  { to: undefined },
+  { to: undefined, selected: undefined },
 )
+
+const emit = defineEmits<{ select: [] }>()
 
 // Only who the person is: never an amount or a balance (US-13).
 const name = computed(() => displayName(props.user))
@@ -21,7 +25,22 @@ const avatar = computed(() => initials(props.user))
 
 <template>
   <li class="user-row">
-    <component :is="to ? RouterLink : 'div'" :to="to" class="row">
+    <button
+      v-if="selected !== undefined"
+      type="button"
+      class="row choice"
+      :class="{ selected }"
+      :aria-pressed="selected"
+      @click="emit('select')"
+    >
+      <span class="avatar" aria-hidden="true">{{ avatar }}</span>
+      <div class="details">
+        <p class="name">{{ name }}</p>
+        <p class="username">{{ username }}</p>
+      </div>
+      <span v-if="selected" class="check" aria-hidden="true">✓</span>
+    </button>
+    <component :is="to ? RouterLink : 'div'" v-else :to="to" class="row">
       <span class="avatar" aria-hidden="true">{{ avatar }}</span>
       <div class="details">
         <p class="name">{{ name }}</p>
@@ -46,6 +65,28 @@ const avatar = computed(() => initials(props.user))
   gap: 0.75rem;
   padding: 0.625rem 0;
   color: inherit;
+}
+
+.choice {
+  width: 100%;
+  padding-inline: 0.5rem;
+  border: none;
+  border-left: 3px solid transparent;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.choice.selected {
+  border-left-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+}
+
+.check {
+  flex: none;
+  color: var(--color-primary);
+  font-weight: 700;
 }
 
 .avatar {
