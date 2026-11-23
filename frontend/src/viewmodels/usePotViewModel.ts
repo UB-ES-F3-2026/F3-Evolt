@@ -4,7 +4,7 @@ import type { Movement } from '@/models/movement'
 import { potMovementAsMovement, type Pot } from '@/models/pot'
 import { getPotMovements, getPots } from '@/services/potsService'
 
-/** One pot's screen (US-18): its balance, its history and the way to «Aportar». */
+/** One pot's screen (US-18, US-19): its balance, its history and the ways to «Aportar» and «Retirar». */
 export function usePotViewModel(potId: string) {
   const pot = ref<Pot | null>(null)
   const history = ref<Movement[]>([])
@@ -14,6 +14,8 @@ export function usePotViewModel(potId: string) {
 
   const title = computed(() => pot.value?.name ?? 'Guardiola')
   const hasHistory = computed(() => history.value.length > 0)
+  // An empty pot has nothing to take out, so «Retirar» is disabled (US-19).
+  const canWithdraw = computed(() => (pot.value?.balance ?? 0) > 0)
 
   async function load(): Promise<void> {
     isLoading.value = true
@@ -31,5 +33,5 @@ export function usePotViewModel(potId: string) {
     }
   }
 
-  return { pot, history, title, hasHistory, isLoading, error, load }
+  return { pot, history, title, hasHistory, canWithdraw, isLoading, error, load }
 }

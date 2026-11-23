@@ -1,9 +1,10 @@
-"""Endpoints de les guardioles (US-17 i US-18, docs/api.md §9.2 a §9.5)."""
+"""Endpoints de les guardioles (US-17 a US-19, docs/api.md §9.2 a §9.5 i §11.2)."""
 
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
-from pydantic import BaseModel, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr, field_validator
+from pydantic.alias_generators import to_camel
 
 from app.models import POT_COLORS, Pot, PotMovement
 from app.repositories import AccountRepository, MovementRepository, PotRepository
@@ -11,34 +12,48 @@ from app.repositories.atomic import Atomic
 from app.routers.current_user import current_user_id
 from app.routers.dependencies import account_repository, atomic, movement_repository, pot_repository
 from app.routers.schemas import MovementResponse
+from app.services.pot_progress import GoalStatus, pot_progress
 from app.services.pot_service import (
     ContributionResult,
+    WithdrawalResult,
     contribute,
     create_pot,
     list_pot_movements,
     list_pots,
+    withdraw,
 )
 
 router = APIRouter(tags=["pots"])
 
 
 class PotResponse(BaseModel):
-    """Objecte `Pot` del contracte (§9.1), sense el camp intern `user_id`."""
+    """Objecte `Pot` del contracte (§9.1), sense el camp intern `user_id`.
+
+    `percentage` i `goalStatus` (§11.1) no es desen: surten del saldo d'aquest moment.
+    Les dues claus hi són sempre, també quan valen `null`.
+    """
+
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
     id: str
     name: str
     balance: int
     target: int | None
     color: str
+    percentage: int | None
+    goal_status: GoalStatus | None
 
     @classmethod
     def from_pot(cls, pot: Pot) -> "PotResponse":
+        progress = pot_progress(pot.balance, pot.target)
         return cls(
             id=pot.id,
             name=pot.name,
             balance=pot.balance,
             target=pot.target,
             color=pot.color,
+            percentage=progress.percentage,
+            goal_status=progress.goal_status,
         )
 
 
@@ -87,6 +102,28 @@ class ContributionResponse(BaseModel):
 
     @classmethod
     def from_result(cls, result: ContributionResult) -> "ContributionResponse":
+        return cls(
+            balance=result.balance,
+            pot=PotResponse.from_pot(result.pot),
+            movement=MovementResponse.from_movement(result.movement),
+        )
+
+
+class WithdrawalRequest(BaseModel):
+    """Cos de la petició: `{ amount }` en cèntims (§11.2), estricte com l'aportació (P5)."""
+
+    amount: StrictInt
+
+
+class WithdrawalResponse(BaseModel):
+    """Cos de la resposta `201`: `{ balance, pot, movement }` (§11.2)."""
+
+    balance: int
+    pot: PotResponse
+    movement: MovementResponse
+
+    @classmethod
+    def from_result(cls, result: WithdrawalResult) -> "WithdrawalResponse":
         return cls(
             balance=result.balance,
             pot=PotResponse.from_pot(result.pot),
@@ -154,6 +191,21 @@ def post_contribution(
     # Les quatre escriptures de l'aportació, tot o res (TR01.1).
     result = run.run(lambda: contribute(user_id, pot_id, body.amount, accounts, pots, movements))
     return ContributionResponse.from_result(result)
+
+
+@router.post("/pots/{pot_id}/withdrawals", status_code=status.HTTP_201_CREATED)
+def post_withdrawal(
+    pot_id: str,
+    body: WithdrawalRequest,
+    user_id: Annotated[int, Depends(current_user_id)],
+    accounts: Annotated[AccountRepository, Depends(account_repository)],
+    pots: Annotated[PotRepository, Depends(pot_repository)],
+    movements: Annotated[MovementRepository, Depends(movement_repository)],
+    run: Annotated[Atomic, Depends(atomic)],
+) -> WithdrawalResponse:
+    # Les quatre escriptures de la retirada, tot o res (TR01.1), com l'aportació.
+    result = run.run(lambda: withdraw(user_id, pot_id, body.amount, accounts, pots, movements))
+    return WithdrawalResponse.from_result(result)
 
 
 @router.get("/pots/{pot_id}/movements")

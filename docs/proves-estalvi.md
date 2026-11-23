@@ -1,6 +1,8 @@
-# Proves d'acceptació · Estalvi (US-17 i US-18)
+# Proves d'acceptació · Estalvi (US-17 a US-20)
 
 Proves d'acceptació de les històries d'estalvi, escrites a partir dels criteris de [`docs/P1/trello-backlog.md`](P1/trello-backlog.md) i del contracte de l'[apartat 9 de `docs/api.md`](api.md#9-guardioles-us-17-i-us-18). Tasca: T17.1 (issue #71).
+
+US-19 i US-20 (Sprint 2) segueixen l'[apartat 11 de `docs/api.md`](api.md#11-guardioles-retirar-i-progrés-us-19-i-us-20) i les històries de `docs/us/`. Tasca: T19.1 (issue #146).
 
 ## Índex
 
@@ -8,7 +10,9 @@ Proves d'acceptació de les històries d'estalvi, escrites a partir dels criteri
 2. [Dades de partida](#dades-de-partida)
 3. [US-17 · Crear guardiola](#us-17--crear-guardiola)
 4. [US-18 · Aportar diners a una guardiola](#us-18--aportar-diners-a-una-guardiola)
-5. [Criteris d'acceptació i proves](#criteris-dacceptació-i-proves)
+5. [US-19 · Retirar diners d'una guardiola](#us-19--retirar-diners-duna-guardiola)
+6. [US-20 · Veure progrés i objectiu assolit](#us-20--veure-progrés-i-objectiu-assolit)
+7. [Criteris d'acceptació i proves](#criteris-dacceptació-i-proves)
 
 ---
 
@@ -36,7 +40,8 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 
   - Cada guardiola té una sola entrada a l'historial: «Saldo inicial», pel seu saldo.
 - **Usuari 2:** saldo 0,00 € i cap guardiola.
-- Rellotge fixat a **T0 = `2026-11-03T10:00:00+01:00`** a les proves que miren la data d'una aportació.
+- Progrés de les guardioles de l'usuari 1 (US-20): Vacances 15 % i Regal d'aniversari 63 %, totes dues «En progrés»; Emergències no té objectiu.
+- Rellotge fixat a **T0 = `2026-11-03T10:00:00+01:00`** a les proves que miren la data d'una aportació o d'una retirada.
 - Els objectius i els colors de les guardioles del seed són una proposta del contracte (P32). Si a la revisió canvien, s'actualitzen aquí.
 
 ---
@@ -65,7 +70,7 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 | **P-16** | Seed | `POST /api/pots` amb `{ "name": "  Viatge  " }` | `201` amb `name: "Viatge"`. |
 | **P-17** | Seed | `POST /api/pots` amb `{ "name": "Primera" }` (usuari 2), i després `GET /api/pots` dels dos usuaris | `201`. L'usuari 2 té 1 guardiola; l'usuari 1 continua amb 3. |
 | **P-18** | P-03 fet | `GET /api/home` (usuari 1) | `balance` `379521` i `totalSaved` `30000`, igual que abans: crear una guardiola no mou diners. |
-| **P-19** | P-03 fet | Mirar la resposta de P-03 | Té exactament les claus `id`, `name`, `balance`, `target` i `color`. |
+| **P-19** | P-03 fet | Mirar la resposta de P-03 | Té exactament les claus `id`, `name`, `balance`, `target` i `color`. Des de la T20.1, també `percentage` i `goalStatus` (O-06). |
 
 ### Pantalla (T17.3 i T17.4)
 
@@ -127,6 +132,85 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 
 ---
 
+## US-19 · Retirar diners d'una guardiola
+
+### API (T19.2)
+
+| Id | Situació inicial | Acció | Resultat esperat |
+|---|---|---|---|
+| **RE-01** | Seed, T0 | `POST /api/pots/pot-01/withdrawals` amb `{ "amount": 3000 }` | `201` `{ balance: 382521, pot: { id: "pot-01", name: "Vacances", balance: 12000, percentage: 12, goalStatus: "in_progress", … }, movement: { amount: 3000, concept: "Retirada de Vacances", date: "2026-11-03T10:00:00+01:00", type: "income", icon: "savings", counterparty: null, status: "completed" } }`. |
+| **RE-02** | RE-01 fet | `GET /api/home` | `balance` `382521` i `totalSaved` `27000`. `balance + totalSaved` és `409521`, igual que abans de la retirada. |
+| **RE-03** | RE-01 fet | `GET /api/home`, `GET /api/movements` i `GET /api/movements?type=income` | El primer de `lastMovements` i el primer de tots dos llistats és el moviment de RE-01. |
+| **RE-04** | RE-01 fet | `GET /api/pots/pot-01/movements` | `200` amb 2 entrades: primer la retirada (`3000`, `"Retirada"`, `type: "expense"`, data T0) i després «Saldo inicial» (`15000`, `income`). `15000 − 3000 = 12000`, el saldo de la guardiola. |
+| **RE-05** | RE-01 fet | `GET /api/movements/<id del moviment de RE-01>` | `200` amb el detall: `concept` «Retirada de Vacances», `type: "income"`, `status: "completed"` i una `reference` nova. |
+| **RE-06** | Seed | Retirar `15000` (tot el saldo) de `pot-01` | `201`. La guardiola queda a `0` (`percentage: 0`) i el compte a `394521`. |
+| **RE-07** | Seed | Retirar `15001` (1 cèntim més que el saldo) de `pot-01` | `422 INSUFFICIENT_POT_BALANCE`. No canvien el saldo del compte, el saldo de la guardiola, el nombre de moviments ni l'historial. |
+| **RE-08** | RE-06 fet (`pot-01` a `0`) | Retirar `100` de `pot-01` | `422 INSUFFICIENT_POT_BALANCE`. |
+| **RE-09** | Seed | Retirar `0`, i després `-100` | `422 INVALID_AMOUNT` totes dues vegades. No canvia res. |
+| **RE-10** | Seed | Retirar `"30"`, `30.0`, o sense `amount` | `422 VALIDATION_ERROR`. |
+| **RE-11** | Seed | Retirar `3000` de `pot-99` | `404 POT_NOT_FOUND`. |
+| **RE-12** | Seed | Retirar `3000` de `pot-01` com a usuari 2 | `404 POT_NOT_FOUND`, amb **el mateix cos** que RE-11. La guardiola de l'usuari 1 no canvia. |
+| **RE-13** | Seed | Retirar `0` de `pot-99` | `404 POT_NOT_FOUND`: la guardiola es comprova abans que l'import. |
+| **RE-14** | L'usuari 2 ha creat una guardiola (saldo `0`) | Retirar-ne `0`, i després `100` | Primer `422 INVALID_AMOUNT` (l'import es comprova abans que el saldo de la guardiola); després `422 INSUFFICIENT_POT_BALANCE`. |
+| **RE-15** | Seed, backend amb `SIMULATE_ERROR_RATE=100` | Retirar `3000` de `pot-01` | `500 INTERNAL_ERROR`. Sense la simulació, `GET /api/home` i `GET /api/pots` mostren els saldos de partida. |
+| **RE-16** | Seed. Test amb `monkeypatch`: falla una escriptura que no és la primera (p. ex. la de l'historial) | Retirar `3000` de `pot-01` | `500 INTERNAL_ERROR`. No canvien el saldo del compte, el de la guardiola, els moviments ni l'historial: es desfà el que ja s'havia escrit. |
+| **RE-17** | Seed | Dues retirades de `10000` de `pot-01` alhora. A part, des del seed: una retirada de `15000` i una aportació de `3000` a `pot-01` alhora | Les dues retirades: una `201` i l'altra `422 INSUFFICIENT_POT_BALANCE`; la guardiola queda a `5000`, mai negativa. La retirada i l'aportació: totes dues `201`, en qualsevol ordre; la guardiola queda a `3000` i el compte a `391521`, perquè cap de les dues es perd (fan servir el mateix pany, [api.md 11.6](api.md#116-model-intern)). |
+| **RE-18** | RE-01 fet | Sumar els moviments del compte de l'usuari 1 | La suma és `382521`: el saldo continua sent la suma dels seus moviments. |
+| **RE-19** | RE-01 fet | Recarregar `50000` i `50000` el mateix dia | `201` totes dues: la retirada no compta per al límit diari de recàrrega. |
+| **RE-20** | RE-01 fet | Mirar l'XP de l'usuari 1 a les dades en memòria | No ha canviat: en aquest sprint, retirar no dona ni treu XP. |
+| **RE-21** | RE-01 fet | `POST /api/dev/reset` i `GET /api/pots` | Les guardioles tornen al seed: Vacances té `15000` i una sola entrada a l'historial. |
+
+### Pantalla (T19.3)
+
+| Id | Què fas | Què has de veure |
+|---|---|---|
+| **REP-01** | A «Guardioles», obre «Vacances». | El detall de la guardiola, amb el botó «Retirar» al costat d'«Aportar». |
+| **REP-02** | Toca «Retirar». | S'obre «Retirar de Vacances». A dalt, «Saldo de la guardiola» 150,00 €; a sota, la casella «Import», el botó «Confirmar» i «Cancel·lar». |
+| **REP-03** | Deixa l'import buit. Després escriu `0`. | Buit: cap missatge i «Confirmar» desactivat. Amb `0`: la casella es posa vermella, surt «L'import ha de ser més gran que 0.» en vermell i «Confirmar» queda desactivat. |
+| **REP-04** | Escriu `200`. | La casella es posa vermella, surt «La guardiola no té prou saldo per aquesta retirada.» en vermell a sota i «Confirmar» queda desactivat. |
+| **REP-05** | Escriu `30` i toca «Confirmar». | Surt un tic verd amb «Has retirat 30,00 € de Vacances» i «Saldo disponible: 3.825,21 € · Vacances: 120,00 €». 1,5 s després torna sol al detall, amb 120,00 €. |
+| **REP-06** | Mira l'historial de Vacances. | A dalt de tot, la retirada en vermell amb «−30,00 €» i el concepte «Retirada». |
+| **REP-07** | Torna a «Inici». | Saldo 3.825,21 € i total estalviat 270,00 €. A «Últims moviments», el primer és «Retirada de Vacances», +30,00 € en verd. |
+| **REP-08** | Amb el backend a `SIMULATE_ERROR_RATE=100`, retira `10`. | Surt «S'ha produït un error inesperat. Torna-ho a provar més tard.» en vermell sota el botó i l'import es queda escrit. Quan el backend torna a funcionar, cap dels dos saldos ha canviat. |
+| **REP-09** | Amb el backend aturat, retira `10`. | Surt «No hi ha connexió amb el servidor. Torna-ho a provar.» en vermell sota el botó i l'import es queda escrit. |
+| **REP-10** | Retira exactament tot el saldo de Vacances (`150`). | Es fa la retirada i Vacances queda a 0,00 €. |
+| **REP-11** | Amb Vacances a 0,00 € (REP-10), obre el detall i prova de tocar «Retirar», amb el ratolí i amb el tabulador. | «Retirar» surt desactivat, amb el fons gris; no fa res i el tabulador se'l salta. «Aportar» continua actiu. |
+| **REP-12** | A «Retirar de Vacances», escriu `30` i toca «Cancel·lar». Torna-ho a fer i, aquest cop, toca «Tornar a la guardiola». | No es retira res. Surt «Retirada cancel·lada» (`/pots/pot-01/withdraw/cancelled`) amb «No s'ha retirat res i cap dels dos saldos canvia.» i, a sota, «Saldo disponible: 3.795,21 € · Vacances: 150,00 €», sense l'import escrit ni tic verd. 1,5 s després torna sola al detall de Vacances, amb 150,00 €. Amb «Tornar a la guardiola» hi torna abans. |
+
+---
+
+## US-20 · Veure progrés i objectiu assolit
+
+### API (T20.1)
+
+| Id | Situació inicial | Acció | Resultat esperat |
+|---|---|---|---|
+| **O-01** | Seed | `GET /api/pots` (usuari 1) | Vacances: `percentage: 15`, `goalStatus: "in_progress"`. Emergències: `percentage: null`, `goalStatus: null`. Regal d'aniversari: `percentage: 63` (62,5 arrodonit cap amunt), `goalStatus: "in_progress"`. |
+| **O-02** | Seed | Aportar `3000` a `pot-03` | El `pot` de la resposta té `balance: 8000`, `percentage: 100` i `goalStatus: "achieved"`. |
+| **O-03** | O-02 fet | Aportar `2000` més a `pot-03` | `balance: 10000`, `percentage: 125` (el valor real, per sobre de 100) i `goalStatus: "achieved"`. |
+| **O-04** | O-03 fet | Retirar `3000` de `pot-03` | `balance: 7000`, `percentage: 88` (87,5) i `goalStatus: "in_progress"`: la retirada torna la guardiola a «En progrés». |
+| **O-05** | Seed | `POST /api/pots` amb `{ "name": "Viatge", "target": 30000 }` i amb `{ "name": "Fons" }` | Viatge: `percentage: 0` i `goalStatus: "in_progress"`. Fons, sense objectiu: `percentage: null` i `goalStatus: null`. |
+| **O-06** | Seed | Mirar el `pot` de `GET /api/pots`, de `POST /api/pots`, de l'aportació i de la retirada | A totes quatre, exactament les claus `id`, `name`, `balance`, `target`, `color`, `percentage` i `goalStatus`. |
+| **O-07** | Test de la funció pura del progrés | `(balance, target)`: `(5000, 8000)`, `(4990, 8000)`, `(1, 8)`, `(10, 2000)`, `(3, 2000)`, `(7999, 8000)`, `(0, 30000)` | `percentage`: `63`, `62`, `13`, `1`, `0`, `99` i `0`. `goalStatus`: `"in_progress"` a tots. `(7999, 8000)` dona `99` i no `100`: sense arribar a l'objectiu, el màxim és `99`. Amb `(8000, 8000)`, `100` i `"achieved"`. |
+| **O-08** | O-02 fet | `GET /api/pots` | Regal d'aniversari surt amb `percentage: 100` i `goalStatus: "achieved"`: el progrés es calcula a cada lectura, no només a la resposta de l'aportació. |
+| **O-09** | Seed | Aportar `2999` a `pot-03`, i després `1` més | Primer `balance: 7999`, `percentage: 99` i `goalStatus: "in_progress"` (99,99 %, sense arribar a l'objectiu). Després `balance: 8000`, `percentage: 100` i `goalStatus: "achieved"`. |
+
+### Pantalla (T20.2)
+
+| Id | Què fas | Què has de veure |
+|---|---|---|
+| **OP-01** | A «Guardioles», obre «Vacances». | Entre «Objectiu:» i «Aportar»: «150,00 € de 1.000,00 €», una barra lila plena un 15 % aproximadament, «15 %» escrit i l'etiqueta grisa «En progrés». |
+| **OP-02** | Obre «Emergències». | Ni barra, ni percentatge, ni línia «Objectiu:»: només el saldo. |
+| **OP-03** | Obre «Regal d'aniversari». | «50,00 € de 80,00 €», «63 %» i «En progrés». |
+| **OP-04** | Aporta 30,00 € a Regal d'aniversari i torna al detall. | Sense recarregar a mà: la barra plena i verda, «100 %» i l'etiqueta verda «Objectiu assolit». |
+| **OP-05** | Aporta-hi 20,00 € més. | «125 %», la barra plena però sense sortir de la pista, i «Objectiu assolit». |
+| **OP-06** | Retira 30,00 € de Regal d'aniversari. | En tornar al detall: «88 %», la barra lila i «En progrés». |
+| **OP-07** | Torna a «Guardioles». | Vacances i Regal d'aniversari tenen una barra petita i el percentatge sota el nom. Emergències només té el saldo. |
+| **OP-08** | Inspecciona la barra (o fes servir el lector de pantalla). | La barra té `role="progressbar"` amb el valor, i el percentatge i l'etiqueta són text visible: el color no és l'únic senyal. |
+| **OP-09** | Amb el seed, aporta 29,99 € a Regal d'aniversari. Després, 0,01 € més. | Primer «79,99 € de 80,00 €», «99 %», la barra lila i «En progrés», mai «100 %» amb «En progrés». Després «100 %», la barra verda i «Objectiu assolit». |
+
+---
+
 ## Criteris d'acceptació i proves
 
 | Criteri d'acceptació | Proves |
@@ -144,5 +228,21 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 | US-18 · A l'historial de la guardiola surt l'aportació en verd amb «+» i el concepte «Aportació» | A-04, A-05, AP-05 |
 | US-18 · Si el servidor falla, surt el missatge d'error en vermell i cap dels dos saldos canvia | A-16, AP-07 |
 | US-18 · Mai es queda a mitges: o canvien els dos saldos o no en canvia cap | A-07, A-17, A-18 |
+| US-19 · A la pantalla d'una guardiola hi ha el botó «Retirar», que obre la pantalla «Retirar de <nom de la guardiola>» | REP-01, REP-02 |
+| US-19 · A dalt es veu el saldo que té la guardiola | P-01, REP-02 |
+| US-19 · L'import ha de ser més gran que 0 i no més gran que el saldo de la guardiola; si no, la casella es posa vermella, surt el motiu en vermell i el botó «Confirmar» queda desactivat | RE-06, RE-07, RE-08, RE-09, RE-10, RE-14, REP-03, REP-04, REP-10 |
+| US-19 · En confirmar, el saldo de la guardiola baixa i el principal puja exactament el mateix import | RE-01, RE-02, RE-03, RE-05, RE-18, REP-05, REP-07 |
+| US-19 · Surt un tic verd amb «Has retirat X € de <nom>» | RE-01, REP-05 |
+| US-19 · A l'historial de la guardiola surt la retirada en vermell amb «−» i el concepte «Retirada» | RE-04, REP-06 |
+| US-19 · Si el servidor falla, surt el missatge d'error en vermell i cap dels dos saldos canvia | RE-15, RE-16, REP-08, REP-09 |
+| US-19 · Si la guardiola té 0,00 €, el botó «Retirar» surt desactivat (gris clar) | RE-08, REP-11 |
+| US-20 · La pantalla d'una guardiola amb objectiu mostra el saldo i l'objectiu (per exemple «120,00 € de 500,00 €»), una barra de progrés i el percentatge | O-01, OP-01, OP-03 |
+| US-20 · La part plena de la barra, en lila, correspon al percentatge | O-01, O-07, OP-01 |
+| US-20 · Si el saldo és menor que l'objectiu, surt l'etiqueta grisa «En progrés» | O-01, O-04, O-07, O-09, OP-01, OP-06, OP-09 |
+| US-20 · Si el saldo arriba o passa l'objectiu, la barra es posa verda i surt l'etiqueta verda «Objectiu assolit» | O-02, O-03, O-08, O-09, OP-04, OP-05, OP-09 |
+| US-20 · A la llista de guardioles, cada guardiola amb objectiu té una barra petita sota el nom | O-01, OP-07 |
+| US-20 · Les guardioles sense objectiu no tenen barra, només el saldo | O-01, O-05, OP-02, OP-07 |
+| US-20 · Després d'aportar o retirar, la barra i el percentatge ja surten actualitzats | O-02, O-03, O-04, RE-01, OP-04, OP-05, OP-06 |
+| US-20 · El percentatge també surt escrit amb números (per exemple «24 %»), no només com a barra | OP-01, OP-08 |
 
-Proves que no surten d'un criteri, sinó del contracte: P-12 i P-13 (format del cos), A-10 a A-13 (guardioles inexistents o d'altres usuaris), A-15 (aportar per sobre de l'objectiu), A-20 (sense XP), A-21 (límit diari) i A-22 (reinici de dades).
+Proves que no surten d'un criteri, sinó del contracte: P-12 i P-13 (format del cos), A-10 a A-13 (guardioles inexistents o d'altres usuaris), A-15 (aportar per sobre de l'objectiu), A-20 (sense XP), A-21 (límit diari) i A-22 (reinici de dades); RE-10 a RE-13 (format i guardioles d'altres), RE-17 (retirades i aportacions alhora), RE-19 a RE-21 (límit diari, XP i reinici), REP-12 (cancel·lar, decisió del PO a US-19), O-06 (claus del `Pot`) i O-07 (arrodoniment i màxim de 99, decisió del PO).

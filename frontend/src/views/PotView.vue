@@ -7,15 +7,16 @@ import ErrorState from '@/components/ErrorState.vue'
 import LoadingIndicator from '@/components/LoadingIndicator.vue'
 import MoneyAmount from '@/components/MoneyAmount.vue'
 import MovementRow from '@/components/MovementRow.vue'
+import PotProgress from '@/components/PotProgress.vue'
 import { useBalanceVisibility } from '@/viewmodels/useBalanceVisibility'
 import { usePotViewModel } from '@/viewmodels/usePotViewModel'
 
 const props = defineProps<{ potId: string }>()
 
-const { pot, history, title, hasHistory, isLoading, error, load } = usePotViewModel(props.potId)
+const { pot, history, title, hasHistory, canWithdraw, isLoading, error, load } = usePotViewModel(props.potId)
 const { isHidden } = useBalanceVisibility()
 
-// Every visit reloads, so a contribution shows up when coming back from «Aportar».
+// Every visit reloads, so a contribution or a withdrawal shows up when coming back.
 onMounted(load)
 </script>
 
@@ -40,9 +41,21 @@ onMounted(load)
           Objectiu:
           <MoneyAmount :cents="pot.target" :hidden="isHidden" />
         </p>
-        <router-link :to="{ name: 'contribute', params: { potId: pot.id } }" class="contribute">
-          Aportar
-        </router-link>
+        <PotProgress :pot="pot" :hidden="isHidden" />
+        <div class="actions">
+          <router-link :to="{ name: 'contribute', params: { potId: pot.id } }" class="action contribute">
+            Aportar
+          </router-link>
+          <router-link
+            v-if="canWithdraw"
+            :to="{ name: 'withdraw', params: { potId: pot.id } }"
+            class="action withdraw"
+          >
+            Retirar
+          </router-link>
+          <!-- A real disabled button: an empty pot has nothing to take out and it cannot get focus. -->
+          <button v-else type="button" class="action withdraw" disabled>Retirar</button>
+        </div>
       </section>
 
       <section class="card">
@@ -101,17 +114,43 @@ onMounted(load)
 }
 
 .target {
-  margin: 0 0 1rem;
+  /* The progress bar below brings its own top margin, so no extra gap here. */
+  margin: 0;
   font-size: 0.875rem;
   color: var(--color-muted);
 }
 
-.contribute {
-  padding: 0.625rem 1.5rem;
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.action {
+  padding: 0.625rem 1rem;
+  border: 1px solid transparent;
   border-radius: var(--radius);
+  font: inherit;
+  font-weight: 600;
+  text-align: center;
+}
+
+.contribute {
   background: var(--color-primary);
   color: var(--color-surface);
-  font-weight: 600;
+}
+
+.withdraw {
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.withdraw:disabled {
+  background: var(--color-border);
+  color: var(--color-muted);
+  cursor: not-allowed;
 }
 
 .history {

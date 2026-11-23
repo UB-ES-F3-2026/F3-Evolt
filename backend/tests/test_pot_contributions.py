@@ -21,7 +21,7 @@ from app.services.errors import INSUFFICIENT_BALANCE, ApiError
 from app.services.pot_service import contribute
 
 EMPTY_USER = {"X-User-Id": str(EMPTY_USER_ID)}
-POT_KEYS = {"id", "name", "balance", "target", "color"}
+POT_KEYS = {"id", "name", "balance", "target", "color", "percentage", "goalStatus"}
 ENTRY_KEYS = {"id", "amount", "concept", "date", "type"}
 POT_NOT_FOUND_BODY = {"code": "POT_NOT_FOUND", "message": "No s'ha trobat la guardiola."}
 # T0 de docs/proves-estalvi.md.
@@ -77,6 +77,8 @@ def test_contribution_moves_money_from_the_account_to_the_pot(client: TestClient
         "balance": 18000,
         "target": 100000,
         "color": "blue",
+        "percentage": 18,
+        "goalStatus": "in_progress",
     }
     assert _balance(client) == before - 3000
     assert _pot_balance(client, "pot-01") == 18000
