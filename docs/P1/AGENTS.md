@@ -75,6 +75,8 @@ Cada US té:
 2. **Assumptes / Comments**
 3. **Acceptance criteria**
 
+Les especificacions detallades per història (pantalles amb ruta i component Vue, matriu d'estats, còpia d'UI literal, validacions amb missatge exacte, integració API amb reacció a cada codi d'error, criteris d'acceptació, mockups i enllaços Trello/issue/PR) es documenten a [`docs/us/`](../us/), amb una fitxa `US-XX.md` per història en format compacte.
+
 ### Acceptance criteria (AC)
 
 - Cada US té **com a mínim 1** AC
@@ -84,6 +86,18 @@ Cada US té:
 - Enfoc en el **Què** (resultat final), no el **Com** (aproximació tècnica)
 - Incloure criteris funcionals i no funcionals quan sigui rellevant
 - Les US **fines** detallen els passos de principi a fi amb les pantalles (per a l'equip i per a QA)
+- Cada US amb pantalla porta un **mockup** de cada pantalla, i els AC defineixen cada botó (també «Cancel·lar»), cada missatge, els estats buit i d'error i quants elements surten a les llistes. Ningú s'inventa una pantalla (skill `user-stories`)
+- **Backlog Refinement:** durant l'sprint, reunions curtes per revisar i ajustar les properes US; si en desenvolupar falta alguna cosa, es pregunta al PO i s'actualitza la US abans de programar-la
+
+### Regla dels 3 criteris d'acceptació
+
+- Tota user story té **EXACTAMENT 3 criteris d'acceptació** (3 forts valen més que 6 febles; màxim 3, mai més).
+- Cadascun ha de provar **funcionalitat real i integritat de dades, mai cosmètica de presentació**. **Prohibits:** "el botó es posa vermell", "surt l'etiqueta En progrés", "apareix el toast", "queda com el mockup". **Permesos:** els diners s'han mogut realment, els dos saldos han canviat de manera atòmica, el registre ha quedat desat, l'operació il·legal s'ha refusat i no ha canviat res, la sol·licitud caducada es calcula com a caducada, el mateix usuari no surt a la seva cerca, es refusa una divisa repetida en el mateix compte, només es pot cancel·lar una sol·licitud pendent.
+- Els 3 són **complementaris i en aquest ordre**: (1) **happy path** de punta a punta amb xifres i noms concrets i l'estat final esperat; (2) **invariant / protecció** — l'operació il·legal es refusa **i no canvia res** (atòmic, saldo insuficient, duplicat, destí prohibit, límit superat); (3) **estat / persistència / propagació** — el canvi es veu a tot on cal (una altra vista, l'historial de moviments, el compte de l'altre usuari, el percentatge o estat recalculat) i **sobreviu a una recàrrega**.
+- Cadascun escrit en **Gherkin** (Given/When/Then), **independentment testable**, amb resultat **Pass / Fall** clar i **verificable pel PO al navegador en menys d'un minut**.
+- L'extensió de pantalla (estats, còpia literal, validacions, reaccions a errors d'API) és **especificació al cos de la US, no criteris d'acceptació addicionals**; així es mantenen 3 AC forts en lloc de 6 febles.
+- Aquesta regla substitueix el «com a mínim 1» del bloc Acceptance criteria anterior: a partir d'ara, exactament 3.
+- Les fitxes d'aquesta documentació són a [`docs/us/`](../us/) i el repartiment de tasques a [`docs/us/_repartiment.md`](../us/_repartiment.md).
 
 ### INVEST (qualitat de cada US)
 
@@ -182,7 +196,7 @@ L'estàndard d'arquitectura, skills, commits i PRs viu al **`AGENTS.md` arrel** 
 - **SOLID** i **DRY**
 - Skills AI lazy: `.claude/skills/` i `.opencode/skills/` (Vue, FastAPI, gitflow…)
 - Commits: Conventional Commits + `US-XX`
-- Branches: `develop` = base de PR; `feature/<slug>`, `fix/<slug>`, `refactor/<slug>`; `hotfix/<slug>` des de `main`; `main` = demo/release
-- PR: una US / una tasca tècnica per PR
+- Branches: `develop` = integració, mai trencada; una branca `story/us-<id>-<slug>` per història, amb les seves tasques `feature/<frontend|backend|devops>/<tNN-N-slug>`; `fix/<slug>`, `refactor/<slug>`; `hotfix/<slug>` des de `main`; `main` = producció
+- PR: cada tasca, cap a la branca de la seva història; la història sencera, en una PR cap a `develop` quan està acabada i acceptada pel PO
 
 Producte i backlog: aquest directori `docs/P1/`.

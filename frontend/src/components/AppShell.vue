@@ -2,7 +2,11 @@
 import { Menu } from '@lucide/vue'
 import { useSessionMenuViewModel } from '@/viewmodels/useSessionMenuViewModel'
 
-withDefaults(defineProps<{ title: string; back?: boolean }>(), { back: false })
+withDefaults(defineProps<{ title: string; back?: boolean; backTo?: string; backLabel?: string }>(), {
+  back: false,
+  backTo: '/',
+  backLabel: '← Inici',
+})
 
 // The one component with a ViewModel: every screen has this header, so the alternative
 // is repeating the same menu and its logout in all of them.
@@ -12,13 +16,17 @@ const { isLoggedIn, logOut } = useSessionMenuViewModel()
 <template>
   <div class="shell">
     <header class="header">
-      <router-link v-if="back" to="/" class="back">← Inici</router-link>
+      <router-link v-if="back" :to="backTo" class="back">{{ backLabel }}</router-link>
       <h1 class="title">{{ title }}</h1>
       <details v-if="isLoggedIn" class="menu">
         <summary class="menu-button" aria-label="Menú" title="Menú">
           <Menu :size="20" />
         </summary>
-        <button type="button" class="menu-item" @click="logOut">Tancar sessió</button>
+        <div class="menu-list">
+          <!-- US-15: Inici → menú → «Sol·licituds enviades» (PO decision: no card in Inici). -->
+          <router-link :to="{ name: 'money-requests' }" class="menu-item">Sol·licituds enviades</router-link>
+          <button type="button" class="menu-item" @click="logOut">Tancar sessió</button>
+        </div>
       </details>
     </header>
     <main class="content">
@@ -78,16 +86,25 @@ const { isLoggedIn, logOut } = useSessionMenuViewModel()
   background: var(--color-bg);
 }
 
-.menu-item {
+.menu-list {
   position: absolute;
   top: 100%;
   right: 0;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
   margin-top: 0.25rem;
-  padding: 0.625rem 1rem;
+  overflow: hidden;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
+}
+
+.menu-item {
+  padding: 0.625rem 1rem;
+  border: none;
+  background: var(--color-surface);
+  text-align: left;
   color: var(--color-text);
   font: inherit;
   font-size: 0.875rem;

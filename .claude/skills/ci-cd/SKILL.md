@@ -1,6 +1,6 @@
 ---
 name: ci-cd
-description: Load when creating or changing GitHub Actions workflows, ESLint config, npm check scripts, required status checks, branch protection, deploy hooks or health checks, or when debugging a red pipeline in F3-Evolt.
+description: Load when creating or changing GitHub Actions workflows, ESLint config, npm check scripts, required status checks, branch protection, environments (pre-production, production), deploy hooks or health checks, or when debugging a red pipeline in F3-Evolt.
 ---
 
 # CI/CD (F3-Evolt)
@@ -10,7 +10,7 @@ One pipeline, one required check. Workflow: `.github/workflows/ci.yml` (name `CI
 ## Pipeline map
 
 ```
-PR / push to develop or main
+PR / push to develop, main or story/**
         │
         ├── backend  (Python 3.12) ── ruff + compileall + pytest
         │
@@ -18,12 +18,20 @@ PR / push to develop or main
         │
         └──► ci   ← gate job: fails unless backend AND frontend are success
 
-push to main (ci green) ──► Deploy   (see docs/deploy.md)
+push to main ──► Render native auto-deploy (on today, both services; docs/deploy.md)
+                 Deploy workflow: dormant until DEPLOY_ENABLED; never both at once
+
+any PR event ──► Kanban   moves the issues it links (Refs #N) on the board; not a gate
 ```
 
 The two jobs run in parallel; `ci` waits with `if: always()` and points at
 whichever failed. **`ci` is the only required status check** — a red `ci`
 blocks merge, nothing else needs protection.
+
+CI runs on story branches too: every task PR into a `story/**` branch, and
+every push to one (a merged task, or `develop` merged in), gets the same checks
+as a PR to `develop`. That is how a story is already green before it reaches
+`develop` (skill `gitflow`).
 
 ## Non-negotiables
 
@@ -81,15 +89,42 @@ sync: `rm -rf node_modules && npm ci && npm run lint`.
 Exact commands live in `docs/branch-protection.md`. The shape:
 
 - Required status check: **`ci`** — this exact name, one check for the whole pipeline.
-- PRs only into `develop` and `main`; no direct pushes (see skill `gitflow`).
+- `develop` and `main`: PR + 1 approval + green `ci`, no direct pushes, no
+  force pushes, no deletion (see skill `gitflow`).
+- `story/**` branches are not protected on GitHub: the team rule is that only
+  task PRs and the merge of `develop` land there.
 - If any rule in `ci.yml` changes (job names, `paths:`, triggers), update
   branch protection in the same PR.
+
+## Environments
+
+The Sprint 1 review asked for **two identical deployed environments, only one of
+them production**: test on pre-production, fix there, then promote.
+
+| Environment | Branch | Status |
+|-------------|--------|--------|
+| **Production** | `main` | Live on Render: web `https://f3-evolt.onrender.com`, API `https://evolt-api.onrender.com`, Firestore. Render's native auto-deploy publishes every merge to `main`; the `Deploy` workflow stays dormant (`DEPLOY_ENABLED` unset) so it never deploys twice (`docs/deploy.md`) |
+| **Pre-production** | `develop` | **Not created yet** (DevOps; moved to Sprint 3 on 23/11/2026). Same setup as production, with its own Firestore data, never production's |
+
+Until pre-production exists, check a story before its PR to `develop` by running
+it locally from the story branch, with `STORAGE=firestore` on the Firestore
+emulator (`backend/tests/test_firestore.py` explains how).
+
+## Quality gates
+
+What `ci` checks today: Ruff, compile check and pytest (backend, in memory);
+ESLint, type-check, Vitest and build (frontend).
+
+Not in `ci.yml` yet; do not assume they run (QA defines them, DevOps wires
+them; skill `qa-strategy`): coverage report, the backend suite on the Firestore
+emulator, E2E tests, dependency audit and secret scanning. When one is added,
+it is a new job listed in `ci.needs` (recipe above).
 
 ## Self-check
 
 - [ ] `ci` is the only required check and still named `ci`
 - [ ] Every job is listed in `ci.needs`
-- [ ] No `paths:` filters; triggers cover `pull_request` + `push` on develop/main
+- [ ] No `paths:` filters; triggers cover `pull_request` + `push` on `develop`, `main` and `story/**`
 - [ ] `permissions: contents: read`; no new permissions without a reason
 - [ ] No secrets or `.env` values in the workflow
 - [ ] Node 22 / Python 3.12 / Ruff 0.17.3 pinned

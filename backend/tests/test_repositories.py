@@ -17,6 +17,7 @@ from app.data.seed import (
 from app.models import KIND_OTHER, KIND_TOPUP, TYPE_EXPENSE, TYPE_INCOME, OutboxMessage
 from app.repositories import (
     AccountRepository,
+    ClosedOutboxRepository,
     MovementRepository,
     OutboxRepository,
     PasswordResetTokenRepository,
@@ -333,10 +334,11 @@ def test_add_user_gets_a_new_id_and_is_findable(seed):
     ana = _new_user(users)
     pau = _new_user(users, "pau@x.com")
 
-    assert (ana.id, pau.id) == (3, 4)
+    # El seed té 8 usuaris (T13.2).
+    assert (ana.id, pau.id) == (9, 10)
     assert users.get(ana.id) is ana
     assert users.find_by_identifier("pau@x.com") is pau
-    assert seed.next_user_id == 5
+    assert seed.next_user_id == 11
 
 
 def test_get_unknown_user_is_none(seed):
@@ -486,3 +488,26 @@ def test_outbox_lists_newest_first_and_filters(seed):
     assert [m.to for m in outbox.list()] == ["a@x.com", "b@x.com", "a@x.com"][::-1]
     assert len(outbox.list("a@x.com")) == 2
     assert outbox.list("ningu@x.com") == []
+
+
+def test_outbox_remove_takes_out_only_that_message(seed):
+    # Per desfer un enviament que falla a mitges (T14.1): un missatge igual d'abans es queda.
+    outbox = OutboxRepository(seed)
+    first = OutboxMessage(to="a@x.com", channel="email", type="transfer_sent", text="t", date=NOW)
+    second = OutboxMessage(to="a@x.com", channel="email", type="transfer_sent", text="t", date=NOW)
+    outbox.add(first)
+    outbox.add(second)
+
+    outbox.remove(second)
+
+    assert outbox.list() == [first]
+    assert outbox.list()[0] is first
+
+
+def test_closed_outbox_remove_does_nothing():
+    outbox = ClosedOutboxRepository()
+    message = OutboxMessage(to="a@x.com", channel="email", type="transfer_sent", text="t", date=NOW)
+
+    outbox.remove(message)
+
+    assert outbox.list() == []

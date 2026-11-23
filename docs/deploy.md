@@ -1,12 +1,14 @@
 # Deploy runbook (T06.3)
 
-Auto-deploy to a hosting provider. The workflow lives in
-[`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml).
+Hosting is **Render** (PRs #107/#108, both services live). **Today Render's native
+auto-deploy publishes `main`** on both services: merging the release PR is the deploy
+(see [Release with native auto-deploy](#release-with-native-auto-deploy-today)).
 
-Hosting is **Render** (PRs #107/#108, both services live). The workflow stays
-**provider-agnostic** (driven by repository secrets/variables) and **dormant**
-until those secrets/variables exist: it runs on every push to `main` and stays
-green with all deploy jobs skipped while `DEPLOY_ENABLED` is unset.
+The other path, deploy hooks behind CI, lives in
+[`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml). It stays
+**provider-agnostic** (driven by repository secrets/variables) and **dormant**: it
+runs on every push to `main` and stays green with all deploy jobs skipped while
+`DEPLOY_ENABLED` is unset. It must stay that way while native auto-deploy is on.
 
 ---
 
@@ -114,9 +116,83 @@ gh variable set DEPLOY_ENABLED      -b "true"
 # gh variable set PUBLIC_API_URL   -b "https://api.f3-evolt.example"
 ```
 
-## First deploy checklist
+## Known technical debt: native auto-deploy vs deploy hook
 
-1. Hosting live per the example above (#107/#108; both public URLs answer).
+Render offers **two independent ways** to deploy, and only one of them may be
+active per service, or every push to `main` deploys twice:
+
+| Mechanism | How it fires | Gate | What it costs us |
+|-----------|--------------|------|------------------|
+| **Render native auto-deploy** | Render is connected to the GitHub repo and rebuilds on every push to the service's branch (`main`) | none — no CI, no health check | Zero setup, but a red commit can go live |
+| **Deploy hook** (this workflow) | Actions POSTs the hook URL after `ci` is green and `/api/health` answers | `ci` job + health poll | Needs the two secrets and `DEPLOY_ENABLED=true` |
+
+**Never enable both at the same time.** A plain `git push`/merge to `main`
+would trigger Render natively *and* the workflow would POST the hook, which
+means two builds and two short outages per release.
+
+Current state (checked on Render by Izan, 23/11/2026):
+
+- Render native auto-deploy is **on**, with branch `main`, on both services (web and API).
+- The hook secrets and `DEPLOY_ENABLED` are **unset**, so the deploy jobs are
+  skipped and the workflow stays green. **Leave them unset**, or each push deploys twice.
+- Net effect: every merge to `main` deploys by itself, with no CI gate. That is
+  acceptable because `main` only receives the release PR from `develop`, which needs a
+  green `ci` and one approval (`docs/branch-protection.md`). The debt left is the gate:
+  a red commit could go live if it ever reached `main`. Moving to the hooks means turning
+  native auto-deploy off first, then setting the secrets and `DEPLOY_ENABLED`.
+
+Note: calling the deployed API (`GET /api/health`, `/api/movements`, ...) does
+**not** trigger a deploy. On the free plan the backend sleeps when idle, and the
+first request wakes it up with the version **already deployed** (a slow first answer
+is that cold start, not a deploy). Only a push to the branch (native) or a POST to the
+hook deploys.
+
+## Release with native auto-deploy (today)
+
+1. Merge the release PR `develop` → `main` with a **merge commit** (skill `gitflow`).
+2. On Render, each service's **Events** tab shows a new deploy with that `main` commit.
+   Wait until both say **Live**. If one does not start, use **Manual Deploy → Deploy
+   latest commit** on that service.
+3. `curl https://evolt-api.onrender.com/api/health` → `{"status":"ok"}`.
+4. If the release changes the seed, reseed production now
+   ([Release with seed changes](#release-with-seed-changes)).
+5. Smoke test on `https://f3-evolt.onrender.com`: log in with the seed user and go
+   through the release PR's checklist.
+6. Rollback: on Render, redeploy the previous `main` commit from the service's
+   **Events** tab (both services), then fix forward on `develop`.
+
+## Release with seed changes
+
+With `STORAGE=firestore`, the backend writes the seed **only when the database is empty**
+(`ensure_seeded` at start-up). Production was seeded in Sprint 1, so a release that changes
+`backend/app/data/seed.py` does not reach production by itself. Sprint 2 is one: US-13 adds
+the eight seed users with `@usuari` and phone, and the demo needs them (search and send money).
+
+And `POST /api/dev/reset` never exists on real Firestore, on purpose.
+
+**Run this once, right after the release reaches `main`.** It must be someone who has the
+service-account key (it lives only in Render and never in the repo; for the Sprint 2
+release, Izan):
+
+```bash
+cd backend
+pip install -r requirements.txt
+# The project id is the backend's FIRESTORE_PROJECT_ID on Render; write it twice.
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json   python -m app.data.firestore_seed --project <project-id> --confirm <project-id>
+```
+
+- It **deletes every collection** of that project and writes the seed again: accounts
+  registered in production, sessions, movements and pots are lost. Fine for the demo data.
+- If `--project` and `--confirm` differ, it connects to nothing and deletes nothing.
+- No restart is needed: the backend reads Firestore on every request. Everyone logs in again.
+- Then check `/api/health`, log in with the seed user and search for `@izanfarreny47`.
+
+## First deploy checklist (hook path)
+
+Only if the team moves from native auto-deploy to the hooks.
+
+1. Native auto-deploy turned **off** on both Render services, and hosting live per the
+   example above (#107/#108; both public URLs answer).
 2. Set all secrets/variables (see table).
 3. `gh variable set DEPLOY_ENABLED -b "true"` — **last**.
 4. Open the release PR from `develop` to `main` and merge it (or run the
@@ -166,7 +242,10 @@ Note: the reusable `ci` job always runs; the deploy chain only runs if
 
 ## Status
 
-Automation is **ready**; the gate keeps `main` green while the Render hooks are
-missing. The acceptance criterion of #94 ("merging to `main` produces a real
-deploy") can only be **verified** after #107/#108 merge and the first real
-deploy runs with `DEPLOY_ENABLED=true`.
+Merging to `main` produces a real deploy through Render's native auto-deploy
+(checked on Render by Izan, 23/11/2026). The hook workflow is **ready** and
+dormant; the gate keeps `main` green while its secrets are missing.
+
+Pre-production (`develop` deployed with its own Firestore data) moved to **Sprint 3**
+(team decision, 23/11/2026). Until then, each story is checked on its branch before its
+PR to `develop` (skill `ci-cd` → Environments).

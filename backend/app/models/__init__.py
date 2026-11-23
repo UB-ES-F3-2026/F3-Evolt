@@ -6,10 +6,30 @@ La conversió a la forma de l'API (camelCase, sense `kind` ni `seq`) es fa als r
 
 from app.models.account import Account
 from app.models.clock import MADRID_TZ, now_madrid
+from app.models.currency import (
+    CURRENCIES,
+    MAIN_CURRENCY,
+    MAIN_SUBACCOUNT_ID,
+    Currency,
+    commission,
+    convert,
+    rate_bps,
+    reaches_one_unit,
+    total_in_euros,
+)
+from app.models.money_request import (
+    MAX_REQUEST_AMOUNT,
+    MAX_REQUEST_CONCEPT,
+    REQUEST_EXPIRED,
+    REQUEST_PENDING,
+    MoneyRequest,
+)
 from app.models.movement import (
     ICONS,
     KIND_OTHER,
     KIND_TOPUP,
+    KIND_TRANSFER_IN,
+    KIND_TRANSFER_OUT,
     KINDS,
     MOVEMENT_STATUS_COMPLETED,
     MOVEMENT_STATUS_PENDING,
@@ -28,7 +48,10 @@ from app.models.outbox import (
     CHANNEL_EMAIL,
     CHANNEL_SMS,
     MESSAGE_ACCOUNT_LOCKED,
+    MESSAGE_MONEY_REQUEST,
     MESSAGE_PASSWORD_RESET,
+    MESSAGE_TRANSFER_RECEIVED,
+    MESSAGE_TRANSFER_SENT,
     MESSAGE_VERIFICATION_CODE,
     OutboxMessage,
 )
@@ -38,10 +61,12 @@ from app.models.pot import (
     POT_COLORS,
     POT_CONTRIBUTION_CONCEPT,
     POT_INITIAL_CONCEPT,
+    POT_WITHDRAWAL_CONCEPT,
     Pot,
     PotMovement,
 )
 from app.models.session import Session
+from app.models.subaccount import Subaccount, SubaccountMovement
 from app.models.text import fold_text
 from app.models.user import (
     IDENTIFIER_EMAIL,
@@ -50,12 +75,31 @@ from app.models.user import (
     STATUS_ACTIVE,
     STATUS_PENDING,
     USER_STATUSES,
+    USERNAME_FALLBACK_PREFIX,
+    USERNAME_PATTERN,
     User,
 )
 from app.models.verification import CODE_LENGTH, VerificationCode
 
 __all__ = [
+    "MAX_REQUEST_AMOUNT",
+    "MAX_REQUEST_CONCEPT",
+    "MESSAGE_MONEY_REQUEST",
+    "REQUEST_EXPIRED",
+    "REQUEST_PENDING",
+    "MoneyRequest",
     "Account",
+    "Currency",
+    "CURRENCIES",
+    "MAIN_CURRENCY",
+    "MAIN_SUBACCOUNT_ID",
+    "Subaccount",
+    "SubaccountMovement",
+    "commission",
+    "convert",
+    "rate_bps",
+    "reaches_one_unit",
+    "total_in_euros",
     "Movement",
     "MovementFilters",
     "MovementReport",
@@ -72,6 +116,8 @@ __all__ = [
     "CODE_LENGTH",
     "MESSAGE_ACCOUNT_LOCKED",
     "MESSAGE_PASSWORD_RESET",
+    "MESSAGE_TRANSFER_RECEIVED",
+    "MESSAGE_TRANSFER_SENT",
     "MESSAGE_VERIFICATION_CODE",
     "ICONS",
     "IDENTIFIER_EMAIL",
@@ -80,9 +126,13 @@ __all__ = [
     "STATUS_ACTIVE",
     "STATUS_PENDING",
     "USER_STATUSES",
+    "USERNAME_FALLBACK_PREFIX",
+    "USERNAME_PATTERN",
     "KINDS",
     "KIND_OTHER",
     "KIND_TOPUP",
+    "KIND_TRANSFER_IN",
+    "KIND_TRANSFER_OUT",
     "MADRID_TZ",
     "MAX_REPORT_DESCRIPTION",
     "MOVEMENT_STATUS_COMPLETED",
@@ -91,6 +141,7 @@ __all__ = [
     "POT_COLORS",
     "POT_CONTRIBUTION_CONCEPT",
     "POT_INITIAL_CONCEPT",
+    "POT_WITHDRAWAL_CONCEPT",
     "SAVINGS_ICON",
     "TOPUP_CONCEPT",
     "TOPUP_ICON",

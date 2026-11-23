@@ -1,8 +1,8 @@
 """Missatges a la bústia simulada (docs/api.md §8.12).
 
-L'únic lloc que decideix el canal (email o SMS) i el text de cada missatge.
-El codi de verificació (T02.1) l'envia d'aquí; l'avís de bloqueig (T03.2) i
-l'enllaç de recuperació (T04.1) s'hi afegiran.
+L'únic lloc que decideix el canal (email o SMS) i el text de cada missatge:
+el codi de verificació (T02.1), l'avís de bloqueig (T03.2), l'enllaç de
+recuperació (T04.1) i els avisos d'enviament (T14.2, §13.7).
 """
 
 from datetime import datetime
@@ -12,7 +12,10 @@ from app.models import (
     CHANNEL_SMS,
     IDENTIFIER_EMAIL,
     MESSAGE_ACCOUNT_LOCKED,
+    MESSAGE_MONEY_REQUEST,
     MESSAGE_PASSWORD_RESET,
+    MESSAGE_TRANSFER_RECEIVED,
+    MESSAGE_TRANSFER_SENT,
     MESSAGE_VERIFICATION_CODE,
     OutboxMessage,
     User,
@@ -20,6 +23,7 @@ from app.models import (
 from app.repositories import OutboxRepository
 from app.services.errors import VALIDATION_ERROR, ApiError
 from app.services.identifier import InvalidIdentifier, normalize_identifier
+from app.services.money_text import format_euros
 
 
 def _channel(user: User) -> str:
@@ -66,6 +70,71 @@ def send_password_reset(user: User, link: str, now: datetime, outbox: OutboxRepo
             text=f"Per canviar la contrasenya d'Evolt, obre aquest enllaç. Caduca en 30 minuts: {link}",
             date=now,
             link=link,
+        )
+    )
+
+
+# Avisos d'enviament (US-14, T14.2, §13.7). Els noms arriben ja fets: són els noms
+# visibles (el `name` o `@username`), els mateixos que el `counterparty` dels dos
+# moviments, i els decideix el servei de l'enviament (T14.1). Els crida dins de la
+# mateixa operació tot o res que mou els saldos: si l'enviament falla, no queda cap avís.
+
+
+def send_transfer_sent(
+    sender: User, recipient_name: str, amount: int, now: datetime, outbox: OutboxRepository
+) -> OutboxMessage:
+    """Avís a qui envia: «Has enviat 20,00 € a Usuari nou.»
+
+    Torna el missatge perquè l'enviament el pugui treure si després falla l'avís a qui rep.
+    """
+    message = OutboxMessage(
+        to=sender.identifier,
+        channel=_channel(sender),
+        type=MESSAGE_TRANSFER_SENT,
+        text=f"Has enviat {format_euros(amount)} a {recipient_name}.",
+        date=now,
+    )
+    outbox.add(message)
+    return message
+
+
+def send_transfer_received(
+    recipient: User,
+    sender_name: str,
+    amount: int,
+    concept: str | None,
+    now: datetime,
+    outbox: OutboxRepository,
+) -> None:
+    """Avís a qui rep: «Usuari demo t'ha enviat 20,00 €: El sopar de divendres.»
+
+    Sense concepte (`None` o buit), el text acaba a l'import: «Usuari demo t'ha enviat 20,00 €.»
+    """
+    text = f"{sender_name} t'ha enviat {format_euros(amount)}"
+    text += f": {concept}." if concept else "."
+    outbox.add(
+        OutboxMessage(
+            to=recipient.identifier,
+            channel=_channel(recipient),
+            type=MESSAGE_TRANSFER_RECEIVED,
+            text=text,
+            date=now,
+        )
+    )
+
+
+def send_money_request(
+    requester: User, recipient: User, amount: int, concept: str, now: datetime, outbox: OutboxRepository
+) -> None:
+    """Avís a qui ha de pagar una sol·licitud (US-15, T15.2, docs/api.md §14.6)."""
+    requester_name = requester.name or f"@{requester.visible_username}"
+    outbox.add(
+        OutboxMessage(
+            to=recipient.identifier,
+            channel=_channel(recipient),
+            type=MESSAGE_MONEY_REQUEST,
+            text=f"{requester_name} et demana {format_euros(amount)}: {concept}.",
+            date=now,
         )
     )
 

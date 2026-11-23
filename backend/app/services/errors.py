@@ -27,14 +27,32 @@ RESET_LINK_EXPIRED = "RESET_LINK_EXPIRED"
 INVALID_CODE = "INVALID_CODE"
 CODE_EXPIRED = "CODE_EXPIRED"
 TOO_MANY_ATTEMPTS = "TOO_MANY_ATTEMPTS"
-# Estalvi (docs/api.md §5 i §9.7).
+# Estalvi (docs/api.md §5, §9.7 i §11.5).
 INVALID_POT_NAME = "INVALID_POT_NAME"
 INVALID_TARGET = "INVALID_TARGET"
 INSUFFICIENT_BALANCE = "INSUFFICIENT_BALANCE"
 POT_NOT_FOUND = "POT_NOT_FOUND"
+INSUFFICIENT_POT_BALANCE = "INSUFFICIENT_POT_BALANCE"
 # Moviments (docs/api.md §5 i §10.6).
 MOVEMENT_NOT_FOUND = "MOVEMENT_NOT_FOUND"
 INVALID_DESCRIPTION = "INVALID_DESCRIPTION"
+# Multidivisa (docs/api.md §5 i §12.10).
+CURRENCY_NOT_SUPPORTED = "CURRENCY_NOT_SUPPORTED"
+CURRENCY_EXISTS = "CURRENCY_EXISTS"
+SUBACCOUNT_NOT_FOUND = "SUBACCOUNT_NOT_FOUND"
+MAIN_ACCOUNT_NOT_DELETABLE = "MAIN_ACCOUNT_NOT_DELETABLE"
+SUBACCOUNT_NOT_EMPTY = "SUBACCOUNT_NOT_EMPTY"
+SAME_CURRENCY = "SAME_CURRENCY"
+AMOUNT_TOO_SMALL = "AMOUNT_TOO_SMALL"
+# Pagaments (docs/api.md §5 i §13.8).
+RECIPIENT_NOT_FOUND = "RECIPIENT_NOT_FOUND"
+SELF_TRANSFER = "SELF_TRANSFER"
+TRANSFER_LIMIT_EXCEEDED = "TRANSFER_LIMIT_EXCEEDED"
+# Sol·licituds (docs/api.md §5 i §14.7).
+SELF_REQUEST = "SELF_REQUEST"
+INVALID_CONCEPT = "INVALID_CONCEPT"
+REQUEST_NOT_FOUND = "REQUEST_NOT_FOUND"
+REQUEST_NOT_PENDING = "REQUEST_NOT_PENDING"
 
 # Codi d'error → estat HTTP de la resposta.
 ERROR_STATUS: dict[str, int] = {
@@ -58,8 +76,23 @@ ERROR_STATUS: dict[str, int] = {
     INVALID_TARGET: 422,
     INSUFFICIENT_BALANCE: 422,
     POT_NOT_FOUND: 404,
+    INSUFFICIENT_POT_BALANCE: 422,
     MOVEMENT_NOT_FOUND: 404,
     INVALID_DESCRIPTION: 422,
+    CURRENCY_NOT_SUPPORTED: 422,
+    CURRENCY_EXISTS: 422,
+    SUBACCOUNT_NOT_FOUND: 404,
+    MAIN_ACCOUNT_NOT_DELETABLE: 422,
+    SUBACCOUNT_NOT_EMPTY: 422,
+    SAME_CURRENCY: 422,
+    AMOUNT_TOO_SMALL: 422,
+    RECIPIENT_NOT_FOUND: 404,
+    SELF_TRANSFER: 422,
+    TRANSFER_LIMIT_EXCEEDED: 422,
+    SELF_REQUEST: 422,
+    INVALID_CONCEPT: 422,
+    REQUEST_NOT_FOUND: 404,
+    REQUEST_NOT_PENDING: 422,
 }
 
 # Missatge per defecte de cada codi (docs/api.md §5). El contracte els marca
@@ -84,10 +117,32 @@ ERROR_MESSAGES: dict[str, str] = {
     TOO_MANY_ATTEMPTS: "Has fet massa intents. Demana un codi nou.",
     INVALID_POT_NAME: "El nom de la guardiola no pot estar buit.",
     INVALID_TARGET: "L'objectiu ha de ser més gran que 0.",
-    INSUFFICIENT_BALANCE: "No tens prou saldo per fer aquesta aportació.",
+    # Text únic per a aportació, enviament i canvi (P85 de la #196, decisió del PO).
+    INSUFFICIENT_BALANCE: "No tens prou saldo.",
     POT_NOT_FOUND: "No s'ha trobat la guardiola.",
+    INSUFFICIENT_POT_BALANCE: "La guardiola no té prou saldo per aquesta retirada.",
     MOVEMENT_NOT_FOUND: "No s'ha trobat el moviment.",
     INVALID_DESCRIPTION: "Explica què passa amb el moviment (com a màxim 500 caràcters).",
+    # Textos literals de la US-25.
+    CURRENCY_NOT_SUPPORTED: "Aquesta divisa no és a la llista de divises disponibles.",
+    CURRENCY_EXISTS: "Ja tens un subcompte en aquesta divisa.",
+    # Decisió del PO (#193).
+    SUBACCOUNT_NOT_FOUND: "No s'ha trobat el subcompte.",
+    # Textos literals de la US-26.
+    MAIN_ACCOUNT_NOT_DELETABLE: "El compte en euros no es pot eliminar.",
+    SUBACCOUNT_NOT_EMPTY: "Només pots eliminar un subcompte amb saldo 0.",
+    # Text de la pantalla (PR #180), decisió del PO.
+    SAME_CURRENCY: "Origen i destí no poden ser el mateix subcompte.",
+    # Text literal de la US-27.
+    AMOUNT_TOO_SMALL: "L'import és massa petit per canviar.",
+    RECIPIENT_NOT_FOUND: "No hem trobat aquest destinatari.",
+    # Textos de la US-14 i de §13.5 i §13.8.
+    SELF_TRANSFER: "No et pots enviar diners a tu mateix.",
+    TRANSFER_LIMIT_EXCEEDED: "Has superat el límit diari d'enviament.",
+    SELF_REQUEST: "No et pots demanar diners a tu mateix.",
+    INVALID_CONCEPT: "El concepte ha de tenir entre 1 i 140 caràcters.",
+    REQUEST_NOT_FOUND: "Aquesta sol·licitud ja no existeix.",
+    REQUEST_NOT_PENDING: "Només es poden cancel·lar les sol·licituds pendents.",
 }
 
 

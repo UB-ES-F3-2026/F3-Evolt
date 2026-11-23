@@ -17,12 +17,14 @@ from app.config import STORAGE_FIRESTORE
 from app.repositories import (
     AccountRepository,
     ClosedOutboxRepository,
+    MoneyRequestRepository,
     MovementReportRepository,
     MovementRepository,
     OutboxRepository,
     PasswordResetTokenRepository,
     PotRepository,
     SessionRepository,
+    SubaccountRepository,
     UserRepository,
     VerificationCodeRepository,
 )
@@ -58,6 +60,14 @@ def pot_repository(request: Request) -> PotRepository:
 
         return FirestorePotRepository(client)
     return PotRepository(request.app.state.seed)
+
+
+def subaccount_repository(request: Request) -> SubaccountRepository:
+    if client := _firestore(request):
+        from app.repositories.firestore import FirestoreSubaccountRepository
+
+        return FirestoreSubaccountRepository(client)
+    return SubaccountRepository(request.app.state.seed)
 
 
 def movement_repository(request: Request) -> MovementRepository:
@@ -109,6 +119,14 @@ def movement_report_repository(request: Request) -> MovementReportRepository:
 
         return FirestoreMovementReportRepository(client)
     return MovementReportRepository(request.app.state.seed)
+
+
+def money_request_repository(request: Request) -> MoneyRequestRepository:
+    if client := _firestore(request):
+        from app.repositories.firestore import FirestoreMoneyRequestRepository
+
+        return FirestoreMoneyRequestRepository(client)
+    return MoneyRequestRepository(request.app.state.seed)
 
 
 def atomic(request: Request) -> Atomic:
