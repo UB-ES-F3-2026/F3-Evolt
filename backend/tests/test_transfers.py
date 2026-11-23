@@ -310,7 +310,20 @@ def test_en19_sending_to_myself_changes_nothing(client: TestClient) -> None:
     assert _state(_seed(client)) == before
 
 
-@pytest.mark.parametrize("to", ["usr-99", "4", "huabin"])
+EN20_UNKNOWN_RECIPIENTS = ["usr-99", "4", "huabin"]
+EN22_AMOUNTS = [0, -100]
+EN23_BAD_BODIES = [
+    {"toUserId": "usr-02", "amount": "2000"},
+    {"toUserId": "usr-02", "amount": 20.0},
+    {"toUserId": "usr-02"},
+    {"amount": 2000},
+    {"toUserId": 2, "amount": 2000},
+    {"toUserId": "usr-02", "amount": 2000, "concept": "x" * 141},
+]
+EN24_ORDER = [("usr-99", 0, "RECIPIENT_NOT_FOUND"), ("usr-01", 0, "SELF_TRANSFER"), ("usr-01", 500000, "SELF_TRANSFER")]
+
+
+@pytest.mark.parametrize("to", EN20_UNKNOWN_RECIPIENTS)
 def test_en20_unknown_recipient_is_not_found(client: TestClient, to: str) -> None:
     response = _send_to(client, to, 2000)
 
@@ -326,11 +339,13 @@ def test_en21_pending_user_is_not_found(client: TestClient) -> None:
     )
     assert response.status_code == 201
     pending = next(user for user in _seed(client).users.values() if user.identifier == "anna@x.com")
+    before = _state(_seed(client))
 
     assert _send_to(client, f"usr-{pending.id:02d}", 2000).json()["code"] == "RECIPIENT_NOT_FOUND"
+    assert _state(_seed(client)) == before
 
 
-@pytest.mark.parametrize("amount", [0, -100])
+@pytest.mark.parametrize("amount", EN22_AMOUNTS)
 def test_en22_zero_or_negative_amount_is_invalid(client: TestClient, amount: int) -> None:
     response = _send_to(client, "usr-02", amount)
 
@@ -338,17 +353,7 @@ def test_en22_zero_or_negative_amount_is_invalid(client: TestClient, amount: int
     assert response.json()["code"] == "INVALID_AMOUNT"
 
 
-@pytest.mark.parametrize(
-    "body",
-    [
-        {"toUserId": "usr-02", "amount": "2000"},
-        {"toUserId": "usr-02", "amount": 20.0},
-        {"toUserId": "usr-02"},
-        {"amount": 2000},
-        {"toUserId": 2, "amount": 2000},
-        {"toUserId": "usr-02", "amount": 2000, "concept": "x" * 141},
-    ],
-)
+@pytest.mark.parametrize("body", EN23_BAD_BODIES)
 def test_en23_badly_formed_body_is_a_validation_error(client: TestClient, body: dict) -> None:
     response = _send(client, body)
 
@@ -362,16 +367,37 @@ def test_en23_concept_of_140_characters_is_allowed(client: TestClient) -> None:
     assert response.status_code == 201
 
 
-@pytest.mark.parametrize(
-    "to, amount, code",
-    [("usr-99", 0, "RECIPIENT_NOT_FOUND"), ("usr-01", 0, "SELF_TRANSFER"), ("usr-01", 500000, "SELF_TRANSFER")],
-)
+@pytest.mark.parametrize("to, amount, code", EN24_ORDER)
 def test_en24_validations_follow_the_contract_order(client: TestClient, to: str, amount: int, code: str) -> None:
     assert _send_to(client, to, amount).json()["code"] == code
 
 
 def test_en25_amount_is_checked_before_the_balance(client: TestClient) -> None:
     assert _send_to(client, "usr-01", 0, headers=EMPTY).json()["code"] == "INVALID_AMOUNT"
+
+
+# EN-26: EN-11, EN-14, EN-19 i EN-21 ja ho miren al seu test; aquí, la resta d'errors.
+EN26_REJECTED = [
+    *(pytest.param({"toUserId": to, "amount": 2000}, DEMO, id=f"EN-20 {to}") for to in EN20_UNKNOWN_RECIPIENTS),
+    *(pytest.param({"toUserId": "usr-02", "amount": amount}, DEMO, id=f"EN-22 {amount}") for amount in EN22_AMOUNTS),
+    *(pytest.param(body, DEMO, id=f"EN-23 cos {n}") for n, body in enumerate(EN23_BAD_BODIES, start=1)),
+    *(
+        pytest.param({"toUserId": to, "amount": amount}, DEMO, id=f"EN-24 {to} {amount}")
+        for to, amount, _ in EN24_ORDER
+    ),
+    pytest.param({"toUserId": "usr-01", "amount": 0}, EMPTY, id="EN-25"),
+]
+
+
+@pytest.mark.memory_only
+@pytest.mark.parametrize("body, headers", EN26_REJECTED)
+def test_en26_rejected_transfer_changes_nothing(client: TestClient, body: dict, headers: dict[str, str]) -> None:
+    before = _state(_seed(client))
+
+    response = _send(client, body, headers)
+
+    assert response.status_code in (404, 422)
+    assert _state(_seed(client)) == before
 
 
 # --- Tot o res i concurrència (EN-27 a EN-29) ----------------------------------------------
@@ -385,6 +411,7 @@ def test_en25_amount_is_checked_before_the_balance(client: TestClient) -> None:
         (AccountRepository, "set_balance", 0),  # el saldo de qui envia
         (AccountRepository, "set_balance", 1),  # el saldo de qui rep
         (OutboxRepository, "add", 0),  # l'avís a qui envia
+        (OutboxRepository, "add", 1),  # l'avís a qui rep: el de qui envia també es treu
     ],
 )
 def test_en27_error_halfway_changes_nothing(

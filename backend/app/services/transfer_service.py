@@ -122,7 +122,8 @@ def send_money(
 
         # Cada escriptura feta deixa aquí com es desfà. Si una falla, es desfan les
         # anteriors, de l'última a la primera, abans de deixar sortir l'error. Els avisos
-        # van al final: la bústia no es pot desfer, i amb Firestore tot és una transacció.
+        # van al final. Amb Firestore tot és una transacció; en memòria, si falla l'avís a
+        # qui rep, també es treu el de qui envia (revisió de la #213).
         undo: list[Callable[[], None]] = []
         try:
             sent = movements.add(
@@ -151,7 +152,8 @@ def send_money(
             undo.append(lambda: accounts.set_balance(sender_id, sender_balance))
             accounts.set_balance(recipient.id, recipient_balance + amount)
             undo.append(lambda: accounts.set_balance(recipient.id, recipient_balance))
-            send_transfer_sent(sender, recipient_name, amount, date, outbox)
+            notice = send_transfer_sent(sender, recipient_name, amount, date, outbox)
+            undo.append(lambda: outbox.remove(notice))
             send_transfer_received(recipient, sender_name, amount, clean_concept or None, date, outbox)
         except Exception:
             for undo_write in reversed(undo):

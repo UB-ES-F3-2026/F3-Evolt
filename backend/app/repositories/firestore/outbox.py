@@ -34,6 +34,20 @@ class FirestoreOutboxRepository:
             },
         )
 
+    def remove(self, message: OutboxMessage) -> None:
+        """Desfà un missatge acabat de desar (T14.1), com `FirestoreMovementRepository.remove`.
+
+        Dins d'una transacció no cal: si l'operació falla, Firestore no n'escriu res.
+        Fora, esborra el missatge igual més recent d'aquest destinatari.
+        """
+        if _tx.in_transaction():
+            return
+        query = self._outbox.where(filter=FieldFilter("to", "==", message.to))
+        for snapshot in sorted(_tx.query(query), key=lambda s: s.to_dict()["seq"], reverse=True):
+            if message_from_dict(snapshot.to_dict()) == message:
+                _tx.delete(snapshot.reference)
+                return
+
     def list(self, to: str | None = None) -> list[OutboxMessage]:
         """Del més recent al més antic; amb `to` (ja normalitzat), només els d'aquest destinatari."""
         query = self._outbox if to is None else self._outbox.where(filter=FieldFilter("to", "==", to))
