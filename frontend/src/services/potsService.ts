@@ -1,13 +1,14 @@
-/** /api/pots — the user's pots (US-17, US-18). One function per endpoint. */
+/** /api/pots — the user's pots (US-17, US-18, US-19). One function per endpoint. */
 
 import { apiGet, apiPost } from './apiClient'
 import { useMocks } from '@/mocks'
-import { mockContribute, mockCreatePot, mockPotMovements, mockPots } from '@/mocks/pots'
+import { mockContribute, mockCreatePot, mockPotMovements, mockPots, mockWithdraw } from '@/mocks/pots'
 import {
   fromApiContribution,
   fromApiPot,
   fromApiPotMovements,
   fromApiPots,
+  fromApiWithdrawal,
   type Contribution,
   type ContributionJson,
   type CreatePotRequest,
@@ -16,6 +17,8 @@ import {
   type PotMovement,
   type PotMovementsJson,
   type PotsJson,
+  type Withdrawal,
+  type WithdrawalJson,
 } from '@/models/pot'
 
 export async function getPots(): Promise<Pot[]> {
@@ -42,4 +45,13 @@ export async function contribute(potId: string, amountCents: number): Promise<Co
         amount: amountCents,
       })
   return fromApiContribution(json)
+}
+
+export async function withdraw(potId: string, amountCents: number): Promise<Withdrawal> {
+  const json = useMocks()
+    ? mockWithdraw(potId, { amount: amountCents })
+    : await apiPost<WithdrawalJson>(`/api/pots/${encodeURIComponent(potId)}/withdrawals`, {
+        amount: amountCents,
+      })
+  return fromApiWithdrawal(json)
 }

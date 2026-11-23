@@ -19,7 +19,7 @@ when it is complete**: every task merged, tested on top of the latest
 | Branch | Starts from | PR into | Role |
 |--------|-------------|---------|------|
 | `main` | — | — | **Production.** Receives `develop` at the end of a sprint (release PR) or a `hotfix/*` |
-| `develop` | — | — | **Integration, always working.** Receives whole stories, self-contained technical tasks and fixes. Will deploy to pre-production (DevOps, Sprint 2) |
+| `develop` | — | — | **Integration, always working.** Receives whole stories, self-contained technical tasks and fixes. Will deploy to pre-production (DevOps, Sprint 3) |
 | `story/us-<id>-<slug>` | `develop` | `develop` | **One user story.** Its frontend and backend tasks integrate here |
 | `feature/<frontend\|backend\|devops>/<tNN-N-slug>` | the story branch | the story branch | **One task** of that story |
 | `feature/devops/<trNN-N-slug>`, `docs/<slug>` | `develop` | `develop` | Technical task or doc change **outside any story**, only if it is complete on its own |

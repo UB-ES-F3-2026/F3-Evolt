@@ -29,12 +29,14 @@ from app.models import (
     MOVEMENT_STATUS_COMPLETED,
     MOVEMENT_STATUS_PENDING,
     POT_INITIAL_CONCEPT,
+    REQUEST_PENDING,
     STATUS_ACTIVE,
     TOPUP_CONCEPT,
     TOPUP_ICON,
     TYPE_EXPENSE,
     TYPE_INCOME,
     Account,
+    MoneyRequest,
     Movement,
     MovementReport,
     OutboxMessage,
@@ -75,6 +77,13 @@ _TEAM_USERS = [
     ("Martí", "marti@evolt.test", "sudo-itramplay", "+34611223306"),
 ]
 FIRST_TEAM_USER_ID = 3
+
+# Sol·licituds enviades per l'usuari 1 (docs/api.md §14.8, P83):
+# (dies enrere, hora, destinatari, import, concepte). La de fa 9 dies es veu caducada.
+_USER1_MONEY_REQUESTS = [
+    (9, "21:15", 4, 4200, "Pizza del diumenge"),
+    (1, "19:30", 3, 2500, "El sopar de divendres"),
+]
 SEED_PASSWORD = "Evolt2026"
 # Hash de bcrypt de SEED_PASSWORD, calculat una vegada i escrit aquí: bcrypt és
 # lent a propòsit (~0,25 s) i build_seed() es crida a cada test i a cada reinici.
@@ -174,6 +183,9 @@ class SeedData:
     # dades els esborra (docs/api.md §10.4).
     movement_reports: list[MovementReport] = field(default_factory=list)
     next_report_number: int = field(default=1)
+    # Sol·licituds de diners (T15.2). Cancel·lar-ne una l'esborra (docs/api.md §14.4).
+    money_requests: list[MoneyRequest] = field(default_factory=list)
+    next_money_request_number: int = field(default=1)
     # Subcomptes en divisa (T25.2, docs/api.md §12.11). El seed no en té cap: el compte
     # en euros és l'`Account` de cada usuari, i els nous comencen per sub-01.
     subaccounts: list[Subaccount] = field(default_factory=list)
@@ -213,6 +225,11 @@ def report_id(number: int) -> str:
 def pot_id(number: int) -> str:
     """Id opac de les guardioles (docs/api.md §9.1, P21). El frontend no l'ha d'interpretar."""
     return f"pot-{number:02d}"
+
+
+def money_request_id(number: int) -> str:
+    """Id opac de les sol·licituds de diners (docs/api.md §14.1, P76). El frontend no l'ha d'interpretar."""
+    return f"req-{number:02d}"
 
 
 def pot_movement_id(number: int) -> str:
@@ -331,6 +348,20 @@ def build_seed(now: datetime | None = None) -> SeedData:
         for number, pot in enumerate(pots, start=1)
     ]
 
+    money_requests = [
+        MoneyRequest(
+            id=money_request_id(number),
+            requester_id=DEMO_USER_ID,
+            recipient_id=recipient_id,
+            amount=amount,
+            concept=concept,
+            created_at=_days_ago_at(now, days_ago, hhmm),
+            status=REQUEST_PENDING,
+            seq=number,
+        )
+        for number, (days_ago, hhmm, recipient_id, amount, concept) in enumerate(_USER1_MONEY_REQUESTS, start=1)
+    ]
+
     next_number = len(movements) + 1
     return SeedData(
         users=users,
@@ -343,4 +374,6 @@ def build_seed(now: datetime | None = None) -> SeedData:
         next_user_id=max(users) + 1,
         next_pot_number=len(pots) + 1,
         next_pot_movement_number=len(pot_movements) + 1,
+        money_requests=money_requests,
+        next_money_request_number=len(money_requests) + 1,
     )

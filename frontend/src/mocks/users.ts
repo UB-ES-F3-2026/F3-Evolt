@@ -49,6 +49,11 @@ export function mockUser(userId: string): UserSummaryJson {
   return toSummary(user)
 }
 
+/** The API id of whoever is logged in, to tell a transfer to oneself apart (§13.4). */
+export function mockUserIdByEmail(email: string | null): string | null {
+  return SEED_USERS.find((user) => user.email === email)?.id ?? null
+}
+
 function matches(user: SeedUser, text: string): boolean {
   const username = text.startsWith('@') ? text.slice(1) : text
   return (
