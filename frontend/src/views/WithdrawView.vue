@@ -85,7 +85,11 @@ watch(amountInput, (input) => input?.focus())
         {{ isSubmitting ? 'Enviant…' : 'Confirmar' }}
       </button>
       <p v-if="submitError" class="error submit-error" role="alert">{{ submitError }}</p>
-      <router-link :to="{ name: 'pot', params: { potId } }" class="cancel">Cancel·lar</router-link>
+      <!-- Nothing is sent: it only opens the «Retirada cancel·lada» notice (REP-12). Replace, so going
+           back from that notice does not reopen the form with the amount still typed. -->
+      <router-link :to="{ name: 'withdraw-cancelled', params: { potId } }" replace class="cancel">
+        Cancel·lar
+      </router-link>
     </form>
   </AppShell>
 </template>
