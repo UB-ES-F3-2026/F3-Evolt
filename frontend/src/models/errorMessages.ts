@@ -17,6 +17,7 @@ const MESSAGES: Record<ApiErrorCode, string> = {
   INVALID_TARGET: "L'objectiu ha de ser més gran que 0.",
   // One text on every screen: the frontend picks it by `code`, not by screen (docs/api.md P85).
   INSUFFICIENT_BALANCE: 'No tens prou saldo.',
+  INSUFFICIENT_POT_BALANCE: 'La guardiola no té prou saldo per aquesta retirada.',
   POT_NOT_FOUND: "No s'ha trobat la guardiola.",
   MOVEMENT_NOT_FOUND: "No s'ha trobat el moviment.",
   RECIPIENT_NOT_FOUND: 'No hem trobat aquest destinatari.',

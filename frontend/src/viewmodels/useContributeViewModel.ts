@@ -1,9 +1,9 @@
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { AMOUNT_FORMAT_MESSAGE, messageForCode, toUserMessage } from '@/models/errorMessages'
+import { messageForCode, toUserMessage } from '@/models/errorMessages'
 import type { Home } from '@/models/home'
 import { eurosToCents, formatCents } from '@/models/money'
-import type { Contribution, Pot } from '@/models/pot'
+import { potAmountError, type Contribution, type Pot } from '@/models/pot'
 import { getHome } from '@/services/homeService'
 import { contribute, getPots } from '@/services/potsService'
 
@@ -37,17 +37,7 @@ export function useContributeViewModel(
   const title = computed(() => (pot.value === null ? 'Aportar' : `Aportar a ${pot.value.name}`))
   const cents = computed(() => eurosToCents(amount.value))
 
-  // Same rules as the backend (docs/api.md §9.4), checked here only to answer before sending.
-  const amountError = computed(() => {
-    const typed = amount.value.trim()
-    if (typed === '') return null
-    // eurosToCents only reads digits, so a minus sign would read as a format error: US-18 asks for this text.
-    if (typed.startsWith('-')) return messageForCode('INVALID_AMOUNT')
-    if (cents.value === null) return AMOUNT_FORMAT_MESSAGE
-    if (cents.value <= 0) return messageForCode('INVALID_AMOUNT')
-    if (balance.value !== null && cents.value > balance.value) return messageForCode('INSUFFICIENT_BALANCE')
-    return null
-  })
+  const amountError = computed(() => potAmountError(amount.value, balance.value, 'INSUFFICIENT_BALANCE'))
 
   const error = computed(() => submitError.value ?? amountError.value)
   const canSubmit = computed(
