@@ -83,6 +83,13 @@ def test_empty_query_gives_the_initial_list(client: TestClient, q: str) -> None:
     assert _names(_search(client, q)) == INITIAL_LIST
 
 
+@pytest.mark.parametrize("q", ["@", "  @  "])
+def test_a_bare_at_sign_is_not_a_search(client: TestClient, q: str) -> None:
+    # §13.2 (#212b): un `@` sol no és cap text, així que no hi ha cap coincidència.
+    # abans deia la llista inicial perquè `@` no té text després i buit coincideix amb tot.
+    assert _search(client, q) == []
+
+
 # --- Les quatre vies (§13.2) ----------------------------------------------------------------
 
 
@@ -216,6 +223,19 @@ def test_a_phone_user_is_usuari_and_its_id(client: TestClient) -> None:
     assert _search(client, "600112233") == [{"id": "usr-09", "name": None, "username": "usuari9"}]
 
 
+def test_no_two_users_can_share_a_username(client: TestClient) -> None:
+    # §13.9 (#212c): l'@usuari és únic, també amb la forma de reserva `usuari<id>`
+    # i amb el número que afegeix `first_free`.
+    _register_and_verify(client, "600 11 22 33")  # usr-09: sense @usuari desat → usuari9
+    _register_and_verify(client, "usuari9@x.com")  # usr-10 → usuari9_, mai usuari9
+    _register_and_verify(client, "usuari9_@x.com")  # usr-11 → usuari9_2, perquè usuari9_ ja hi és
+
+    usernames = [client.get(f"/api/users/usr-{user_id:02d}").json()["username"] for user_id in range(1, 12)]
+
+    assert usernames[8:] == ["usuari9", "usuari9_", "usuari9_2"]
+    assert len(set(usernames)) == len(usernames)
+
+
 # --- GET /api/users/{userId} (§13.3) ---------------------------------------------------------
 
 
@@ -304,6 +324,14 @@ def test_phone_registrations_have_no_base() -> None:
 def test_the_reserved_form_gets_an_underscore() -> None:
     # `usuari9` és el de l'usuari 9: un correu no se'l pot quedar.
     assert email_username_base("usuari9@x.com", IDENTIFIER_EMAIL) == "usuari9_"
+
+
+@pytest.mark.parametrize("local", ["usuari9", "usuari123", "Usuari7", "usuari0"])
+def test_the_reserved_form_is_never_a_registration_base(local: str) -> None:
+    # §13.9 (#212c): com que la forma `usuari<xifres>` queda reservada, cap registre pot
+    # fer-la servir d'`@usuari`, així que `is_username_taken` només ha de mirar els
+    # `@usuari` desats (a Firestore, la col·lecció `usernames`): no hi pot haver xoc.
+    assert email_username_base(f"{local}@x.com", IDENTIFIER_EMAIL) == f"{local.lower()}_"
 
 
 def test_first_free_adds_the_first_free_number() -> None:
