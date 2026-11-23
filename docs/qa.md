@@ -63,44 +63,41 @@ local (abans del commit)  →  CI a cada PR i push (develop, main, story/**)  �
 | AC del sprint amb una prova | taula del §5 | 100 % (automàtica o manual amb ID) |
 | Defectes trobats per tests i per revisió | taula del §6 | apuntar-los tots |
 
-### 4.1 Cobertura de `develop` (19/11/2026, commit `0e31a4c`)
+### 4.1 Cobertura de `develop` (23/11/2026, commit `eda8b02`, amb les 8 històries)
 
-`develop` encara no té codi del Sprint 2 (les històries són a les branques `story/*`), així que les xifres són les mateixes que la base del 10/11.
-
-**Backend:** 710 tests (1 omès).
+**Backend:** 1.070 tests en memòria (1 omès) i 836 amb l'emulador de Firestore.
 
 | Àmbit | Línies |
 |---|---|
-| **Total** | **77 %** (455 de 2.012 sense cobrir) |
-| Sense els repositoris de Firestore | **95 %** |
-| Repositoris de Firestore (`repositories/firestore/*`) | 0 % al CI; provats a l'emulador (555 tests en verd) |
-| Rutes (`routers/`) | 8 de 10 fitxers al 100 %; `dev.py` 94 % i `dependencies.py` 68 % (branques de Firestore i de la bústia) |
-| `repositories/atomic.py` | 41 % (la transacció de Firestore només corre a l'emulador) |
+| **Total, només en memòria (el que corre al CI)** | **87 %** (401 de 3.078 sense cobrir) |
+| Sense els repositoris de Firestore | **96 %** |
+| `services/` | 98 % |
+| Rutes (`routers/`) | 96 % |
+| Repositoris de Firestore (`repositories/firestore/*`, `data/firestore*`) | 46 % en memòria · **94 %** amb l'emulador |
+| `repositories/atomic.py` | 41 % en memòria · 98 % amb l'emulador |
+| **Total, memòria + emulador** | **97 %** (80 de 3.081 sense cobrir) |
 
-**Frontend:** 342 tests.
+**Frontend:** 741 tests.
 
 | Àmbit | Línies |
 |---|---|
-| **Total** | **63,6 %** (branques 94,9 %, funcions 84,6 %) |
-| Sense les vistes (`views/`) | **85,2 %** |
-| `viewmodels/` | 91,8 % |
+| **Total** | **74,7 %** (branques 91,3 %, funcions 83,6 %) |
+| Sense les vistes (`views/`) | **89,5 %** |
+| `components/` | 99,3 % |
+| `mocks/` | 97,9 % |
 | `models/` | 94,5 % |
-| `mocks/` | 96,9 % |
-| `services/` | 60,2 % |
-| `components/` | 55,5 % |
-| `router/` | 12,5 % |
-| `views/` (`.vue`) | 0 %: no tenen tests de component; les cobrirà l'E2E |
+| `viewmodels/` | 91,7 % |
+| `services/` | 57,4 % |
+| `views/` (`.vue`) | 33,4 %: algunes vistes noves ja tenen tests de component; la resta, l'E2E |
+| `router/` | 6,4 % |
 
-**Branques del Sprint 2 (frontend):** #190 US-19 378 tests, 62,8 % · #179 US-20 375 tests, 67,7 % · #180 US-27 441 tests, 65,4 %. El codi nou porta els seus tests i no baixa la cobertura.
+**Comparat amb el 19/11** (`0e31a4c`, només l'Sprint 1): backend 77 % → **87 %** (sense Firestore 95 % → 96 %), frontend 63,6 % → **74,7 %** (sense vistes 85,2 % → 89,5 %), i de 710 + 342 tests a 1.070 + 741. Les 8 històries han portat els seus tests i la cobertura ha pujat.
 
-**Lectura:** la lògica ja passa del 80 % (backend 95 %, frontend sense vistes 85 %). El que ens falta és:
-
-- el codi de Firestore al CI, que és el que corre a producció → emulador al CI (§8);
-- les pantalles → E2E (§8).
+**Lectura:** la lògica passa de l'objectiu del 80 % (backend 96 %, frontend sense vistes 89,5 %). El total del backend arriba al 97 % quan s'hi suma l'emulador: el que falta al CI és Firestore (§8). Al frontend, el que queda baix són les vistes i el router, que ha de cobrir l'E2E (§8).
 
 ### 4.2 Rutes
 
-Les 19 rutes de `develop` (17 de l'app i 2 de desenvolupament: `POST /api/dev/reset` i `GET /api/dev/outbox`) tenen tests de contracte (èxit, cada codi d'error de `docs/api.md` i `401`): **100 %**.
+Les 32 rutes de `develop` (30 de l'app i 2 de desenvolupament: `POST /api/dev/reset` i `GET /api/dev/outbox`) tenen tests que les criden: **100 %** (23/11). Al 19/11 n'eren 19.
 
 ### 4.3 Proves puntuals de Q4 (21/11/2026, `develop` a `0e31a4c`)
 
@@ -295,7 +292,7 @@ Amb assistents d'IA hi ha tres riscos nous: menys comprensió del codi generat, 
 
 | Buit | Per què | Pla |
 |---|---|---|
-| Firestore no corre al CI | Cal l'emulador (Java) al runner | Job `backend-firestore` amb l'emulador: QA el defineix, DevOps el connecta. Puja la cobertura del backend (les 455 línies sense cobrir són sobretot de Firestore). Els tests que només fallen amb Firestore (§6: CU-20, retirar, XP dels enviaments i canvi) són els que aquest job hauria trobat a la PR |
+| Firestore no corre al CI | Cal l'emulador (Java) al runner | Job `backend-firestore` amb l'emulador: QA el defineix, DevOps el connecta. Puja la cobertura del backend del 87 % al 97 % (§4.1). Els tests que només fallen amb Firestore (§6: CU-20, retirar, XP dels enviaments i canvi) són els que aquest job hauria trobat a la PR |
 | Les vistes no tenen tests (0 %) | Es proven millor en un navegador real | E2E amb Playwright del flux principal (login → Inici → guardiola: aportar i retirar) contra els mocks, al CI |
 | Preproducció | No hi ha encara un segon entorn | `develop` desplegat com a preproducció (DevOps, skill `ci-cd`) |
 | Auditoria de dependències (Q4) | Feta una vegada (§4.3): 0 a producció, 19 a les eines de desenvolupament | `npm audit --omit=dev` i `pip-audit` al CI, informatius; `npm audit fix` (9 de 19) després de la demo; `vitest` 5 i `vue-tsc` 3 a l'Sprint 3 |
