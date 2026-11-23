@@ -1,210 +1,2714 @@
-<!doctype html>
-<html lang="ca">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Import massa petit per canviar</title>
-  <style>
-    :root {
-      --color-bg: #f7f9fc;
-      --color-surface: #ffffff;
-      --color-text: #1a2233;
-      --color-muted: #6c7a96;
-      --color-border: #e6ebf4;
-      --color-primary: #4f46e5;
-      --color-income: #16a34a;
-      --color-expense: #dc2626;
-      --radius: 0.75rem;
-    }
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 390px;
-      height: 844px;
-      overflow: hidden;
-    }
-    body {
-      background: var(--color-bg);
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      color: var(--color-text);
-      -webkit-font-smoothing: antialiased;
-    }
-    .screen {
-      width: 390px;
-      height: 844px;
-      display: flex;
-      flex-direction: column;
-    }
-    .appbar {
-      height: 56px;
-      flex: 0 0 56px;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--color-bg);
-    }
-    .appbar h1 {
-      margin: 0;
-      font-size: 17px;
-      font-weight: 600;
-      color: var(--color-text);
-    }
-    .back {
-      position: absolute;
-      left: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      border: 0;
-      background: transparent;
-      padding: 8px;
-      font-size: 24px;
-      line-height: 1;
-      color: var(--color-text);
-    }
-    .content {
-      flex: 1;
-      overflow: hidden;
-      padding: 4px 16px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .card {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius);
-      padding: 12px;
-    }
-    .label {
-      margin: 0 0 8px;
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      color: var(--color-text);
-    }
-    .row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border: 2px solid var(--color-primary);
-      border-radius: var(--radius);
-      padding: 12px;
-    }
-    .row-name {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--color-text);
-    }
-    .row-amount {
-      font-size: 15px;
-      font-weight: 600;
-      font-variant-numeric: tabular-nums;
-      color: var(--color-text);
-    }
-    .amount-display {
-      font-size: 30px;
-      font-weight: 600;
-      font-variant-numeric: tabular-nums;
-      color: var(--color-text);
-      padding-bottom: 6px;
-      border-bottom: 1.5px solid var(--color-border);
-    }
-    .estimate {
-      margin: 0;
-      font-size: 20px;
-      line-height: 1.3;
-      color: var(--color-muted);
-      font-variant-numeric: tabular-nums;
-    }
-    .keypad {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-    .key {
-      height: 48px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius);
-      background: var(--color-surface);
-      font-family: inherit;
-      font-size: 19px;
-      font-weight: 500;
-      color: var(--color-text);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .error {
-      margin: 0;
-      font-size: 14px;
-      line-height: 1.4;
-      color: var(--color-expense);
-    }
-    .btn-primary {
-      width: 100%;
-      height: 46px;
-      border: 0;
-      border-radius: var(--radius);
-      background: var(--color-primary);
-      color: #ffffff;
-      font-family: inherit;
-      font-size: 16px;
-      font-weight: 600;
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  </style>
-</head>
-<body>
-  <!--
-    US-27 · Error en viu: l'import dona menys d'un cèntim al destí (390×844, PNG 780×1688).
-    0,01 $ → EUR: 1 × 9123 < 10000, així que no arriba a 1 cèntim → «L'import és massa
-    petit per canviar.» i «Continuar» queda desactivat.
-  -->
-  <div class="screen">
-    <header class="appbar">
-      <button type="button" class="back" aria-label="Enrere">←</button>
-      <h1>Canviar</h1>
-    </header>
-    <main class="content">
-      <section class="card">
-        <p class="label">Subcompte d'origen</p>
-        <div class="row">
-          <span class="row-name">USD · Dòlar nord-americà</span>
-          <span class="row-amount">317,55 $</span>
-        </div>
-      </section>
-      <section class="card">
-        <p class="label">Subcompte de destí</p>
-        <div class="row">
-          <span class="row-name">EUR · Euro</span>
-          <span class="row-amount">1.250,50 €</span>
-        </div>
-      </section>
-      <section class="card">
-        <p class="label">Import</p>
-        <div class="amount-display">0,01</div>
-      </section>
-      <p class="estimate">Rebràs aproximadament 0,01 €</p>
-      <div class="keypad" aria-hidden="true">
-        <div class="key">1</div>
-        <div class="key">2</div>
-        <div class="key">3</div>
-        <div class="key">4</div>
-        <div class="key">5</div>
-        <div class="key">6</div>
-        <div class="key">7</div>
-        <div class="key">8</div>
-        <div class="key">9</div>
-        <div class="key">,</div>
-        <div class="key">0</div>
-        <div class="key">⌫</div>
-      </div>
-      <p class="error" role="alert">L'import és massa petit per canviar.</p>
-      <button type="button" class="btn-primary" disabled>Continuar</button>
-    </main>
-  </div>
-</body>
-</html>
+<!DOCTYPE html><!--
+  US-27 · 1 ¥ a euros: «L'import és massa petit per canviar.» i «Continuar» desactivat.
+  Mockup generat de la pantalla real de l'app (develop, 23/11/2026), a 390×844.
+  HTML estàtic: el mateix marcatge i CSS de l'app, sense JavaScript.
+  PNG: docs/us/img/US-27-error-import-petit.png
+-->
+<html lang="ca"><head>
+    
+
+    <meta charset="UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F3-Evolt</title>
+  <style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/components/AppShell.vue?vue&amp;type=style&amp;index=0&amp;scoped=2c2a4cbf&amp;lang.css">
+.shell[data-v-2c2a4cbf] {
+  min-height: 100vh;
+}
+.header[data-v-2c2a4cbf] {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--color-surface);
+  border-bottom: 1px solid #e6ebf4;
+}
+.title[data-v-2c2a4cbf] {
+  margin: 0;
+  font-size: 1.25rem;
+}
+.back[data-v-2c2a4cbf] {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius);
+  color: var(--color-primary);
+  font-size: 0.875rem;
+}
+.menu[data-v-2c2a4cbf] {
+  position: relative;
+  margin-left: auto;
+}
+.menu-button[data-v-2c2a4cbf] {
+  display: grid;
+  place-items: center;
+  padding: 0.375rem;
+  border-radius: 50%;
+  color: var(--color-muted);
+  cursor: pointer;
+  list-style: none;
+}
+.menu-button[data-v-2c2a4cbf]::-webkit-details-marker {
+  display: none;
+}
+.menu-button[data-v-2c2a4cbf]:hover {
+  background: var(--color-bg);
+}
+.menu-list[data-v-2c2a4cbf] {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.25rem;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.menu-item[data-v-2c2a4cbf] {
+  padding: 0.625rem 1rem;
+  border: none;
+  background: var(--color-surface);
+  text-align: left;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.menu-item[data-v-2c2a4cbf]:hover {
+  background: var(--color-bg);
+}
+.content[data-v-2c2a4cbf] {
+  padding: 1.25rem;
+  max-width: 48rem;
+  margin: 0 auto;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/components/CurrencyRow.vue?vue&amp;type=style&amp;index=0&amp;scoped=5985ce29&amp;lang.css">
+.currency-row[data-v-5985ce29] {
+  list-style: none;
+}
+.row[data-v-5985ce29] {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 3.5rem;
+  padding: 0.375rem 0;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  background: none;
+}
+button.row[data-v-5985ce29] {
+  cursor: pointer;
+}
+.currency-row:last-child .row[data-v-5985ce29] {
+  border-bottom: none;
+}
+.icon[data-v-5985ce29] {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: var(--color-bg);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.name[data-v-5985ce29] {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.badge[data-v-5985ce29] {
+  flex: none;
+  padding: 0.1875rem 0.5625rem;
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.chevron[data-v-5985ce29] {
+  flex: none;
+  color: var(--color-muted);
+}
+.amount[data-v-5985ce29] {
+  flex: none;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.row-disabled .icon[data-v-5985ce29] {
+  background: var(--color-border);
+  color: var(--color-muted);
+}
+.row-disabled .name[data-v-5985ce29],
+.row-disabled .amount[data-v-5985ce29] {
+  color: var(--color-muted);
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/components/LoadingIndicator.vue?vue&amp;type=style&amp;index=0&amp;scoped=2f1c657e&amp;lang.css">
+.loading[data-v-2f1c657e] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 40vh;
+  color: var(--color-muted);
+}
+.loading.inline[data-v-2f1c657e] {
+  flex-direction: row;
+  gap: 0.5rem;
+  min-height: 0;
+  padding: 0.75rem 0;
+  font-size: 0.875rem;
+}
+.spinner[data-v-2f1c657e] {
+  color: var(--color-primary);
+  animation: spin-2f1c657e 0.9s linear infinite;
+}
+@keyframes spin-2f1c657e {
+to {
+    transform: rotate(360deg);
+}
+}
+@media (prefers-reduced-motion: reduce) {
+.spinner[data-v-2f1c657e] {
+    animation: none;
+}
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/AddCurrencyView.vue?vue&amp;type=style&amp;index=0&amp;scoped=79273f35&amp;lang.css">
+.card[data-v-79273f35] {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+.rows[data-v-79273f35] {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.error[data-v-79273f35] {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  color: var(--color-error);
+}
+.success[data-v-79273f35] {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  padding: 2.25rem 1.5rem;
+}
+.success-icon[data-v-79273f35] {
+  color: var(--color-income);
+}
+.success-text[data-v-79273f35] {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+.muted[data-v-79273f35] {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/components/ErrorState.vue?vue&amp;type=style&amp;index=0&amp;scoped=52f2b67a&amp;lang.css">
+.error-state[data-v-52f2b67a] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 0;
+  text-align: center;
+}
+.error-state.inline[data-v-52f2b67a] {
+  gap: 0.5rem;
+  padding: 0.75rem 0;
+}
+.icon[data-v-52f2b67a] {
+  color: var(--color-error);
+}
+.message[data-v-52f2b67a] {
+  margin: 0;
+  color: var(--color-muted);
+}
+.inline .message[data-v-52f2b67a] {
+  font-size: 0.875rem;
+}
+.retry[data-v-52f2b67a] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+.retry[data-v-52f2b67a]:hover {
+  background: var(--color-bg);
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/components/MoneyAmount.vue?vue&amp;type=style&amp;index=0&amp;scoped=001050b8&amp;lang.css">
+.money[data-v-001050b8] {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/components/UserRow.vue?vue&amp;type=style&amp;index=0&amp;scoped=8549b7c9&amp;lang.css">
+.user-row[data-v-8549b7c9] {
+  list-style: none;
+}
+.user-row + .user-row[data-v-8549b7c9] {
+  border-top: 1px solid var(--color-border);
+}
+.row[data-v-8549b7c9] {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0;
+  color: inherit;
+}
+.choice[data-v-8549b7c9] {
+  width: 100%;
+  padding-inline: 0.5rem;
+  border: none;
+  border-left: 3px solid transparent;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.choice.selected[data-v-8549b7c9] {
+  border-left-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+}
+.check[data-v-8549b7c9] {
+  flex: none;
+  color: var(--color-primary);
+  font-weight: 700;
+}
+.avatar[data-v-8549b7c9] {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+  color: var(--color-primary);
+  font-weight: 700;
+}
+.details[data-v-8549b7c9] {
+  flex: 1;
+  min-width: 0;
+}
+.name[data-v-8549b7c9],
+.username[data-v-8549b7c9] {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.username[data-v-8549b7c9] {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/ConfirmPaymentView.vue?vue&amp;type=style&amp;index=0&amp;scoped=0749d426&amp;lang.css">
+.card[data-v-0749d426] {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.75rem;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 0.5rem 1.25rem;
+}
+.summary[data-v-0749d426] {
+  margin: 0;
+}
+.row[data-v-0749d426] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+}
+.row + .row[data-v-0749d426] {
+  border-top: 1px solid var(--color-border);
+}
+.row dt[data-v-0749d426] {
+  color: var(--color-muted);
+}
+.row dd[data-v-0749d426] {
+  margin: 0;
+  min-width: 0;
+  text-align: right;
+}
+.recipient[data-v-0749d426] {
+  margin: 0;
+  padding: 0;
+}
+.amount[data-v-0749d426] {
+  font-size: 2rem;
+  font-weight: 700;
+}
+.strong[data-v-0749d426] {
+  font-weight: 600;
+}
+.button[data-v-0749d426] {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.button[data-v-0749d426]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.error[data-v-0749d426] {
+  margin: 0.5rem 0 0;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--color-error);
+}
+.choose-again[data-v-0749d426] {
+  display: block;
+  margin: 0.75rem auto 1rem;
+  text-align: center;
+  font-weight: 600;
+}
+.success[data-v-0749d426] {
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem 1.25rem;
+  text-align: center;
+}
+.tick[data-v-0749d426] {
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: var(--color-income);
+  color: var(--color-surface);
+}
+.success-text[data-v-0749d426] {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.success-balance[data-v-0749d426] {
+  margin: 0;
+  color: var(--color-muted);
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/ContributeView.vue?vue&amp;type=style&amp;index=0&amp;scoped=e3453e08&amp;lang.css">
+.card[data-v-e3453e08] {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+.balances[data-v-e3453e08] {
+  margin: 0 0 1.25rem;
+}
+.balance-row[data-v-e3453e08] {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.375rem 0;
+}
+.balance-row dt[data-v-e3453e08] {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-muted);
+}
+.balance-row dd[data-v-e3453e08] {
+  margin: 0;
+  font-weight: 600;
+}
+.label[data-v-e3453e08] {
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+.field[data-v-e3453e08] {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.field[data-v-e3453e08]:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+.field.invalid[data-v-e3453e08] {
+  border-color: var(--color-error);
+}
+.field.invalid[data-v-e3453e08]:focus-within {
+  box-shadow: 0 0 0 1px var(--color-error);
+}
+.input[data-v-e3453e08] {
+  flex: 1;
+  min-width: 0;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.input[data-v-e3453e08]:focus {
+  outline: none;
+}
+.currency[data-v-e3453e08] {
+  padding-right: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+/* An error replaces the field's bottom space, so the form does not jump. */
+.error[data-v-e3453e08] {
+  margin: -0.75rem 0 1rem;
+  font-size: 0.875rem;
+  color: var(--color-error);
+}
+.button[data-v-e3453e08] {
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.button[data-v-e3453e08]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.cancel[data-v-e3453e08] {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  text-align: center;
+}
+.success[data-v-e3453e08] {
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1.25rem;
+  text-align: center;
+}
+.success-icon[data-v-e3453e08] {
+  color: var(--color-income);
+}
+.success-text[data-v-e3453e08] {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.success-balances[data-v-e3453e08] {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/CreatePotView.vue?vue&amp;type=style&amp;index=0&amp;scoped=3a5a13a6&amp;lang.css">
+.card[data-v-3a5a13a6] {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+.label[data-v-3a5a13a6] {
+  margin-bottom: 0.25rem;
+  padding: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+.input[data-v-3a5a13a6],
+.amount[data-v-3a5a13a6] {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.input[data-v-3a5a13a6] {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  color: var(--color-text);
+  font: inherit;
+}
+.input[data-v-3a5a13a6]:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+.amount[data-v-3a5a13a6] {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.amount[data-v-3a5a13a6]:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+.amount-input[data-v-3a5a13a6] {
+  flex: 1;
+  min-width: 0;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.amount-input[data-v-3a5a13a6]:focus {
+  outline: none;
+}
+.currency[data-v-3a5a13a6] {
+  padding-right: 0.75rem;
+  color: var(--color-muted);
+}
+.input.invalid[data-v-3a5a13a6],
+.amount.invalid[data-v-3a5a13a6] {
+  border-color: var(--color-error);
+}
+.input.invalid[data-v-3a5a13a6]:focus,
+.amount.invalid[data-v-3a5a13a6]:focus-within {
+  box-shadow: 0 0 0 1px var(--color-error);
+}
+
+/* An error replaces the field's bottom space, so the form does not jump. */
+.error[data-v-3a5a13a6] {
+  margin: -0.75rem 0 1rem;
+  font-size: 0.875rem;
+  color: var(--color-error);
+}
+.submit-error[data-v-3a5a13a6] {
+  margin-top: 0;
+}
+.colors[data-v-3a5a13a6] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  border: none;
+}
+.colors .label[data-v-3a5a13a6] {
+  width: 100%;
+}
+.swatch[data-v-3a5a13a6] {
+  position: relative;
+  cursor: pointer;
+}
+.swatch-input[data-v-3a5a13a6] {
+  position: absolute;
+  opacity: 0;
+}
+.swatch-dot[data-v-3a5a13a6] {
+  display: block;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--color-surface);
+}
+.swatch-input:checked + .swatch-dot[data-v-3a5a13a6] {
+  box-shadow:
+    0 0 0 2px var(--color-surface),
+    0 0 0 4px var(--color-text);
+}
+.swatch-input:focus-visible + .swatch-dot[data-v-3a5a13a6] {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 4px;
+}
+.visually-hidden[data-v-3a5a13a6] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.button[data-v-3a5a13a6] {
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.button[data-v-3a5a13a6]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.cancel[data-v-3a5a13a6] {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  text-align: center;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/CurrenciesView.vue?vue&amp;type=style&amp;index=0&amp;scoped=14afbf3e&amp;lang.css">
+.card[data-v-14afbf3e] {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+.section-header[data-v-14afbf3e] {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+.label[data-v-14afbf3e] {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+.rows[data-v-14afbf3e] {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.total-line[data-v-14afbf3e] {
+  border-top: 1px solid var(--color-border);
+  padding-top: 0.75rem;
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.actions[data-v-14afbf3e] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.create[data-v-14afbf3e],
+.secondary[data-v-14afbf3e] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.625rem 1rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+}
+.create[data-v-14afbf3e] {
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.secondary[data-v-14afbf3e] {
+  border: 1px solid var(--color-primary);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/ExchangeSummaryView.vue?vue&amp;type=style&amp;index=0&amp;scoped=a2351a3d&amp;lang.css">
+.card[data-v-a2351a3d] {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+.summary[data-v-a2351a3d] {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.origin[data-v-a2351a3d] {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.row[data-v-a2351a3d] {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.375rem 0;
+}
+.row-label[data-v-a2351a3d] {
+  font-size: 0.9375rem;
+}
+.row-value[data-v-a2351a3d] {
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+.commission-row[data-v-a2351a3d] {
+  justify-content: flex-end;
+}
+.commission[data-v-a2351a3d] {
+  color: var(--color-expense);
+}
+.note[data-v-a2351a3d] {
+  margin: 0.375rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+.divider[data-v-a2351a3d] {
+  height: 1px;
+  margin: 0.75rem 0;
+  background: var(--color-border);
+}
+.total[data-v-a2351a3d] {
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.button[data-v-a2351a3d] {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.button[data-v-a2351a3d]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.error[data-v-a2351a3d] {
+  margin: 0.75rem 0 0;
+  color: var(--color-expense);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-align: center;
+}
+.success[data-v-a2351a3d] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1.25rem;
+  text-align: center;
+}
+.success-icon[data-v-a2351a3d] {
+  color: var(--color-income);
+}
+.success-text[data-v-a2351a3d] {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 600;
+}
+.returning[data-v-a2351a3d] {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+.balances[data-v-a2351a3d] {
+  width: 100%;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.balance-row[data-v-a2351a3d] {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.3125rem 0;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+.balance-value[data-v-a2351a3d] {
+  font-weight: 600;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/components/AmountKeypad.vue?vue&amp;type=style&amp;index=0&amp;scoped=ed60afc6&amp;lang.css">
+.label[data-v-ed60afc6] {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+.field[data-v-ed60afc6] {
+  display: flex;
+  align-items: center;
+  margin: 0.5rem 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.field[data-v-ed60afc6]:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+.field.invalid[data-v-ed60afc6] {
+  border-color: var(--color-error);
+}
+.field.invalid[data-v-ed60afc6]:focus-within {
+  box-shadow: 0 0 0 1px var(--color-error);
+}
+.input[data-v-ed60afc6] {
+  flex: 1;
+  min-width: 0;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.input[data-v-ed60afc6]:focus {
+  outline: none;
+}
+.currency[data-v-ed60afc6] {
+  padding-right: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+.keypad[data-v-ed60afc6] {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0.75rem 0;
+}
+.key[data-v-ed60afc6] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 54px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 20px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.key[data-v-ed60afc6]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.error[data-v-ed60afc6] {
+  margin: 0.25rem 0 0;
+  font-size: 14px;
+  color: var(--color-expense);
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/components/SubaccountPicker.vue?vue&amp;type=style&amp;index=0&amp;scoped=716346f5&amp;lang.css">
+.label[data-v-716346f5] {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+.select[data-v-716346f5] {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+.select[data-v-716346f5]:focus {
+  outline: none;
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/ExchangeView.vue?vue&amp;type=style&amp;index=0&amp;scoped=fd87f8c2&amp;lang.css">
+.card[data-v-fd87f8c2] {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+.notice[data-v-fd87f8c2] {
+  margin: 0 0 1rem;
+  color: var(--color-muted);
+}
+.estimate[data-v-fd87f8c2] {
+  margin: 0 0 1rem;
+  font-size: 1.5rem;
+  line-height: 1.25;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+.button[data-v-fd87f8c2] {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.button[data-v-fd87f8c2]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.error[data-v-fd87f8c2] {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--color-expense);
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/components/FormField.vue?vue&amp;type=style&amp;index=0&amp;scoped=b9645e84&amp;lang.css">
+.form-field[data-v-b9645e84] {
+  margin-bottom: 1rem;
+}
+.label[data-v-b9645e84] {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+.input[data-v-b9645e84] {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+.input[data-v-b9645e84]:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+.input.invalid[data-v-b9645e84] {
+  border-color: var(--color-error);
+}
+.input.invalid[data-v-b9645e84]:focus {
+  box-shadow: 0 0 0 1px var(--color-error);
+}
+.error[data-v-b9645e84] {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: var(--color-error);
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/components/PrimaryButton.vue?vue&amp;type=style&amp;index=0&amp;scoped=0b1572f2&amp;lang.css">
+.primary-button[data-v-0b1572f2] {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.primary-button[data-v-0b1572f2]:disabled {
+  background: var(--color-border);
+  color: var(--color-muted);
+  cursor: not-allowed;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/ForgotPasswordView.vue?vue&amp;type=style&amp;index=0&amp;scoped=0a50e904&amp;lang.css">
+.card[data-v-0a50e904] {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+.message[data-v-0a50e904] {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+}
+.error[data-v-0a50e904] {
+  color: var(--color-error);
+}
+.links[data-v-0a50e904] {
+  margin: 1rem 0 0;
+  font-size: 0.875rem;
+  text-align: center;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/components/EmptyState.vue?vue&amp;type=style&amp;index=0&amp;scoped=f262d0f3&amp;lang.css">
+.empty-state[data-v-f262d0f3] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem 0;
+  text-align: center;
+}
+.icon[data-v-f262d0f3] {
+  color: var(--color-muted);
+}
+.message[data-v-f262d0f3] {
+  margin: 0;
+  color: var(--color-muted);
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/components/MovementRow.vue?vue&amp;type=style&amp;index=0&amp;scoped=37eeb700&amp;lang.css">
+.movement-row[data-v-37eeb700] {
+  list-style: none;
+}
+.row[data-v-37eeb700] {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0;
+  color: inherit;
+}
+.icon[data-v-37eeb700] {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: var(--color-bg);
+  color: var(--color-muted);
+}
+.details[data-v-37eeb700] {
+  flex: 1;
+  min-width: 0;
+}
+.concept[data-v-37eeb700] {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.date[data-v-37eeb700] {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
+.amount[data-v-37eeb700] {
+  flex: none;
+  font-weight: 600;
+}
+.income[data-v-37eeb700] {
+  color: var(--color-income);
+}
+.expense[data-v-37eeb700] {
+  color: var(--color-expense);
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/HomeView.vue?vue&amp;type=style&amp;index=0&amp;scoped=b4e148ca&amp;lang.css">
+.card[data-v-b4e148ca] {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+.section-header[data-v-b4e148ca] {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+.label[data-v-b4e148ca] {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+.eye[data-v-b4e148ca] {
+  display: grid;
+  place-items: center;
+  padding: 0.375rem;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+.eye[data-v-b4e148ca]:hover {
+  background: var(--color-bg);
+}
+.balance[data-v-b4e148ca] {
+  display: block;
+  margin: 0.25rem 0 0.5rem;
+  font-size: 2rem;
+  font-weight: 700;
+}
+.saved[data-v-b4e148ca] {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+.saved-amount[data-v-b4e148ca] {
+  color: var(--color-text);
+  font-weight: 600;
+}
+.actions[data-v-b4e148ca] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.add-money[data-v-b4e148ca],
+.send-link[data-v-b4e148ca],
+.pots-link[data-v-b4e148ca] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius);
+  font-weight: 600;
+}
+.add-money[data-v-b4e148ca] {
+  background: var(--color-primary);
+  color: var(--color-surface);
+}
+.send-link[data-v-b4e148ca],
+.pots-link[data-v-b4e148ca] {
+  background: var(--color-surface);
+  color: var(--color-primary);
+}
+.currencies-link[data-v-b4e148ca] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius);
+  font-weight: 600;
+  background: var(--color-surface);
+  color: var(--color-primary);
+}
+.see-all[data-v-b4e148ca] {
+  font-size: 0.875rem;
+}
+.movements[data-v-b4e148ca] {
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+.currency-rows[data-v-b4e148ca] {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.total-line[data-v-b4e148ca] {
+  border-top: 1px solid var(--color-border);
+  padding-top: 0.75rem;
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/LoginView.vue?vue&amp;type=style&amp;index=0&amp;scoped=45f5edd7&amp;lang.css">
+.card[data-v-45f5edd7] {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+.notice[data-v-45f5edd7] {
+  margin: 0 0 1rem;
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  font-size: 0.875rem;
+}
+.error[data-v-45f5edd7] {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  color: var(--color-error);
+}
+.links[data-v-45f5edd7] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  font-size: 0.875rem;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/MovementDetailView.vue?vue&amp;type=style&amp;index=0&amp;scoped=7ad64aea&amp;lang.css">
+.back-link[data-v-7ad64aea] {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+.card[data-v-7ad64aea] {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+.summary[data-v-7ad64aea] {
+  text-align: center;
+}
+.amount[data-v-7ad64aea] {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+}
+.income[data-v-7ad64aea] {
+  color: var(--color-income);
+}
+.expense[data-v-7ad64aea] {
+  color: var(--color-expense);
+}
+.concept[data-v-7ad64aea] {
+  margin: 0.25rem 0 0;
+  color: var(--color-muted);
+  overflow-wrap: anywhere;
+}
+.rows[data-v-7ad64aea] {
+  margin: 0;
+}
+.row[data-v-7ad64aea] {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+.row dt[data-v-7ad64aea] {
+  flex: none;
+  color: var(--color-muted);
+}
+.row dd[data-v-7ad64aea] {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.receipt-button[data-v-7ad64aea] {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.receipt-button[data-v-7ad64aea]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.receipt-error[data-v-7ad64aea] {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  color: var(--color-error);
+}
+.report-link[data-v-7ad64aea] {
+  display: block;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  text-align: center;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/MovementsView.vue?vue&amp;type=style&amp;index=0&amp;scoped=f53e49fe&amp;lang.css">
+.card[data-v-f53e49fe] {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+}
+.card + .card[data-v-f53e49fe] {
+  margin-top: 1rem;
+}
+.search[data-v-f53e49fe] {
+  position: relative;
+}
+.search-icon[data-v-f53e49fe] {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem;
+  transform: translateY(-50%);
+  color: var(--color-muted);
+}
+.search-input[data-v-f53e49fe] {
+  width: 100%;
+  padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+.search-input[data-v-f53e49fe]::placeholder {
+  color: var(--color-muted);
+}
+.search-input[data-v-f53e49fe]:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+.toolbar[data-v-f53e49fe] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+}
+.filters-button[data-v-f53e49fe] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+.filters-button[aria-expanded='true'][data-v-f53e49fe] {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.link-button[data-v-f53e49fe] {
+  padding: 0.5rem 0;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.filter-panel[data-v-f53e49fe] {
+  margin-top: 1rem;
+}
+
+/* minmax(0, …): a date picker is wider than half a phone screen and would overflow the card. */
+.dates[data-v-f53e49fe] {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 0.75rem;
+}
+.types[data-v-f53e49fe] {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+.types-legend[data-v-f53e49fe] {
+  margin-bottom: 0.25rem;
+  padding: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+.type-option[data-v-f53e49fe] {
+  --option-color: var(--color-text);
+
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--option-color);
+  text-align: center;
+  cursor: pointer;
+}
+.type-option.income[data-v-f53e49fe] {
+  --option-color: var(--color-income);
+}
+.type-option.expense[data-v-f53e49fe] {
+  --option-color: var(--color-expense);
+}
+.type-option.selected[data-v-f53e49fe] {
+  border-color: var(--option-color);
+  background: color-mix(in srgb, var(--option-color) 10%, var(--color-surface));
+  font-weight: 600;
+}
+.type-option[data-v-f53e49fe]:focus-within {
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+/* The radio stays for the keyboard and screen readers; the whole pill is the target. */
+.type-radio[data-v-f53e49fe] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.no-results[data-v-f53e49fe] {
+  text-align: center;
+}
+.movements[data-v-f53e49fe] {
+  margin: 0;
+  padding: 0;
+}
+.sentinel[data-v-f53e49fe] {
+  height: 1px;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/components/ConfirmDialog.vue?vue&amp;type=style&amp;index=0&amp;scoped=d3e333dd&amp;lang.css">
+.backdrop[data-v-d3e333dd] {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(26 34 51 / 50%);
+}
+.dialog[data-v-d3e333dd] {
+  width: 100%;
+  max-width: 24rem;
+  padding: 1.5rem;
+  border-radius: calc(var(--radius) * 1.5);
+  background: var(--color-surface);
+}
+.title[data-v-d3e333dd] {
+  margin: 0;
+  font-size: 1.125rem;
+}
+.title.centered[data-v-d3e333dd] {
+  text-align: center;
+}
+.message[data-v-d3e333dd] {
+  margin: 0.75rem 0 0;
+  color: var(--color-text);
+}
+.buttons[data-v-d3e333dd] {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+.cancel[data-v-d3e333dd],
+.confirm[data-v-d3e333dd] {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cancel[data-v-d3e333dd] {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.confirm[data-v-d3e333dd] {
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-surface);
+}
+.confirm.danger[data-v-d3e333dd] {
+  background: var(--color-expense);
+}
+.cancel[data-v-d3e333dd]:disabled,
+.confirm[data-v-d3e333dd]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/MoneyRequestsView.vue?vue&amp;type=style&amp;index=0&amp;scoped=a10aac5c&amp;lang.css">
+.ask[data-v-a10aac5c] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.875rem;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font-weight: 600;
+}
+.notice[data-v-a10aac5c],
+.cancel-error[data-v-a10aac5c] {
+  margin: 0 0 0.75rem;
+  font-weight: 600;
+  text-align: center;
+}
+.notice[data-v-a10aac5c] {
+  color: var(--color-income);
+}
+.cancel-error[data-v-a10aac5c] {
+  color: var(--color-error);
+}
+.requests[data-v-a10aac5c] {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.card[data-v-a10aac5c] {
+  margin-bottom: 0.75rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.top[data-v-a10aac5c] {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.who[data-v-a10aac5c] {
+  min-width: 0;
+}
+.name[data-v-a10aac5c],
+.muted[data-v-a10aac5c] {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.muted[data-v-a10aac5c] {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+.side[data-v-a10aac5c] {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+.amount[data-v-a10aac5c] {
+  font-weight: 700;
+}
+.status[data-v-a10aac5c] {
+  padding: 0.125rem 0.625rem;
+  border-radius: 999px;
+  background: var(--color-border);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.cancel[data-v-a10aac5c] {
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/NewMoneyRequestView.vue?vue&amp;type=style&amp;index=0&amp;scoped=0faeb3a2&amp;lang.css">
+.form[data-v-0faeb3a2] {
+  display: flex;
+  flex-direction: column;
+}
+.label[data-v-0faeb3a2] {
+  margin: 0.75rem 0 0.375rem;
+  color: var(--color-muted);
+}
+.search[data-v-0faeb3a2] {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.search[data-v-0faeb3a2]:focus-within,
+.field[data-v-0faeb3a2]:focus-within {
+  border-color: var(--color-primary);
+}
+.search-icon[data-v-0faeb3a2] {
+  flex: none;
+  color: var(--color-muted);
+}
+.search-input[data-v-0faeb3a2] {
+  flex: 1;
+  min-width: 0;
+  padding: 0.75rem 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+}
+.search-input[data-v-0faeb3a2]:focus,
+.input[data-v-0faeb3a2]:focus {
+  outline: none;
+}
+.visually-hidden[data-v-0faeb3a2] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.card[data-v-0faeb3a2] {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.list[data-v-0faeb3a2] {
+  overflow: hidden;
+}
+.users[data-v-0faeb3a2] {
+  margin: 0;
+  padding: 0;
+}
+.field[data-v-0faeb3a2] {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.field.invalid[data-v-0faeb3a2] {
+  border-color: var(--color-error);
+}
+.input[data-v-0faeb3a2] {
+  flex: 1;
+  min-width: 0;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+}
+.concept[data-v-0faeb3a2] {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.currency[data-v-0faeb3a2] {
+  padding-right: 1rem;
+  color: var(--color-muted);
+}
+.hint[data-v-0faeb3a2],
+.error[data-v-0faeb3a2] {
+  margin: 0.375rem 0 0;
+  font-size: 0.875rem;
+}
+.hint[data-v-0faeb3a2] {
+  color: var(--color-muted);
+}
+.error[data-v-0faeb3a2] {
+  color: var(--color-error);
+}
+.submit-error[data-v-0faeb3a2] {
+  text-align: center;
+}
+.button[data-v-0faeb3a2] {
+  margin-top: 1.5rem;
+  padding: 0.875rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.button[data-v-0faeb3a2]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.secondary[data-v-0faeb3a2] {
+  margin-top: 1rem;
+  padding: 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: 600;
+  text-align: center;
+}
+.success[data-v-0faeb3a2] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1.25rem;
+  text-align: center;
+}
+.success-icon[data-v-0faeb3a2] {
+  color: var(--color-income);
+}
+.success-text[data-v-0faeb3a2] {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/NewPasswordView.vue?vue&amp;type=style&amp;index=0&amp;scoped=79cacbd4&amp;lang.css">
+.card[data-v-79cacbd4] {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+.result[data-v-79cacbd4] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1.25rem;
+  text-align: center;
+}
+.result-text[data-v-79cacbd4] {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.success-icon[data-v-79cacbd4] {
+  color: var(--color-income);
+}
+.ask-again[data-v-79cacbd4] {
+  padding: 0.625rem 1rem;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font-weight: 600;
+}
+.error[data-v-79cacbd4] {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  color: var(--color-error);
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/PaymentsView.vue?vue&amp;type=style&amp;index=0&amp;scoped=26f2b3db&amp;lang.css">
+.search[data-v-26f2b3db] {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.search[data-v-26f2b3db]:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
+}
+.search-icon[data-v-26f2b3db] {
+  flex: none;
+  color: var(--color-muted);
+}
+.search-input[data-v-26f2b3db] {
+  flex: 1;
+  min-width: 0;
+  padding: 0.75rem 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+}
+.search-input[data-v-26f2b3db]:focus {
+  outline: none;
+}
+.visually-hidden[data-v-26f2b3db] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.label[data-v-26f2b3db] {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+.card[data-v-26f2b3db] {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 0.25rem 1.25rem;
+}
+.users[data-v-26f2b3db] {
+  margin: 0;
+  padding: 0;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/components/PotProgress.vue?vue&amp;type=style&amp;index=0&amp;scoped=532cbb2a&amp;lang.css">
+.progress[data-v-532cbb2a] {
+  /* Own top gap (next to .target, which carries none) and bottom gap before «Aportar». */
+  margin-top: 14px;
+  margin-bottom: 14px;
+  padding-top: 14px;
+  /* Full width inside the flex-column card of PotView (align-items: flex-start). */
+  width: 100%;
+  border-top: 1px solid var(--color-border);
+}
+.progress-amounts[data-v-532cbb2a] {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.progress-track[data-v-532cbb2a] {
+  width: 100%;
+  margin-top: 8px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--color-border);
+  overflow: hidden;
+}
+.progress-fill[data-v-532cbb2a] {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-primary);
+}
+.progress-fill.achieved[data-v-532cbb2a] {
+  background: var(--color-income);
+}
+.progress-meta[data-v-532cbb2a] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.progress-percent[data-v-532cbb2a] {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.badge-status[data-v-532cbb2a] {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--color-border);
+  color: var(--color-text);
+  white-space: nowrap;
+}
+.badge-status.achieved[data-v-532cbb2a] {
+  background: var(--color-goal-badge-bg);
+  color: var(--color-goal-badge-text);
+}
+.mini[data-v-532cbb2a] {
+  /* Full width inside PotRow's flex-column name cell. */
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+.mini-track[data-v-532cbb2a] {
+  width: 100%;
+  max-width: 150px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-border);
+  overflow: hidden;
+}
+.mini-fill[data-v-532cbb2a] {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-primary);
+}
+.mini-fill.achieved[data-v-532cbb2a] {
+  background: var(--color-income);
+}
+.mini-percent[data-v-532cbb2a] {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/PotView.vue?vue&amp;type=style&amp;index=0&amp;scoped=519b0108&amp;lang.css">
+.back-link[data-v-519b0108] {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+}
+.card[data-v-519b0108] {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+.summary[data-v-519b0108] {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.icon[data-v-519b0108] {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-bottom: 0.75rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--pot-color) 14%, var(--color-surface));
+  color: var(--pot-color);
+}
+.label[data-v-519b0108] {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+.balance[data-v-519b0108] {
+  display: block;
+  margin: 0.25rem 0 0.5rem;
+  font-size: 2rem;
+  font-weight: 700;
+}
+.target[data-v-519b0108] {
+  /* The progress bar below brings its own top margin, so no extra gap here. */
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+.actions[data-v-519b0108] {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  width: 100%;
+}
+.action[data-v-519b0108] {
+  padding: 0.625rem 1rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font: inherit;
+  font-weight: 600;
+  text-align: center;
+}
+.contribute[data-v-519b0108] {
+  background: var(--color-primary);
+  color: var(--color-surface);
+}
+.withdraw[data-v-519b0108] {
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.withdraw[data-v-519b0108]:disabled {
+  background: var(--color-border);
+  color: var(--color-muted);
+  cursor: not-allowed;
+}
+.history[data-v-519b0108] {
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/components/PotRow.vue?vue&amp;type=style&amp;index=0&amp;scoped=13343371&amp;lang.css">
+.pot-row-item[data-v-13343371] {
+  list-style: none;
+}
+.pot-row[data-v-13343371] {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0;
+  color: var(--color-text);
+}
+.icon[data-v-13343371] {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--pot-color) 14%, var(--color-surface));
+  color: var(--pot-color);
+}
+.row-name-col[data-v-13343371] {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.name[data-v-13343371] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.balance[data-v-13343371] {
+  flex: none;
+  font-weight: 600;
+}
+.chevron[data-v-13343371] {
+  flex: none;
+  color: var(--color-muted);
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/PotsView.vue?vue&amp;type=style&amp;index=0&amp;scoped=4458fe88&amp;lang.css">
+.card[data-v-4458fe88] {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+.empty[data-v-4458fe88] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 1.5rem;
+}
+.pots[data-v-4458fe88] {
+  margin: 0;
+  padding: 0;
+}
+.create[data-v-4458fe88] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.625rem 1rem;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font-weight: 600;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/RegisterView.vue?vue&amp;type=style&amp;index=0&amp;scoped=bf0653ef&amp;lang.css">
+.card[data-v-bf0653ef] {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+.terms[data-v-bf0653ef] {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+.error[data-v-bf0653ef] {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  color: var(--color-error);
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/SubaccountView.vue?vue&amp;type=style&amp;index=0&amp;scoped=4b881c08&amp;lang.css">
+.card[data-v-4b881c08] {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+.label[data-v-4b881c08] {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.balance[data-v-4b881c08] {
+  margin: 0.25rem 0 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+.history[data-v-4b881c08] {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+.entry[data-v-4b881c08] {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.entry[data-v-4b881c08]:last-child {
+  border-bottom: none;
+}
+.details[data-v-4b881c08] {
+  flex: 1;
+  min-width: 0;
+}
+.concept[data-v-4b881c08] {
+  margin: 0;
+}
+.date[data-v-4b881c08] {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+.amount[data-v-4b881c08] {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.amount.income[data-v-4b881c08] {
+  color: var(--color-income);
+}
+.amount.expense[data-v-4b881c08] {
+  color: var(--color-expense);
+}
+.delete[data-v-4b881c08] {
+  /* Mockup US-26-detall-subcompte: the red button stays at the bottom of the screen. */
+  position: sticky;
+  bottom: 1rem;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.875rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-expense);
+  color: var(--color-surface);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.success[data-v-4b881c08] {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  padding: 2.25rem 1.5rem;
+}
+.success-icon[data-v-4b881c08] {
+  color: var(--color-income);
+}
+.success-text[data-v-4b881c08] {
+  margin: 0;
+  font-weight: 600;
+}
+.muted[data-v-4b881c08] {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+.error[data-v-4b881c08] {
+  margin: 0 0 0.25rem;
+  color: var(--color-error);
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/ReportProblemView.vue?vue&amp;type=style&amp;index=0&amp;scoped=b66a6bbd&amp;lang.css">
+.card[data-v-b66a6bbd] {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+.movement[data-v-b66a6bbd] {
+  margin: 0 0 1rem;
+  padding: 0;
+}
+.label[data-v-b66a6bbd] {
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+.input[data-v-b66a6bbd] {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  resize: vertical;
+}
+.input[data-v-b66a6bbd]:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+.input.invalid[data-v-b66a6bbd] {
+  border-color: var(--color-error);
+}
+.input.invalid[data-v-b66a6bbd]:focus {
+  box-shadow: 0 0 0 1px var(--color-error);
+}
+
+/* An error replaces the field's bottom space, so the form does not jump. */
+.error[data-v-b66a6bbd] {
+  margin: -0.75rem 0 1rem;
+  font-size: 0.875rem;
+  color: var(--color-error);
+}
+.link-button[data-v-b66a6bbd] {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+.cancel[data-v-b66a6bbd] {
+  margin-top: 0.75rem;
+}
+.success[data-v-b66a6bbd] {
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1.25rem;
+  text-align: center;
+}
+.success-icon[data-v-b66a6bbd] {
+  color: var(--color-income);
+}
+.success-text[data-v-b66a6bbd] {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/SendPaymentView.vue?vue&amp;type=style&amp;index=0&amp;scoped=f4bfe33c&amp;lang.css">
+.card[data-v-f4bfe33c] {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.75rem;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 0.5rem 1.25rem;
+}
+.recipient[data-v-f4bfe33c] {
+  margin: 0;
+  padding: 0;
+}
+.amount-card[data-v-f4bfe33c] {
+  padding: 1rem 1.25rem;
+}
+.label[data-v-f4bfe33c] {
+  margin: 0 0 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+.amount[data-v-f4bfe33c] {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.error[data-v-f4bfe33c] {
+  margin: 0.5rem 0 0;
+  font-weight: 600;
+  color: var(--color-error);
+}
+.keypad[data-v-f4bfe33c] {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.key[data-v-f4bfe33c] {
+  padding: 0.875rem 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.concept-label[data-v-f4bfe33c] {
+  display: block;
+}
+.concept[data-v-f4bfe33c] {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+.button[data-v-f4bfe33c] {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.button[data-v-f4bfe33c]:disabled {
+  background: var(--color-border);
+  color: var(--color-muted);
+  cursor: not-allowed;
+}
+.choose-again[data-v-f4bfe33c] {
+  margin: 0 auto 1rem;
+  font-weight: 600;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/TopUpView.vue?vue&amp;type=style&amp;index=0&amp;scoped=866de4da&amp;lang.css">
+.card[data-v-866de4da] {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+.label[data-v-866de4da] {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+.field[data-v-866de4da] {
+  display: flex;
+  align-items: center;
+  margin: 0.5rem 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.field[data-v-866de4da]:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+.field.invalid[data-v-866de4da] {
+  border-color: var(--color-error);
+}
+.field.invalid[data-v-866de4da]:focus-within {
+  box-shadow: 0 0 0 1px var(--color-error);
+}
+.input[data-v-866de4da] {
+  flex: 1;
+  min-width: 0;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.input[data-v-866de4da]:focus {
+  outline: none;
+}
+.currency[data-v-866de4da] {
+  padding-right: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+.help[data-v-866de4da],
+.error[data-v-866de4da] {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+}
+.help[data-v-866de4da] {
+  color: var(--color-muted);
+}
+.error[data-v-866de4da] {
+  color: var(--color-error);
+}
+.button[data-v-866de4da] {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.button[data-v-866de4da]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.note[data-v-866de4da] {
+  margin: 0.75rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+.success[data-v-866de4da] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1.25rem;
+  text-align: center;
+}
+.success-icon[data-v-866de4da] {
+  color: var(--color-income);
+}
+.success-text[data-v-866de4da] {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/components/CodeInput.vue?vue&amp;type=style&amp;index=0&amp;scoped=aaaa5aaa&amp;lang.css">
+.code-input[data-v-aaaa5aaa] {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.box[data-v-aaaa5aaa] {
+  width: 2.75rem;
+  min-width: 0;
+  padding: 0.75rem 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: center;
+}
+.box[data-v-aaaa5aaa]:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+.box.invalid[data-v-aaaa5aaa] {
+  border-color: var(--color-error);
+}
+.box.invalid[data-v-aaaa5aaa]:focus {
+  box-shadow: 0 0 0 1px var(--color-error);
+}
+.box[data-v-aaaa5aaa]:disabled {
+  background: var(--color-bg);
+  cursor: not-allowed;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/VerifyView.vue?vue&amp;type=style&amp;index=0&amp;scoped=f51833c5&amp;lang.css">
+.card[data-v-f51833c5] {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  text-align: center;
+}
+.intro[data-v-f51833c5] {
+  margin: 0 0 1rem;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+.message[data-v-f51833c5] {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+}
+.error[data-v-f51833c5] {
+  color: var(--color-error);
+}
+.notice[data-v-f51833c5] {
+  color: var(--color-muted);
+}
+.link[data-v-f51833c5] {
+  margin-top: 1rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  cursor: pointer;
+}
+.link[data-v-f51833c5]:disabled {
+  color: var(--color-muted);
+  cursor: not-allowed;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/WithdrawCancelledView.vue?vue&amp;type=style&amp;index=0&amp;scoped=9515bb2a&amp;lang.css">
+.card[data-v-9515bb2a] {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+.notice[data-v-9515bb2a] {
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1.25rem;
+  text-align: center;
+}
+.notice-title[data-v-9515bb2a] {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.notice-text[data-v-9515bb2a] {
+  margin: 0;
+}
+.notice-balances[data-v-9515bb2a] {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+.button[data-v-9515bb2a] {
+  align-self: stretch;
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/views/WithdrawView.vue?vue&amp;type=style&amp;index=0&amp;scoped=85d4fe6a&amp;lang.css">
+.card[data-v-85d4fe6a] {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+.balances[data-v-85d4fe6a] {
+  margin: 0 0 1.25rem;
+}
+.balance-row[data-v-85d4fe6a] {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.375rem 0;
+}
+.balance-row dt[data-v-85d4fe6a] {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-muted);
+}
+.balance-row dd[data-v-85d4fe6a] {
+  margin: 0;
+  font-weight: 600;
+}
+.label[data-v-85d4fe6a] {
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+.field[data-v-85d4fe6a] {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.field[data-v-85d4fe6a]:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+.field.invalid[data-v-85d4fe6a] {
+  border-color: var(--color-error);
+}
+.field.invalid[data-v-85d4fe6a]:focus-within {
+  box-shadow: 0 0 0 1px var(--color-error);
+}
+.input[data-v-85d4fe6a] {
+  flex: 1;
+  min-width: 0;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.input[data-v-85d4fe6a]:focus {
+  outline: none;
+}
+.currency[data-v-85d4fe6a] {
+  padding-right: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+/* An error replaces the field's bottom space, so the form does not jump. */
+.error[data-v-85d4fe6a] {
+  margin: -0.75rem 0 1rem;
+  font-size: 0.875rem;
+  color: var(--color-error);
+}
+.submit-error[data-v-85d4fe6a] {
+  margin: 0.5rem 0 0;
+  text-align: center;
+}
+.button[data-v-85d4fe6a] {
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.button[data-v-85d4fe6a]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.cancel[data-v-85d4fe6a] {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  text-align: center;
+}
+.success[data-v-85d4fe6a] {
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1.25rem;
+  text-align: center;
+}
+.success-icon[data-v-85d4fe6a] {
+  color: var(--color-income);
+}
+.success-text[data-v-85d4fe6a] {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.success-balances[data-v-85d4fe6a] {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+</style><style type="text/css" data-vite-dev-id="C:/Users/izanv/Desktop/Eng Software/F3-Evolt/frontend/src/style.css">:root {
+  --color-bg: #f7f9fc;
+  --color-surface: #ffffff;
+  --color-text: #1a2233;
+  --color-muted: #6c7a96;
+  --color-border: #e6ebf4;
+  --color-primary: #4f46e5;
+  --color-income: #16a34a;
+  /* Goal badge «Objectiu assolit» (US-20). */
+  --color-goal-badge-bg: #e8f6ee;
+  --color-goal-badge-text: #166534;
+  --color-expense: #dc2626;
+  --color-error: #dc2626;
+  /* Pot colours (docs/api.md §9.1): never green or red, which mean income, expense and errors. */
+  --color-pot-purple: #4f46e5;
+  --color-pot-blue: #2563eb;
+  --color-pot-teal: #0d9488;
+  --color-pot-orange: #ea580c;
+  --color-pot-pink: #db2777;
+  --color-pot-yellow: #ca8a04;
+  --radius: 0.75rem;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+</style></head>
+  <body>
+    <div id="app" data-v-app=""><div data-v-2c2a4cbf="" data-v-fd87f8c2="" class="shell"><header data-v-2c2a4cbf="" class="header"><a data-v-2c2a4cbf="" href="/" class="back">← Inici</a><h1 data-v-2c2a4cbf="" class="title">Canviar</h1><details data-v-2c2a4cbf="" class="menu"><summary data-v-2c2a4cbf="" class="menu-button" aria-label="Menú" title="Menú"><svg data-v-2c2a4cbf="" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu" aria-hidden="true"><path d="M4 5h16"></path><path d="M4 12h16"></path><path d="M4 19h16"></path></svg></summary><div data-v-2c2a4cbf="" class="menu-list"><!-- US-15: Inici → menú → «Sol·licituds enviades» (PO decision: no card in Inici). --><a data-v-2c2a4cbf="" href="/requests" class="menu-item">Sol·licituds enviades</a><button data-v-2c2a4cbf="" type="button" class="menu-item">Tancar sessió</button></div></details></header><main data-v-2c2a4cbf="" class="content"><section data-v-fd87f8c2="" class="card"><div data-v-716346f5="" data-v-fd87f8c2="" class="subaccount-picker"><label data-v-716346f5="" class="label" for="exchange-src">Subcompte d'origen</label><select data-v-716346f5="" id="exchange-src" class="select" value="JPY"><option data-v-716346f5="" value="EUR">EUR · Euro — 3.693,71&nbsp;€</option><option data-v-716346f5="" value="USD">USD · Dòlar nord-americà — 109,61&nbsp;$</option><option data-v-716346f5="" value="JPY" selected="">JPY · Ien japonès — 0&nbsp;¥</option></select></div></section><section data-v-fd87f8c2="" class="card"><div data-v-716346f5="" data-v-fd87f8c2="" class="subaccount-picker"><label data-v-716346f5="" class="label" for="exchange-tgt">Subcompte de destí</label><select data-v-716346f5="" id="exchange-tgt" class="select" value="EUR"><option data-v-716346f5="" value="EUR" selected="">EUR · Euro — 3.693,71&nbsp;€</option><option data-v-716346f5="" value="USD">USD · Dòlar nord-americà — 109,61&nbsp;$</option><option data-v-716346f5="" value="JPY" disabled="">JPY · Ien japonès — 0&nbsp;¥ · és l'origen</option></select></div></section><section data-v-fd87f8c2="" class="card"><div data-v-ed60afc6="" data-v-fd87f8c2="" class="amount-keypad"><label data-v-ed60afc6="" class="label" for="v-0">Import</label><div data-v-ed60afc6="" class="field"><input data-v-ed60afc6="" id="v-0" type="text" inputmode="numeric" autocomplete="off" class="input" aria-invalid="false" value="1" style=""><span data-v-ed60afc6="" class="currency" aria-hidden="true">¥</span></div><div data-v-ed60afc6="" class="hint"><p data-v-fd87f8c2="" class="estimate">Rebràs aproximadament 0,01&nbsp;€</p></div><div data-v-ed60afc6="" class="keypad"><button data-v-ed60afc6="" type="button" class="key">1</button><button data-v-ed60afc6="" type="button" class="key">2</button><button data-v-ed60afc6="" type="button" class="key">3</button><button data-v-ed60afc6="" type="button" class="key">4</button><button data-v-ed60afc6="" type="button" class="key">5</button><button data-v-ed60afc6="" type="button" class="key">6</button><button data-v-ed60afc6="" type="button" class="key">7</button><button data-v-ed60afc6="" type="button" class="key">8</button><button data-v-ed60afc6="" type="button" class="key">9</button><button data-v-ed60afc6="" type="button" class="key">0</button><button data-v-ed60afc6="" type="button" class="key" aria-label="Esborra un caràcter">⌫</button></div><!--v-if--></div></section><!-- «Import massa petit» lives above the button (US-27-error-import-petit); --><!-- «No tens prou saldo» lives under it (US-27 «Saldo insuficient»). --><!--v-if--><button data-v-fd87f8c2="" type="button" class="button" disabled="">Continuar</button><p data-v-fd87f8c2="" class="error" role="alert">L'import és massa petit per canviar.</p></main></div></div>
+    
+  
+
+</body></html>
