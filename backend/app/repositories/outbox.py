@@ -13,6 +13,16 @@ class OutboxRepository:
     def add(self, message: OutboxMessage) -> None:
         self._seed.outbox.append(message)
 
+    def remove(self, message: OutboxMessage) -> None:
+        """Treu un missatge acabat de desar, per desfer una operació que ha fallat (T14.1).
+
+        Busca aquest mateix objecte des del final: un missatge igual d'abans no es toca.
+        """
+        for index in range(len(self._seed.outbox) - 1, -1, -1):
+            if self._seed.outbox[index] is message:
+                del self._seed.outbox[index]
+                return
+
     def list(self, to: str | None = None) -> list[OutboxMessage]:
         """Missatges del més recent al més antic; amb `to`, només els d'aquest destinatari.
 
@@ -31,6 +41,9 @@ class ClosedOutboxRepository:
     """
 
     def add(self, message: OutboxMessage) -> None:
+        return None
+
+    def remove(self, message: OutboxMessage) -> None:
         return None
 
     def list(self, to: str | None = None) -> list[OutboxMessage]:

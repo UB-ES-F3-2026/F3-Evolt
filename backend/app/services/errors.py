@@ -46,6 +46,8 @@ SAME_CURRENCY = "SAME_CURRENCY"
 AMOUNT_TOO_SMALL = "AMOUNT_TOO_SMALL"
 # Pagaments (docs/api.md §5 i §13.8).
 RECIPIENT_NOT_FOUND = "RECIPIENT_NOT_FOUND"
+SELF_TRANSFER = "SELF_TRANSFER"
+TRANSFER_LIMIT_EXCEEDED = "TRANSFER_LIMIT_EXCEEDED"
 # Sol·licituds (docs/api.md §5 i §14.7).
 SELF_REQUEST = "SELF_REQUEST"
 INVALID_CONCEPT = "INVALID_CONCEPT"
@@ -85,6 +87,8 @@ ERROR_STATUS: dict[str, int] = {
     SAME_CURRENCY: 422,
     AMOUNT_TOO_SMALL: 422,
     RECIPIENT_NOT_FOUND: 404,
+    SELF_TRANSFER: 422,
+    TRANSFER_LIMIT_EXCEEDED: 422,
     SELF_REQUEST: 422,
     INVALID_CONCEPT: 422,
     REQUEST_NOT_FOUND: 404,
@@ -132,6 +136,9 @@ ERROR_MESSAGES: dict[str, str] = {
     # Text literal de la US-27.
     AMOUNT_TOO_SMALL: "L'import és massa petit per canviar.",
     RECIPIENT_NOT_FOUND: "No hem trobat aquest destinatari.",
+    # Textos de la US-14 i de §13.5 i §13.8.
+    SELF_TRANSFER: "No et pots enviar diners a tu mateix.",
+    TRANSFER_LIMIT_EXCEEDED: "Has superat el límit diari d'enviament.",
     SELF_REQUEST: "No et pots demanar diners a tu mateix.",
     INVALID_CONCEPT: "El concepte ha de tenir entre 1 i 140 caràcters.",
     REQUEST_NOT_FOUND: "Aquesta sol·licitud ja no existeix.",

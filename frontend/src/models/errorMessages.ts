@@ -21,6 +21,9 @@ const MESSAGES: Record<ApiErrorCode, string> = {
   POT_NOT_FOUND: "No s'ha trobat la guardiola.",
   MOVEMENT_NOT_FOUND: "No s'ha trobat el moviment.",
   RECIPIENT_NOT_FOUND: 'No hem trobat aquest destinatari.',
+  SELF_TRANSFER: 'No et pots enviar diners a tu mateix.',
+  // The screens say the limit itself (`transferLimitMessage`), read from GET /api/transfers/limit.
+  TRANSFER_LIMIT_EXCEEDED: "Has superat el límit diari d'enviament.",
   SELF_REQUEST: 'No et pots demanar diners a tu mateix.',
   INVALID_CONCEPT: 'El concepte ha de tenir entre 1 i 140 caràcters.',
   REQUEST_NOT_FOUND: 'Aquesta sol·licitud ja no existeix.',

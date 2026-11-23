@@ -7,7 +7,7 @@ negoci: això és feina dels serveis.
 from datetime import date, datetime
 
 from app.data.seed import MADRID_TZ, SeedData, movement_id, movement_reference
-from app.models import KIND_TOPUP, MOVEMENT_STATUS_COMPLETED, Movement, MovementFilters
+from app.models import KIND_TOPUP, KIND_TRANSFER_OUT, MOVEMENT_STATUS_COMPLETED, Movement, MovementFilters
 
 
 class MovementRepository:
@@ -134,6 +134,19 @@ class MovementRepository:
             movement.amount
             for movement in self._by_account(account_id)
             if movement.kind == KIND_TOPUP
+            and movement.date.astimezone(MADRID_TZ).date() == day
+        )
+
+    def sum_transfers_sent_on_day(self, account_id: int, day: date) -> int:
+        """Suma dels enviaments fets des d'un compte en un dia natural de Madrid (T14.1).
+
+        Filtra per `kind == "transfer_out"` (§13.9), mai pel concepte: el concepte
+        l'escriu qui envia. Els diners rebuts (`transfer_in`) no hi compten (§13.5).
+        """
+        return sum(
+            movement.amount
+            for movement in self._by_account(account_id)
+            if movement.kind == KIND_TRANSFER_OUT
             and movement.date.astimezone(MADRID_TZ).date() == day
         )
 
