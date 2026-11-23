@@ -1,35 +1,50 @@
-/**
- * `/api/subaccounts` — currency sub-accounts (§12, US-25/US-26). One function per
- * endpoint.
- *
- * The mock speaks app shapes (`SubaccountList` / `Subaccount`) and the API speaks
- * wire shapes (`SubaccountsJson` / `SubaccountJson`), so only the API path maps:
- * running `fromApiSubaccountsList` over a mock response would find no `currency`
- * field and silently drop every row.
- */
+/** /api/subaccounts — currency sub-accounts (US-25 and US-26). One function per endpoint. */
 
 import { apiGet, apiPost } from './apiClient'
 import { useMocks } from '@/mocks'
-import { mockAddSubaccount, mockSubaccounts } from '@/mocks/currencies'
+import {
+  mockAddSubaccount,
+  mockDeleteSubaccount,
+  mockSubaccountMovements,
+  mockSubaccounts,
+} from '@/mocks/currencies'
 import {
   fromApiSubaccount,
-  fromApiSubaccountsList,
+  fromApiSubaccounts,
   type CurrencyCode,
+  type DeleteSubaccountJson,
   type Subaccount,
   type SubaccountJson,
-  type SubaccountList,
+  type SubaccountMovement,
+  type SubaccountMovementsJson,
   type SubaccountsJson,
 } from '@/models/currency'
 
-/** GET /api/subaccounts (§12.3): the rows plus the server-computed approximate total. */
-export async function getSubaccounts(): Promise<SubaccountList> {
-  if (useMocks()) return mockSubaccounts()
-  return fromApiSubaccountsList(await apiGet<SubaccountsJson>('/api/subaccounts'))
+export async function getSubaccounts(): Promise<Subaccount[]> {
+  const json = useMocks() ? mockSubaccounts() : await apiGet<SubaccountsJson>('/api/subaccounts')
+  return fromApiSubaccounts(json.items)
 }
 
-/** POST /api/subaccounts (§12.4): a new currency sub-account, with `balance: 0`. */
 export async function addSubaccount(code: CurrencyCode): Promise<Subaccount> {
-  return useMocks()
+  const json = useMocks()
     ? mockAddSubaccount({ currency: code })
-    : fromApiSubaccount(await apiPost<SubaccountJson>('/api/subaccounts', { currency: code }))
+    : await apiPost<SubaccountJson>('/api/subaccounts', { currency: code })
+  return fromApiSubaccount(json)
+}
+
+/** POST /api/subaccounts/{subaccountId}/delete (US-26, docs/api.md §12.5). POST, not DELETE: the apiClient and CORS only allow GET and POST. */
+export async function deleteSubaccount(subaccountId: string): Promise<void> {
+  if (useMocks()) {
+    mockDeleteSubaccount(subaccountId)
+    return
+  }
+  await apiPost<DeleteSubaccountJson>(`/api/subaccounts/${encodeURIComponent(subaccountId)}/delete`, {})
+}
+
+/** GET /api/subaccounts/{subaccountId}/movements (US-26, docs/api.md §12.6): newest first. */
+export async function getSubaccountMovements(subaccountId: string): Promise<SubaccountMovement[]> {
+  const json = useMocks()
+    ? mockSubaccountMovements(subaccountId)
+    : await apiGet<SubaccountMovementsJson>(`/api/subaccounts/${encodeURIComponent(subaccountId)}/movements`)
+  return json.items
 }

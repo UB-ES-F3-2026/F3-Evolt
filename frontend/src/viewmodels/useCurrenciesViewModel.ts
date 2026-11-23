@@ -2,22 +2,26 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   CURRENCIES,
+  formatCurrencyAmount,
+  totalInEurosMinor,
   type CurrencyCode,
   type Subaccount,
-  type SubaccountList,
 } from '@/models/currency'
 import { toUserMessage } from '@/models/errorMessages'
-import { formatMinor } from '@/models/money'
 import { getSubaccounts } from '@/services/subaccountsService'
 
 export interface CurrenciesDependencies {
-  getSubaccounts: () => Promise<SubaccountList>
+  getSubaccounts: () => Promise<Subaccount[]>
   goToAdd: () => unknown
   goChange: () => unknown
+  /** US-26: each row opens its account's detail. */
+  goToSubaccount: (subaccountId: string) => unknown
 }
 
 /** One line of the currencies list: only the sub-accounts the person already owns. */
 export interface CurrencyRow {
+  /** The account's id (`main` for EUR), for its detail (US-26). */
+  id: string
   code: CurrencyCode
   name: string
   symbol: string
@@ -33,8 +37,6 @@ export function useCurrenciesViewModel(dependencies: CurrenciesDependencies = de
   // Starts true so a zero total never flashes before the first answer.
   const isLoading = ref(true)
   const error = ref<string | null>(null)
-  // The server computes the total (§12.3): the screen only displays it.
-  const totalInEuros = ref<number | null>(null)
 
   // CURRENCIES order, so EUR is always first and the list never reorders.
   const rows = computed<CurrencyRow[]>(() =>
@@ -43,26 +45,24 @@ export function useCurrenciesViewModel(dependencies: CurrenciesDependencies = de
       if (subaccount === undefined) return []
       return [
         {
+          id: subaccount.id,
           code: currency.code,
           name: currency.name,
           symbol: currency.symbol,
-          amountText: formatMinor(subaccount.balance, currency.code),
+          amountText: formatCurrencyAmount(subaccount.balance, currency.code),
         },
       ]
     }),
   )
 
-  // Stored as `null` so the injected server total is shown only once it has loaded,
-  // exactly when `rows` gets its first values.
-  const totalCents = computed(() => totalInEuros.value ?? 0)
+  // Each row is converted to euros on its own and then summed (see the model).
+  const totalCents = computed(() => totalInEurosMinor(subaccounts.value))
 
   async function load(): Promise<void> {
     isLoading.value = true
     error.value = null
     try {
-      const list = await dependencies.getSubaccounts()
-      subaccounts.value = list.items
-      totalInEuros.value = list.totalInEuros
+      subaccounts.value = await dependencies.getSubaccounts()
     } catch (failure) {
       error.value = toUserMessage(failure)
     } finally {
@@ -78,6 +78,7 @@ export function useCurrenciesViewModel(dependencies: CurrenciesDependencies = de
     load,
     goToAdd: dependencies.goToAdd,
     goChange: dependencies.goChange,
+    goToSubaccount: dependencies.goToSubaccount,
   }
 }
 
@@ -88,5 +89,6 @@ function defaultDependencies(): CurrenciesDependencies {
     goToAdd: () => router.push({ name: 'add-currency' }),
     // Owned by US-27: the route does not exist yet, so it is pushed by raw path.
     goChange: () => router.push('/canviar'),
+    goToSubaccount: (subaccountId) => router.push({ name: 'subaccount', params: { subaccountId } }),
   }
 }

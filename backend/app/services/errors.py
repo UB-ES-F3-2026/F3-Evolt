@@ -35,6 +35,16 @@ POT_NOT_FOUND = "POT_NOT_FOUND"
 # Moviments (docs/api.md §5 i §10.6).
 MOVEMENT_NOT_FOUND = "MOVEMENT_NOT_FOUND"
 INVALID_DESCRIPTION = "INVALID_DESCRIPTION"
+# Multidivisa (docs/api.md §5 i §12.10).
+CURRENCY_NOT_SUPPORTED = "CURRENCY_NOT_SUPPORTED"
+CURRENCY_EXISTS = "CURRENCY_EXISTS"
+SUBACCOUNT_NOT_FOUND = "SUBACCOUNT_NOT_FOUND"
+MAIN_ACCOUNT_NOT_DELETABLE = "MAIN_ACCOUNT_NOT_DELETABLE"
+SUBACCOUNT_NOT_EMPTY = "SUBACCOUNT_NOT_EMPTY"
+SAME_CURRENCY = "SAME_CURRENCY"
+AMOUNT_TOO_SMALL = "AMOUNT_TOO_SMALL"
+# Pagaments (docs/api.md §5 i §13.8).
+RECIPIENT_NOT_FOUND = "RECIPIENT_NOT_FOUND"
 
 # Codi d'error → estat HTTP de la resposta.
 ERROR_STATUS: dict[str, int] = {
@@ -60,6 +70,14 @@ ERROR_STATUS: dict[str, int] = {
     POT_NOT_FOUND: 404,
     MOVEMENT_NOT_FOUND: 404,
     INVALID_DESCRIPTION: 422,
+    CURRENCY_NOT_SUPPORTED: 422,
+    CURRENCY_EXISTS: 422,
+    SUBACCOUNT_NOT_FOUND: 404,
+    MAIN_ACCOUNT_NOT_DELETABLE: 422,
+    SUBACCOUNT_NOT_EMPTY: 422,
+    SAME_CURRENCY: 422,
+    AMOUNT_TOO_SMALL: 422,
+    RECIPIENT_NOT_FOUND: 404,
 }
 
 # Missatge per defecte de cada codi (docs/api.md §5). El contracte els marca
@@ -84,10 +102,24 @@ ERROR_MESSAGES: dict[str, str] = {
     TOO_MANY_ATTEMPTS: "Has fet massa intents. Demana un codi nou.",
     INVALID_POT_NAME: "El nom de la guardiola no pot estar buit.",
     INVALID_TARGET: "L'objectiu ha de ser més gran que 0.",
-    INSUFFICIENT_BALANCE: "No tens prou saldo per fer aquesta aportació.",
+    # Un sol text a l'aportació, l'enviament i el canvi (P85).
+    INSUFFICIENT_BALANCE: "No tens prou saldo.",
     POT_NOT_FOUND: "No s'ha trobat la guardiola.",
     MOVEMENT_NOT_FOUND: "No s'ha trobat el moviment.",
     INVALID_DESCRIPTION: "Explica què passa amb el moviment (com a màxim 500 caràcters).",
+    # Textos literals de la US-25.
+    CURRENCY_NOT_SUPPORTED: "Aquesta divisa no és a la llista de divises disponibles.",
+    CURRENCY_EXISTS: "Ja tens un subcompte en aquesta divisa.",
+    # Decisió del PO (#193).
+    SUBACCOUNT_NOT_FOUND: "No s'ha trobat el subcompte.",
+    # Textos literals de la US-26.
+    MAIN_ACCOUNT_NOT_DELETABLE: "El compte en euros no es pot eliminar.",
+    SUBACCOUNT_NOT_EMPTY: "Només pots eliminar un subcompte amb saldo 0.",
+    # Text de la pantalla (PR #180), decisió del PO.
+    SAME_CURRENCY: "Origen i destí no poden ser el mateix subcompte.",
+    # Text literal de la US-27.
+    AMOUNT_TOO_SMALL: "L'import és massa petit per canviar.",
+    RECIPIENT_NOT_FOUND: "No hem trobat aquest destinatari.",
 }
 
 

@@ -1,22 +1,19 @@
 import { describe, expect, it, vi } from 'vitest'
-import { type Subaccount, type SubaccountList } from '@/models/currency'
+import { totalInEurosMinor, type Subaccount } from '@/models/currency'
 import { messageForCode } from '@/models/errorMessages'
 import { useCurrenciesViewModel, type CurrenciesDependencies } from './useCurrenciesViewModel'
 
 const owned: Subaccount[] = [
-  { id: 'main', code: 'EUR', balance: 125050, isMain: true, rateBps: 10000 },
-  { id: 'sub-01', code: 'USD', balance: 42716, isMain: false, rateBps: 9123 },
+  { id: 'sub-eur', code: 'EUR', balance: 125050 },
+  { id: 'sub-usd', code: 'USD', balance: 42716 },
 ]
-
-function fakeList(totalInEuros: number): SubaccountList {
-  return { items: owned, totalInEuros }
-}
 
 function fakeDependencies(overrides: Partial<CurrenciesDependencies> = {}) {
   return {
-    getSubaccounts: vi.fn(() => Promise.resolve(fakeList(164020))),
+    getSubaccounts: vi.fn(() => Promise.resolve(owned)),
     goToAdd: vi.fn(),
     goChange: vi.fn(),
+    goToSubaccount: vi.fn(),
     ...overrides,
   }
 }
@@ -28,7 +25,6 @@ describe('useCurrenciesViewModel', () => {
     expect(viewModel.isLoading.value).toBe(true)
     expect(viewModel.error.value).toBeNull()
     expect(viewModel.rows.value).toEqual([])
-    expect(viewModel.totalCents.value).toBe(0)
   })
 
   it('lists only the owned sub-accounts, in CURRENCIES order (EUR first)', async () => {
@@ -49,16 +45,14 @@ describe('useCurrenciesViewModel', () => {
     expect(viewModel.rows.value[1].amountText).toMatch(/^427,16\s\$$/)
   })
 
-  it('shows the server total instead of recomputing it from the rows', async () => {
-    // The server total deliberately differs from what the rows would sum to
-    // (164020): the screen must display the server's figure untouched (§12.3).
-    const viewModel = useCurrenciesViewModel(
-      fakeDependencies({ getSubaccounts: vi.fn(() => Promise.resolve(fakeList(199999))) }),
-    )
+  it('totals every sub-account in euro cents', async () => {
+    const viewModel = useCurrenciesViewModel(fakeDependencies())
 
     await viewModel.load()
 
-    expect(viewModel.totalCents.value).toBe(199999)
+    // EUR 125050 stays as is; USD 42716 at 9123 bps is 38970.
+    expect(viewModel.totalCents.value).toBe(164020)
+    expect(viewModel.totalCents.value).toBe(totalInEurosMinor(owned))
   })
 
   it('shows the user message of a rejected load and no rows', async () => {
@@ -83,5 +77,16 @@ describe('useCurrenciesViewModel', () => {
 
     expect(dependencies.goToAdd).toHaveBeenCalledTimes(1)
     expect(dependencies.goChange).toHaveBeenCalledTimes(1)
+  })
+
+  it('US-26: each row carries its account id, and opens its detail', async () => {
+    const dependencies = fakeDependencies()
+    const viewModel = useCurrenciesViewModel(dependencies)
+
+    await viewModel.load()
+    viewModel.goToSubaccount(viewModel.rows.value[1].id)
+
+    expect(viewModel.rows.value.map((row) => row.id)).toEqual(['sub-eur', 'sub-usd'])
+    expect(dependencies.goToSubaccount).toHaveBeenCalledWith('sub-usd')
   })
 })

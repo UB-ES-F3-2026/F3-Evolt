@@ -62,9 +62,10 @@ develop ──┬─────────────────────
    ```
 
 2. **Contract first.** If the story changes `docs/api.md`, that is its first task
-   PR into the story branch, reviewed by backend and frontend.
+   PR into the story branch, reviewed by one teammate (whoever uses it most).
 3. **Each task:** branch from the story branch, small commits, PR **into the
-   story branch**. CI runs on it, one teammate reviews, merge.
+   story branch**. CI runs on it; the author self-reviews, then one teammate
+   reviews, approves and merges.
 
    ```bash
    git switch story/us-19-pot-detail && git pull

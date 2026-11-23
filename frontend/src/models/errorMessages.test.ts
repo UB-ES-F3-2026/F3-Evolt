@@ -10,10 +10,6 @@ describe('toUserMessage', () => {
     expect(toUserMessage({ code: 'INTERNAL_ERROR', message: 'x' })).toMatch(/error inesperat/)
     expect(toUserMessage({ code: 'INVALID_POT_NAME', message: 'x' })).toBe('El nom de la guardiola no pot estar buit.')
     expect(toUserMessage({ code: 'INVALID_TARGET', message: 'x' })).toBe("L'objectiu ha de ser més gran que 0.")
-    expect(toUserMessage({ code: 'AMOUNT_TOO_SMALL', message: 'x' })).toBe("L'import és massa petit per canviar.")
-    expect(toUserMessage({ code: 'SAME_CURRENCY', message: 'x' })).toBe(
-      'Origen i destí no poden ser el mateix subcompte.',
-    )
   })
 
   it.each([
@@ -35,8 +31,7 @@ describe('toUserMessage', () => {
   it.each([
     ['CURRENCY_EXISTS', 'Ja tens un subcompte en aquesta divisa.'],
     ['CURRENCY_NOT_SUPPORTED', 'Aquesta divisa no és a la llista de divises disponibles.'],
-    ['SUBACCOUNT_NOT_FOUND', "No s'ha trobat el subcompte."],
-  ])('gives the multidivisa code %s its text of docs/api.md §12', (code, text) => {
+  ])('gives the currency code %s the text of US-25', (code, text) => {
     expect(toUserMessage({ code, message: 'x' })).toBe(text)
   })
 

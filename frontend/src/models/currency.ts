@@ -1,10 +1,9 @@
 /**
- * US-25: the closed list of currency sub-accounts, their € rates and the
- * sub-account mapping. Amounts in minor units (cents, or whole yen for JPY).
- * Display formatting lives in `money.ts` (`formatMinor`).
+ * US-25: the closed list of currency sub-accounts, their € rates and display
+ * formatting. Amounts in minor units (cents, or whole yen for JPY).
  */
 
-import { halfUpDiv } from './money'
+import { formatCents } from './money'
 
 /** Every currency the bank offers, in the order the API and the UI list them. */
 export type CurrencyCode = 'EUR' | 'USD' | 'GBP' | 'CHF' | 'JPY'
@@ -26,9 +25,9 @@ export const CURRENCIES: readonly CurrencyInfo[] = [
   { code: 'JPY', name: 'Ien japonès', symbol: '¥', rateBps: 5700, decimals: 0 },
 ]
 
-/** `true` only for the five codes in `CURRENCIES` (case sensitive, like the API); safe on untyped data, like `history.state`. */
-export function isCurrencyCode(value: unknown): value is CurrencyCode {
-  return typeof value === 'string' && CURRENCIES.some((currency) => currency.code === value)
+/** `true` only for the five codes in `CURRENCIES` (case sensitive, like the API). */
+export function isCurrencyCode(value: string): value is CurrencyCode {
+  return CURRENCIES.some((currency) => currency.code === value)
 }
 
 /** The `CurrencyInfo` of a known code. Throws on anything else (internal invariant). */
@@ -40,16 +39,15 @@ export function currencyByCode(code: CurrencyCode): CurrencyInfo {
 
 /** `minor` units of `rateBps` into whole euro cents, rounding halves up. */
 export function eurosFromMinor(minor: number, rateBps: number): number {
-  return halfUpDiv(minor * rateBps, 10000)
+  // Integer-exact equivalent of `Math.floor(minor * rateBps / 10000 + 0.5)`.
+  return Math.floor((minor * rateBps + 5000) / 10000)
 }
 
-/** One currency sub-account of the main account (§12.2). */
+/** One currency sub-account of the main account. */
 export interface Subaccount {
   id: string
   code: CurrencyCode
   balance: number
-  isMain: boolean
-  rateBps: number
 }
 
 /** A subaccount as the API sends it, before `currency` is checked. */
@@ -57,20 +55,37 @@ export interface SubaccountJson {
   id: string
   currency: string
   balance: number
-  isMain: boolean
-  rateBps: number
 }
 
-/** GET /api/subaccounts (§12.3): the rows plus the server-computed approximate total. */
+/** GET /api/subaccounts (docs/api.md). */
 export interface SubaccountsJson {
   items: SubaccountJson[]
-  totalInEuros: number
 }
 
-/** A mapped §12.3 list, ready for the ViewModels: rows and the server's `totalInEuros`. */
-export interface SubaccountList {
-  items: Subaccount[]
-  totalInEuros: number
+/** The id of the main euro account in every multi-currency answer (docs/api.md §12.2). */
+export const MAIN_SUBACCOUNT_ID = 'main'
+
+/**
+ * One entry of a currency sub-account's history (US-26, docs/api.md §12.6).
+ * `amount` is in the minor unit of the sub-account's currency, always > 0;
+ * `type` says whether money came in or went out of the sub-account.
+ */
+export interface SubaccountMovement {
+  id: string
+  amount: number
+  concept: string
+  date: string
+  type: 'income' | 'expense'
+}
+
+/** GET /api/subaccounts/{subaccountId}/movements (docs/api.md §12.6). */
+export interface SubaccountMovementsJson {
+  items: SubaccountMovement[]
+}
+
+/** POST /api/subaccounts/{subaccountId}/delete (docs/api.md §12.5). */
+export interface DeleteSubaccountJson {
+  status: 'ok'
 }
 
 /** Maps one row; unknown currency codes are an API contract break, so it throws. */
@@ -78,30 +93,17 @@ export function fromApiSubaccount(json: SubaccountJson): Subaccount {
   if (!isCurrencyCode(json.currency)) {
     throw new Error(`Unknown currency code: ${json.currency}`)
   }
-  if (typeof json.isMain !== 'boolean') {
-    throw new Error(`Invalid subaccount isMain: expected boolean, got ${typeof json.isMain}`)
-  }
-  if (!Number.isSafeInteger(json.rateBps)) {
-    throw new Error(`Invalid subaccount rateBps: expected safe integer, got ${json.rateBps}`)
-  }
-  return { id: json.id, code: json.currency, balance: json.balance, isMain: json.isMain, rateBps: json.rateBps }
+  return { id: json.id, code: json.currency, balance: json.balance }
+}
+
+/** Maps the list, dropping rows whose currency is not a known code. */
+export function fromApiSubaccounts(list: SubaccountJson[] | null | undefined): Subaccount[] {
+  return (list ?? []).filter((json) => isCurrencyCode(json.currency)).map(fromApiSubaccount)
 }
 
 /**
- * Maps the list, dropping rows whose currency is not a known code. `totalInEuros`
- * passes through untouched: the server computes it (§12.1), no screen recomputes it.
- */
-export function fromApiSubaccountsList(json: SubaccountsJson | null | undefined): SubaccountList {
-  if (json === null || json === undefined) return { items: [], totalInEuros: 0 }
-  // A payload without `items` degrades to the empty list, like null/undefined above.
-  const rows = Array.isArray(json.items) ? json.items : []
-  const items = rows.filter((row) => isCurrencyCode(row.currency)).map(fromApiSubaccount)
-  return { items, totalInEuros: json.totalInEuros }
-}
-
-/**
- * The server's approximate-total algorithm (§12.1), used by the mock: every row
- * is converted to euro cents and rounded on its own, and only then summed.
+ * The total of every subaccount in euro cents: each row is converted and rounded
+ * on its own, and only then summed — never the other way around.
  */
 export function totalInEurosMinor(subaccounts: readonly { code: CurrencyCode; balance: number }[]): number {
   return subaccounts.reduce((total, subaccount) => {
@@ -109,25 +111,26 @@ export function totalInEurosMinor(subaccounts: readonly { code: CurrencyCode; ba
   }, 0)
 }
 
-/** One subaccount of the «Canviar» pickers (US-27 View), derived from a `Subaccount`. */
-export interface SubaccountOption {
-  code: CurrencyCode
-  name: string
-  balanceMinor: number
-  isMain: boolean
-}
+const FORMATTERS: Record<number, Intl.NumberFormat> = {}
 
-/** EUR is the main currency (US-25): every account owns it and it holds the main balance. */
-export function isMainCurrency(code: CurrencyCode): boolean {
-  return code === 'EUR'
-}
-
-/** Maps a service `Subaccount` (id, code, balance in minor units) to a picker option. */
-export function toSubaccountOption(subaccount: Subaccount): SubaccountOption {
-  return {
-    code: subaccount.code,
-    name: currencyByCode(subaccount.code).name,
-    balanceMinor: subaccount.balance,
-    isMain: isMainCurrency(subaccount.code),
+function numberFormatter(decimals: number): Intl.NumberFormat {
+  let formatter = FORMATTERS[decimals]
+  if (formatter === undefined) {
+    formatter = new Intl.NumberFormat('ca-ES', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    })
+    FORMATTERS[decimals] = formatter
   }
+  return formatter
+}
+
+/**
+ * `31755, 'USD'` → `"317,55 $"`. EUR reuses `formatCents`; the rest avoid
+ * Intl's `style: 'currency'`, which renders USD as `US$` in ca-ES.
+ */
+export function formatCurrencyAmount(minor: number, code: CurrencyCode): string {
+  const currency = currencyByCode(code)
+  if (code === 'EUR') return formatCents(minor)
+  return `${numberFormatter(currency.decimals).format(minor / 10 ** currency.decimals)} ${currency.symbol}`
 }

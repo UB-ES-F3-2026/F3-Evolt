@@ -1,25 +1,19 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { CurrencyCode, Subaccount, SubaccountList } from '@/models/currency'
+import type { CurrencyCode, Subaccount } from '@/models/currency'
 import { messageForCode } from '@/models/errorMessages'
 import { useAddCurrencyViewModel, type AddCurrencyDependencies } from './useAddCurrencyViewModel'
 
-const rateBps: Record<CurrencyCode, number> = { EUR: 10000, USD: 9123, GBP: 11680, CHF: 10355, JPY: 5700 }
-
-function row(code: CurrencyCode, balance: number, isMain: boolean): Subaccount {
-  return { id: `sub-${code.toLowerCase()}`, code, balance, isMain, rateBps: rateBps[code] }
-}
-
-const ownedEur: SubaccountList = { items: [row('EUR', 125050, true)], totalInEuros: 125050 }
-const ownedEurAndUsd: SubaccountList = {
-  items: [...ownedEur.items, row('USD', 0, false)],
-  totalInEuros: 125050,
-}
+const ownedEur: Subaccount[] = [{ id: 'sub-eur', code: 'EUR', balance: 125050 }]
+const ownedEurAndUsd: Subaccount[] = [
+  ...ownedEur,
+  { id: 'sub-usd', code: 'USD', balance: 0 },
+]
 
 function fakeDependencies(overrides: Partial<AddCurrencyDependencies> = {}) {
   return {
     getSubaccounts: vi.fn(() => Promise.resolve(ownedEur)),
     addSubaccount: vi.fn((code: CurrencyCode) =>
-      Promise.resolve(row(code, 0, false)),
+      Promise.resolve({ id: `sub-${code.toLowerCase()}`, code, balance: 0 }),
     ),
     goHome: vi.fn(() => Promise.resolve()),
     pause: vi.fn(() => Promise.resolve()),
@@ -116,7 +110,7 @@ describe('useAddCurrencyViewModel', () => {
     expect(second).toBe(false)
     expect(dependencies.addSubaccount).toHaveBeenCalledTimes(1)
 
-    finish(row('USD', 0, false))
+    finish({ id: 'sub-usd', code: 'USD', balance: 0 })
     await first
   })
 

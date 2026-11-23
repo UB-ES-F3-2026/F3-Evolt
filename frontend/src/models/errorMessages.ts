@@ -16,10 +16,9 @@ const MESSAGES: Record<ApiErrorCode, string> = {
   INVALID_POT_NAME: 'El nom de la guardiola no pot estar buit.',
   INVALID_TARGET: "L'objectiu ha de ser més gran que 0.",
   INSUFFICIENT_BALANCE: 'No tens prou saldo per fer aquesta aportació.',
-  AMOUNT_TOO_SMALL: "L'import és massa petit per canviar.",
-  SAME_CURRENCY: 'Origen i destí no poden ser el mateix subcompte.',
   POT_NOT_FOUND: "No s'ha trobat la guardiola.",
   MOVEMENT_NOT_FOUND: "No s'ha trobat el moviment.",
+  RECIPIENT_NOT_FOUND: 'No hem trobat aquest destinatari.',
   INVALID_DESCRIPTION: `Explica què passa amb el moviment (com a màxim ${MAX_REPORT_LENGTH} caràcters).`,
   VALIDATION_ERROR: 'Les dades no són vàlides. Revisa-les i torna-ho a provar.',
   INTERNAL_ERROR: "S'ha produït un error inesperat. Torna-ho a provar més tard.",
@@ -36,11 +35,12 @@ const MESSAGES: Record<ApiErrorCode, string> = {
   UNAUTHENTICATED: 'Cal iniciar sessió.',
   SESSION_EXPIRED: "La sessió s'ha tancat per inactivitat.",
   RESET_LINK_EXPIRED: 'Aquest enllaç ha caducat.',
-  // Multidivisa (docs/api.md §12, US-25/US-27/T27.2).
+  // Multi-currency (docs/api.md §12.10): the literals of US-25 and US-26.
   CURRENCY_EXISTS: 'Ja tens un subcompte en aquesta divisa.',
   CURRENCY_NOT_SUPPORTED: 'Aquesta divisa no és a la llista de divises disponibles.',
-  // §12.10 of docs/api.md leaves this literal pending the PO (US-26 gives no text).
   SUBACCOUNT_NOT_FOUND: "No s'ha trobat el subcompte.",
+  MAIN_ACCOUNT_NOT_DELETABLE: 'El compte en euros no es pot eliminar.',
+  SUBACCOUNT_NOT_EMPTY: 'Només pots eliminar un subcompte amb saldo 0.',
 }
 
 export function messageForCode(code: ApiErrorCode, details?: ApiError['details']): string {
@@ -58,6 +58,3 @@ export function toUserMessage(failure: unknown): string {
 
 /** An amount typed in euros that is not a number with at most 2 decimals (top-up, pot target). */
 export const AMOUNT_FORMAT_MESSAGE = 'Escriu un import en euros, amb 2 decimals com a màxim.'
-
-/** Exchange wording (US-27). Distinct from the pot-specific INSUFFICIENT_BALANCE text above. */
-export const EXCHANGE_INSUFFICIENT_BALANCE_MESSAGE = 'No tens prou saldo'
