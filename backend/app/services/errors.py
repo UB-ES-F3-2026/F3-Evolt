@@ -44,6 +44,11 @@ MAIN_ACCOUNT_NOT_DELETABLE = "MAIN_ACCOUNT_NOT_DELETABLE"
 SUBACCOUNT_NOT_EMPTY = "SUBACCOUNT_NOT_EMPTY"
 # Pagaments (docs/api.md §5 i §13.8).
 RECIPIENT_NOT_FOUND = "RECIPIENT_NOT_FOUND"
+# Sol·licituds (docs/api.md §5 i §14.7).
+SELF_REQUEST = "SELF_REQUEST"
+INVALID_CONCEPT = "INVALID_CONCEPT"
+REQUEST_NOT_FOUND = "REQUEST_NOT_FOUND"
+REQUEST_NOT_PENDING = "REQUEST_NOT_PENDING"
 
 # Codi d'error → estat HTTP de la resposta.
 ERROR_STATUS: dict[str, int] = {
@@ -76,6 +81,10 @@ ERROR_STATUS: dict[str, int] = {
     MAIN_ACCOUNT_NOT_DELETABLE: 422,
     SUBACCOUNT_NOT_EMPTY: 422,
     RECIPIENT_NOT_FOUND: 404,
+    SELF_REQUEST: 422,
+    INVALID_CONCEPT: 422,
+    REQUEST_NOT_FOUND: 404,
+    REQUEST_NOT_PENDING: 422,
 }
 
 # Missatge per defecte de cada codi (docs/api.md §5). El contracte els marca
@@ -114,6 +123,10 @@ ERROR_MESSAGES: dict[str, str] = {
     MAIN_ACCOUNT_NOT_DELETABLE: "El compte en euros no es pot eliminar.",
     SUBACCOUNT_NOT_EMPTY: "Només pots eliminar un subcompte amb saldo 0.",
     RECIPIENT_NOT_FOUND: "No hem trobat aquest destinatari.",
+    SELF_REQUEST: "No et pots demanar diners a tu mateix.",
+    INVALID_CONCEPT: "El concepte ha de tenir entre 1 i 140 caràcters.",
+    REQUEST_NOT_FOUND: "Aquesta sol·licitud ja no existeix.",
+    REQUEST_NOT_PENDING: "Només es poden cancel·lar les sol·licituds pendents.",
 }
 
 

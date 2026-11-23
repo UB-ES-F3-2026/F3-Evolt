@@ -1,6 +1,8 @@
-# Proves d'acceptació · Pagaments (US-13 i US-14)
+# Proves d'acceptació · Pagaments (US-13 a US-15)
 
 Proves d'acceptació de cercar un usuari i d'enviar-li diners, escrites a partir de les històries (`docs/us/US-13.md` i `docs/us/US-14.md`) i del contracte de l'[apartat 13 de `docs/api.md`](api.md#13-pagaments-cercar-usuaris-i-enviar-diners-us-13-i-us-14). Tasca: T13.1 (issue #157).
+
+Les de demanar diners (US-15) segueixen l'[apartat 14](api.md#14-sol·licituds-de-diners-us-15) i `docs/us/US-15.md`. Tasca: T15.1 (issue #153).
 
 ## Índex
 
@@ -8,7 +10,8 @@ Proves d'acceptació de cercar un usuari i d'enviar-li diners, escrites a partir
 2. [Dades de partida](#dades-de-partida)
 3. [US-13 · Cercar un usuari](#us-13--cercar-un-usuari)
 4. [US-14 · Enviar diners a usuaris](#us-14--enviar-diners-a-usuaris)
-5. [Casos de les històries i proves](#casos-de-les-històries-i-proves)
+5. [US-15 · Sol·licitar diners](#us-15--sol·licitar-diners)
+6. [Casos de les històries i proves](#casos-de-les-històries-i-proves)
 
 ---
 
@@ -37,6 +40,7 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
   | `usr-08` | Martí | `sudo-itramplay` | `marti@evolt.test` | `+34611223306` | 0,00 € |
 
 - Cap enviament fet avui: el límit diari d'enviament comença a 1.000,00 € (`100000`).
+- Sol·licituds enviades per l'usuari 1 (US-15, [`api.md` §14.8](api.md#148-model-intern)): `req-01` a Huabin, 42,00 €, «Pizza del diumenge», fa 9 dies (caducada), i `req-02` a Alicia, 25,00 €, «El sopar de divendres», ahir a les 19:30 (pendent). La resta d'usuaris no n'han enviat cap.
 - Rellotge fixat a **T0 = `2026-11-15T21:15:00+01:00`** a les proves que miren la data d'un enviament.
 
 ---
@@ -150,6 +154,56 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 
 ---
 
+## US-15 · Sol·licitar diners
+
+### API (T15.2)
+
+| Id | Situació inicial | Acció | Resultat esperat |
+|---|---|---|---|
+| **SO-01** | Seed, T0 | `POST /api/money-requests` amb `{ "toUserId": "usr-03", "amount": 2500, "concept": "El sopar de divendres" }` | `201` `{ id: "req-03", to: { id: "usr-03", name: "Alicia", username: "aliciaa415" }, amount: 2500, concept: "El sopar de divendres", status: "pending", createdAt: T0, expiresAt: "2026-11-22T00:00:00+01:00" }`. |
+| **SO-02** | SO-01 fet | `GET /api/money-requests` (usuari 1) | `200` amb `req-03`, `req-02` i `req-01`, en aquest ordre. `req-01` és `expired` i les altres dues, `pending`. |
+| **SO-03** | SO-01 fet | Mirar cada element de SO-02 | Té exactament les claus `id`, `to`, `amount`, `concept`, `status`, `createdAt` i `expiresAt`; `to` només té `id`, `name` i `username`. |
+| **SO-04** | SO-01 fet | `GET /api/home`, `GET /api/movements`, `GET /api/pots` (usuaris 1 i 3) | Igual que abans de SO-01: una sol·licitud no mou diners. |
+| **SO-05** | SO-01 fet | `GET /api/dev/outbox?to=alicia@evolt.test` | El primer missatge és `money_request`, «Usuari demo et demana 25,00 €: El sopar de divendres.», canal `email`, sense `code` ni `link`. |
+| **SO-06** | Seed | `GET /api/money-requests` com a usuari 2 | `200` amb `items: []`. |
+| **SO-07** | Seed | Demanar `2500` a `usr-01` (a mi mateix) | `422 SELF_REQUEST`. No es desa res ni hi ha cap missatge nou. |
+| **SO-08** | Seed | Demanar a `usr-99`, a `"3"` i a l'usuari pendent de CU-15 | `404 RECIPIENT_NOT_FOUND`. |
+| **SO-09** | Seed | Demanar `0` i després `-100` | `422 INVALID_AMOUNT`. |
+| **SO-10** | Seed | Demanar `100000000` (1.000.000,00 €) i després `100000001` | Primer `201`; després `422 AMOUNT_OVER_LIMIT`. |
+| **SO-11** | Seed | Concepte `""`, `"   "` i de 141 caràcters | `422 INVALID_CONCEPT`. Amb 140 caràcters, `201`, i amb `"  Sopar  "`, el concepte es desa com a «Sopar». |
+| **SO-12** | Seed | Cossos sense `concept`, amb `amount: "2500"`, amb `toUserId: 3` i sense `toUserId` | `422 VALIDATION_ERROR`. |
+| **SO-13** | Seed | Demanar `0` a `usr-01` i `0` a `usr-99` | `SELF_REQUEST` i `RECIPIENT_NOT_FOUND`: l'ordre de 14.2. |
+| **SO-14** | Una sol·licitud creada el 14/11 a les 19:30 | `GET /api/money-requests` el 20/11 a les 23:59:59 i el 21/11 a les 00:00 (rellotge fixat) | `pending` i després `expired`, amb `expiresAt` `2026-11-21T00:00:00+01:00` totes dues vegades. |
+| **SO-15** | SO-14 | Mirar la sol·licitud desada | Continua desada com a pendent: `expired` no es desa mai. |
+| **SO-16** | Seed | `POST /api/money-requests/req-02/cancel` (usuari 1) | `200` `{ "status": "ok" }`. `GET /api/money-requests` ja no té `req-02`. |
+| **SO-17** | SO-16 fet | Tornar a cancel·lar `req-02` | `404 REQUEST_NOT_FOUND`. |
+| **SO-18** | Seed | Cancel·lar `req-01` (caducada) | `422 REQUEST_NOT_PENDING`, i `req-01` continua a la llista. |
+| **SO-19** | Seed | Cancel·lar `req-02` com a usuari 3 (Alicia, la destinatària) | `404 REQUEST_NOT_FOUND`, amb el mateix cos que SO-17; `req-02` continua pendent. |
+| **SO-20** | Seed | Cancel·lar `req-99` i `abc` | `404 REQUEST_NOT_FOUND`. |
+| **SO-21** | Seed | Cancel·lar `req-02` el dia que caduca a les 00:00 (rellotge fixat) | `422 REQUEST_NOT_PENDING`: l'estat es calcula en el moment de la petició. |
+| **SO-22** | SO-16 fet | Crear una sol·licitud nova | Té l'id `req-03`: l'id d'una cancel·lada no es torna a fer servir. |
+| **SO-23** | Seed. Test amb `monkeypatch`: falla el missatge de la bústia | Crear una sol·licitud | `500 INTERNAL_ERROR`; no es desa cap sol·licitud. |
+| **SO-24** | SO-01 fet | `POST /api/dev/reset` | Les sol·licituds tornen a ser `req-01` i `req-02`. |
+| **SO-25** | Seed | Les tres rutes sense sessió (backend amb `ALLOW_X_USER_ID=false`) | `401 UNAUTHENTICATED`. |
+
+### Pantalla (T15.3)
+
+| Id | Què fas | Què has de veure |
+|---|---|---|
+| **SOP-01** | Obre «Sol·licituds enviades» (`/requests`) amb l'usuari 1. | La pendent a Alicia (25,00 €, «El sopar de divendres», etiqueta «Pendent» i «Cancel·lar») i la caducada a Huabin (42,00 €, «Pizza del diumenge», «Caducada», sense «Cancel·lar»). |
+| **SOP-02** | Obre `/requests` amb l'usuari 2. | «Encara no has enviat cap sol·licitud.» i «Demanar diners». |
+| **SOP-03** | A «Demanar diners», sense destinatari, import ni concepte. | «Enviar sol·licitud» desactivat. |
+| **SOP-04** | Tria Alicia, escriu `25` i el concepte «El sopar de divendres», i envia. | «Sol·licitud enviada a Alicia.» i, 1,5 s després, `/requests` amb la fila nova la primera. |
+| **SOP-05** | A la cerca de destinatari, escriu el teu nom. | No surts als resultats. |
+| **SOP-06** | Amb el backend a `SIMULATE_ERROR_RATE=100`, envia una sol·licitud. | Error en vermell, i el destinatari, l'import i el concepte continuen escrits. |
+| **SOP-07** | A la fila pendent, toca «Cancel·lar». | Diàleg «Cancel·lar sol·licitud» amb «Segur que vols cancel·lar aquesta sol·licitud?», «Cancel·lar» i «Confirmar». |
+| **SOP-08** | Tanca el diàleg amb «Cancel·lar», amb `Esc` i fent clic fora. | Es tanca sense cap petició; la fila continua igual. |
+| **SOP-09** | Torna a obrir-lo i toca «Confirmar». | «Sol·licitud cancel·lada.» a dalt i la fila desapareix; recarregant, no torna. |
+| **SOP-10** | Cancel·la una sol·licitud que ha caducat mentre tenies la pantalla oberta. | «Només es poden cancel·lar les sol·licituds pendents.» i la llista es torna a carregar. |
+| **SOP-11** | Comprova Inici després d'enviar una sol·licitud. | El saldo i els moviments no han canviat. |
+
+---
+
 ## Casos de les històries i proves
 
 | Cas de la història | Proves |
@@ -174,5 +228,14 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 | US-14 · Notificació a qui envia i a qui rep, a la bústia simulada | EN-05 |
 | US-14 · Sense concepte, «Transferència enviada» i «Transferència rebuda» | EN-04, ENP-10 |
 | US-14 · Destinatari inexistent: «No hem trobat aquest destinatari.» | EN-20, EN-21, CUP-10 |
+| US-15 · Quatre estats, sense «Cancel·lada»; a l'Sprint 2 només Pendent i Caducada | SO-01, SO-02, SOP-01 |
+| US-15 · «Caducada» es deriva en llegir, pel dia natural de Madrid (7 dies) | SO-14, SO-15, SO-21 |
+| US-15 · Una sol·licitud no mou diners; només deixa l'avís a la bústia simulada | SO-04, SO-05, SOP-11 |
+| US-15 · «Enviar sol·licitud» desactivat sense destinatari, import vàlid (fins a 1.000.000,00 €) i concepte d'1 a 140 caràcters | SO-09, SO-10, SO-11, SOP-03 |
+| US-15 · La cerca no et retorna mai a tu, i el servidor respon «No et pots demanar diners a tu mateix.» | SO-07, SO-13, SOP-05 |
+| US-15 · «Cancel·lar» només a les pendents; el diàleg es tanca sense cap crida | SO-18, SOP-01, SOP-07, SOP-08 |
+| US-15 · En confirmar, s'esborra i desapareix per sempre | SO-16, SO-17, SO-22, SOP-09 |
+| US-15 · Si ja no és pendent, «Només es poden cancel·lar…»; si no és teva, «Aquesta sol·licitud ja no existeix.» | SO-18, SO-19, SO-20, SOP-10 |
+| US-15 · Èxit: «Sol·licitud enviada a Alicia.» i la fila nova la primera; un error deixa el formulari intacte | SO-01, SO-02, SOP-04, SOP-06 |
 
-Proves que no surten d'un cas de la història, sinó del contracte: CU-15, CU-17, CU-20 i CU-21 (comptes pendents, màxim de 10 i sessió); EN-06 a EN-08 (llistat, detall i invariants), EN-09 i EN-16 a EN-18 (límits independents), EN-23 a EN-25 (format i ordre de les validacions), EN-27 a EN-32 i EN-36 (tot o res, concurrència, XP, reinici i sessió).
+Proves que no surten d'un cas de la història, sinó del contracte: CU-15, CU-17, CU-20 i CU-21 (comptes pendents, màxim de 10 i sessió); EN-06 a EN-08 (llistat, detall i invariants), EN-09 i EN-16 a EN-18 (límits independents), EN-23 a EN-25 (format i ordre de les validacions), EN-27 a EN-32 i EN-36 (tot o res, concurrència, XP, reinici i sessió); SO-03, SO-06, SO-08, SO-12, SO-23 a SO-25 (forma, llista buida, format, tot o res, reinici i sessió).
