@@ -6,7 +6,7 @@ Executar des de backend/:  python -m pytest tests/test_errors.py
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from app.services.errors import DAILY_LIMIT_EXCEEDED, INTERNAL_ERROR
+from app.services.errors import DAILY_LIMIT_EXCEEDED, ERROR_MESSAGES, INSUFFICIENT_BALANCE, INTERNAL_ERROR
 
 INTERNAL_MESSAGE = "S'ha produït un error inesperat. Torna-ho a provar més tard."
 VALIDATION_MESSAGE = "Les dades de la petició no són vàlides."
@@ -37,6 +37,11 @@ def test_malformed_query_param_returns_validation_error(client: TestClient) -> N
     assert body["message"] == VALIDATION_MESSAGE
     assert "details" not in body
     assert "detail" not in body
+
+
+def test_insufficient_balance_has_the_single_contract_text() -> None:
+    """P85 (#210): un sol text per a aportació, enviament i canvi de divises."""
+    assert ERROR_MESSAGES[INSUFFICIENT_BALANCE] == "No tens prou saldo."
 
 
 def test_api_error_with_details_includes_details(client: TestClient) -> None:

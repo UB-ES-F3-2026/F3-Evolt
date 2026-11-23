@@ -46,6 +46,11 @@ describe('mockSearchUsers (docs/api.md §13.2)', () => {
     },
   )
 
+  it('a bare "@" is no search at all, never the initial list (docs/api.md §13.2)', () => {
+    expect(mockSearchUsers('@', DEMO)).toEqual({ items: [] })
+    expect(mockSearchUsers('  @  ', DEMO)).toEqual({ items: [] })
+  })
+
   it('CU-09: a phone of nobody gives an empty list, not an error', () => {
     expect(mockSearchUsers('612 34 56 78', DEMO)).toEqual({ items: [] })
   })

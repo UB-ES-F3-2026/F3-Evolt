@@ -113,7 +113,7 @@ ERROR_MESSAGES: dict[str, str] = {
     TOO_MANY_ATTEMPTS: "Has fet massa intents. Demana un codi nou.",
     INVALID_POT_NAME: "El nom de la guardiola no pot estar buit.",
     INVALID_TARGET: "L'objectiu ha de ser més gran que 0.",
-    # Un sol text a l'aportació, l'enviament i el canvi (P85).
+    # Text únic per a aportació, enviament i canvi (P85 de la #196, decisió del PO).
     INSUFFICIENT_BALANCE: "No tens prou saldo.",
     POT_NOT_FOUND: "No s'ha trobat la guardiola.",
     INSUFFICIENT_POT_BALANCE: "La guardiola no té prou saldo per aquesta retirada.",
