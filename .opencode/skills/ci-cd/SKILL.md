@@ -18,8 +18,8 @@ PR / push to develop, main or story/**
         │
         └──► ci   ← gate job: fails unless backend AND frontend are success
 
-push to main (ci green) ──► Deploy   only with DEPLOY_ENABLED; today deploys are manual,
-                                      and never together with Render auto-deploy (docs/deploy.md)
+push to main ──► Render native auto-deploy (on today, both services; docs/deploy.md)
+                 Deploy workflow: dormant until DEPLOY_ENABLED; never both at once
 
 any PR event ──► Kanban   moves the issues it links (Refs #N) on the board; not a gate
 ```
@@ -103,8 +103,8 @@ them production**: test on pre-production, fix there, then promote.
 
 | Environment | Branch | Status |
 |-------------|--------|--------|
-| **Production** | `main` | Live on Render: web `https://f3-evolt.onrender.com`, API `https://evolt-api.onrender.com`, Firestore. Redeployed by hand; the `Deploy` workflow stays dormant until `DEPLOY_ENABLED` is set (`docs/deploy.md`) |
-| **Pre-production** | `develop` | **Not created yet** (DevOps, Sprint 2). Same setup as production, with its own Firestore data, never production's |
+| **Production** | `main` | Live on Render: web `https://f3-evolt.onrender.com`, API `https://evolt-api.onrender.com`, Firestore. Render's native auto-deploy publishes every merge to `main`; the `Deploy` workflow stays dormant (`DEPLOY_ENABLED` unset) so it never deploys twice (`docs/deploy.md`) |
+| **Pre-production** | `develop` | **Not created yet** (DevOps; moved to Sprint 3 on 23/11/2026). Same setup as production, with its own Firestore data, never production's |
 
 Until pre-production exists, check a story before its PR to `develop` by running
 it locally from the story branch, with `STORAGE=firestore` on the Firestore

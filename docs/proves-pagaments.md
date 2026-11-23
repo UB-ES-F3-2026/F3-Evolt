@@ -142,7 +142,7 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 |---|---|---|
 | **ENP-01** | A «Enviar diners», toca «Usuari nou». | S'obre «Enviar» amb Usuari nou i `@buit`, la casella «Import», el teclat numèric, «Concepte» i «Continuar». |
 | **ENP-02** | Escriu `4.000,00`. | «No tens prou saldo.» en vermell i «Continuar» desactivat. No s'envia cap petició. |
-| **ENP-03** | Amb 20,00 € enviats avui, escriu `981`. | Sense tocar «Continuar»: «Has superat el límit diari de 1.000,00 €. Avui encara pots enviar 980,00 €.» en vermell i «Continuar» desactivat. «Enviar» ho sap per `GET /api/transfers/limit`. |
+| **ENP-03** | Amb 20,00 € enviats avui, escriu `981`. | Sense tocar «Continuar»: exactament «Has superat el límit diari de 1.000,00 €.» en vermell i «Continuar» desactivat. «Enviar» ho sap per `GET /api/transfers/limit`. |
 | **ENP-04** | Escriu `20`, el concepte «El sopar de divendres» i toca «Continuar». | «Confirmar» amb el destinatari, l'import, el concepte i el saldo disponible. |
 | **ENP-05** | Toca «Confirmar enviament». | Tic verd «Has enviat 20,00 € a Usuari nou» i «Saldo disponible: 3.775,21 €». 1,5 s després torna sol a Inici. |
 | **ENP-06** | Mira Inici. | Saldo 3.775,21 € i, el primer moviment, «−20,00 €» en vermell. Recarregar no ho canvia. |
