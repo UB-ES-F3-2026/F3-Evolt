@@ -26,8 +26,13 @@ export const CURRENCIES: readonly CurrencyInfo[] = [
 ]
 
 /** `true` only for the five codes in `CURRENCIES` (case sensitive, like the API). */
-export function isCurrencyCode(value: string): value is CurrencyCode {
+export function isCurrencyCode(value: unknown): value is CurrencyCode {
   return CURRENCIES.some((currency) => currency.code === value)
+}
+
+/** `true` for the euro code: the main account, the only one that is not a sub-account (§12.2). */
+export function isMainCurrency(code: CurrencyCode): boolean {
+  return code === 'EUR'
 }
 
 /** The `CurrencyInfo` of a known code. Throws on anything else (internal invariant). */
@@ -48,6 +53,22 @@ export interface Subaccount {
   id: string
   code: CurrencyCode
   balance: number
+}
+
+/** A sub-account ready to be listed in a picker (US-27): its code, its name and its balance. */
+export interface SubaccountOption {
+  code: CurrencyCode
+  name: string
+  balanceMinor: number
+}
+
+/** Adds the display fields of a picker row: the currency name and the balance in minor units. */
+export function toSubaccountOption(subaccount: Subaccount): SubaccountOption {
+  return {
+    code: subaccount.code,
+    name: currencyByCode(subaccount.code).name,
+    balanceMinor: subaccount.balance,
+  }
 }
 
 /** A subaccount as the API sends it, before `currency` is checked. */

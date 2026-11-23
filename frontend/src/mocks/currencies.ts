@@ -7,6 +7,7 @@
 import {
   MAIN_SUBACCOUNT_ID,
   isCurrencyCode,
+  type CurrencyCode,
   type DeleteSubaccountJson,
   type SubaccountJson,
   type SubaccountMovement,
@@ -126,9 +127,10 @@ export function mockSubaccountMovements(subaccountIdToRead: string): SubaccountM
 }
 
 /**
- * Without «Aportar» (#189) and before the exchange (US-27), no API call puts money
- * in a sub-account. Tests (and anyone trying the screens with the mocks) use this
- * to stand in for an exchange: it sets the balance and records the entry.
+ * Moves one foreign sub-account's balance and records the entry in its history
+ * (docs/api.md §12.6). The exchange mock (US-27) uses it for the foreign side of a
+ * change; tests use it to seed history. One step so the balance stays the sum of
+ * the recorded entries.
  */
 export function mockRecordSubaccountMovement(
   subaccountIdToChange: string,
@@ -154,4 +156,17 @@ export function mockRecordSubaccountMovement(
 /** Same opaque id format as the backend. */
 function subaccountId(number: number): string {
   return `sub-${String(number).padStart(2, '0')}`
+}
+
+/**
+ * Writes the stored balance of one foreign sub-account row (US-27). The main
+ * EUR row is not stored: it is always read live from `mockBalance()`, so asking
+ * for it is an error rather than a silent no-op.
+ */
+export function mockSetSubaccountBalance(code: CurrencyCode, balanceMinor: number): void {
+  const subaccount = subaccounts.find((candidate) => candidate.currency === code)
+  if (subaccount === undefined || subaccount.id === MAIN_SUBACCOUNT_ID) {
+    throw new Error(`No foreign sub-account to write: ${code}`)
+  }
+  subaccount.balance = balanceMinor
 }
