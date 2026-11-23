@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { ref } from 'vue'
 import { messageForCode } from '@/models/errorMessages'
 import type { Home } from '@/models/home'
 import type { TransferLimit } from '@/models/transfer'
@@ -133,5 +134,24 @@ describe('useSendPaymentViewModel', () => {
 
     expect(await viewModel.continueToConfirm()).toBe(false)
     expect(dependencies.goToConfirm).not.toHaveBeenCalled()
+  })
+
+  it('#212: a new `?to=` in the same screen asks the new recipient on the next load', async () => {
+    const huabin: UserSummary = { id: 'usr-04', name: 'Huabin', username: '123huabin123' }
+    const to = ref('usr-02')
+    const getUser = vi.fn((id: string) => Promise.resolve(id === 'usr-04' ? huabin : usuariNou))
+    const viewModel = useSendPaymentViewModel(to, {
+      getUser,
+      getHome: () => Promise.resolve(home),
+      getTransferLimit: () => Promise.resolve(fullLimit),
+      goToConfirm: () => Promise.resolve(),
+    })
+    await viewModel.load()
+
+    to.value = 'usr-04'
+    await viewModel.load()
+
+    expect(getUser).toHaveBeenLastCalledWith('usr-04')
+    expect(viewModel.recipient.value).toEqual(huabin)
   })
 })

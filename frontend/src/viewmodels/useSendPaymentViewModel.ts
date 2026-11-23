@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+import { computed, ref, toValue, type MaybeRefOrGetter } from 'vue'
 import { useRouter } from 'vue-router'
 import { isApiError } from '@/models/apiError'
 import { messageForCode, toUserMessage } from '@/models/errorMessages'
@@ -36,7 +36,8 @@ export interface SendPaymentDependencies {
  * the amount is empty or zero, above the balance or above what is left of today's limit.
  */
 export function useSendPaymentViewModel(
-  toUserId: string | undefined,
+  /** The `?to=` of the URL, read on every `load`, so a new recipient in the same screen is asked again (#212). */
+  toUserId: MaybeRefOrGetter<string | undefined>,
   dependencies: SendPaymentDependencies = defaultDependencies(),
 ) {
   const recipient = ref<UserSummary | null>(null)
@@ -64,16 +65,18 @@ export function useSendPaymentViewModel(
     isLoading.value = true
     error.value = null
     isRecipientMissing.value = false
+    recipient.value = null
+    const userId = toValue(toUserId)
     try {
       // Without `to` there is nobody to send to: the same answer as an id that is not a user.
-      if (toUserId === undefined || toUserId === '') {
+      if (userId === undefined || userId === '') {
         error.value = messageForCode('RECIPIENT_NOT_FOUND')
         isRecipientMissing.value = true
         return
       }
       // Balance and limit are asked on opening, so the screen can answer before sending (US-14).
       const [user, home, todayLimit] = await Promise.all([
-        dependencies.getUser(toUserId),
+        dependencies.getUser(userId),
         dependencies.getHome(),
         dependencies.getTransferLimit(),
       ])
