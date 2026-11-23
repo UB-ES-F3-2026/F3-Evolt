@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detall de la guardiola · Vacances · F3-Evolt</title>
+<style>
+:root{
+  --color-bg:#f7f9fc;
+  --color-surface:#ffffff;
+  --color-text:#1a2233;
+  --color-muted:#6c7a96;
+  --color-border:#e6ebf4;
+  --color-primary:#4f46e5;
+  --color-income:#16a34a;
+  --color-expense:#dc2626;
+  --color-error:#dc2626;
+  --color-pot-blue:#2563eb;
+  --radius:0.75rem;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--color-bg);
+  color:var(--color-text);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:16px;
+  line-height:1.5;
+}
+/* --- Pantalla 390x844 --- */
+.screen{
+  width:390px;
+  height:844px;
+  background:var(--color-bg);
+  overflow:hidden;
+  margin:0 auto;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+}
+/* --- Barra superior --- */
+.appbar{
+  background:var(--color-surface);
+  border-bottom:1px solid var(--color-border);
+  padding:14px 16px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:none;
+}
+.appbar-title{
+  font-size:17px;
+  font-weight:600;
+  margin:0;
+}
+/* --- Enllaç de tornada de la vista (C22) --- */
+.back-link{
+  display:inline-block;
+  margin-bottom:2px;
+  font-size:14px;
+  color:var(--color-primary);
+  text-decoration:none;
+}
+/* --- Contingut --- */
+.content{
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  flex:1;
+}
+.card{
+  background:var(--color-surface);
+  border-radius:var(--radius);
+  padding:20px;
+}
+/* --- Targeta de resum (PotView) --- */
+.summary{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+}
+.icon{
+  display:grid;
+  place-items:center;
+  width:44px;
+  height:44px;
+  margin-bottom:12px;
+  border-radius:50%;
+  background:#e3ebfd; /* pot blue 14% sobre blanc */
+  color:var(--color-pot-blue);
+}
+.summary-label{
+  margin:0;
+  font-size:14px;
+  color:var(--color-muted);
+}
+.balance{
+  display:block;
+  margin:4px 0 8px;
+  font-size:32px;
+  font-weight:700;
+  font-variant-numeric:tabular-nums;
+  line-height:1.2;
+}
+.target{
+  margin:0 0 16px;
+  font-size:14px;
+  color:var(--color-muted);
+  font-variant-numeric:tabular-nums;
+}
+/* --- Botons «Aportar» (lila) i «Retirar» (secundari amb vora) --- */
+.actions{
+  display:flex;
+  gap:10px;
+  width:100%;
+}
+.btn-primary{
+  flex:1;
+  min-height:48px;
+  border:none;
+  border-radius:var(--radius);
+  background:var(--color-primary);
+  color:#fff;
+  font-family:inherit;
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer;
+}
+.btn-secondary{
+  flex:1;
+  min-height:48px;
+  border:1px solid var(--color-border);
+  border-radius:var(--radius);
+  background:var(--color-surface);
+  color:var(--color-text);
+  font-family:inherit;
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer;
+}
+/* --- Historial (MovementRow) --- */
+.history{
+  margin:8px 0 0;
+  padding:0;
+  list-style:none;
+}
+.mrow{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:10px 0;
+}
+.mrow + .mrow{
+  border-top:1px solid var(--color-border);
+}
+.mrow-icon{
+  flex:none;
+  display:grid;
+  place-items:center;
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background:var(--color-bg);
+  color:var(--color-muted);
+}
+.mrow-details{
+  flex:1;
+  min-width:0;
+}
+.mrow-concept{
+  margin:0;
+  font-size:15px;
+  font-weight:500;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.mrow-date{
+  font-size:13px;
+  color:var(--color-muted);
+}
+.mrow-amount{
+  flex:none;
+  font-weight:600;
+  font-variant-numeric:tabular-nums;
+}
+.mrow-amount.income{
+  color:var(--color-income);
+}
+</style>
+</head>
+<body>
+<!--
+  US-19 · Detall de la guardiola «Vacances» (PotView) — maqueta estàtica.
+  Saldo 150,00 € · Objectiu 1.000,00 € · color blau (--color-pot-blue).
+
+  Estats NO representats aquí (es documenten al doc, no als mockups):
+  - Carregant: «Carregant…» (LoadingIndicator)
+  - Error: «No s'ha trobat la guardiola.» + «Reintentar»
+  - Guardiola a 0,00 €: botó «Retirar» desactivat (gris clar)
+  - Estat buit de l'historial: «Encara no hi has aportat diners»
+-->
+<div class="screen">
+  <header class="appbar">
+    <h1 class="appbar-title">Vacances</h1>
+  </header>
+  <main class="content">
+    <a class="back-link" href="#"><span aria-hidden="true">←</span> Guardioles</a>
+
+    <!-- Targeta de resum -->
+    <section class="card summary">
+      <span class="icon" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.645.645 2.645 1.5 3H2v3h2c.5.5 1 1 2 1v2h2v-2h5v2h2v-2.5c1.5-.5 3-2.5 3-5.5h2V10.5h-2.5"/>
+          <circle cx="15.5" cy="10.5" r="1"/>
+        </svg>
+      </span>
+      <h2 class="summary-label">Saldo de la guardiola</h2>
+      <span class="balance">150,00&nbsp;€</span>
+      <p class="target">Objectiu: 1.000,00&nbsp;€</p>
+      <div class="actions">
+        <button class="btn-primary" type="button">Aportar</button>
+        <button class="btn-secondary" type="button">Retirar</button>
+      </div>
+    </section>
+
+    <!-- Historial -->
+    <section class="card">
+      <h2 class="summary-label">Historial</h2>
+      <ul class="history">
+        <li class="mrow">
+          <span class="mrow-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.645.645 2.645 1.5 3H2v3h2c.5.5 1 1 2 1v2h2v-2h5v2h2v-2.5c1.5-.5 3-2.5 3-5.5h2V10.5h-2.5"/>
+              <circle cx="15.5" cy="10.5" r="1"/>
+            </svg>
+          </span>
+          <div class="mrow-details">
+            <p class="mrow-concept">Saldo inicial</p>
+            <time class="mrow-date" datetime="2026-10-04T10:00:00+02:00">4 d’oct. · 10:00</time>
+          </div>
+          <span class="mrow-amount income">+150,00&nbsp;€</span>
+        </li>
+      </ul>
+    </section>
+  </main>
+</div>
+</body>
+</html>

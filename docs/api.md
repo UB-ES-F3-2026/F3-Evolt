@@ -669,7 +669,7 @@ Aquest apartat és per al backend. El frontend no en depèn.
 
 ## 7. Propostes del contracte
 
-Totes les propostes d'aquesta llista estan acceptades: es van validar en aprovar-se la PR que les proposava. Les noves continuen a partir de la P47 i porten la marca fins que s'aproven.
+Totes les propostes d'aquesta llista estan acceptades: es van validar en aprovar-se la PR que les proposava. Les noves continuen a partir de la P86 i porten la marca fins que s'aproven.
 
 Propostes de l'Sprint 0 (PR #29):
 
@@ -737,7 +737,7 @@ Propostes dels moviments (T10.1, PR #120):
 | P44 | [10.5](#105-justificant-pdf) | El justificant PDF es genera al navegador amb jsPDF (llicència MIT), sense Cloud Function ni cap ruta (decisió de PO). |
 | P45 | [10.7](#107-model-intern-dels-moviments) | Seed: els noms fictius de la contrapart de la taula de 10.7, i el moviment més recent de l'usuari 1 (`mov-30`) en estat `pending`. |
 
-Propostes de multidivisa (T25.1), per validar a la revisió de la PR:
+Propostes de multidivisa (T25.1, PR #193):
 
 | # | Apartat | Proposta |
 |---|---|---|
@@ -756,7 +756,7 @@ Propostes de multidivisa (T25.1), per validar a la revisió de la PR:
 | P62 | [12.10](#1210-errors) | `SUBACCOUNT_NOT_FOUND` diu «No s'ha trobat el subcompte.», i `SAME_CURRENCY`, el text de la pantalla (PR #180): «Origen i destí no poden ser el mateix subcompte.». |
 | P63 | [12.11](#1211-model-intern-de-multidivisa) | El compte en euros és l'`Account` actual, sense duplicar-ne el saldo, i el seed no té subcomptes en divisa. |
 
-Propostes dels pagaments (T13.1, US-13 i US-14). Comencen a la P64 perquè les P47–P49 són de la retirada i el progrés (T19.1, PR #177) i les P50–P63, de la multidivisa (T25.1, PR #193):
+Propostes dels pagaments (T13.1, US-13 i US-14, PR #196). Comencen a la P64 perquè les P47–P49 són de la retirada i el progrés (T19.1, PR #177) i les P50–P63, de la multidivisa (T25.1, PR #193):
 
 | # | Apartat | Proposta |
 |---|---|---|
@@ -1948,11 +1948,11 @@ La llista de divises és **tancada** i els tipus són fixos: no es consulta cap 
 | `CHF` | Franc suís | CHF | 2 | `10355` | 1 CHF = 1,0355 € |
 | `JPY` | Ien japonès | ¥ | 0 | `5700` | 1 ¥ = 0,0057 € |
 
-Els valors i el format són els de la pantalla que ja hi ha a la branca de la US-25 (`frontend/src/models/currency.ts`, T25.3) **[PROPOSTA — pendent de validar]**.
+Els valors i el format són els de la pantalla que ja hi ha a la branca de la US-25 (`frontend/src/models/currency.ts`, T25.3).
 
 - **Unitat menor:** el cèntim a les divises amb 2 decimals, i el ien sencer al JPY, que no té decimals. `1234` en JPY és «1.234 ¥» (US-25).
 - **`rateBps`:** quants cèntims d'euro val una unitat menor de la divisa, multiplicat per 10.000. Per això el JPY és `5700`: 1 ¥ val 0,57 cèntims d'euro.
-- **Conversió** d'`amount` unitats menors de la divisa `A` a la divisa `B` **[PROPOSTA — pendent de validar]**:
+- **Conversió** d'`amount` unitats menors de la divisa `A` a la divisa `B`:
 
   ```
   convertit = arrodonir(amount × rateBps[A] / rateBps[B])
@@ -1960,11 +1960,11 @@ Els valors i el format són els de la pantalla que ja hi ha a la branca de la US
 
   - Tot es calcula amb enters, mai amb decimals. `arrodonir(n / d)` és `⌊(2n + d) / (2d)⌋`: la meitat, cap amunt.
   - Exemple: 100,00 € en dòlars és `10000 × 10000 / 9123 = 10961,30…`, que s'arrodoneix a `10961` (109,61 $).
-- **Total aproximat en euros** («Total ≈ … €», US-25) **[PROPOSTA — pendent de validar]**: cada compte es converteix a cèntims d'euro i s'arrodoneix per separat (`arrodonir(balance × rateBps / 10000)`), i després se sumen. Exemple: `125050` € i `31755` $ donen `125050 + 28970 = 154020` («Total ≈ 1.540,20 €»).
+- **Total aproximat en euros** («Total ≈ … €», US-25): cada compte es converteix a cèntims d'euro i s'arrodoneix per separat (`arrodonir(balance × rateBps / 10000)`), i després se sumen. Exemple: `125050` € i `31755` $ donen `125050 + 28970 = 154020` («Total ≈ 1.540,20 €»).
 
 ### 12.2 Objecte `Subaccount`
 
-Un compte de l'usuari en una divisa. És el mateix objecte a totes les respostes d'aquest apartat **[PROPOSTA — pendent de validar]**.
+Un compte de l'usuari en una divisa. És el mateix objecte a totes les respostes d'aquest apartat.
 
 | Camp | Tipus | Notes |
 |---|---|---|
@@ -1991,7 +1991,7 @@ Exemples:
 
 Els comptes de l'usuari: la card «Divises» d'Inici i la pantalla `/divises` (US-25).
 
-**Resposta `200`:** `{ items, totalInEuros }` **[PROPOSTA — pendent de validar]**
+**Resposta `200`:** `{ items, totalInEuros }`
 
 | Camp | Tipus | Descripció |
 |---|---|---|
@@ -2025,7 +2025,7 @@ Crea un subcompte en una divisa nova («Afegir divisa», US-25).
 
 **Resposta `201`:** el `Subaccount` creat, sol, amb `balance: 0`.
 
-**Ordre de les validacions**, el que ja fa servir la pantalla (`frontend/src/mocks/currencies.ts`) **[PROPOSTA — pendent de validar]**. S'aturen al primer error:
+**Ordre de les validacions**, el que ja fa servir la pantalla (`frontend/src/mocks/currencies.ts`). S'aturen al primer error:
 
 1. Format del cos: falta `currency` o no és un string → `VALIDATION_ERROR`.
 2. El codi no és a la llista de [12.1](#121-divises-i-tipus-de-canvi) → `CURRENCY_NOT_SUPPORTED`.
@@ -2058,9 +2058,9 @@ Content-Type: application/json
 Elimina un subcompte en divisa que té saldo 0 («Eliminar subcompte», US-26). És `POST` i no `DELETE` perquè el CORS i l'`apiClient` només admeten `GET` i `POST`.
 
 - **Cos de la petició:** cap.
-- **Resposta `200`:** `{ status }`, amb `status` sempre `"ok"`, com a [8.9](#89-post-apiauthlogout) **[PROPOSTA — pendent de validar]**.
+- **Resposta `200`:** `{ status }`, amb `status` sempre `"ok"`, com a [8.9](#89-post-apiauthlogout).
 
-**Ordre de les validacions** **[PROPOSTA — pendent de validar]**. S'aturen al primer error:
+**Ordre de les validacions**. S'aturen al primer error:
 
 1. El subcompte no existeix o és d'un altre usuari → `SUBACCOUNT_NOT_FOUND`. La resposta és la mateixa en tots dos casos, com a `POT_NOT_FOUND`.
 2. És el compte principal (`main`) → `MAIN_ACCOUNT_NOT_DELETABLE`. Es comprova abans que el saldo: l'EUR no s'elimina mai, tingui el saldo que tingui.
@@ -2069,13 +2069,13 @@ Elimina un subcompte en divisa que té saldo 0 («Eliminar subcompte», US-26). 
 **Regles:**
 
 - Només s'esborra el subcompte. Els moviments del compte principal que han fet els seus canvis es queden a `GET /api/movements`, amb el seu import (US-26).
-- Les entrades de l'historial del subcompte ([12.6](#126-get-apisubaccountssubaccountidmovements)) es queden desades, però ja no es poden consultar: la ruta de l'historial respon `SUBACCOUNT_NOT_FOUND` **[PROPOSTA — pendent de validar]**.
+- Les entrades de l'historial del subcompte ([12.6](#126-get-apisubaccountssubaccountidmovements)) es queden desades, però ja no es poden consultar: la ruta de l'historial respon `SUBACCOUNT_NOT_FOUND`.
 - La divisa torna a estar disponible. Un `POST /api/subaccounts` amb la mateixa divisa en crea un de nou, amb un `id` nou, saldo `0` i l'historial buit.
 - El total de [12.3](#123-get-apisubaccounts) no canvia, perquè el saldo era 0.
 
 ### 12.6 `GET /api/subaccounts/{subaccountId}/movements`
 
-L'historial d'un subcompte en divisa: «Últims moviments» al detall del subcompte (mockup `US-26-detall-subcompte`) **[PROPOSTA — pendent de validar]**.
+L'historial d'un subcompte en divisa: «Últims moviments» al detall del subcompte (mockup `US-26-detall-subcompte`).
 
 **Resposta `200`:** `{ items }`, de l'entrada més recent a la més antiga, sense paginació.
 
@@ -2113,9 +2113,9 @@ Cada entrada:
 
 ### 12.7 `POST /api/exchanges`
 
-Canvia diners d'un compte de l'usuari a un altre de la mateixa persona en una altra divisa («Confirmar canvi», US-27). El nom de la ruta és el que ja fa servir la pantalla (PR #180) **[PROPOSTA — pendent de validar]**.
+Canvia diners d'un compte de l'usuari a un altre de la mateixa persona en una altra divisa («Confirmar canvi», US-27). El nom de la ruta és el que ja fa servir la pantalla (PR #180).
 
-**Cos de la petició:** `{ fromCurrency, toCurrency, amount }` **[PROPOSTA — pendent de validar]**
+**Cos de la petició:** `{ fromCurrency, toCurrency, amount }`
 
 | Camp | Tipus | Descripció |
 |---|---|---|
@@ -2123,7 +2123,7 @@ Canvia diners d'un compte de l'usuari a un altre de la mateixa persona en una al
 | `toCurrency` | string | Divisa del compte de destí. Obligatori. |
 | `amount` | integer | Import a canviar, en la unitat menor de la divisa d'origen. Obligatori. Enter JSON estricte, com a P5. |
 
-**Càlcul** **[PROPOSTA — pendent de validar]**:
+**Càlcul**:
 
 | Valor | Fórmula | 100,00 € a dòlars |
 |---|---|---|
@@ -2143,7 +2143,7 @@ Canvia diners d'un compte de l'usuari a un altre de la mateixa persona en una al
   - **US-26:** 312,86 $ a euros. La comissió és `arrodonir(31286 × 150 / 10000) = 469` (4,69 $), més gran que el mínim de 0,55 $. El càrrec és `31755`, tot el saldo, i el subcompte queda a 0,00 $. L'EUR rep `28542` (285,42 €).
   - **El mínim:** 10,00 € a dòlars. L'1,5 % són 0,15 €, així que la comissió és de 0,50 € i el càrrec, de 10,50 €.
 
-**Ordre de les validacions**, el de la pantalla (PR #180) amb els codis de l'API **[PROPOSTA — pendent de validar]**. S'aturen al primer error:
+**Ordre de les validacions**, el de la pantalla (PR #180) amb els codis de l'API. S'aturen al primer error:
 
 1. Format del cos: falta un camp, les divises no són strings o `amount` no és un enter JSON estricte → `VALIDATION_ERROR`.
 2. `fromCurrency` i `toCurrency` són la mateixa → `SAME_CURRENCY`.
@@ -2159,7 +2159,7 @@ Canvia diners d'un compte de l'usuari a un altre de la mateixa persona en una al
 - Canviar exactament tot el saldo (l'import més la comissió) està permès. L'origen queda a `0`.
 - No hi ha cap límit diari de canvi, i un canvi no compta per al límit diari de recàrrega.
 
-**Resposta `201`:** `{ from, to, amount, commission, received }` **[PROPOSTA — pendent de validar]**
+**Resposta `201`:** `{ from, to, amount, commission, received }`
 
 | Camp | Tipus | Descripció |
 |---|---|---|
@@ -2199,7 +2199,7 @@ Content-Type: application/json
 
 ### 12.8 Moviments d'un canvi i efecte sobre altres rutes
 
-Cada canvi crea **dos moviments**, un a cada compte i en la seva divisa (US-27) **[PROPOSTA — pendent de validar]**:
+Cada canvi crea **dos moviments**, un a cada compte i en la seva divisa (US-27):
 
 | Compte | `type` | `amount` |
 |---|---|---|
@@ -2267,7 +2267,7 @@ Missatges:
 
 ### 12.11 Model intern de multidivisa
 
-Aquest apartat és per al backend. El frontend no en depèn. Tot és **[PROPOSTA — pendent de validar]**.
+Aquest apartat és per al backend. El frontend no en depèn.
 
 - **El compte en euros és l'`Account` actual.** No es desa cap subcompte EUR: `GET /api/subaccounts` el construeix a partir del compte principal de l'usuari, amb l'`id` `"main"`. Així el saldo no es duplica.
 - **Subcomptes en divisa:** un model nou amb `id`, `user_id`, `currency`, `balance` i l'ordre de creació, amb les validacions al model: divisa de la llista, que no sigui l'`EUR`, i saldo enter `≥ 0`.
@@ -2298,7 +2298,7 @@ Totes les rutes d'aquest apartat són **protegides** ([8.2](#82-sessió)): l'usu
 
 ### 13.1 Objecte `UserSummary`
 
-Un altre usuari, tal com surt a la cerca i al destinatari d'un enviament. **[PROPOSTA — pendent de validar]** (P64, P65)
+Un altre usuari, tal com surt a la cerca i al destinatari d'un enviament. (P64, P65)
 
 | Camp | Tipus | Notes |
 |---|---|---|
@@ -2311,7 +2311,7 @@ Un altre usuari, tal com surt a la cerca i al destinatari d'un enviament. **[PRO
 
 ### 13.2 `GET /api/users`
 
-Cerca d'usuaris per a «Enviar diners» (US-13). **[PROPOSTA — pendent de validar]** (P66, P67)
+Cerca d'usuaris per a «Enviar diners» (US-13). (P66, P67)
 
 **Paràmetre de consulta opcional:** `q`, el text de la barra «@usuari, telèfon o email».
 
@@ -2363,7 +2363,7 @@ Authorization: Bearer <token>
 
 ### 13.3 `GET /api/users/{userId}`
 
-Un usuari concret, perquè «Enviar» ([US-14](#134-post-apitransfers)) pugui tornar a validar el destinatari quan es recarrega `/pagaments/enviar?to=<id>`. **[PROPOSTA — pendent de validar]** (P68)
+Un usuari concret, perquè «Enviar» ([US-14](#134-post-apitransfers)) pugui tornar a validar el destinatari quan es recarrega `/pagaments/enviar?to=<id>`. (P68)
 
 **Resposta `200`:** l'`UserSummary` de l'usuari ([13.1](#131-objecte-usersummary)).
 
@@ -2380,7 +2380,7 @@ Un usuari concret, perquè «Enviar» ([US-14](#134-post-apitransfers)) pugui to
 
 ### 13.4 `POST /api/transfers`
 
-Envia diners del compte principal de l'usuari de la sessió al compte principal d'un altre usuari, a l'instant (US-14). **[PROPOSTA — pendent de validar]** (P69, P70)
+Envia diners del compte principal de l'usuari de la sessió al compte principal d'un altre usuari, a l'instant (US-14). (P69, P70)
 
 **Cos de la petició:** `{ toUserId, amount, concept? }`
 
@@ -2490,7 +2490,7 @@ L'usuari 2 té ara saldo `2000` i un moviment `mov-32`: `"El sopar de divendres"
 
 #### `GET /api/transfers/limit`
 
-Quant pot enviar encara avui l'usuari de la sessió. «Enviar» ho demana en obrir-se, com el saldo, per mostrar «Has superat el límit diari de 1.000,00 €. Avui encara pots enviar 980,00 €.» i desactivar «Continuar» **abans** de confirmar (decisió de PO a la US-14). **[PROPOSTA — pendent de validar]** (P84)
+Quant pot enviar encara avui l'usuari de la sessió. «Enviar» ho demana en obrir-se, com el saldo, per mostrar «Has superat el límit diari de 1.000,00 €. Avui encara pots enviar 980,00 €.» i desactivar «Continuar» **abans** de confirmar (decisió de PO a la US-14). (P84)
 
 **Resposta `200`:** `{ dailyLimit, remainingToday }`
 
@@ -2523,7 +2523,7 @@ Després d'un enviament:
 
 ### 13.7 Avisos a la bústia simulada
 
-US-14 demana un avís a qui envia i a qui rep. Com la resta de missatges, van a la bústia simulada ([8.12](#812-get-apidevoutbox)); dins de l'app no hi ha cap llista d'avisos. **[PROPOSTA — pendent de validar]** (P73)
+US-14 demana un avís a qui envia i a qui rep. Com la resta de missatges, van a la bústia simulada ([8.12](#812-get-apidevoutbox)); dins de l'app no hi ha cap llista d'avisos. (P73)
 
 | `type` | A qui | `text` (exemple de 13.4) |
 |---|---|---|
@@ -2572,7 +2572,7 @@ Aquest apartat és per al backend. El frontend no en depèn.
 
 El `name` que ja existia és el nom visible; buit (`""`) vol dir que no en té, i l'API el dona com a `null`.
 
-**`@usuari` dels usuaris nous** (decisió de PO: surt de la part local del correu, és únic i serà editable al perfil). **[PROPOSTA — pendent de validar]** (P74)
+**`@usuari` dels usuaris nous** (decisió de PO: surt de la part local del correu, és únic i serà editable al perfil). (P74)
 
 - Registre amb email: la part d'abans de l'`@`, en minúscules, sense els caràcters que no siguin `a`–`z`, `0`–`9`, `.`, `_` o `-`. `Anna.Puig+evolt@x.com` → `anna.puigevolt`.
 - Si ja existeix, s'hi afegeix el primer número lliure a partir de `2`: `anna.puigevolt2`, `anna.puigevolt3`…
@@ -2581,7 +2581,7 @@ El `name` que ja existia és el nom visible; buit (`""`) vol dir que no en té, 
 - L'`@usuari` es decideix en el registre, encara que el compte quedi pendent: així no canvia en verificar.
 - Editar-lo al perfil no és d'aquest sprint.
 
-**Seed** (decisió de PO: als usuaris del seed se'ls assigna un àlies d'equip). Vuit usuaris actius, tots amb la contrasenya del seed ([8.13](#813-model-intern-de-laccés)). Els usuaris 3 a 8 tenen el compte principal a `0`, sense moviments ni guardioles. **[PROPOSTA — pendent de validar]** (P75)
+**Seed** (decisió de PO: als usuaris del seed se'ls assigna un àlies d'equip). Vuit usuaris actius, tots amb la contrasenya del seed ([8.13](#813-model-intern-de-laccés)). Els usuaris 3 a 8 tenen el compte principal a `0`, sense moviments ni guardioles. (P75)
 
 | Id | `id` a l'API | Nom | Email | `username` | Telèfon |
 |---|---|---|---|---|---|

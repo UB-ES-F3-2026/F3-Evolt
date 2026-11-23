@@ -52,7 +52,7 @@ local (abans del commit)  →  CI a cada PR i push (develop, main, story/**)  �
 - **CI** (`.github/workflows/ci.yml`): backend (Ruff, `compileall`, pytest en memòria) i frontend (ESLint, `vue-tsc`, Vitest, build). Cap PR es fusiona amb el CI en vermell.
 - **CodeQL** (configuració per defecte de GitHub, activa des de l'1/11): analitza Python i JavaScript/TypeScript a les PR cap a `develop` i `main` (checks «Analyze (python)», «Analyze (javascript-typescript)» i «CodeQL»). No corre a les PR cap a `story/*`.
 - **Revisió:** cada PR de tasca la revisa algú que no l'ha escrita; la revisió de QA de cada història (T19.4, T20.3…) executa els AC al navegador i ho deixa escrit a la PR.
-- **Després del desplegament:** `/api/health` ha de respondre (prova de fum del desplegament, TR06.3 a la #144).
+- **Després del desplegament:** `/api/health` ha de respondre (prova de fum del desplegament, TR06.3, documentada a la #144, fusionada el 22/11).
 
 ## 4. Mètriques
 
@@ -139,20 +139,22 @@ La resta de regles (etiquetes dels camps, noms dels botons, `lang`, rols ARIA) p
 
 ## 5. Traçabilitat AC → prova (Sprint 2)
 
-Font dels AC: les targetes del Trello (checklist «Acceptance Criteria»). Estat a 21/11.
+Font dels AC: les targetes del Trello (checklist «Acceptance Criteria»). Estat a 22/11.
 
-Les proves de multidivisa (US-25, US-26 i US-27) són a `docs/proves-multidivisa.md`, amb el contracte de la #193 (cap a `story/us-25-currency-subaccounts`; alguns punts encara són proposta del PO).
+Les proves de multidivisa (US-25, US-26 i US-27) són a `docs/proves-multidivisa.md`, amb el contracte de la #193 (ja a `develop` amb la US-25). Les marques `[PROPOSTA]` de §12 i §13 de `docs/api.md` es treuen a la #219, oberta.
 
 | Història | AC al Trello | Proves definides | Codi | Provat per QA |
 |---|---|---|---|---|
-| US-19 Retirar diners | 7 | RE-01…RE-21 (API), REP-01…REP-12 (pantalla) a la #177 | Frontend #190 · backend #195 (totes dues aprovades) | **Sí, de punta a punta** (§5.1) |
-| US-20 Progrés | 8 | O-01…O-08 (API), OP-01…OP-08 (pantalla) a la #177 | Backend #194 (fusionada a `story/us-20`) · frontend #179 | Jiajun i Huabin (#179, #194) |
-| US-25 Afegir subcompte | 6 | DV-01…DV-16 (API), DVP-01…DVP-07 (pantalla) a la #193 | Frontend a `story/us-25` (#178) · backend T25.2 pendent | Izan (#178) |
-| US-26 Eliminar subcompte | 6 | EL-01…EL-09 (API), ELP-01…ELP-07 (pantalla) a la #193 | No començat (depèn de la T25.2) | — |
+| US-19 Retirar diners | 7 | RE-01…RE-21 (API), REP-01…REP-12 (pantalla) a la #177 | Contracte #177, frontend #190 i backend #195 fusionats a `story/us-19`. Falta la PR d'història | **Sí, de punta a punta** (§5.1) |
+| US-20 Progrés | 8 | O-01…O-08 (API), OP-01…OP-08 (pantalla) a la #177 | Backend #194 i #203, frontend #179, fusionats a `story/us-20`. Falta la PR d'història | Jiajun i Huabin (#179, #194) |
+| US-25 Afegir subcompte | 6 | DV-01…DV-16 (API), DVP-01…DVP-07 (pantalla) a la #193 | **A `develop`** (#209, 22/11): contracte #193, backend #206, frontend #178 | Izan (#178), Huabin (#209) · **acceptada pel PO** |
+| US-26 Eliminar subcompte | 6 | EL-01…EL-11 (API), ELP-01…ELP-07 (pantalla) a la #193 | **A `develop`** (#215, 22/11): backend #207, frontend #208 | Jiajun (T26.3), Alicia (backend) · **acceptada pel PO**. ELP-06 al navegador espera la US-27 (al backend, EL-07) |
 | US-27 Canvi de divises | 7 | CV-01…CV-23 (API), CVP-01…CVP-10 (pantalla) a la #193 | Frontend #180 (esborrany) · backend T27.1 pendent | — |
-| US-13 Cercar usuari | 7 | CU-01…CU-23 (API), CUP-01…CUP-11 (pantalla) a la #196 | Backend #197 · frontend #200 | **Sí, de punta a punta** (#197 + #200) |
-| US-14 Enviar diners | 9 | EN-01…EN-36 (API), ENP-01…ENP-11 (pantalla) a la #196 | Avisos #201 · enviament T14.1 i pantalles T14.3 pendents | Huabin (#201) |
-| US-15 Sol·licitar diners | 10 | SO-01…SO-25 (API), SOP-01…SOP-11 (pantalla) a la #198 | Backend #199 · frontend T15.3 pendent | Huabin (#199, l'API) |
+| US-13 Cercar usuari | 7 | CU-01…CU-23 (API), CUP-01…CUP-11 (pantalla) a la #196 | **A `develop`** (#205, 22/11): contracte #196, backend #197, frontend #200 | **Sí, de punta a punta** (#197 + #200) · **acceptada pel PO** (pendents a la #212) |
+| US-14 Enviar diners | 9 | EN-01…EN-36 (API), ENP-01…ENP-11 (pantalla) a la #196 | Avisos #201 i enviament #213 (T14.1) fusionats a `story/us-14` · pantalles T14.3 pendents | Huabin (#201), Martí (#213) |
+| US-15 Sol·licitar diners | 10 | SO-01…SO-25 (API), SOP-01…SOP-11 (pantalla) a la #198 | Contracte #198 i backend #199 fusionats a `story/us-15` · frontend T15.3 pendent | Huabin (#199, l'API) |
+
+A 22/11 hi ha **3 de les 8 històries a `develop`** (US-13, US-25 i US-26). Abans de fusionar-se, la US-15 i la US-19 s'han de posar al dia amb `develop` (la #215 ja avisa de 4 i 3 conflictes), com es va fer a la #211 i la #214.
 
 ### 5.1 US-19 · Retirar diners (#190 i #195, 19–20/11)
 
@@ -196,8 +198,13 @@ Els tres defectes que va trobar la prova del 19/11 (l'error sobre el botó, la c
 | 2 | Dues PR treuen la mateixa funció `format_euros()` a dos mòduls diferents (`money_text.py` i `money_format.py`): la regla quedaria duplicada | Revisió (QA) | #199, #201 |
 | 2 | Dos buits dels tests de l'Sprint 1: el canvi de dia del límit de recàrrega a mitjanit de Madrid i el límit `ana@x.c` del domini (el codi és correcte, però cap test no ho comprovava) | **Testing de mutació** (QA, §4.3) | `test_topup_daily_limit.py`, `test_identifier.py` (pendent, §8) |
 | 2 | El text secundari (`#6c7a96`, 4,31:1) i els imports positius (`#16a34a`, 3,29:1) no arriben al contrast mínim de WCAG AA (4,5:1): 58 elements a 10 pantalles | **axe** (QA, §4.3) | `style.css` (proposta al PO) |
+| 2 | Un usuari sense nom mostra l'`@usuari` dues vegades (com a nom i a sota en gris) | Revisió (PO) | #205 → #212 |
+| 2 | La unicitat de l'`@usuari` no és igual a memòria i a Firestore: Firestore no reserva la forma `usuari<id>` | Revisió (PO) | #205 → #212 |
+| 2 | CU-20 fallava amb `TEST_STORAGE=firestore`: el test llegia el seed de memòria, que amb Firestore no existeix | **Test** (suite sobre l'emulador, QA) | #214 → arreglat a la #216 |
+| 2 | Tres textos diferents per a `INSUFFICIENT_BALANCE` (aportació, enviament i canvi) en lloc del de P85 | Revisió (PO) | #210 → arreglat a la #213 |
+| 2 | `ConfirmDialog` no atrapa el focus: amb Tab se surt de la finestra cap al fons | Revisió (PO) | #215 (pendent, #210) |
 
-**Recompte:** 22 defectes. 6 els va trobar una prova (tests, script, navegador, mutació o axe), 14 la revisió, 1 totes dues i 1 el desplegament. Cap defecte trobat a la revisió no ha arribat a `develop`. Tots es van trobar a la PR, menys els dos de la #178, que es van trobar a `story/us-25` perquè s'hi va fusionar sense revisió. Els dos de les proves puntuals del 21/11 eren a `develop` des de l'Sprint 1: les proves de cada PR no els podien veure.
+**Recompte:** 27 defectes. 7 els va trobar una prova (tests, script, navegador, mutació o axe), 18 la revisió, 1 totes dues i 1 el desplegament. Tots es van trobar a la PR, menys els dos de la #178, que es van trobar a `story/us-25` perquè s'hi va fusionar sense revisió. Cap defecte que bloquegés no ha arribat a `develop`: els petits que el PO va acceptar com a pendents (#212 i #210) hi són anotats. Els dos de les proves puntuals del 21/11 eren a `develop` des de l'Sprint 1, i el de CU-20 hi va entrar amb la US-13: les proves de cada PR corren en memòria i no els podien veure. Això torna a demanar el job de Firestore al CI (§8).
 
 Com és habitual, la revisió de disseny i de codi troba més defectes que les proves unitàries. Per això la revisió és obligatòria i la revisió de QA executa els AC.
 
@@ -242,7 +249,7 @@ Com més tard és el punt, més cara és la prova i menys sovint corre. El CI de
 |---|---|---|
 | Aprovació obligatòria | Algú que no és l'autor ha mirat el canvi | ✅ a `develop` i `main` · a `story/*` és una norma de l'equip, a propòsit: una regla de PR bloquejaria el push del merge de `develop` a la història (pas 4 del gitflow, skill `ci-cd`). La #178 es va fusionar sense revisió i tenia 2 errors |
 | Checks obligatoris | Lint, tests i build han passat | ✅ `ci` obligatori a `develop` i `main` |
-| Branca al dia abans de fusionar | La combinació s'ha provat sobre l'últim `develop` | ⚠️ acordat per l'equip el 17/11 (proposta de QA a la #145), però `docs/branch-protection.md` encara diu `strict: false` |
+| Branca al dia abans de fusionar | La combinació s'ha provat sobre l'últim `develop` | ✅ `strict` actiu a `develop` des del 23/11 (acord de l'equip del 17/11, proposta de QA a la #145) |
 | Comentaris resolts | Cap problema bloquejant es perd | Revisió manual |
 | CODEOWNERS | Les zones sensibles les revisa qui les coneix | No el fem servir |
 
@@ -266,7 +273,7 @@ Amb assistents d'IA hi ha tres riscos nous: menys comprensió del codi generat, 
 
 | Buit | Per què | Pla |
 |---|---|---|
-| Firestore no corre al CI | Cal l'emulador (Java) al runner | Job `backend-firestore` amb l'emulador: QA el defineix, DevOps el connecta. Puja la cobertura del backend (les 455 línies sense cobrir són sobretot de Firestore) |
+| Firestore no corre al CI | Cal l'emulador (Java) al runner | Job `backend-firestore` amb l'emulador: QA el defineix, DevOps el connecta. Puja la cobertura del backend (les 455 línies sense cobrir són sobretot de Firestore). El defecte de CU-20 (§6) és el que aquest job hauria trobat a la PR |
 | Les vistes no tenen tests (0 %) | Es proven millor en un navegador real | E2E amb Playwright del flux principal (login → Inici → guardiola: aportar i retirar) contra els mocks, al CI |
 | Preproducció | No hi ha encara un segon entorn | `develop` desplegat com a preproducció (DevOps, skill `ci-cd`) |
 | Auditoria de dependències (Q4) | Feta una vegada (§4.3): 0 a producció, 19 a les eines de desenvolupament | `npm audit --omit=dev` i `pip-audit` al CI, informatius; `npm audit fix` (9 de 19) després de la demo; `vitest` 5 i `vue-tsc` 3 a l'Sprint 3 |

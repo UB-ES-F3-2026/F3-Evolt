@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<!--
+  base.html — Plantilla base de mockups estàtics (marc 390×844).
+
+  COM FER UN MOCKUP NOU (recepta per a qui escriu):
+  1. Duplica aquest fitxer a  src/US-XX-<pantalla>.html  (mateixa carpeta _mockup).
+  2. Mantén el marc intacte: <html> → <body> → .screen (390×844) → .appbar → .content.
+  3. Substitueix el contingut de .content pel de la teva pantalla.
+     Utilitza NOMÉS classes existents a base.css; si en falta una,
+     marca-la amb:  TODO: classe pendent a base.css
+  4. Només es permet marcatge visual ESTÀTIC (HTML + base.css).
+     Res de JS amb lògica de negoci: els mockups il·lustren la vista.
+  5. Renderitza a PNG des de la carpeta _mockup:
+       ./render.sh src/US-XX-<pantalla>.html ../img/US-XX-<pantalla>.png
+     (genera 780×1688, és a dir, 390×844 a escala 2x).
+-->
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mockup — US-XX <Pantalla></title>
+  <link rel="stylesheet" href="base.css">
+</head>
+<body>
+  <div class="screen">
+
+    <!-- Barra superior: botó enrere + títol de la pantalla -->
+    <div class="appbar">
+      <span class="appbar-back">‹</span>
+      <span class="appbar-title">Cartera</span>
+    </div>
+
+    <!-- Contingut: duplica aquest fitxer i substitueix tot el que hi ha aquí dins -->
+    <div class="content">
+
+      <!-- Patró: línia de saldo -->
+      <div class="card">
+        <div class="section-header">
+          <span class="card-title">Saldo total</span>
+          <span class="badge-owned">@usuari</span>
+        </div>
+        <div class="balance-big">1.250,50 €</div>
+        <span class="muted">Actualitzat ara mateix</span>
+      </div>
+
+      <!-- Patró: llista de files (moviments) -->
+      <div class="card">
+        <span class="card-title">Últims moviments</span>
+        <ul class="rows">
+          <li class="row">
+            <span class="row-icon">MB</span>
+            <span class="row-name">
+              Mercadona
+              <span class="row-sub">11 d’oct. · 21:15</span>
+            </span>
+            <span class="amount expense">−23,40 €</span>
+          </li>
+          <li class="row">
+            <span class="row-icon">@u</span>
+            <span class="row-name">
+              Marta Busquet
+              <span class="row-sub">10 d’oct. · 09:02 · @martab</span>
+            </span>
+            <span class="amount income">+45,00 €</span>
+          </li>
+          <li class="row">
+            <span class="row-icon">TG</span>
+            <span class="row-name">
+              Traspàs a pot «Viatge»
+              <span class="row-sub">9 d’oct. · 18:30</span>
+            </span>
+            <span class="amount">−50,00 €</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Patró: acció principal -->
+      <div class="actions">
+        <a class="btn-primary" href="#">Enviar diners</a>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
