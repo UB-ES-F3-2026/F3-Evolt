@@ -228,7 +228,8 @@ describe('mockWithdraw (docs/api.md §11.2)', () => {
   })
 
   it('RE-06, RE-08: allows taking exactly the whole pot balance, leaving it at 0', () => {
-    const result = mockWithdraw('pot-03', { amount: 5000 })
+    // 8000: the 5000 of the seed plus the 3000 that reached the target in mockContribute (US-20).
+    const result = mockWithdraw('pot-03', { amount: 8000 })
 
     expect(result.pot.balance).toBe(0)
     expect(() => mockWithdraw('pot-03', { amount: 1 })).toThrow(
