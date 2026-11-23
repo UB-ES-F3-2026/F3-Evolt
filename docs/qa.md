@@ -139,22 +139,22 @@ La resta de regles (etiquetes dels camps, noms dels botons, `lang`, rols ARIA) p
 
 ## 5. Traçabilitat AC → prova (Sprint 2)
 
-Font dels AC: les targetes del Trello (checklist «Acceptance Criteria»). Estat a 22/11.
+Font dels AC: les targetes del Trello (checklist «Acceptance Criteria»). Estat a 23/11.
 
-Les proves de multidivisa (US-25, US-26 i US-27) són a `docs/proves-multidivisa.md`, amb el contracte de la #193 (ja a `develop` amb la US-25). Les marques `[PROPOSTA]` de §12 i §13 de `docs/api.md` es treuen a la #219, oberta.
+Les proves de multidivisa (US-25, US-26 i US-27) són a `docs/proves-multidivisa.md`, amb el contracte de la #193 (ja a `develop` amb la US-25). Les marques `[PROPOSTA]` de §12, §13 i §14 de `docs/api.md` ja no hi són (#219 i #241).
 
 | Història | AC al Trello | Proves definides | Codi | Provat per QA |
 |---|---|---|---|---|
-| US-19 Retirar diners | 7 | RE-01…RE-21 (API), REP-01…REP-12 (pantalla) a la #177 | Contracte #177, frontend #190 i backend #195 fusionats a `story/us-19`. Falta la PR d'història | **Sí, de punta a punta** (§5.1) |
-| US-20 Progrés | 8 | O-01…O-08 (API), OP-01…OP-08 (pantalla) a la #177 | Backend #194 i #203, frontend #179, fusionats a `story/us-20`. Falta la PR d'història | Jiajun i Huabin (#179, #194) |
+| US-19 Retirar diners | 7 | RE-01…RE-21 (API), REP-01…REP-12 (pantalla) a la #177 | **A `develop`** (#231, 23/11): contracte #177, backend #195, frontend #190 i #232 (REP-12), tests amb Firestore #230 | **Sí, de punta a punta** (§5.1, i REP-01…REP-12 a la #231) · **acceptada pel PO** |
+| US-20 Progrés | 8 | O-01…O-09 (API), OP-01…OP-09 (pantalla) a la #177 | **A `develop`** (#229, 23/11): backend #194 i #203, frontend #179 | Jiajun (22/11); Huabin, OP-01…OP-09 a `d160625` i, amb la US-19 ja dins, també la OP-06 a `b3696ad` i a la regressió (§5.2); Junhao, OP-06 a `b08187c` · **acceptada pel PO** |
 | US-25 Afegir subcompte | 6 | DV-01…DV-16 (API), DVP-01…DVP-07 (pantalla) a la #193 | **A `develop`** (#209, 22/11): contracte #193, backend #206, frontend #178 | Izan (#178), Huabin (#209) · **acceptada pel PO** |
-| US-26 Eliminar subcompte | 6 | EL-01…EL-11 (API), ELP-01…ELP-07 (pantalla) a la #193 | **A `develop`** (#215, 22/11): backend #207, frontend #208 | Jiajun (T26.3), Alicia (backend) · **acceptada pel PO**. ELP-06 al navegador espera la US-27 (al backend, EL-07) |
-| US-27 Canvi de divises | 7 | CV-01…CV-23 (API), CVP-01…CVP-10 (pantalla) a la #193 | Frontend #180 (esborrany) · backend T27.1 pendent | — |
-| US-13 Cercar usuari | 7 | CU-01…CU-23 (API), CUP-01…CUP-11 (pantalla) a la #196 | **A `develop`** (#205, 22/11): contracte #196, backend #197, frontend #200 | **Sí, de punta a punta** (#197 + #200) · **acceptada pel PO** (pendents a la #212) |
-| US-14 Enviar diners | 9 | EN-01…EN-36 (API), ENP-01…ENP-11 (pantalla) a la #196 | Avisos #201 i enviament #213 (T14.1) fusionats a `story/us-14` · pantalles T14.3 pendents | Huabin (#201), Martí (#213) |
-| US-15 Sol·licitar diners | 10 | SO-01…SO-25 (API), SOP-01…SOP-11 (pantalla) a la #198 | Contracte #198 i backend #199 fusionats a `story/us-15` · frontend T15.3 pendent | Huabin (#199, l'API) |
+| US-26 Eliminar subcompte | 6 | EL-01…EL-11 (API), ELP-01…ELP-07 (pantalla) a la #193 | **A `develop`** (#215, 22/11): backend #207, frontend #208 | Jiajun (T26.3), Alicia (backend) · **acceptada pel PO**. ELP-06 provada a la #242, ja amb la US-27 |
+| US-27 Canvi de divises | 7 | CV-01…CV-23 (API), CVP-01…CVP-10 (pantalla) a la #193 | **A `develop`** (#242, 23/11): backend #222, frontend #180 | Huabin (CVP-01…CVP-10 a la #180 i la #242, en memòria i amb Firestore) · **acceptada pel PO** |
+| US-13 Cercar usuari | 7 | CU-01…CU-23 (API), CUP-01…CUP-11 (pantalla) a la #196 | **A `develop`** (#205, 22/11): contracte #196, backend #197, frontend #200; pendents del PO a la #236 i la #240 | **Sí, de punta a punta** (#197 + #200) · **acceptada pel PO** |
+| US-14 Enviar diners | 9 | EN-01…EN-36 (API), ENP-01…ENP-11 (pantalla) a la #196 | **A `develop`** (#239, 23/11): avisos #201, enviament #213 i #223, pantalles #233, text del límit #234 | Huabin (#201, #233, i ENP + T14.4 sobre `develop`) · **acceptada pel PO** |
+| US-15 Sol·licitar diners | 10 | SO-01…SO-25 (API), SOP-01…SOP-11 (pantalla) a la #198 | **A `develop`** (#238, 23/11): contracte #198, backend #199, frontend #235 | Huabin (#199, #235 i SOP-01…SOP-11 a la #238) · **acceptada pel PO** |
 
-A 22/11 hi ha **3 de les 8 històries a `develop`** (US-13, US-25 i US-26). Abans de fusionar-se, la US-15 i la US-19 s'han de posar al dia amb `develop` (la #215 ja avisa de 4 i 3 conflictes), com es va fer a la #211 i la #214.
+A 23/11 hi ha **les 8 històries a `develop`**, totes acceptades pel PO.
 
 ### 5.1 US-19 · Retirar diners (#190 i #195, 19–20/11)
 
@@ -172,6 +172,19 @@ Provat al navegador amb els mocks (19/11) i, el 20/11, de punta a punta: el fron
 
 Els tres defectes que va trobar la prova del 19/11 (l'error sobre el botó, la casella vermella amb un error del servidor i la falta de «← Inici») es van arreglar a `4fb2396` i el 20/11 es van tornar a provar amb el backend real: ✅. Queda pendent del PO què fa «Cancel·lar» (REP-12): ara torna al detall.
 
+### 5.2 Regressió de `develop` abans de la release (23/11)
+
+Sobre `develop` a `8db6d22` (les 8 històries juntes, després de la #242), abans de pujar a `main`:
+
+| Prova | Resultat |
+|---|---|
+| Backend en memòria (`pytest`, `ruff`, `compileall`) | 1.070 ✅, 1 omès |
+| Backend amb l'emulador de Firestore | 831 ✅, **5 fallits**: 4 de `test_exchanges.py` i `test_en30_transfers_give_no_xp` (§6: els tests, no el codi) |
+| Frontend (`vitest`, ESLint, `vue-tsc`, build) | 740 ✅ |
+| Navegador amb el backend real, en memòria i amb Firestore, cada recorregut amb dades noves | Les 8 històries: cerca, enviar i rebre (ENP i T14.4), sol·licitar, divises, canvi (CVP-01…CVP-10), retirar i progrés, i les pantalles de l'Sprint 1. Tot ✅, sense errors de JavaScript ni respostes 5xx. «Canviar» ja obre la pantalla de canvi |
+
+Abans, a `947a729` (7 històries, sense la US-27), el mateix recorregut també va sortir bé, però «Canviar» encara obria una pantalla en blanc.
+
 ## 6. Han servit els tests? Defectes trobats
 
 | Sprint | Defecte | Com es va trobar | On |
@@ -188,7 +201,7 @@ Els tres defectes que va trobar la prova del 19/11 (l'error sobre el botó, la c
 | 2 | US-25, US-26 i US-15 tenien dues funcionalitats; AC que contradeien els casos especials (US-14, US-15, US-27, US-20) | Revisió de QA (Definition of Ready) | #176 → #189 |
 | 2 | 79,99 € de 80,00 € mostra «100 %» i «En progrés» (decisió del PO: 99 % com a màxim; arreglat a la #194) | Revisió | #177, #179 |
 | 2 | El frontend recalcula el percentatge que el contracte diu que dona el backend | Revisió | #179 |
-| 2 | Pantalla en blanc en anar a «Canviar» des de la US-25; llista amb l'EUR seleccionable si falla la càrrega | Revisió, després de fusionar-la a `story/us-25` | #178 |
+| 2 | Pantalla en blanc en anar a «Canviar» des de la US-25; llista amb l'EUR seleccionable si falla la càrrega | Revisió, després de fusionar-la a `story/us-25` | #178 → pantalla en blanc arreglada a la #180 (US-27) |
 | 2 | Dues còpies del model de divises i dues rutes per al mateix (`/api/subaccounts` vs `/api/currencies`) | Revisió | #180 |
 | 2 | Error del servidor en el lloc equivocat, casella vermella amb import correcte, sense camí de tornada | **Prova al navegador** (QA) | #190 |
 | 2 | El CI no corria a `story/us-20` (anava 4 commits per darrere de `develop`) | Revisió | #179 |
@@ -198,13 +211,22 @@ Els tres defectes que va trobar la prova del 19/11 (l'error sobre el botó, la c
 | 2 | Dues PR treuen la mateixa funció `format_euros()` a dos mòduls diferents (`money_text.py` i `money_format.py`): la regla quedaria duplicada | Revisió (QA) | #199, #201 |
 | 2 | Dos buits dels tests de l'Sprint 1: el canvi de dia del límit de recàrrega a mitjanit de Madrid i el límit `ana@x.c` del domini (el codi és correcte, però cap test no ho comprovava) | **Testing de mutació** (QA, §4.3) | `test_topup_daily_limit.py`, `test_identifier.py` (pendent, §8) |
 | 2 | El text secundari (`#6c7a96`, 4,31:1) i els imports positius (`#16a34a`, 3,29:1) no arriben al contrast mínim de WCAG AA (4,5:1): 58 elements a 10 pantalles | **axe** (QA, §4.3) | `style.css` (proposta al PO) |
-| 2 | Un usuari sense nom mostra l'`@usuari` dues vegades (com a nom i a sota en gris) | Revisió (PO) | #205 → #212 |
-| 2 | La unicitat de l'`@usuari` no és igual a memòria i a Firestore: Firestore no reserva la forma `usuari<id>` | Revisió (PO) | #205 → #212 |
+| 2 | Un usuari sense nom mostra l'`@usuari` dues vegades (com a nom i a sota en gris) | Revisió (PO) | #205 → arreglat a la #236 |
+| 2 | La unicitat de l'`@usuari` no és igual a memòria i a Firestore: Firestore no reserva la forma `usuari<id>` | Revisió (PO) | #205 → a la #240 es prova que no pot passar i es documenta |
 | 2 | CU-20 fallava amb `TEST_STORAGE=firestore`: el test llegia el seed de memòria, que amb Firestore no existeix | **Test** (suite sobre l'emulador, QA) | #214 → arreglat a la #216 |
 | 2 | Tres textos diferents per a `INSUFFICIENT_BALANCE` (aportació, enviament i canvi) en lloc del de P85 | Revisió (PO) | #210 → arreglat a la #213 |
 | 2 | `ConfirmDialog` no atrapa el focus: amb Tab se surt de la finestra cap al fons | Revisió (PO) | #215 (pendent, #210) |
+| 2 | `q=@` sol tornava la llista inicial sencera, com si fos una cerca buida | Revisió (PO) | #205 → arreglat a la #240 |
+| 2 | El contracte (§13.5) i l'ENP-03 deien «… Avui encara pots enviar 980,00 €.», però la US-14 diu exactament «Has superat el límit diari de 1.000,00 €.» | Revisió (frontend) | #233 → arreglat a la #234 |
+| 2 | 6 tests de `test_pot_withdrawals.py` llegien el seed de memòria i fallaven amb Firestore (com CU-20) | **Test** (suite sobre l'emulador, QA) | #224 → arreglat a la #230 |
+| 2 | `test_en30_transfers_give_no_xp` llegeix el seed de memòria i falla amb Firestore | **Test** (suite sobre l'emulador, QA) | #239 (pendent: `memory_only`) |
+| 2 | 4 tests de `test_exchanges.py` llegeixen el seed de memòria i fallen amb Firestore | **Test** (suite sobre l'emulador, QA) | #180; encara fallen a `develop` després de la #242 (pendent) |
+| 2 | «Retirada cancel·lada»: el temporitzador comença abans de carregar els saldos; si la càrrega triga o falla, l'avís no es veu | Revisió (QA) | #232 (pendent) |
+| 2 | A la variant de selecció de `UserRow` («Demanar diners») l'`@usuari` d'un usuari sense nom encara es repeteix | Revisió (QA) | #236, #238 (pendent) |
+| 2 | «Pendent» i «Caducada» tenen la mateixa etiqueta grisa, i la T15.3 demana un color per estat | Revisió (QA) | #235 (pendent, #155) |
+| 2 | El canvi té un segon text «No tens prou saldo» (sense punt) que repeteix el de P85 | Revisió (QA) | #180 (pendent) |
 
-**Recompte:** 27 defectes. 7 els va trobar una prova (tests, script, navegador, mutació o axe), 18 la revisió, 1 totes dues i 1 el desplegament. Tots es van trobar a la PR, menys els dos de la #178, que es van trobar a `story/us-25` perquè s'hi va fusionar sense revisió. Cap defecte que bloquegés no ha arribat a `develop`: els petits que el PO va acceptar com a pendents (#212 i #210) hi són anotats. Els dos de les proves puntuals del 21/11 eren a `develop` des de l'Sprint 1, i el de CU-20 hi va entrar amb la US-13: les proves de cada PR corren en memòria i no els podien veure. Això torna a demanar el job de Firestore al CI (§8).
+**Recompte:** 36 defectes. 10 els va trobar una prova (tests, script, navegador, mutació o axe), 24 la revisió, 1 totes dues i 1 el desplegament. Tots es van trobar a la PR, menys els dos de la #178, que es van trobar a `story/us-25` perquè s'hi va fusionar sense revisió. Cap defecte que bloquegés no ha arribat a `develop`: els petits que el PO va acceptar com a pendents (#212 i #210) hi són anotats. Els dos de les proves puntuals del 21/11 eren a `develop` des de l'Sprint 1, i el de CU-20 hi va entrar amb la US-13: les proves de cada PR corren en memòria i no els podien veure. El mateix error de test (llegir `app.state.seed` sense `memory_only`) ha sortit en quatre històries (US-13, US-19, US-14 i US-27), sempre amb la suite sobre l'emulador. Això torna a demanar el job de Firestore al CI (§8).
 
 Com és habitual, la revisió de disseny i de codi troba més defectes que les proves unitàries. Per això la revisió és obligatòria i la revisió de QA executa els AC.
 
@@ -273,7 +295,7 @@ Amb assistents d'IA hi ha tres riscos nous: menys comprensió del codi generat, 
 
 | Buit | Per què | Pla |
 |---|---|---|
-| Firestore no corre al CI | Cal l'emulador (Java) al runner | Job `backend-firestore` amb l'emulador: QA el defineix, DevOps el connecta. Puja la cobertura del backend (les 455 línies sense cobrir són sobretot de Firestore). El defecte de CU-20 (§6) és el que aquest job hauria trobat a la PR |
+| Firestore no corre al CI | Cal l'emulador (Java) al runner | Job `backend-firestore` amb l'emulador: QA el defineix, DevOps el connecta. Puja la cobertura del backend (les 455 línies sense cobrir són sobretot de Firestore). Els tests que només fallen amb Firestore (§6: CU-20, retirar, XP dels enviaments i canvi) són els que aquest job hauria trobat a la PR |
 | Les vistes no tenen tests (0 %) | Es proven millor en un navegador real | E2E amb Playwright del flux principal (login → Inici → guardiola: aportar i retirar) contra els mocks, al CI |
 | Preproducció | No hi ha encara un segon entorn | `develop` desplegat com a preproducció (DevOps, skill `ci-cd`) |
 | Auditoria de dependències (Q4) | Feta una vegada (§4.3): 0 a producció, 19 a les eines de desenvolupament | `npm audit --omit=dev` i `pip-audit` al CI, informatius; `npm audit fix` (9 de 19) després de la demo; `vitest` 5 i `vue-tsc` 3 a l'Sprint 3 |
