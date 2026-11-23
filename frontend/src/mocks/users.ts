@@ -57,7 +57,8 @@ export function mockUserIdByEmail(email: string | null): string | null {
 function matches(user: SeedUser, text: string): boolean {
   const username = text.startsWith('@') ? text.slice(1) : text
   return (
-    fold(user.username).includes(fold(username)) ||
+    // A bare "@" has no handle, so it matches nobody (docs/api.md §13.2).
+    (username !== '' && fold(user.username).includes(fold(username))) ||
     fold(user.name ?? '').includes(fold(text)) ||
     // Only the whole email, so a search cannot be used to guess emails.
     user.email === text.toLowerCase() ||
