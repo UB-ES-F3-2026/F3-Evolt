@@ -15,10 +15,14 @@ const MESSAGES: Record<ApiErrorCode, string> = {
   DAILY_LIMIT_EXCEEDED: 'Has superat el límit diari de recàrrega.',
   INVALID_POT_NAME: 'El nom de la guardiola no pot estar buit.',
   INVALID_TARGET: "L'objectiu ha de ser més gran que 0.",
-  INSUFFICIENT_BALANCE: 'No tens prou saldo per fer aquesta aportació.',
+  // One text on every screen: the frontend picks it by `code`, not by screen (docs/api.md P85).
+  INSUFFICIENT_BALANCE: 'No tens prou saldo.',
   POT_NOT_FOUND: "No s'ha trobat la guardiola.",
   MOVEMENT_NOT_FOUND: "No s'ha trobat el moviment.",
   RECIPIENT_NOT_FOUND: 'No hem trobat aquest destinatari.',
+  SELF_TRANSFER: 'No et pots enviar diners a tu mateix.',
+  // The screens say the limit itself (`transferLimitMessage`), read from GET /api/transfers/limit.
+  TRANSFER_LIMIT_EXCEEDED: "Has superat el límit diari d'enviament.",
   INVALID_DESCRIPTION: `Explica què passa amb el moviment (com a màxim ${MAX_REPORT_LENGTH} caràcters).`,
   VALIDATION_ERROR: 'Les dades no són vàlides. Revisa-les i torna-ho a provar.',
   INTERNAL_ERROR: "S'ha produït un error inesperat. Torna-ho a provar més tard.",

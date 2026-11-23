@@ -127,7 +127,7 @@ export function mockContribute(potId: string, body: { amount?: unknown }): Contr
     throw mockError('INVALID_AMOUNT', "L'import ha de ser més gran que 0.")
   }
   if (amount > mockBalance()) {
-    throw mockError('INSUFFICIENT_BALANCE', 'No tens prou saldo per fer aquesta aportació.')
+    throw mockError('INSUFFICIENT_BALANCE', 'No tens prou saldo.')
   }
 
   const now = new Date()
