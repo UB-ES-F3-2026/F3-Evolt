@@ -8,9 +8,9 @@
 
 import { messageForCode } from '@/models/errorMessages'
 import { exchangePreview, type ExchangePreview, type ExchangeResult } from '@/models/exchange'
-import { currencyByCode, fromApiSubaccount, type Subaccount } from '@/models/currency'
+import { fromApiSubaccount, type Subaccount } from '@/models/currency'
 import { mockError, recordAccountMovement } from './index'
-import { mockSetSubaccountBalance, mockSubaccounts } from './currencies'
+import { mockRecordSubaccountMovement, mockSubaccounts } from './currencies'
 
 /**
  * POST /api/exchanges (§12.7, US-27). The body arrives untrusted, like a real
@@ -95,7 +95,11 @@ export function mockPostExchange(body: {
  * The source pays the amount plus the commission and the target receives the exact
  * converted amount, so the main account side never moves the raw amount. Euros go
  * through the main account movement (their balance is the sum of the movements); a
- * foreign currency writes its own sub-account row.
+ * foreign currency goes through `mockRecordSubaccountMovement`, which moves the
+ * sub-account's balance and records its history entry in one step.
+ *
+ * §12.8: each account gets one movement and both carry the same concept,
+ * «Canvi <origen> → <destí>» with the pair's codes (PO decision).
  */
 function applyExchange(
   fromRow: Subaccount,
@@ -103,30 +107,42 @@ function applyExchange(
   amount: number,
   preview: ExchangePreview,
 ): ExchangeResult {
+  const concept = `Canvi ${fromRow.code} → ${toRow.code}`
+
   let newFrom: number
   if (fromRow.code === 'EUR') {
     newFrom = recordAccountMovement(
-      `Canvi a ${currencyByCode(toRow.code).name}`,
+      concept,
       'expense',
       'transfer',
       preview.totalChargeMinor,
     ).balance
   } else {
+    mockRecordSubaccountMovement(fromRow.id, {
+      concept,
+      date: new Date().toISOString(),
+      type: 'expense',
+      amount: preview.totalChargeMinor,
+    })
     newFrom = fromRow.balance - preview.totalChargeMinor
-    mockSetSubaccountBalance(fromRow.code, newFrom)
   }
 
   let newTo: number
   if (toRow.code === 'EUR') {
     newTo = recordAccountMovement(
-      `Canvi de ${currencyByCode(fromRow.code).name}`,
+      concept,
       'income',
       'transfer',
       preview.exactReceivedMinor,
     ).balance
   } else {
+    mockRecordSubaccountMovement(toRow.id, {
+      concept,
+      date: new Date().toISOString(),
+      type: 'income',
+      amount: preview.exactReceivedMinor,
+    })
     newTo = toRow.balance + preview.exactReceivedMinor
-    mockSetSubaccountBalance(toRow.code, newTo)
   }
 
   // The §12.7 response echoes the figures already applied, so the screen never

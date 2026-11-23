@@ -185,8 +185,8 @@ function defaultDependencies(): ExchangeDependencies {
         },
       }),
     goToCurrencies: () =>
-      // /divises is registered by T25.3 (route NAME differs across branches) — match by
-      // path and fall back to Inici until it lands.
+      // Defensive: the route name (`currencies`) differs across branches, so match by
+      // path first and fall back to Inici if it is ever absent.
       router.getRoutes().some((route) => route.path === '/divises')
         ? router.push('/divises')
         : router.push({ name: 'home' }),

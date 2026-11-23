@@ -127,9 +127,10 @@ export function mockSubaccountMovements(subaccountIdToRead: string): SubaccountM
 }
 
 /**
- * Without «Aportar» (#189) and before the exchange (US-27), no API call puts money
- * in a sub-account. Tests (and anyone trying the screens with the mocks) use this
- * to stand in for an exchange: it sets the balance and records the entry.
+ * Moves one foreign sub-account's balance and records the entry in its history
+ * (docs/api.md §12.6). The exchange mock (US-27) uses it for the foreign side of a
+ * change; tests use it to seed history. One step so the balance stays the sum of
+ * the recorded entries.
  */
 export function mockRecordSubaccountMovement(
   subaccountIdToChange: string,

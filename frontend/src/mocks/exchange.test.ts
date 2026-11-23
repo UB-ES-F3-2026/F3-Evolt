@@ -5,7 +5,7 @@ import { fromApiSubaccounts, type CurrencyCode, type Subaccount } from '@/models
 import { formatCents, formatSignedCents } from '@/models/money'
 import { mockBalance, mockHome } from './index'
 import { mockPostExchange } from './exchange'
-import { mockAddSubaccount, mockSetSubaccountBalance, mockSubaccounts } from './currencies'
+import { mockAddSubaccount, mockSubaccountMovements, mockSetSubaccountBalance, mockSubaccounts } from './currencies'
 import { setMockCurrentUser } from './mockUser'
 
 // The mock keeps its state for the whole file, like `npm run dev` keeps it until a reload.
@@ -170,10 +170,10 @@ describe('mockPostExchange (§12.7 response, US-27)', () => {
     expect(appSubaccounts()).toEqual([result.from, result.to])
   })
 
-  it('shows «Canvi a Dòlar nord-americà» first in home and in the list, as an expense', () => {
+  it('shows «Canvi EUR → USD» first in home and in the list, as an expense', () => {
     const movement = mockHome().lastMovements[0]
 
-    expect(movement.concept).toBe('Canvi a Dòlar nord-americà')
+    expect(movement.concept).toBe('Canvi EUR → USD')
     expect(movement.type).toBe('expense')
     // The total charge (amount + commission), shown with a minus sign in the row.
     expect(movement.amount).toBe(10150)
@@ -210,9 +210,16 @@ describe('mockPostExchange (§12.7 response, US-27)', () => {
       received: 9123,
     })
     expect(mockHome().lastMovements[0]).toMatchObject({
-      concept: 'Canvi de Dòlar nord-americà',
+      concept: 'Canvi USD → EUR',
       type: 'income',
       amount: 9123,
+    })
+    // §12.8: the foreign side also gets its own movement, visible in its sub-account
+    // history (§12.6) — the same concept, as an expense of the whole charge.
+    expect(mockSubaccountMovements('sub-01').items[0]).toMatchObject({
+      concept: 'Canvi USD → EUR',
+      type: 'expense',
+      amount: 10150,
     })
   })
 
