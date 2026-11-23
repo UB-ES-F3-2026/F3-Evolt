@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=390">
+  <title>Vacances · Guardiola amb progrés · F3-Evolt</title>
+  <style>
+    :root {
+      --color-bg: #f7f9fc;
+      --color-surface: #ffffff;
+      --color-text: #1a2233;
+      --color-muted: #6c7a96;
+      --color-border: #e6ebf4;
+      --color-primary: #4f46e5;
+      --color-income: #16a34a;
+      --color-error: #dc2626;
+      --color-pot-blue: #2563eb;
+      --radius: 0.75rem;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--color-bg);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--color-text);
+      -webkit-font-smoothing: antialiased;
+    }
+    .screen {
+      width: 390px;
+      height: 844px;
+      overflow: hidden;
+      margin: 0 auto;
+      background: var(--color-bg);
+      display: flex;
+      flex-direction: column;
+    }
+    /* Barra superior (estructura US-19: títol a l'appbar, enllaç de tornada al contingut) */
+    .appbar {
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: none;
+    }
+    .appbar-title {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 600;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 2px;
+      font-size: 14px;
+      color: var(--color-primary);
+      text-decoration: none;
+    }
+    .content {
+      flex: 1;
+      overflow: hidden;
+      padding: 8px 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: 0 1px 2px rgba(26, 34, 51, 0.04);
+    }
+    /* Targeta resum */
+    .summary .icon {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--color-pot-blue) 14%, var(--color-surface));
+      color: var(--color-pot-blue);
+      margin-bottom: 10px;
+    }
+    .label {
+      margin: 0;
+      font-size: 14px;
+      color: var(--color-muted);
+    }
+    .balance-big {
+      margin: 4px 0 0;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .target-line {
+      margin: 6px 0 0;
+      font-size: 14px;
+      color: var(--color-muted);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .target-line strong { color: var(--color-text); font-weight: 600; }
+    /* Bloc de progrés (PotProgress, mida gran) */
+    .progress {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--color-border);
+    }
+    .progress-amounts {
+      font-size: 15px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .progress-track {
+      margin-top: 8px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--color-border);
+      overflow: hidden;
+    }
+    .progress-fill {
+      width: 15%;
+      height: 100%;
+      border-radius: 999px;
+      background: var(--color-primary);
+    }
+    .progress-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .progress-percent {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--color-border);
+      color: var(--color-text);
+      white-space: nowrap;
+    }
+    /* Accions */
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .actions > * {
+      flex: 1;
+      min-width: 0;
+      min-height: 48px;
+      border-radius: var(--radius);
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--color-primary);
+      color: var(--color-surface);
+    }
+    .btn-outline {
+      background: var(--color-surface);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+    }
+    /* Historial */
+    .card-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    ul.history {
+      list-style: none;
+      margin: 6px 0 0;
+      padding: 0;
+    }
+    .movement-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 52px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .movement-row:last-child { border-bottom: none; }
+    .movement-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .movement-icon.income {
+      background: color-mix(in srgb, var(--color-income) 14%, var(--color-surface));
+      color: var(--color-income);
+    }
+    .movement-icon.saldo-inicial {
+      /* Patró US-19: glif de porquet dins d'un cercle suau (Saldo inicial) */
+      background: #eef0fb;
+      color: #4f46e5;
+    }
+    .movement-main { flex: 1; min-width: 0; }
+    .movement-concept {
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1.3;
+    }
+    .movement-date {
+      font-size: 12px;
+      color: var(--color-muted);
+      font-variant-numeric: tabular-nums;
+      margin-top: 2px;
+    }
+    .amount {
+      flex-shrink: 0;
+      font-size: 15px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .amount.income { color: var(--color-income); }
+  </style>
+</head>
+<body>
+  <!--
+    Estàtic (mockup visual) · US-20 · detall de «Vacances» amb progrés — estats NO representats aquí:
+    - Carregant… (isLoading) i Error + botó «Reintentar»
+    - Detall sense objectiu: sense línia «Objectiu:», sense barra, «15 %» ni etiqueta (Emergències)
+    - Objectiu assolit: barra plena verda #16a34a + etiqueta verda «Objectiu assolit» (#166534 sobre #e8f6ee) — representat a la maqueta US-20-objectiu-assolit.html
+    - Després d'aportar o retirar: la pantalla recarrega sola i la barra surt ja actualitzada
+  -->
+  <div class="screen">
+    <header class="appbar">
+      <h1 class="appbar-title">Vacances</h1>
+    </header>
+    <main class="content">
+      <a class="back-link" href="#"><span aria-hidden="true">←</span> Guardioles</a>
+
+      <section class="card summary">
+        <span class="icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 17h3v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-3a3.16 3.16 0 0 0 2-2h1a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1h-1a5 5 0 0 0-2-4V3a4 4 0 0 0-3.2 1.6l-.3.4H11a6 6 0 0 0-6 6v1a5 5 0 0 0 2 4v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1z"/>
+            <path d="M16 10h.01"/>
+            <path d="M2 8v1a2 2 0 0 0 2 2h1"/>
+          </svg>
+        </span>
+        <h2 class="label">Saldo de la guardiola</h2>
+        <p class="balance-big">150,00&nbsp;€</p>
+        <p class="target-line">Objectiu: <strong>1.000,00&nbsp;€</strong></p>
+
+        <div class="progress">
+          <p class="progress-amounts">150,00&nbsp;€ de 1.000,00&nbsp;€</p>
+          <div
+            class="progress-track"
+            role="progressbar"
+            aria-label="Progrés de Vacances cap a l'objectiu"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="15"
+            aria-valuetext="15 % de l'objectiu"
+          >
+            <div class="progress-fill"></div>
+          </div>
+          <div class="progress-meta">
+            <span class="progress-percent">15&nbsp;%</span>
+            <span class="badge-status">En progrés</span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <a class="btn-primary" href="#">Aportar</a>
+          <a class="btn-outline" href="#">Retirar</a>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">Historial</h2>
+        <ul class="history">
+          <li class="movement-row">
+            <span class="movement-icon saldo-inicial" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.645.645 2.645 1.5 3H2v3h2c.5.5 1 1 2 1v2h2v-2h5v2h2v-2.5c1.5-.5 3-2.5 3-5.5h2V10.5h-2.5"/>
+                <circle cx="15.5" cy="10.5" r="1"/>
+              </svg>
+            </span>
+            <div class="movement-main">
+              <div class="movement-concept">Saldo inicial</div>
+              <div class="movement-date">4 d’oct. · 10:00</div>
+            </div>
+            <span class="amount income">+150,00&nbsp;€</span>
+          </li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>No tens prou saldo</title>
+  <style>
+    :root {
+      --color-bg: #f7f9fc;
+      --color-surface: #ffffff;
+      --color-text: #1a2233;
+      --color-muted: #6c7a96;
+      --color-border: #e6ebf4;
+      --color-primary: #4f46e5;
+      --color-income: #16a34a;
+      --color-expense: #dc2626;
+      --radius: 0.75rem;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 390px;
+      height: 844px;
+      overflow: hidden;
+    }
+    body {
+      background: var(--color-bg);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--color-text);
+      -webkit-font-smoothing: antialiased;
+    }
+    .screen {
+      width: 390px;
+      height: 844px;
+      display: flex;
+      flex-direction: column;
+    }
+    .appbar {
+      height: 56px;
+      flex: 0 0 56px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--color-bg);
+    }
+    .appbar h1 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+    .back {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 0;
+      background: transparent;
+      padding: 8px;
+      font-size: 24px;
+      line-height: 1;
+      color: var(--color-text);
+    }
+    .content {
+      flex: 1;
+      overflow: hidden;
+      padding: 8px 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .origin {
+      margin: 0 0 16px;
+      font-size: 20px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--color-text);
+    }
+    .row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 0;
+    }
+    .row-label {
+      font-size: 15px;
+      color: var(--color-text);
+    }
+    .row-value {
+      font-size: 15px;
+      font-variant-numeric: tabular-nums;
+      color: var(--color-text);
+    }
+    .row-value.commission { color: var(--color-expense); }
+    .note {
+      margin: 6px 0 0;
+      font-size: 15px;
+      line-height: 1.4;
+      color: var(--color-text);
+    }
+    .divider {
+      height: 1px;
+      background: var(--color-border);
+      margin: 12px 0;
+    }
+    .total {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--color-text);
+    }
+    .btn-primary {
+      margin-top: auto;
+      width: 100%;
+      height: 48px;
+      border: 0;
+      border-radius: var(--radius);
+      background: var(--color-primary);
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .error {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: center;
+      color: var(--color-expense);
+    }
+  </style>
+</head>
+<body>
+  <!--
+    US-27 · Error de saldo al resum (390×844, PNG 780×1688).
+    El canvi és de 100,00 € i calen 101,50 € amb la comissió; amb 100,00 € a l'origen
+    el resum no navega i «No tens prou saldo» surt en vermell sota el botó.
+  -->
+  <div class="screen">
+    <header class="appbar">
+      <button type="button" class="back" aria-label="Enrere">←</button>
+      <h1>Resum del canvi</h1>
+    </header>
+    <main class="content">
+      <section class="card">
+        <p class="origin">100,00 € → USD</p>
+        <div class="row">
+          <span class="row-label">1 € =</span>
+          <span class="row-value">1,10 $</span>
+        </div>
+        <div class="row">
+          <span class="row-label">Comissió:</span>
+          <span class="row-value commission">1,50 €</span>
+        </div>
+        <p class="note">Se't descomptaran 101,50 € del subcompte d'origen</p>
+        <div class="divider" aria-hidden="true"></div>
+        <p class="total">Rebràs exactament 109,61 $</p>
+      </section>
+      <button type="button" class="btn-primary">Confirmar canvi</button>
+      <p class="error" role="alert">No tens prou saldo</p>
+    </main>
+  </div>
+</body>
+</html>

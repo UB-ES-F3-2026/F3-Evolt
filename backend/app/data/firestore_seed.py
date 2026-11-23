@@ -1,13 +1,19 @@
 """Seed i reinici a Firestore (TR01.1, docs/api.md §4.4 i §8.13).
 
 Les dades són les mateixes de `build_seed()`: usuaris, comptes, guardioles amb el
-seu historial i moviments, i els comptadors per als ids nous.
+seu historial, moviments, subcomptes en divisa i el seu historial (cap, T25.2 i T26.1), i
+els comptadors per als ids nous.
 
 - `ensure_seeded`: a l'arrencada, només si la base de dades és buida. Les dades
   es conserven entre reinicis del backend.
 - `reset`: per a `POST /api/dev/reset`. Esborra **totes** les col·leccions i hi
   torna a escriure el seed: només amb l'emulador o el projecte de desenvolupament.
+- `main`: el mateix `reset` a mà, per a una release que canvia el seed
+  (docs/deploy.md, «Release with seed changes»). Demana el projecte dues vegades.
 """
+
+import argparse
+import sys
 
 from google.cloud import firestore
 
@@ -28,6 +34,14 @@ from app.repositories.firestore.pot import (
     pot_to_dict,
 )
 from app.repositories.firestore.session import SESSIONS
+from app.repositories.firestore.subaccount import (
+    SUBACCOUNT_COUNTER,
+    SUBACCOUNT_MOVEMENT_COUNTER,
+    SUBACCOUNT_MOVEMENTS,
+    SUBACCOUNTS,
+    subaccount_movement_to_dict,
+    subaccount_to_dict,
+)
 from app.repositories.firestore.user import (
     USER_COUNTER,
     USER_IDENTIFIERS,
@@ -52,6 +66,8 @@ COLLECTIONS = (
     VERIFICATION_CODES,
     OUTBOX,
     PASSWORD_RESET_TOKENS,
+    SUBACCOUNTS,
+    SUBACCOUNT_MOVEMENTS,
     _tx.COUNTERS,
 )
 
@@ -97,6 +113,10 @@ def write_seed(client: firestore.Client, seed: SeedData) -> None:
         batch.set(client.collection(MOVEMENTS).document(movement.id), movement_to_dict(movement))
     for money_request in seed.money_requests:
         batch.set(client.collection(MONEY_REQUESTS).document(money_request.id), money_request_to_dict(money_request))
+    for subaccount in seed.subaccounts:
+        batch.set(client.collection(SUBACCOUNTS).document(subaccount.id), subaccount_to_dict(subaccount))
+    for entry in seed.subaccount_movements:
+        batch.set(client.collection(SUBACCOUNT_MOVEMENTS).document(entry.id), subaccount_movement_to_dict(entry))
     batch.set(
         _tx.counters_ref(client),
         {
@@ -108,6 +128,30 @@ def write_seed(client: firestore.Client, seed: SeedData) -> None:
             OUTBOX_COUNTER: 1,
             REPORT_COUNTER: seed.next_report_number,
             MONEY_REQUEST_COUNTER: seed.next_money_request_number,
+            SUBACCOUNT_COUNTER: seed.next_subaccount_number,
+            SUBACCOUNT_MOVEMENT_COUNTER: seed.next_subaccount_movement_number,
         },
     )
     batch.commit()
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Torna un projecte de Firestore al seed: esborra **totes** les dades.
+
+    Només per a una release que canvia el seed (docs/deploy.md). El projecte s'ha
+    d'escriure dues vegades: si no coincideixen, no es connecta ni s'esborra res.
+    """
+    parser = argparse.ArgumentParser(prog="python -m app.data.firestore_seed")
+    parser.add_argument("--project", required=True, help="id del projecte de Firestore")
+    parser.add_argument("--confirm", required=True, help="el mateix id, una altra vegada")
+    args = parser.parse_args(argv)
+    if args.confirm != args.project:
+        print("--project i --confirm no coincideixen: no s'esborra res.", file=sys.stderr)
+        return 2
+    reset(firestore.Client(project=args.project))
+    print(f"Seed escrit de nou a {args.project}: totes les dades anteriors s'han esborrat.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

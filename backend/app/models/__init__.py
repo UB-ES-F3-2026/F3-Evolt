@@ -6,6 +6,14 @@ La conversió a la forma de l'API (camelCase, sense `kind` ni `seq`) es fa als r
 
 from app.models.account import Account
 from app.models.clock import MADRID_TZ, now_madrid
+from app.models.currency import (
+    CURRENCIES,
+    MAIN_CURRENCY,
+    MAIN_SUBACCOUNT_ID,
+    Currency,
+    rate_bps,
+    total_in_euros,
+)
 from app.models.money_request import (
     MAX_REQUEST_AMOUNT,
     MAX_REQUEST_CONCEPT,
@@ -50,6 +58,7 @@ from app.models.pot import (
     PotMovement,
 )
 from app.models.session import Session
+from app.models.subaccount import Subaccount, SubaccountMovement
 from app.models.text import fold_text
 from app.models.user import (
     IDENTIFIER_EMAIL,
@@ -72,6 +81,14 @@ __all__ = [
     "REQUEST_PENDING",
     "MoneyRequest",
     "Account",
+    "Currency",
+    "CURRENCIES",
+    "MAIN_CURRENCY",
+    "MAIN_SUBACCOUNT_ID",
+    "Subaccount",
+    "SubaccountMovement",
+    "rate_bps",
+    "total_in_euros",
     "Movement",
     "MovementFilters",
     "MovementReport",

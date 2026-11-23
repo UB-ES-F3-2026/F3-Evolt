@@ -1,0 +1,34 @@
+name: Kanban
+
+# Moves the issues a PR links to ("Refs #N", "Closes #N") across the "Kanban Evolt"
+# board: opened → In review, draft → In progress, merged → Done (docs/ci-cd.md).
+# It is not a quality gate: it is not in `ci.needs` and never blocks a merge.
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, converted_to_draft, closed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kanban-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  move-issues:
+    name: move-issues
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Move the linked issues
+        env:
+          # A token with "Projects: read and write" on the organization: GITHUB_TOKEN
+          # cannot write an organization project. Without it the job only logs a notice.
+          PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          PROJECT_OWNER: UB-ES-F3-2026
+          PROJECT_NUMBER: "4"
+        run: node .github/scripts/project-status.mjs

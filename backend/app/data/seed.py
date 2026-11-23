@@ -44,6 +44,8 @@ from app.models import (
     Pot,
     PotMovement,
     Session,
+    Subaccount,
+    SubaccountMovement,
     User,
     VerificationCode,
     now_madrid,
@@ -184,6 +186,14 @@ class SeedData:
     # Sol·licituds de diners (T15.2). Cancel·lar-ne una l'esborra (docs/api.md §14.4).
     money_requests: list[MoneyRequest] = field(default_factory=list)
     next_money_request_number: int = field(default=1)
+    # Subcomptes en divisa (T25.2, docs/api.md §12.11). El seed no en té cap: el compte
+    # en euros és l'`Account` de cada usuari, i els nous comencen per sub-01.
+    subaccounts: list[Subaccount] = field(default_factory=list)
+    next_subaccount_number: int = field(default=1)
+    # Historial dels subcomptes (T26.1, §12.6). Buit al seed: les entrades les crea el
+    # canvi (T27.1), i les noves comencen per smov-01. Eliminar un subcompte no les esborra.
+    subaccount_movements: list[SubaccountMovement] = field(default_factory=list)
+    next_subaccount_movement_number: int = field(default=1)
 
 
 def _days_ago_at(now: datetime, days_ago: int, hhmm: str) -> datetime:
@@ -225,6 +235,16 @@ def money_request_id(number: int) -> str:
 def pot_movement_id(number: int) -> str:
     """Id opac de les entrades de l'historial (docs/api.md §9.5). El frontend no l'ha d'interpretar."""
     return f"pmov-{number:02d}"
+
+
+def subaccount_id(number: int) -> str:
+    """Id opac dels subcomptes en divisa (docs/api.md §12.2). El frontend no l'ha d'interpretar."""
+    return f"sub-{number:02d}"
+
+
+def subaccount_movement_id(number: int) -> str:
+    """Id opac de l'historial dels subcomptes (docs/api.md §12.6). El frontend no l'ha d'interpretar."""
+    return f"smov-{number:02d}"
 
 
 def build_seed(now: datetime | None = None) -> SeedData:

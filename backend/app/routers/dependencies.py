@@ -24,6 +24,7 @@ from app.repositories import (
     PasswordResetTokenRepository,
     PotRepository,
     SessionRepository,
+    SubaccountRepository,
     UserRepository,
     VerificationCodeRepository,
 )
@@ -59,6 +60,14 @@ def pot_repository(request: Request) -> PotRepository:
 
         return FirestorePotRepository(client)
     return PotRepository(request.app.state.seed)
+
+
+def subaccount_repository(request: Request) -> SubaccountRepository:
+    if client := _firestore(request):
+        from app.repositories.firestore import FirestoreSubaccountRepository
+
+        return FirestoreSubaccountRepository(client)
+    return SubaccountRepository(request.app.state.seed)
 
 
 def movement_repository(request: Request) -> MovementRepository:

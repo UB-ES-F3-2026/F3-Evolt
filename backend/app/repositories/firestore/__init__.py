@@ -13,6 +13,7 @@ from app.repositories.firestore.outbox import FirestoreOutboxRepository
 from app.repositories.firestore.password_reset import FirestorePasswordResetTokenRepository
 from app.repositories.firestore.pot import FirestorePotRepository
 from app.repositories.firestore.session import FirestoreSessionRepository
+from app.repositories.firestore.subaccount import FirestoreSubaccountRepository
 from app.repositories.firestore.user import FirestoreUserRepository
 from app.repositories.firestore.verification_code import FirestoreVerificationCodeRepository
 
@@ -25,6 +26,7 @@ __all__ = [
     "FirestorePasswordResetTokenRepository",
     "FirestorePotRepository",
     "FirestoreSessionRepository",
+    "FirestoreSubaccountRepository",
     "FirestoreUserRepository",
     "FirestoreVerificationCodeRepository",
 ]
