@@ -38,12 +38,10 @@ def _seed(client: TestClient) -> SeedData:
     return client.app.state.seed
 
 
-def _balance(client: TestClient, user_id: int = DEMO_USER_ID) -> int:
-    return _seed(client).accounts[user_id].balance
-
-
 def _pot_balance(client: TestClient, pot_id: str) -> int:
-    return next(pot.balance for pot in _seed(client).pots if pot.id == pot_id)
+    # Per l'API i no pel seed: així també funciona amb TEST_STORAGE=firestore, on
+    # `app.state.seed` no existeix (com la CU-20 a la #216).
+    return next(pot["balance"] for pot in client.get("/api/pots").json()["items"] if pot["id"] == pot_id)
 
 
 def _withdraw(client: TestClient, pot_id: str, amount, headers: dict[str, str] | None = None):
