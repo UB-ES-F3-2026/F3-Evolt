@@ -55,6 +55,14 @@ class FirestoreSubaccountRepository:
         _tx.create(self._subaccounts.document(subaccount.id), subaccount_to_dict(subaccount))
         return subaccount
 
+    def set_balance(self, subaccount_id: str, balance: int) -> None:
+        """Com a la memòria (T27.1). Dins del canvi, va a la mateixa transacció."""
+        if not isinstance(balance, int) or isinstance(balance, bool):
+            raise TypeError("balance ha de ser un enter en la unitat menor de la divisa")
+        if balance < 0:
+            raise ValueError("un subcompte no pot tenir saldo negatiu")
+        _tx.update(self._subaccounts.document(subaccount_id), {"balance": balance})
+
     def delete(self, subaccount_id: str) -> None:
         """Com a la memòria: només el subcompte; l'historial es queda (§12.5)."""
         _tx.delete(self._subaccounts.document(subaccount_id))
@@ -82,6 +90,11 @@ class FirestoreSubaccountRepository:
         entry.id, entry.seq = subaccount_movement_id(number), number
         _tx.create(self._entries.document(entry.id), subaccount_movement_to_dict(entry))
         return entry
+
+    def remove_movement(self, entry: SubaccountMovement) -> None:
+        """Com `FirestorePotRepository.remove_movement`: dins d'una transacció no cal."""
+        if not _tx.in_transaction():
+            _tx.delete(self._entries.document(entry.id))
 
 
 def subaccount_to_dict(subaccount: Subaccount) -> dict:
