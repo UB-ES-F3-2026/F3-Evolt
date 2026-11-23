@@ -19,6 +19,9 @@ describe('UserRow', () => {
     const row = mount(UserRow, { props: { user: { id: 'usr-09', name: null, username: 'anna' } } })
 
     expect(row.find('.name').text()).toBe('@anna')
+    // Only once: the grey @username line would repeat it (PO note at #212).
+    expect(row.find('.username').exists()).toBe(false)
+    expect(row.text().match(/@anna/g)).toHaveLength(1)
   })
 
   it('CUP-08: with `to`, the whole row goes there', () => {
