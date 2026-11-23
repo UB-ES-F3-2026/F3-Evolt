@@ -81,7 +81,8 @@ def find_active_user(raw_id: str, users: UserRepository) -> User | None:
 
 def _matches(user: User, query: str) -> bool:
     handle = query[1:] if query.startswith("@") else query
-    if handle.lower() in user.visible_username:
+    # Un `@` sol no és cap `@usuari` (§13.2): sense text no hi ha cap coincidència.
+    if handle and handle.lower() in user.visible_username:
         return True
     if user.name and fold_text(query) in fold_text(user.name):
         return True

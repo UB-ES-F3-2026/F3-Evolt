@@ -15,7 +15,8 @@ const MESSAGES: Record<ApiErrorCode, string> = {
   DAILY_LIMIT_EXCEEDED: 'Has superat el límit diari de recàrrega.',
   INVALID_POT_NAME: 'El nom de la guardiola no pot estar buit.',
   INVALID_TARGET: "L'objectiu ha de ser més gran que 0.",
-  INSUFFICIENT_BALANCE: 'No tens prou saldo per fer aquesta aportació.',
+  // One text for contribution, transfer and exchange (docs/api.md P85).
+  INSUFFICIENT_BALANCE: 'No tens prou saldo.',
   INSUFFICIENT_POT_BALANCE: 'La guardiola no té prou saldo per aquesta retirada.',
   POT_NOT_FOUND: "No s'ha trobat la guardiola.",
   MOVEMENT_NOT_FOUND: "No s'ha trobat el moviment.",
