@@ -12,6 +12,7 @@ Read **[`AGENTS.md`](AGENTS.md)** — it is the source of truth for architecture
 - Never invent a screen, button, message or list behaviour: if the story or its mockup does not define it, ask the PO (`user-stories`).
 - `develop` never breaks: a task PR goes into its story branch, and only whole stories reach `develop` (`gitflow`).
 - Every test says what it proves (AC or rule); every AC maps to a test (`qa-strategy`).
+- **One reviewer per PR.** Before asking for review, the author reviews their own PR: reads the whole diff, runs the tests and says so in the PR. Then **one** teammate, never the author, reviews it, approves it and merges it. No second approval, contracts included (`pr-conventions`).
 
 ## Stack
 

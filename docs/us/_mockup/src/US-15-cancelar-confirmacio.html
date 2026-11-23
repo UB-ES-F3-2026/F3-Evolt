@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=390, initial-scale=1">
+  <title>Cancel·lar sol·licitud · F3-Evolt</title>
+  <style>
+    :root {
+      --color-bg: #f7f9fc;
+      --color-surface: #ffffff;
+      --color-text: #1a2233;
+      --color-muted: #6c7a96;
+      --color-border: #e6ebf4;
+      --color-primary: #4f46e5;
+      --color-error: #dc2626;
+      --radius: 0.75rem;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--color-bg);
+      color: var(--color-text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    .phone {
+      width: 390px;
+      min-height: 844px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+      background: var(--color-bg);
+    }
+
+    /* Layer 1 — background screen (Sol·licituds enviades) */
+    .layer-screen {
+      padding: 16px;
+    }
+    .header {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .header .back {
+      font-size: 15px;
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+    .header h1 {
+      margin: 2px 0 0;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+    .btn-primary {
+      width: 100%;
+      min-height: 48px;
+      background: var(--color-primary);
+      color: var(--color-surface);
+      border: none;
+      border-radius: var(--radius);
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .requests {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .req-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: 0 1px 2px rgba(26, 34, 51, 0.04);
+    }
+    .req-top {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .req-name {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--color-text);
+    }
+    .handle {
+      font-size: 13px;
+      color: var(--color-muted);
+      line-height: 1.3;
+    }
+    .req-amount {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text);
+      font-variant-numeric: tabular-nums;
+    }
+    .req-concept {
+      display: block;
+      font-size: 13px;
+      color: var(--color-muted);
+      margin-top: 1px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .req-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .req-date {
+      font-size: 13px;
+      color: var(--color-muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .badge {
+      display: inline-block;
+      border-radius: 999px;
+      padding: .125rem .5rem;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .pendent { background: #e6ebf4; color: var(--color-text); }
+    .caducada { background: #f1f4f9; color: var(--color-text); border: 1px solid var(--color-border); }
+    .btn-cancel-row {
+      margin-top: 10px;
+      width: 100%;
+      min-height: 44px;
+      background: var(--color-surface);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Layer 2 — confirmation dialog */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(26, 34, 51, .45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 10;
+    }
+    .dialog {
+      background: #ffffff;
+      border-radius: var(--radius);
+      padding: 20px;
+      width: 100%;
+      box-shadow: 0 12px 32px rgba(26, 34, 51, .18);
+    }
+    .dialog h2 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+    .dialog .body {
+      margin: 10px 0 0;
+      font-size: 14px;
+      color: var(--color-text);
+      line-height: 1.5;
+    }
+    .dialog-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .dialog-actions > * {
+      flex: 1;
+      min-height: 48px;
+      border-radius: var(--radius);
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-ghost {
+      background: var(--color-surface);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+    }
+    .btn-destructive {
+      background: var(--color-error);
+      color: var(--color-surface);
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <!--
+    US-15 · Cancel·lar una sol·licitud enviada (confirmació) — mockup estàtic, sense JS.
+
+    Comportament real de la vista (alertdialog):
+    · El diàleg usa role="alertdialog".
+    · El focus inicial és al botó segur «Cancel·lar» (dismiss: tanca el diàleg).
+    · Esc tanca el diàleg.
+    · En tancar, el focus torna al botó «Cancel·lar» de la fila corresponent.
+    · En confirmar (botó destructiu) → estat d'èxit «Sol·licitud cancel·lada.»
+      i la fila desapareix de la llista.
+    · El servidor rebutja cancel·lar una sol·licitud no Pendent amb
+      REQUEST_NOT_PENDING (409); la UI mostra l'error i recarrega la llista (§3 pas 14, §8).
+  -->
+  <div class="phone">
+
+    <!-- Layer 1: pantalla «Sol·licituds enviades» (atenuada sota el diàleg) -->
+    <div class="layer-screen">
+      <header class="header">
+        <span class="back">← Inici</span>
+        <h1>Sol·licituds enviades</h1>
+      </header>
+
+      <button class="btn-primary" type="button" tabindex="-1">Demanar diners</button>
+
+      <div class="requests">
+        <article class="req-card">
+          <div class="req-top">
+            <div>
+              <div class="req-name">Alicia</div>
+              <div class="handle">@alicia</div>
+            </div>
+            <span class="req-amount">25,00&nbsp;€</span>
+          </div>
+          <span class="req-concept">El sopar de divendres</span>
+          <div class="req-meta">
+            <span class="req-date">14 de nov. · 19:30</span>
+            <span class="badge pendent">Pendent</span>
+          </div>
+          <button class="btn-cancel-row" type="button" tabindex="-1">Cancel·lar</button>
+        </article>
+
+        <article class="req-card">
+          <div class="req-top">
+            <div>
+              <div class="req-name">Huabin</div>
+              <div class="handle">@huabin</div>
+            </div>
+            <span class="req-amount">42,00&nbsp;€</span>
+          </div>
+          <span class="req-concept">Pizza del diumenge</span>
+          <div class="req-meta">
+            <span class="req-date">6 de nov. · 21:15</span>
+            <span class="badge caducada">Caducada</span>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <!-- Layer 2: diàleg de confirmació -->
+    <div class="overlay">
+      <div class="dialog" role="alertdialog" aria-labelledby="dlg-title" aria-describedby="dlg-body">
+        <h2 id="dlg-title">Cancel·lar sol·licitud</h2>
+        <p class="body" id="dlg-body">Segur que vols cancel·lar aquesta sol·licitud?</p>
+        <div class="dialog-actions">
+          <!-- Botó segur: tanca el diàleg (dismiss) -->
+          <button class="btn-ghost" type="button" tabindex="-1">Cancel·lar</button>
+          <!-- Botó destructiu: confirma la cancel·lació -->
+          <button class="btn-destructive" type="button" tabindex="-1">Confirmar</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

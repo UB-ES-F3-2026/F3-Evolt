@@ -50,7 +50,7 @@ ci: run CI on story branches
 Short description of the change.
 
 ## Why
-Story and task: US-XX, TXX.X (issue #N).
+Story and task: US-XX, TXX.X. Refs #N (the task issue: the Kanban moves it).
 
 ## How
 Layers touched (View / ViewModel / Model, or Router / Service / Repository).
@@ -70,13 +70,14 @@ UI: next to the story's mockup; empty / loading / error states.
 - [ ] Tests added per skill `qa-strategy` (each AC or rule has a test that names it)
 - [ ] Nothing invented: every screen element, message and button comes from the story or its mockup
 - [ ] Tests pass (`vitest` / `pytest`)
+- [ ] Self-review: I read the whole diff and ran the tests before asking for review
 ```
 
 ## Body: story PR
 
 ```markdown
 ## Story
-US-XX: value statement. Trello card / issue #N. Mockup: link.
+US-XX: value statement. Trello card. Mockup: link. Closes #N (the story issue: the Kanban moves it).
 
 ## Task PRs in this story
 - #… backend: …
@@ -97,6 +98,7 @@ Found while integrating, and the test that now covers each one.
 Story PR checklist (all must be true before it merges):
 
 - [ ] Every task PR of the story is merged into the story branch
+- [ ] Self-review: the author read the whole story diff and ran every test before asking for review
 - [ ] Latest `develop` merged into the story branch; CI green after that
 - [ ] The whole flow works from the story branch, and its acceptance tests pass
 - [ ] The PO accepted the story on the story branch
@@ -105,7 +107,11 @@ Story PR checklist (all must be true before it merges):
 
 ## Review
 
-- At least **1 teammate** reviews every PR.
+- **Self-review first.** Before asking for review, the author reads the whole
+  diff, runs the tests and ticks the self-review line of the checklist.
+- **One reviewer.** One teammate, never the author, reviews the PR, approves it
+  and merges it. No second approval is needed, contracts included: pick the
+  teammate who will use the change most (e.g. frontend for a backend contract).
 - Reviewer checks **architecture + AC**, not only syntax. On a story PR, the
   reviewer also checks the story checklist above.
 - A screen that does not match the story or its mockup is a review comment,
@@ -120,7 +126,7 @@ Story PR checklist (all must be true before it merges):
 3. AC verified
 4. Help/doc if user-facing
 5. PO accepts (on the story branch)
-6. PR reviewed
+6. PR self-reviewed, then reviewed, approved and merged by one teammate
 7. CI green; the story reaches `develop` whole, and `develop` stays deployable
 8. No critical open bugs for that story
 9. Architecture checklist respected
@@ -133,3 +139,4 @@ Story PR checklist (all must be true before it merges):
 - [ ] AC mapped to tests
 - [ ] Architecture checklist done
 - [ ] No secrets, no build junk in the diff
+- [ ] Self-review done: whole diff read, tests run, said in the PR

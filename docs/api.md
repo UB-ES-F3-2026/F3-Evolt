@@ -18,6 +18,8 @@ Contracte compartit entre el backend (FastAPI) i el frontend per a les històrie
 8. [Accés (US-01 a US-04)](#8-accés-us-01-a-us-04)
 9. [Guardioles (US-17 i US-18)](#9-guardioles-us-17-i-us-18)
 10. [Moviments: filtres, detall i informe (US-10 i US-11)](#10-moviments-filtres-detall-i-informe-us-10-i-us-11)
+12. [Multidivisa: subcomptes i canvi (US-25, US-26 i US-27)](#12-multidivisa-subcomptes-i-canvi-us-25-us-26-i-us-27)
+13. [Pagaments: cercar usuaris i enviar diners (US-13 i US-14)](#13-pagaments-cercar-usuaris-i-enviar-diners-us-13-i-us-14)
 
 ---
 
@@ -98,7 +100,7 @@ Comprova que el backend està en marxa. No fa servir la capçalera `X-User-Id`.
 
 ## 3. Objecte `Movement`
 
-Representa un moviment del compte principal. És el mateix objecte a `GET /api/home`, `GET /api/movements`, `POST /api/topups` i `POST /api/pots/{potId}/contributions` ([apartat 9.4](#94-post-apipotspotidcontributions)).
+Representa un moviment del compte principal. És el mateix objecte a `GET /api/home`, `GET /api/movements`, `POST /api/topups`, `POST /api/pots/{potId}/contributions` ([apartat 9.4](#94-post-apipotspotidcontributions)) i `POST /api/transfers` ([apartat 13.4](#134-post-apitransfers)).
 
 | Camp | Tipus | Notes |
 |---|---|---|
@@ -167,6 +169,15 @@ Exemple:
 | `GET /api/pots/{potId}/movements` | `200` | US-18 · [9.5](#95-get-apipotspotidmovements) |
 | `GET /api/movements/{movementId}` | `200` | US-11 · [10.3](#103-get-apimovementsmovementid) |
 | `POST /api/movements/{movementId}/reports` | `201` | US-11 · [10.4](#104-post-apimovementsmovementidreports) |
+| `GET /api/subaccounts` | `200` | US-25 · [12.3](#123-get-apisubaccounts) |
+| `POST /api/subaccounts` | `201` | US-25 · [12.4](#124-post-apisubaccounts) |
+| `POST /api/subaccounts/{subaccountId}/delete` | `200` | US-26 · [12.5](#125-post-apisubaccountssubaccountiddelete) |
+| `GET /api/subaccounts/{subaccountId}/movements` | `200` | US-26 · [12.6](#126-get-apisubaccountssubaccountidmovements) |
+| `POST /api/exchanges` | `201` | US-27 · [12.7](#127-post-apiexchanges) |
+| `GET /api/users` | `200` | US-13 · [13.2](#132-get-apiusers) |
+| `GET /api/users/{userId}` | `200` | US-13 · [13.3](#133-get-apiusersuserid) |
+| `POST /api/transfers` | `201` | US-14 · [13.4](#134-post-apitransfers) |
+| `GET /api/transfers/limit` | `200` | US-14 · [13.5](#get-apitransferslimit) |
 
 A partir de la T03.1, `GET /api/home`, `GET /api/movements` i `POST /api/topups` són **rutes protegides**: necessiten una sessió ([apartat 8.2](#82-sessió)).
 
@@ -561,6 +572,30 @@ Codis dels moviments (Sprint 1, [apartat 10](#10-moviments-filtres-detall-i-info
 | `MOVEMENT_NOT_FOUND` | 404 | El moviment no existeix o és d'un altre usuari | — |
 | `INVALID_DESCRIPTION` | 422 | La descripció de l'informe és buida, només té espais o passa de 500 caràcters | — |
 
+Codis de multidivisa (Sprint 2, [apartat 12](#12-multidivisa-subcomptes-i-canvi-us-25-us-26-i-us-27)):
+
+| `code` | HTTP | Quan | `details` |
+|---|---|---|---|
+| `CURRENCY_NOT_SUPPORTED` | 422 | La divisa d'un subcompte nou no és a la llista ([12.1](#121-divises-i-tipus-de-canvi)) | — |
+| `CURRENCY_EXISTS` | 422 | L'usuari ja té un compte en aquesta divisa | — |
+| `SUBACCOUNT_NOT_FOUND` | 404 | El subcompte no existeix o és d'un altre usuari, o el canvi fa servir una divisa que no és un compte de l'usuari | — |
+| `MAIN_ACCOUNT_NOT_DELETABLE` | 422 | Es vol eliminar el compte en euros | — |
+| `SUBACCOUNT_NOT_EMPTY` | 422 | Es vol eliminar un subcompte amb el saldo diferent de 0 | — |
+| `SAME_CURRENCY` | 422 | L'origen i el destí d'un canvi són la mateixa divisa | — |
+| `AMOUNT_TOO_SMALL` | 422 | L'import d'un canvi, convertit, no arriba a una unitat menor del destí | — |
+
+- `INVALID_AMOUNT` i `INSUFFICIENT_BALANCE` també valen per al canvi ([12.7](#127-post-apiexchanges)): `amount ≤ 0`, o l'import més la comissió supera el saldo de l'origen.
+
+Codis dels pagaments (Sprint 2, [apartat 13](#13-pagaments-cercar-usuaris-i-enviar-diners-us-13-i-us-14)):
+
+| `code` | HTTP | Quan | `details` |
+|---|---|---|---|
+| `RECIPIENT_NOT_FOUND` | 404 | El destinatari no existeix o està pendent de verificar ([13.3](#133-get-apiusersuserid), [13.4](#134-post-apitransfers)) | — |
+| `SELF_TRANSFER` | 422 | Enviar-se diners a un mateix | — |
+| `TRANSFER_LIMIT_EXCEEDED` | 422 | Enviat avui + `amount > 100000` ([13.5](#135-límit-diari-denviament)) | `{ remainingToday }` (cèntims) |
+
+`INSUFFICIENT_BALANCE` i `INVALID_AMOUNT` també surten a `POST /api/transfers`, amb el mateix significat.
+
 ### Exemples
 
 `INVALID_AMOUNT`:
@@ -623,6 +658,7 @@ Aquest apartat és per al backend. El frontend no en depèn.
 - Serveix per sumar les recàrregues d'un dia (mètode del repositori de T07.4 i comprovació del límit diari de T09.2) **sense dependre del text del concepte**.
 - La suma de les recàrregues d'avui filtra per `kind == "topup"` i per la `date` dins del dia natural d'avui a `Europe/Madrid` (vegeu l'[apartat 1](#què-vol-dir-avui)).
 - `kind` **no s'exposa** a cap resposta. Per mostrar una recàrrega, el frontend ja té `icon: "topup"`.
+- Des de l'Sprint 2, els enviaments fan servir `"transfer_out"` i `"transfer_in"` per al seu límit diari ([13.9](#139-model-intern)).
 
 ### Seed
 
@@ -633,7 +669,7 @@ Aquest apartat és per al backend. El frontend no en depèn.
 
 ## 7. Propostes del contracte
 
-Totes les propostes d'aquesta llista estan acceptades: es van validar en aprovar-se la PR que les proposava. Les noves continuen a partir de la P47 i porten la marca fins que s'aproven.
+Totes les propostes d'aquesta llista estan acceptades: es van validar en aprovar-se la PR que les proposava. Les noves continuen a partir de la P86 i porten la marca fins que s'aproven.
 
 Propostes de l'Sprint 0 (PR #29):
 
@@ -700,6 +736,44 @@ Propostes dels moviments (T10.1, PR #120):
 | P43 | [10.4](#104-post-apimovementsmovementidreports) | Codi propi `INVALID_DESCRIPTION` (`422`) per a una descripció buida, només amb espais o de més de 500 caràcters. La descripció es desa sense els espais dels extrems. |
 | P44 | [10.5](#105-justificant-pdf) | El justificant PDF es genera al navegador amb jsPDF (llicència MIT), sense Cloud Function ni cap ruta (decisió de PO). |
 | P45 | [10.7](#107-model-intern-dels-moviments) | Seed: els noms fictius de la contrapart de la taula de 10.7, i el moviment més recent de l'usuari 1 (`mov-30`) en estat `pending`. |
+
+Propostes de multidivisa (T25.1, PR #193):
+
+| # | Apartat | Proposta |
+|---|---|---|
+| P50 | [12.1](#121-divises-i-tipus-de-canvi) | Tipus fixos i format `rateBps` de la pantalla de la US-25 (`models/currency.ts`): `EUR` 10000, `USD` 9123, `GBP` 11680, `CHF` 10355 i `JPY` 5700. |
+| P51 | [12.1](#121-divises-i-tipus-de-canvi) | Conversió amb enters i arrodoniment mig cap amunt. El total en euros arrodoneix cada compte per separat i després els suma. |
+| P52 | [12.2](#122-objecte-subaccount) | Objecte `Subaccount` `{ id, currency, balance, isMain, rateBps }`. El compte en euros és el compte principal, amb l'`id` `"main"`; els subcomptes en divisa són `sub-01`, `sub-02`… |
+| P53 | [12.3](#123-get-apisubaccounts) | `GET /api/subaccounts` respon `{ items, totalInEuros }`: l'EUR primer i després per ordre de creació. El total el calcula el servidor. |
+| P54 | [12.4](#124-post-apisubaccounts) | Ordre de les validacions en crear: format → `CURRENCY_NOT_SUPPORTED` → `CURRENCY_EXISTS`. Els codis distingeixen majúscules. |
+| P55 | [12.5](#125-post-apisubaccountssubaccountiddelete) | Eliminar respon `200` `{ status: "ok" }`, amb l'ordre `SUBACCOUNT_NOT_FOUND` → `MAIN_ACCOUNT_NOT_DELETABLE` → `SUBACCOUNT_NOT_EMPTY`. |
+| P56 | [12.6](#126-get-apisubaccountssubaccountidmovements) | Historial d'un subcompte en divisa a `GET /api/subaccounts/{subaccountId}/movements`, amb entrades `{ id, amount, concept, date, type }` i ids `smov-01`, `smov-02`…. El compte en euros fa servir `GET /api/movements`. La ruta la fa la T26.1, i les entrades, la T27.1. |
+| P57 | [12.7](#127-post-apiexchanges) | El canvi rep `{ fromCurrency, toCurrency, amount }` i respon `201` amb `{ from, to, amount, commission, received }`, sense els moviments. |
+| P58 | [12.7](#127-post-apiexchanges) | La comissió es calcula en la divisa d'origen: `max(arrodonir(amount × 1,5 %), mínim)`, amb el mínim de 0,50 € convertit arrodonint cap amunt. |
+| P59 | [12.7](#127-post-apiexchanges) | Ordre de les validacions del canvi: format → `SAME_CURRENCY` → `SUBACCOUNT_NOT_FOUND` → `INVALID_AMOUNT` → `AMOUNT_TOO_SMALL` → `INSUFFICIENT_BALANCE`. |
+| P60 | [12.8](#128-moviments-dun-canvi-i-efecte-sobre-altres-rutes) | Dos moviments per canvi, un a cada compte, tots dos amb el concepte «Canvi <origen> → <destí>» (p. ex. «Canvi EUR → USD»). El del compte en euros és un `Movement` normal (`icon: "transfer"`); el d'un subcompte en divisa només surt al seu historial. |
+| P61 | [12.5](#125-post-apisubaccountssubaccountiddelete) | En eliminar un subcompte, el seu historial es queda desat, però ja no es pot consultar. |
+| P62 | [12.10](#1210-errors) | `SUBACCOUNT_NOT_FOUND` diu «No s'ha trobat el subcompte.», i `SAME_CURRENCY`, el text de la pantalla (PR #180): «Origen i destí no poden ser el mateix subcompte.». |
+| P63 | [12.11](#1211-model-intern-de-multidivisa) | El compte en euros és l'`Account` actual, sense duplicar-ne el saldo, i el seed no té subcomptes en divisa. |
+
+Propostes dels pagaments (T13.1, US-13 i US-14, PR #196). Comencen a la P64 perquè les P47–P49 són de la retirada i el progrés (T19.1, PR #177) i les P50–P63, de la multidivisa (T25.1, PR #193):
+
+| # | Apartat | Proposta |
+|---|---|---|
+| P64 | [13.1](#131-objecte-usersummary) | L'`id` d'un usuari a l'API és un string opac amb el format `usr-03`, com `Movement.id` (P1). |
+| P65 | [13.1](#131-objecte-usersummary) | `UserSummary` només té `id`, `name` (o `null` si no en té) i `username` (sense `@`): mai email, telèfon, estat ni cap dada financera. |
+| P66 | [13.2](#132-get-apiusers) | La cerca troba el text com a part de l'`username` o del nom (sense majúscules ni accents), l'email només si és igual, i el telèfon per les 9 últimes xifres. Mai l'usuari de la sessió ni els pendents. Com a màxim 10, ordenats pel nom visible. `q` de més de 64 caràcters és `VALIDATION_ERROR`. |
+| P67 | [13.2](#132-get-apiusers) | Sense `q`, o amb `q` buit, la llista inicial són tots els altres usuaris actius (els 10 primers pel nom visible). |
+| P68 | [13.3](#133-get-apiusersuserid) | `GET /api/users/{userId}` per tornar a validar el destinatari en recarregar «Enviar». Un usuari que no existeix o pendent és `404 RECIPIENT_NOT_FOUND`. |
+| P69 | [13.4](#134-post-apitransfers) | `POST /api/transfers` amb `{ toUserId, amount, concept? }`, que respon `201` amb `{ balance, movement, recipient }`. |
+| P70 | [13.4](#134-post-apitransfers) | Ordre de les validacions: format → `RECIPIENT_NOT_FOUND` → `SELF_TRANSFER` → `INVALID_AMOUNT` → `INSUFFICIENT_BALANCE` → `TRANSFER_LIMIT_EXCEEDED`. |
+| P71 | [13.5](#135-límit-diari-denviament) | El límit d'enviament (1.000,00 € al dia, decisió de PO) és independent del de recàrrega i té el seu propi codi, `TRANSFER_LIMIT_EXCEEDED`, amb `details.remainingToday`. |
+| P72 | [13.4](#134-post-apitransfers) | El concepte és opcional (fins a 140 caràcters). Sense concepte, els moviments diuen «Transferència enviada» i «Transferència rebuda». Tots dos fan servir `icon: "transfer"` i, a `counterparty`, el nom visible de l'altra persona. |
+| P73 | [13.7](#137-avisos-a-la-bústia-simulada) | Els avisos d'enviament són missatges `transfer_sent` i `transfer_received` a la bústia simulada, amb els textos de 13.7. |
+| P74 | [13.9](#139-model-intern) | L'`@usuari` d'un registre amb email és la part local netejada, amb un número si ja existeix; amb telèfon, `usuari` i l'id. |
+| P75 | [13.9](#139-model-intern) | Seed de vuit usuaris: els dos d'abans i un per a cada membre de l'equip, amb el seu àlies de GitHub com a `@usuari` i telèfons fictius `+34 611 22 33 0N`. |
+| P84 | [13.5](#get-apitransferslimit) | `GET /api/transfers/limit` → `{ dailyLimit, remainingToday }`, perquè «Enviar» pugui avisar del límit abans de confirmar (revisió de l'Izan a la #196). La numeració salta a P84 perquè les P76–P83 són de la #198. |
+| P85 | [13.8](#138-errors) | `INSUFFICIENT_BALANCE` té un sol text, «No tens prou saldo.», a l'aportació, a l'enviament i al canvi de divises (revisió del Huabin a la #196). |
 
 ---
 
@@ -1083,7 +1157,7 @@ X-Dev-Key: <DEV_OUTBOX_KEY>
 }
 ```
 
-Textos dels altres dos tipus:
+Textos dels altres dos tipus (els avisos d'enviament, `transfer_sent` i `transfer_received`, són a [13.7](#137-avisos-a-la-bústia-simulada)):
 
 - `account_locked`: «Hem bloquejat el teu compte d'Evolt durant 15 minuts després de 5 intents fallits. Si no has estat tu, canvia la contrasenya.»
 - `password_reset`: «Per canviar la contrasenya d'Evolt, obre aquest enllaç. Caduca en 30 minuts: <enllaç>»
@@ -1131,7 +1205,7 @@ Les dates es desen com a `Timestamp` de Firestore (UTC) i el backend les convert
 | 1 (compte amb moviments) | `demo@evolt.test` | `Evolt2026` | `active` |
 | 2 (compte buit) | `buit@evolt.test` | `Evolt2026` | `active` |
 
-El domini `.test` està reservat i no pot arribar a cap bústia real. Els mocks del frontend han de fer servir les mateixes credencials.
+El domini `.test` està reservat i no pot arribar a cap bústia real. Els mocks del frontend han de fer servir les mateixes credencials. Des de la T13.2 el seed té vuit usuaris, tots amb aquesta contrasenya ([13.9](#139-model-intern)).
 
 ### 8.14 Textos dels errors d'accés
 
@@ -1511,7 +1585,7 @@ Els codis són a la taula de l'[apartat 5](#taula-de-codis). Els missatges són 
 ```json
 {
   "code": "INSUFFICIENT_BALANCE",
-  "message": "No tens prou saldo per fer aquesta aportació."
+  "message": "No tens prou saldo."
 }
 ```
 
@@ -1564,7 +1638,7 @@ Camps nous del moviment, filtres i cerca al llistat, detall d'un moviment, infor
 
 Totes les rutes d'aquest apartat són **rutes protegides** i resolen l'usuari igual que la resta: amb `X-User-Id` ([apartat 2](#2-usuari-actual-i-estat-del-servei)) mentre estigui permesa, i a partir de la T03.1 amb la sessió ([apartat 8.2](#82-sessió)). Cada usuari només veu els seus moviments. Segueixen les convencions de l'[apartat 1](#1-convencions-generals).
 
-Els exemples fan servir les dades de l'usuari 1 del seed, suposant que avui és el **3/11/2026**. Els ids són els del seed (`mov-01` és el més antic i `mov-30`, el més recent). En canvi, els exemples de l'[apartat 4](#4-endpoints) són fictícis i els seus ids no coincideixen amb el seed: per exemple, allà `mov-16` és una transferència i al seed és una recàrrega.
+Els exemples fan servir les dades de l'usuari 1 del seed, suposant que avui és el **3/11/2026**. Els ids són els del seed (`mov-01` és el més antic i `mov-30`, el més recent). En canvi, els exemples de l'[apartat 4](#4-endpoints) són fictius i els seus ids no coincideixen amb el seed: per exemple, allà `mov-16` és una transferència i al seed és una recàrrega.
 
 ### 10.1 Camps nous de `Movement`
 
@@ -1844,3 +1918,691 @@ Aquest apartat és per al backend. El frontend no en depèn.
     | `mov-18` | Transferència enviada | Laia Vidal |
     | `mov-24` | Bizum rebut | Pau Ferrer |
     | `mov-29` | Bizum enviat | Núria Soler |
+
+---
+
+## 12. Multidivisa: subcomptes i canvi (US-25, US-26 i US-27)
+
+Subcomptes en altres divises: llistar-los, crear-ne, eliminar-los, veure'n l'historial i canviar diners entre ells. Tasca: T25.1 (issue #166). Històries: `docs/us/US-25.md`, `US-26.md` i `US-27.md`.
+
+| Tasca | Què implementa d'aquest apartat |
+|---|---|
+| T25.2 (backend) | [12.1](#121-divises-i-tipus-de-canvi), [12.2](#122-objecte-subaccount), [12.3](#123-get-apisubaccounts), [12.4](#124-post-apisubaccounts) i el seed de [12.11](#1211-model-intern-de-multidivisa) |
+| T26.1 (backend) | [12.5](#125-post-apisubaccountssubaccountiddelete) i la ruta de [12.6](#126-get-apisubaccountssubaccountidmovements), que llegeix l'historial |
+| T27.1 (backend) | [12.7](#127-post-apiexchanges) i [12.8](#128-moviments-dun-canvi-i-efecte-sobre-altres-rutes): el canvi crea els moviments i les entrades de l'historial de 12.6 |
+| T25.3, T26.2, T27.2 (frontend) | Les pantalles que criden aquestes rutes |
+
+Totes les rutes d'aquest apartat són **rutes protegides**: necessiten la sessió ([apartat 8.2](#82-sessió)), i sense sessió responen `401 UNAUTHENTICATED`. Cada usuari només veu i modifica els seus comptes. Segueixen les convencions de l'[apartat 1](#1-convencions-generals), amb una diferència: els imports d'un subcompte són enters en la **unitat menor de la seva divisa** (cèntims, o iens sencers al JPY), no sempre en cèntims d'euro.
+
+Els exemples d'aquest apartat fan servir les xifres de les històries: el compte en euros amb `125050` (1.250,50 €, US-25) i un subcompte en dòlars amb `31755` (317,55 $, US-26). Les proves d'acceptació ([`docs/proves-multidivisa.md`](proves-multidivisa.md)) parteixen del seed. Les dates d'exemple són del 19/11/2026 (`+01:00`, horari d'hivern).
+
+### 12.1 Divises i tipus de canvi
+
+La llista de divises és **tancada** i els tipus són fixos: no es consulta cap API de tipus de canvi (US-25).
+
+| Codi | Nom | Símbol | Decimals | `rateBps` | Equivalència |
+|---|---|---|---|---|---|
+| `EUR` | Euro | € | 2 | `10000` | 1 € = 1 € |
+| `USD` | Dòlar nord-americà | $ | 2 | `9123` | 1 $ = 0,9123 € |
+| `GBP` | Lliura esterlina | £ | 2 | `11680` | 1 £ = 1,1680 € |
+| `CHF` | Franc suís | CHF | 2 | `10355` | 1 CHF = 1,0355 € |
+| `JPY` | Ien japonès | ¥ | 0 | `5700` | 1 ¥ = 0,0057 € |
+
+Els valors i el format són els de la pantalla que ja hi ha a la branca de la US-25 (`frontend/src/models/currency.ts`, T25.3).
+
+- **Unitat menor:** el cèntim a les divises amb 2 decimals, i el ien sencer al JPY, que no té decimals. `1234` en JPY és «1.234 ¥» (US-25).
+- **`rateBps`:** quants cèntims d'euro val una unitat menor de la divisa, multiplicat per 10.000. Per això el JPY és `5700`: 1 ¥ val 0,57 cèntims d'euro.
+- **Conversió** d'`amount` unitats menors de la divisa `A` a la divisa `B`:
+
+  ```
+  convertit = arrodonir(amount × rateBps[A] / rateBps[B])
+  ```
+
+  - Tot es calcula amb enters, mai amb decimals. `arrodonir(n / d)` és `⌊(2n + d) / (2d)⌋`: la meitat, cap amunt.
+  - Exemple: 100,00 € en dòlars és `10000 × 10000 / 9123 = 10961,30…`, que s'arrodoneix a `10961` (109,61 $).
+- **Total aproximat en euros** («Total ≈ … €», US-25): cada compte es converteix a cèntims d'euro i s'arrodoneix per separat (`arrodonir(balance × rateBps / 10000)`), i després se sumen. Exemple: `125050` € i `31755` $ donen `125050 + 28970 = 154020` («Total ≈ 1.540,20 €»).
+
+### 12.2 Objecte `Subaccount`
+
+Un compte de l'usuari en una divisa. És el mateix objecte a totes les respostes d'aquest apartat.
+
+| Camp | Tipus | Notes |
+|---|---|---|
+| `id` | string | Identificador opac. El compte principal en euros és `"main"`. Els subcomptes en divisa són `sub-01`, `sub-02`…, per ordre de creació i únics a tot el sistema, com les guardioles. |
+| `currency` | string | Un codi de la llista de [12.1](#121-divises-i-tipus-de-canvi). |
+| `balance` | integer | Saldo en la unitat menor de la divisa, `≥ 0`. Un subcompte nou té `0`. |
+| `isMain` | boolean | `true` només al compte principal en euros, que no s'elimina mai (US-25 i US-26). |
+| `rateBps` | integer | El tipus fix de la divisa ([12.1](#121-divises-i-tipus-de-canvi)). El resum del canvi el fa servir per al «Rebràs exactament» (US-27). |
+
+- **El compte en euros és el compte principal**, no un compte a part. El seu `balance` és el mateix que el de `GET /api/home`, i els seus moviments són els de `GET /api/movements`. Tots els usuaris el tenen des del registre.
+- Com a molt hi ha cinc comptes: l'EUR i les quatre altres divises. La llista tancada ja és el topall (US-25).
+
+Exemples:
+
+```json
+{ "id": "main", "currency": "EUR", "balance": 125050, "isMain": true, "rateBps": 10000 }
+```
+
+```json
+{ "id": "sub-01", "currency": "USD", "balance": 31755, "isMain": false, "rateBps": 9123 }
+```
+
+### 12.3 `GET /api/subaccounts`
+
+Els comptes de l'usuari: la card «Divises» d'Inici i la pantalla `/divises` (US-25).
+
+**Resposta `200`:** `{ items, totalInEuros }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `items` | `Subaccount[]` | Tots els comptes de l'usuari. El primer és sempre el compte principal en euros; després, els subcomptes en divisa per ordre de creació. Mai és buida. |
+| `totalInEuros` | integer | El total aproximat, en cèntims d'euro, calculat com diu [12.1](#121-divises-i-tipus-de-canvi). |
+
+- El total el calcula el servidor amb la taula de tipus fixa (T25.2), perquè cap pantalla el calculi diferent.
+- Un subcompte nou, a `0`, no canvia el total (US-25).
+
+**Resposta** (xifres de les històries):
+
+```json
+{
+  "items": [
+    { "id": "main", "currency": "EUR", "balance": 125050, "isMain": true, "rateBps": 10000 },
+    { "id": "sub-01", "currency": "USD", "balance": 31755, "isMain": false, "rateBps": 9123 }
+  ],
+  "totalInEuros": 154020
+}
+```
+
+### 12.4 `POST /api/subaccounts`
+
+Crea un subcompte en una divisa nova («Afegir divisa», US-25).
+
+**Cos de la petició:** `{ currency }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `currency` | string | Codi de la divisa. Obligatori. Distingeix majúscules: `"usd"` no és a la llista. |
+
+**Resposta `201`:** el `Subaccount` creat, sol, amb `balance: 0`.
+
+**Ordre de les validacions**, el que ja fa servir la pantalla (`frontend/src/mocks/currencies.ts`). S'aturen al primer error:
+
+1. Format del cos: falta `currency` o no és un string → `VALIDATION_ERROR`.
+2. El codi no és a la llista de [12.1](#121-divises-i-tipus-de-canvi) → `CURRENCY_NOT_SUPPORTED`.
+3. L'usuari ja té un compte en aquesta divisa, també si és l'`EUR` principal → `CURRENCY_EXISTS`. El servidor ho valida encara que la pantalla ja mostri la fila en gris (US-25).
+
+**Regles:**
+
+- Un sol subcompte per divisa i usuari. Si arriben dues peticions alhora per a la mateixa divisa, només en guanya una, i l'altra rep `CURRENCY_EXISTS`.
+- Un error no crea res ni gasta cap `id`.
+
+**Petició:**
+
+```http
+POST /api/subaccounts HTTP/1.1
+Content-Type: application/json
+
+{
+  "currency": "USD"
+}
+```
+
+**Resposta `201`:**
+
+```json
+{ "id": "sub-01", "currency": "USD", "balance": 0, "isMain": false, "rateBps": 9123 }
+```
+
+### 12.5 `POST /api/subaccounts/{subaccountId}/delete`
+
+Elimina un subcompte en divisa que té saldo 0 («Eliminar subcompte», US-26). És `POST` i no `DELETE` perquè el CORS i l'`apiClient` només admeten `GET` i `POST`.
+
+- **Cos de la petició:** cap.
+- **Resposta `200`:** `{ status }`, amb `status` sempre `"ok"`, com a [8.9](#89-post-apiauthlogout).
+
+**Ordre de les validacions**. S'aturen al primer error:
+
+1. El subcompte no existeix o és d'un altre usuari → `SUBACCOUNT_NOT_FOUND`. La resposta és la mateixa en tots dos casos, com a `POT_NOT_FOUND`.
+2. És el compte principal (`main`) → `MAIN_ACCOUNT_NOT_DELETABLE`. Es comprova abans que el saldo: l'EUR no s'elimina mai, tingui el saldo que tingui.
+3. El saldo no és exactament 0 → `SUBACCOUNT_NOT_EMPTY`. N'hi ha prou amb `1` (0,01 $).
+
+**Regles:**
+
+- Només s'esborra el subcompte. Els moviments del compte principal que han fet els seus canvis es queden a `GET /api/movements`, amb el seu import (US-26).
+- Les entrades de l'historial del subcompte ([12.6](#126-get-apisubaccountssubaccountidmovements)) es queden desades, però ja no es poden consultar: la ruta de l'historial respon `SUBACCOUNT_NOT_FOUND`.
+- La divisa torna a estar disponible. Un `POST /api/subaccounts` amb la mateixa divisa en crea un de nou, amb un `id` nou, saldo `0` i l'historial buit.
+- El total de [12.3](#123-get-apisubaccounts) no canvia, perquè el saldo era 0.
+
+### 12.6 `GET /api/subaccounts/{subaccountId}/movements`
+
+L'historial d'un subcompte en divisa: «Últims moviments» al detall del subcompte (mockup `US-26-detall-subcompte`).
+
+**Resposta `200`:** `{ items }`, de l'entrada més recent a la més antiga, sense paginació.
+
+Cada entrada:
+
+| Camp | Tipus | Notes |
+|---|---|---|
+| `id` | string | Identificador opac. Format `smov-01`, `smov-02`… |
+| `amount` | integer | En la unitat menor de la divisa del subcompte, sempre `> 0`. |
+| `concept` | string | El de [12.8](#128-moviments-dun-canvi-i-efecte-sobre-altres-rutes). |
+| `date` | string | ISO 8601 amb desplaçament. |
+| `type` | `"income"` \| `"expense"` | Des del punt de vista del subcompte: entren o surten diners. |
+
+- Un subcompte nou té l'historial buit (`{ "items": [] }`). La pantalla mostra «Encara no tens moviments» (mockup).
+- El saldo d'un subcompte és sempre la suma del seu historial.
+- Si dues entrades tenen la mateixa data, va primer la creada més tard, com a P4.
+- Només és per als subcomptes en divisa. L'historial del compte en euros és `GET /api/movements` ([4.2](#42-get-apimovements)), que ja existeix, i amb `main` aquesta ruta respon `SUBACCOUNT_NOT_FOUND` (decisió del PO).
+- El subcompte no existeix, és d'un altre usuari o s'ha eliminat → `SUBACCOUNT_NOT_FOUND`.
+
+**Resposta** (`sub-01`, després del canvi de [12.7](#127-post-apiexchanges)):
+
+```json
+{
+  "items": [
+    {
+      "id": "smov-01",
+      "amount": 10961,
+      "concept": "Canvi EUR → USD",
+      "date": "2026-11-19T10:00:00+01:00",
+      "type": "income"
+    }
+  ]
+}
+```
+
+### 12.7 `POST /api/exchanges`
+
+Canvia diners d'un compte de l'usuari a un altre de la mateixa persona en una altra divisa («Confirmar canvi», US-27). El nom de la ruta és el que ja fa servir la pantalla (PR #180).
+
+**Cos de la petició:** `{ fromCurrency, toCurrency, amount }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `fromCurrency` | string | Divisa del compte d'origen. Obligatori. |
+| `toCurrency` | string | Divisa del compte de destí. Obligatori. |
+| `amount` | integer | Import a canviar, en la unitat menor de la divisa d'origen. Obligatori. Enter JSON estricte, com a P5. |
+
+**Càlcul**:
+
+| Valor | Fórmula | 100,00 € a dòlars |
+|---|---|---|
+| Import convertit (`received`) | `arrodonir(amount × rateBps[origen] / rateBps[destí])` | `10961` (109,61 $) |
+| Comissió (`commission`) | `max(arrodonir(amount × 150 / 10000), mínim[origen])` | `150` (1,50 €) |
+| Càrrec a l'origen | `amount + commission` | `10150` (101,50 €) |
+
+- **La comissió** és de l'1,5 % amb un mínim de 0,50 €, **sempre**: aquest sprint no hi ha canvis sense comissió (decisió del PO, issues #166 i #173). Es calcula en la divisa d'origen, arrodonida a la unitat menor. La paga l'origen i es queda al sistema: no l'ingressa cap compte.
+- **El mínim de 0,50 €** es converteix a la divisa d'origen arrodonint **cap amunt**, perquè mai valgui menys de 0,50 €: `mínim[origen] = ⌈50 × 10000 / rateBps[origen]⌉`.
+
+  | Divisa d'origen | `EUR` | `USD` | `GBP` | `CHF` | `JPY` |
+  |---|---|---|---|---|---|
+  | Comissió mínima | `50` (0,50 €) | `55` (0,55 $) | `43` (0,43 £) | `49` (0,49 CHF) | `88` (88 ¥) |
+
+- **Exemples de les històries**, que quadren amb aquest càlcul:
+  - **US-27:** 100,00 € a dòlars, amb 1.250,50 € i 317,55 $. La comissió és d'1,50 €, l'EUR queda a 1.149,00 € (`114900`), el USD a 427,16 $ (`42716`) i el total a 1.538,70 € (`153870`).
+  - **US-26:** 312,86 $ a euros. La comissió és `arrodonir(31286 × 150 / 10000) = 469` (4,69 $), més gran que el mínim de 0,55 $. El càrrec és `31755`, tot el saldo, i el subcompte queda a 0,00 $. L'EUR rep `28542` (285,42 €).
+  - **El mínim:** 10,00 € a dòlars. L'1,5 % són 0,15 €, així que la comissió és de 0,50 € i el càrrec, de 10,50 €.
+
+**Ordre de les validacions**, el de la pantalla (PR #180) amb els codis de l'API. S'aturen al primer error:
+
+1. Format del cos: falta un camp, les divises no són strings o `amount` no és un enter JSON estricte → `VALIDATION_ERROR`.
+2. `fromCurrency` i `toCurrency` són la mateixa → `SAME_CURRENCY`.
+3. Alguna de les dues divises no és un compte de l'usuari, també si el codi no és a la llista → `SUBACCOUNT_NOT_FOUND`.
+4. `amount ≤ 0` → `INVALID_AMOUNT`, el mateix codi que a la recàrrega i a l'aportació.
+5. `amount × rateBps[origen] < rateBps[destí]` → `AMOUNT_TOO_SMALL`: l'import convertit, **exacte i abans d'arrodonir**, no arriba a una unitat menor del destí. És la regla literal de la US-27 i la que fa la pantalla (PR #180). Exemple: 0,01 $ són 0,9123 cèntims d'euro, que no arriben a 1 cèntim, i per tant és massa petit, encara que arrodonit donaria 1. Si l'import passa aquesta comprovació, el convertit exacte és com a mínim 1, i `received` mai no és 0.
+6. `amount + commission` és més gran que el saldo de l'origen → `INSUFFICIENT_BALANCE`. Exemple: canviar tot el saldo, sense marge per a la comissió.
+
+**Regles:**
+
+- **Tot o res** (US-27). Un canvi fa quatre escriptures: el saldo de l'origen, el del destí i un moviment a cadascun ([12.8](#128-moviments-dun-canvi-i-efecte-sobre-altres-rutes)). O es fan totes, o no se'n fa cap. Si hi ha un error, no canvia res.
+- Dos canvis alhora des del mateix compte s'apliquen un darrere l'altre. El segon es valida amb el saldo que ha deixat el primer: cap saldo pot quedar negatiu.
+- Canviar exactament tot el saldo (l'import més la comissió) està permès. L'origen queda a `0`.
+- No hi ha cap límit diari de canvi, i un canvi no compta per al límit diari de recàrrega.
+
+**Resposta `201`:** `{ from, to, amount, commission, received }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `from` | `Subaccount` | El compte d'origen, amb el saldo nou. |
+| `to` | `Subaccount` | El compte de destí, amb el saldo nou. |
+| `amount` | integer | L'import canviat, en la unitat menor de l'origen. |
+| `commission` | integer | La comissió aplicada, en la unitat menor de l'origen. |
+| `received` | integer | El que ha rebut el destí, en la seva unitat menor. |
+
+- Els tipus aplicats són el `rateBps` de `from` i el de `to`.
+- La resposta no porta els moviments: després del tic «Canvi fet», l'app torna a Inici i hi torna a demanar les dades (US-27).
+
+**Petició** (exemple de la US-27):
+
+```http
+POST /api/exchanges HTTP/1.1
+Content-Type: application/json
+
+{
+  "fromCurrency": "EUR",
+  "toCurrency": "USD",
+  "amount": 10000
+}
+```
+
+**Resposta `201`:**
+
+```json
+{
+  "from": { "id": "main", "currency": "EUR", "balance": 114900, "isMain": true, "rateBps": 10000 },
+  "to": { "id": "sub-01", "currency": "USD", "balance": 42716, "isMain": false, "rateBps": 9123 },
+  "amount": 10000,
+  "commission": 150,
+  "received": 10961
+}
+```
+
+### 12.8 Moviments d'un canvi i efecte sobre altres rutes
+
+Cada canvi crea **dos moviments**, un a cada compte i en la seva divisa (US-27):
+
+| Compte | `type` | `amount` |
+|---|---|---|
+| Origen | `expense` | L'import més la comissió |
+| Destí | `income` | L'import convertit |
+
+- **Concepte:** el mateix als dos moviments, «Canvi <codi d'origen> → <codi de destí>», p. ex. «Canvi EUR → USD» (decisió del PO).
+
+- **Compte principal en euros.** Si l'EUR és l'origen o el destí, el seu moviment és un `Movement` normal ([apartat 3](#3-objecte-movement)) i surt a `GET /api/home` i a `GET /api/movements`, com al mockup `US-27-inici-despres-canvi` (−101,50 €). Porta `icon: "transfer"`, `counterparty: null`, `status: "completed"`, una `reference` nova i el `kind` intern `"other"`.
+- **Subcompte en divisa.** El seu moviment només surt al seu historial ([12.6](#126-get-apisubaccountssubaccountidmovements)). `GET /api/movements` continua tenint només moviments en euros, i l'objecte `Movement` no canvia.
+- Un canvi entre dues divises sense l'EUR (p. ex. de dòlars a lliures) no crea cap moviment al compte principal.
+- La comissió va dins del moviment d'origen. Així cada saldo continua sent la suma dels seus moviments.
+
+Després d'un canvi:
+
+- `GET /api/home`: el `balance` canvia si l'EUR és l'origen o el destí.
+- `GET /api/subaccounts`: canvien els dos saldos, i el `totalInEuros` baixa més o menys el valor de la comissió, segons l'arrodoniment.
+- El límit diari de recàrrega no canvia.
+
+Exemple amb el canvi de la US-27:
+
+| | EUR (`main`) | USD (`sub-01`) | `totalInEuros` |
+|---|---|---|---|
+| Abans | `125050` | `31755` | `154020` |
+| Després | `114900` | `42716` | `153870` |
+
+### 12.9 Fora de l'abast
+
+- **Aportar a un subcompte:** aquest sprint no hi ha botó «Aportar» (decisió del PO a la US-26). Un subcompte només s'omple i es buida amb un canvi, i no hi ha cap ruta `POST /api/subaccounts/{subaccountId}/topups`.
+- Els pagaments en divisa (US-28) i el canvi sense comissió (US-29).
+- Tipus de canvi variables o d'una API externa.
+
+### 12.10 Errors
+
+Els codis són a la taula de l'[apartat 5](#taula-de-codis). Els missatges són els literals de les històries: el frontend decideix a partir del `code`.
+
+| `code` | HTTP | Ruta | Quan |
+|---|---|---|---|
+| `VALIDATION_ERROR` | 422 | `POST /api/subaccounts`, `POST /api/exchanges` | El cos està mal format |
+| `CURRENCY_NOT_SUPPORTED` | 422 | `POST /api/subaccounts` | La divisa no és a la llista |
+| `CURRENCY_EXISTS` | 422 | `POST /api/subaccounts` | L'usuari ja té un compte en aquesta divisa |
+| `SUBACCOUNT_NOT_FOUND` | 404 | Les de `/api/subaccounts/{subaccountId}/…`, `POST /api/exchanges` | El compte no existeix o és d'un altre usuari. Al canvi, una de les divises no és un compte de l'usuari |
+| `MAIN_ACCOUNT_NOT_DELETABLE` | 422 | `POST /api/subaccounts/{subaccountId}/delete` | Es vol eliminar el compte en euros |
+| `SUBACCOUNT_NOT_EMPTY` | 422 | `POST /api/subaccounts/{subaccountId}/delete` | El saldo no és exactament 0 |
+| `SAME_CURRENCY` | 422 | `POST /api/exchanges` | L'origen i el destí són la mateixa divisa |
+| `INVALID_AMOUNT` | 422 | `POST /api/exchanges` | `amount ≤ 0` (ja existeix) |
+| `AMOUNT_TOO_SMALL` | 422 | `POST /api/exchanges` | L'import convertit no arriba a una unitat menor del destí |
+| `INSUFFICIENT_BALANCE` | 422 | `POST /api/exchanges` | L'import més la comissió supera el saldo de l'origen (ja existeix, [9.7](#97-errors)) |
+
+Missatges:
+
+| `code` | `message` |
+|---|---|
+| `CURRENCY_NOT_SUPPORTED` | «Aquesta divisa no és a la llista de divises disponibles.» (US-25) |
+| `CURRENCY_EXISTS` | «Ja tens un subcompte en aquesta divisa.» (US-25) |
+| `SUBACCOUNT_NOT_FOUND` | «No s'ha trobat el subcompte.» (decisió del PO) |
+| `MAIN_ACCOUNT_NOT_DELETABLE` | «El compte en euros no es pot eliminar.» (US-26) |
+| `SUBACCOUNT_NOT_EMPTY` | «Només pots eliminar un subcompte amb saldo 0.» (US-26) |
+| `SAME_CURRENCY` | «Origen i destí no poden ser el mateix subcompte.», el text de la pantalla (PR #180, decisió del PO) |
+| `AMOUNT_TOO_SMALL` | «L'import és massa petit per canviar.» (US-27) |
+| `INSUFFICIENT_BALANCE` | «No tens prou saldo.», el text únic per a tots els casos: aportació, enviament i canvi (P85 de la #196, decisió del PO). El frontend tria el text pel `code`. |
+| `INVALID_AMOUNT` | «L'import ha de ser més gran que 0.» (ja existeix) |
+
+- El `404` segueix la P11 ([apartat 7](#7-propostes-del-contracte)), que el preveu per als recursos que no existeixen.
+
+### 12.11 Model intern de multidivisa
+
+Aquest apartat és per al backend. El frontend no en depèn.
+
+- **El compte en euros és l'`Account` actual.** No es desa cap subcompte EUR: `GET /api/subaccounts` el construeix a partir del compte principal de l'usuari, amb l'`id` `"main"`. Així el saldo no es duplica.
+- **Subcomptes en divisa:** un model nou amb `id`, `user_id`, `currency`, `balance` i l'ordre de creació, amb les validacions al model: divisa de la llista, que no sigui l'`EUR`, i saldo enter `≥ 0`.
+- **Historial:** un model nou, com l'historial de les guardioles ([9.8](#98-model-intern-de-lestalvi)), amb el subcompte al qual pertany. En eliminar un subcompte, les seves entrades no s'esborren.
+- **Taula de divises i regla de la comissió en un sol mòdul** (skill `middle-services`): els codis, els `rateBps`, la comissió (`150` punts bàsics) i el mínim (`50` cèntims d'euro), i les funcions de conversió, comissió i total. La US-29 (canvi sense comissió) el podrà ampliar sense tocar els serveis.
+- **Tot o res**, com l'aportació ([9.8](#98-model-intern-de-lestalvi)): es valida tot abans d'escriure i les quatre escriptures van dins d'`atomic.run(...)`. Si una falla, es desfan les anteriors.
+- **Amb Firestore** (TR01.1): les col·leccions `subaccounts` i `subaccount_movements`, amb els ids dels comptadors. Els dos comptes d'un canvi es llegeixen i s'escriuen dins de la mateixa transacció.
+- **Invariants:**
+  - el saldo de cada compte és la suma dels seus moviments;
+  - un canvi no crea ni destrueix diners més enllà de la comissió: l'import convertit val en euros el mateix que l'import, amb una diferència d'1 cèntim com a molt per l'arrodoniment.
+- **Seed:** cap usuari té subcomptes en divisa. L'usuari 1 parteix de l'EUR amb `379521` i l'usuari 2, amb `0`. Els subcomptes i les entrades noves comencen per `sub-01` i `smov-01`, i els comptadors es reinicien amb el seed (`POST /api/dev/reset`).
+
+---
+
+## 13. Pagaments: cercar usuaris i enviar diners (US-13 i US-14)
+
+Trobar altres usuaris de l'app i enviar-los diners a l'instant. Tasca: T13.1 (issue #157). Les pantalles, els textos i els mockups són a les històries (`docs/us/US-13.md` i `docs/us/US-14.md`); les proves d'acceptació, a [`docs/proves-pagaments.md`](proves-pagaments.md).
+
+| Tasca | Què implementa d'aquest apartat |
+|---|---|
+| T13.2 (backend) | [13.1](#131-objecte-usersummary), [13.2](#132-get-apiusers), [13.3](#133-get-apiusersuserid), l'`@usuari` i el seed de [13.9](#139-model-intern) |
+| T13.3 (frontend) | La barra de cerca a «Enviar diners», que crida [13.2](#132-get-apiusers) |
+| T14.1 (backend) | [13.4](#134-post-apitransfers), [13.5](#135-límit-diari-denviament) (amb `GET /api/transfers/limit`) i [13.6](#136-efecte-sobre-altres-rutes) |
+| T14.2 (backend) | Els avisos de [13.7](#137-avisos-a-la-bústia-simulada) |
+| T14.3 i T14.4 (frontend) | «Pagaments», «Enviar» i «Confirmar», que criden [13.3](#133-get-apiusersuserid), `GET /api/transfers/limit` ([13.5](#get-apitransferslimit)) i [13.4](#134-post-apitransfers), i Inici i el llistat amb els saldos nous |
+
+Totes les rutes d'aquest apartat són **protegides** ([8.2](#82-sessió)): l'usuari és el de la sessió. Els imports són cèntims enters i les dates, ISO 8601 amb el desplaçament de Madrid ([apartat 1](#1-convencions-generals)). Els exemples fan servir l'usuari 1 del seed (`Usuari demo`, saldo `379521`) i els usuaris de [13.9](#139-model-intern).
+
+### 13.1 Objecte `UserSummary`
+
+Un altre usuari, tal com surt a la cerca i al destinatari d'un enviament. (P64, P65)
+
+| Camp | Tipus | Notes |
+|---|---|---|
+| `id` | string | Identificador opac amb el format `usr-03`, com `Movement.id` (P1). El frontend no l'ha d'interpretar: només el passa a `?to=<id>` i a `toUserId`. |
+| `name` | string \| `null` | Nom visible. Val `null` si l'usuari no en té: els que es registren a US-01 no en donen cap. Llavors el frontend mostra l'`@usuari` com a nom (US-13). |
+| `username` | string | L'`@usuari`, **sense** l'`@` i en minúscules (`aliciaa415`). El frontend hi afegeix l'`@`. |
+
+- **Mai** hi surten dades financeres (saldo, moviments, guardioles, XP) ni l'email, el telèfon o l'estat del compte d'un altre usuari. Les inicials de la fila les calcula el frontend a partir del nom visible.
+- Un usuari **pendent** de verificar ([8.5](#85-post-apiauthregister)) no surt mai: no pot rebre diners.
+
+### 13.2 `GET /api/users`
+
+Cerca d'usuaris per a «Enviar diners» (US-13). (P66, P67)
+
+**Paràmetre de consulta opcional:** `q`, el text de la barra «@usuari, telèfon o email».
+
+- Es treuen els espais del principi i del final.
+- Més de **64 caràcters** (després de treure'ls) → `422 VALIDATION_ERROR`. La pantalla mostra «Les dades no són vàlides. Revisa-les i torna-ho a provar.» amb «Reintentar».
+
+**Resposta `200`:** `{ items }`, una llista d'`UserSummary` ([13.1](#131-objecte-usersummary)).
+
+- **Sense `q`, o amb `q` buit:** la llista inicial, tots els altres usuaris actius.
+- **Amb `q`:** els usuaris que hi coincideixen per alguna d'aquestes quatre vies:
+
+| Via | Coincideix si… | Exemple (seed) |
+|---|---|---|
+| `@usuari` | El text, sense l'`@` del principi, és **part** de l'`username`. Sense distingir majúscules. | `hua`, `@hua` o `@123HUABIN123` → Huabin |
+| Nom | El text és **part** del nom visible. Sense distingir majúscules ni accents. | `marti` o `Martí` → Martí |
+| Email | El text, normalitzat com un email ([8.3](#83-identificador-email-o-telèfon)), és **igual** a l'email de l'usuari. Una part de l'email no coincideix, perquè la cerca no serveixi per endevinar emails. | `Huabin@Evolt.test` → Huabin; `evolt.test` → cap |
+| Telèfon | El text només té xifres, espais, `+`, `-`, `.`, `(` i `)`, en té **9 o més**, i les **9 últimes** són iguals a les 9 últimes del telèfon de l'usuari. | `611 22 33 02`, `+34 611 22 33 02` i `611223302` → Huabin |
+
+**Regles:**
+
+- L'usuari de la sessió **no surt mai**, ni a la llista inicial ni a cap cerca: cercar el meu nom, `@demo`, `demo@evolt.test` o el meu telèfon dona `items: []`.
+- Sense coincidències → `200` amb `items: []`, no un error. La pantalla mostra «No hi ha resultats»; amb el camp buit torna la llista inicial, sense aquest text.
+- **Ordre:** per nom visible (el `name` o, si no en té, l'`username`), sense distingir majúscules ni accents; si dos coincideixen, primer el d'id més petit.
+- **Com a màxim 10** usuaris, tant a la llista inicial com a les cerques (US-14: «màxim 10 resultats»). No hi ha paginació.
+- La cerca no canvia res i no compta com a cap enviament.
+
+**Petició:**
+
+```http
+GET /api/users?q=611%2022%2033%2002 HTTP/1.1
+Authorization: Bearer <token>
+```
+
+**Resposta `200`:**
+
+```json
+{
+  "items": [
+    {
+      "id": "usr-04",
+      "name": "Huabin",
+      "username": "123huabin123"
+    }
+  ]
+}
+```
+
+**Llista inicial** de l'usuari 1 (`GET /api/users`): Alicia, Huabin, Izan, Jiajun, Junhao, Martí i Usuari nou, en aquest ordre.
+
+### 13.3 `GET /api/users/{userId}`
+
+Un usuari concret, perquè «Enviar» ([US-14](#134-post-apitransfers)) pugui tornar a validar el destinatari quan es recarrega `/pagaments/enviar?to=<id>`. (P68)
+
+**Resposta `200`:** l'`UserSummary` de l'usuari ([13.1](#131-objecte-usersummary)).
+
+- L'usuari no existeix, està pendent de verificar o l'id té un format qualsevol → `404 RECIPIENT_NOT_FOUND` («No hem trobat aquest destinatari.»). La pantalla hi afegeix «Torna a triar el destinatari».
+- El propi usuari de la sessió també respon `200`: no és cap dada nova per a ell. Qui impedeix enviar-se diners a un mateix és [13.4](#134-post-apitransfers).
+
+```json
+{
+  "id": "usr-02",
+  "name": "Usuari nou",
+  "username": "buit"
+}
+```
+
+### 13.4 `POST /api/transfers`
+
+Envia diners del compte principal de l'usuari de la sessió al compte principal d'un altre usuari, a l'instant (US-14). (P69, P70)
+
+**Cos de la petició:** `{ toUserId, amount, concept? }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `toUserId` | string | L'`id` de l'`UserSummary` del destinatari. Obligatori. |
+| `amount` | integer | Import en cèntims. Obligatori. Enter JSON estricte, com a P5. |
+| `concept` | string \| `null` | Opcional. Es desa sense els espais dels extrems; buit o només amb espais és com no posar-ne. Com a màxim **140** caràcters. |
+
+**Resposta `201`:** `{ balance, movement, recipient }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `balance` | integer | Saldo **nou** del compte de qui envia, en cèntims. |
+| `movement` | `Movement` | El moviment que s'ha creat al compte de qui envia. |
+| `recipient` | `UserSummary` | El destinatari ([13.1](#131-objecte-usersummary)). |
+
+Amb aquesta resposta, el frontend pinta el tic verd «Has enviat 20,00 € a Usuari nou» i «Saldo disponible: 3.775,21 €» sense tornar a demanar res, i al cap d'1,5 s torna a Inici.
+
+**Ordre de les validacions.** S'aturen al primer error:
+
+1. Format del cos: falta `toUserId` o `amount`, algun no és del tipus de la taula, o `concept` passa de 140 caràcters → `VALIDATION_ERROR`.
+2. El destinatari no existeix, està pendent de verificar o l'id té un format qualsevol → `RECIPIENT_NOT_FOUND` (`404`).
+3. El destinatari és l'usuari de la sessió → `SELF_TRANSFER` (`422`, «No et pots enviar diners a tu mateix.»).
+4. `amount ≤ 0` → `INVALID_AMOUNT`.
+5. `amount` més gran que el saldo de qui envia → `INSUFFICIENT_BALANCE`, el mateix codi i el mateix text que l'aportació («No tens prou saldo.»).
+6. Enviat avui + `amount` supera el límit diari ([13.5](#135-límit-diari-denviament)) → `TRANSFER_LIMIT_EXCEEDED` (`422`), amb `details.remainingToday`.
+
+Si qualsevol validació falla, **no es mou res**: ni saldos, ni moviments, ni avisos.
+
+**Regles:**
+
+- **Tot o res.** Un enviament fa sis escriptures: el saldo de qui envia baixa, el de qui rep puja, un moviment a cada compte i un avís a cadascú ([13.7](#137-avisos-a-la-bústia-simulada)). O es fan totes, o no se'n fa cap.
+- **Moviment de qui envia** (P72):
+  - `type: "expense"`, `amount` igual a l'enviament i `icon: "transfer"`;
+  - `concept`: el concepte de la petició o, si no n'hi ha, `"Transferència enviada"`;
+  - `counterparty`: el nom visible del destinatari (el `name` o, si no en té, `@username`), com a les transferències del seed (P35);
+  - `status: "completed"`, una `reference` nova i la data de l'enviament.
+- **Moviment de qui rep:** igual, però `type: "income"`, el concepte de la petició o `"Transferència rebuda"`, i `counterparty` amb el nom visible de qui envia.
+- El saldo de cada compte continua sent la suma dels seus moviments.
+- **Casos límit:**
+  - Enviar **exactament** tot el saldo està permès: el compte de qui envia queda a `0`.
+  - Dos enviaments alhora de la mateixa persona s'apliquen un darrere l'altre. El segon es valida amb el saldo i el límit que ha deixat el primer: el saldo mai pot quedar negatiu i el límit mai es pot passar.
+  - Un enviament i un altre que arriba al mateix compte alhora també s'apliquen un darrere l'altre.
+- En aquest sprint, enviar o rebre no dona ni treu XP.
+- El límit no es pot editar en aquest sprint.
+
+**Petició:**
+
+```http
+POST /api/transfers HTTP/1.1
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "toUserId": "usr-02",
+  "amount": 2000,
+  "concept": "El sopar de divendres"
+}
+```
+
+**Resposta `201`** (saldo anterior de l'usuari 1: `379521`):
+
+```json
+{
+  "balance": 377521,
+  "movement": {
+    "id": "mov-31",
+    "amount": 2000,
+    "concept": "El sopar de divendres",
+    "date": "2026-11-15T21:15:00+01:00",
+    "type": "expense",
+    "icon": "transfer",
+    "counterparty": "Usuari nou",
+    "status": "completed",
+    "reference": "EVT-000031"
+  },
+  "recipient": {
+    "id": "usr-02",
+    "name": "Usuari nou",
+    "username": "buit"
+  }
+}
+```
+
+L'usuari 2 té ara saldo `2000` i un moviment `mov-32`: `"El sopar de divendres"`, `type: "income"`, `counterparty: "Usuari demo"`.
+
+### 13.5 Límit diari d'enviament
+
+| Límit | Valor | Equivalent |
+|---|---|---|
+| Màxim enviat per dia natural (suma dels enviaments d'avui de qui envia) | `100000` | 1.000,00 € |
+
+- «Avui» és el dia natural a `Europe/Madrid` ([apartat 1](#què-vol-dir-avui)). El límit torna a començar a les 00:00.
+- Arribar **exactament** al límit està permès: després d'enviar `2000` avui, encara es poden enviar `98000`.
+- Només compten els enviaments **fets** per l'usuari. Els diners rebuts no hi compten.
+- És un límit **diferent** del de les recàrregues ([4.3](#43-post-apitopups)): enviar no gasta límit de recàrrega, i recarregar no gasta límit d'enviament. Per això té un codi propi (P71).
+- `TRANSFER_LIMIT_EXCEEDED` porta `details.remainingToday`: el que encara es pot enviar avui, en cèntims (`0` si ja s'ha arribat al límit). La pantalla mostra «Has superat el límit diari de 1.000,00 €. Avui encara pots enviar 980,00 €.».
+
+```json
+{
+  "code": "TRANSFER_LIMIT_EXCEEDED",
+  "message": "Has superat el límit diari d'enviament.",
+  "details": { "remainingToday": 98000 }
+}
+```
+
+#### `GET /api/transfers/limit`
+
+Quant pot enviar encara avui l'usuari de la sessió. «Enviar» ho demana en obrir-se, com el saldo, per mostrar «Has superat el límit diari de 1.000,00 €. Avui encara pots enviar 980,00 €.» i desactivar «Continuar» **abans** de confirmar (decisió de PO a la US-14). (P84)
+
+**Resposta `200`:** `{ dailyLimit, remainingToday }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `dailyLimit` | integer | El límit diari d'enviament, en cèntims (`100000`). El frontend no el té escrit enlloc: el llegeix d'aquí. |
+| `remainingToday` | integer | El que encara es pot enviar avui, en cèntims: `dailyLimit` menys el que s'ha enviat avui, i mai menys de `0`. |
+
+- És una ruta protegida i no canvia res.
+- `POST /api/transfers` torna a comprovar el límit: si entremig s'ha enviat alguna cosa més, respon `TRANSFER_LIMIT_EXCEEDED` igualment.
+- A les 00:00 de Madrid torna a ser `remainingToday: 100000`.
+
+```json
+{
+  "dailyLimit": 100000,
+  "remainingToday": 98000
+}
+```
+
+L'exemple és el de l'usuari 1 després de l'enviament de 13.4.
+
+### 13.6 Efecte sobre altres rutes
+
+Després d'un enviament:
+
+- `GET /api/home` de qui envia: el `balance` baixa l'import, i el moviment surt el primer de `lastMovements`, «−20,00 €» en vermell. El de qui rep: el `balance` puja l'import i el seu moviment surt el primer, «+20,00 €» en verd. No hi ha cap avís dins de l'app: cada Inici torna a demanar `GET /api/home` en obrir-se.
+- `GET /api/movements`, amb els filtres de [10.2](#102-filtres-de-get-apimovements) (`type=expense` per a qui envia, `type=income` per a qui rep, i `q` també troba el nom de la contrapart), el detall de [10.3](#103-get-apimovementsmovementid) i el justificant de [10.5](#105-justificant-pdf): els dos moviments funcionen com qualsevol altre.
+- `totalSaved` no canvia.
+- El límit diari de recàrrega no canvia ([13.5](#135-límit-diari-denviament)).
+
+### 13.7 Avisos a la bústia simulada
+
+US-14 demana un avís a qui envia i a qui rep. Com la resta de missatges, van a la bústia simulada ([8.12](#812-get-apidevoutbox)); dins de l'app no hi ha cap llista d'avisos. (P73)
+
+| `type` | A qui | `text` (exemple de 13.4) |
+|---|---|---|
+| `transfer_sent` | Qui envia | «Has enviat 20,00 € a Usuari nou.» |
+| `transfer_received` | Qui rep | «Usuari demo t'ha enviat 20,00 €: El sopar de divendres.» |
+
+- El destinatari del missatge (`to`) és l'identificador de cada usuari, i el canal, `email` o `sms` segons si és un email o un telèfon, com a [8.12](#812-get-apidevoutbox).
+- Els noms són els visibles (el `name` o `@username`). L'import s'escriu en euros amb el format de la pantalla (`1.000,00 €`).
+- Sense concepte, el text de qui rep acaba a l'import: «Usuari demo t'ha enviat 20,00 €.».
+- Aquests missatges no porten `code` ni `link`.
+
+### 13.8 Errors
+
+Els codis són a la taula de l'[apartat 5](#taula-de-codis). Els missatges són orientatius: el frontend decideix a partir del `code`.
+
+| `code` | HTTP | Ruta | Quan |
+|---|---|---|---|
+| `VALIDATION_ERROR` | 422 | `GET /api/users` | `q` passa de 64 caràcters |
+| `VALIDATION_ERROR` | 422 | `POST /api/transfers` | El cos està mal format o el concepte passa de 140 caràcters |
+| `RECIPIENT_NOT_FOUND` | 404 | `GET /api/users/{userId}`, `POST /api/transfers` | L'usuari no existeix o està pendent de verificar |
+| `SELF_TRANSFER` | 422 | `POST /api/transfers` | El destinatari és l'usuari de la sessió |
+| `INVALID_AMOUNT` | 422 | `POST /api/transfers` | `amount ≤ 0` |
+| `INSUFFICIENT_BALANCE` | 422 | `POST /api/transfers` | L'enviament supera el saldo de qui envia |
+| `TRANSFER_LIMIT_EXCEEDED` | 422 | `POST /api/transfers` | Enviat avui + `amount` > `100000` |
+
+Textos de les pantalles de US-13 i US-14, en vermell:
+
+| `code` | Text |
+|---|---|
+| `VALIDATION_ERROR` | «Les dades no són vàlides. Revisa-les i torna-ho a provar.» (ja existeix) |
+| `RECIPIENT_NOT_FOUND` | «No hem trobat aquest destinatari.» (nou) |
+| `SELF_TRANSFER` | «No et pots enviar diners a tu mateix.» (nou) |
+| `INSUFFICIENT_BALANCE` | «No tens prou saldo.» El mateix text a totes les pantalles, perquè el frontend tria el text pel `code` (P85). |
+| `TRANSFER_LIMIT_EXCEEDED` | «Has superat el límit diari de 1.000,00 €. Avui encara pots enviar X €.», amb `details.remainingToday` (nou) |
+
+### 13.9 Model intern
+
+Aquest apartat és per al backend. El frontend no en depèn.
+
+**`User`** guanya dos camps (US-13):
+
+| Camp | Tipus | Notes |
+|---|---|---|
+| `username` | string | L'`@usuari`, únic i en minúscules, sense l'`@`. Només lletres `a`–`z`, xifres, `.`, `_` i `-`. |
+| `phone` | string \| `None` | El telèfon normalitzat com a [8.3](#83-identificador-email-o-telèfon) (`+34611223302`). Qui es registra amb telèfon el té; qui es registra amb email, no (`None`), fins que es pugui editar al perfil. |
+
+El `name` que ja existia és el nom visible; buit (`""`) vol dir que no en té, i l'API el dona com a `null`.
+
+**`@usuari` dels usuaris nous** (decisió de PO: surt de la part local del correu, és únic i serà editable al perfil). (P74)
+
+- Registre amb email: la part d'abans de l'`@`, en minúscules, sense els caràcters que no siguin `a`–`z`, `0`–`9`, `.`, `_` o `-`. `Anna.Puig+evolt@x.com` → `anna.puigevolt`.
+- Si ja existeix, s'hi afegeix el primer número lliure a partir de `2`: `anna.puigevolt2`, `anna.puigevolt3`…
+- Registre amb telèfon, o una part local que es queda buida: `usuari` seguit de l'id de l'usuari (`usuari9`). No es fa servir el telèfon, perquè l'`@usuari` és visible per a tothom.
+- La forma `usuari` + xifres queda reservada per a aquest cas: una part local que ja la té hi afegeix `_` (`usuari9@x.com` → `usuari9_`), perquè no xoqui amb l'usuari 9. També és la que es mostra als usuaris creats abans de la T13.2, que no en tenen cap de desat.
+- L'`@usuari` es decideix en el registre, encara que el compte quedi pendent: així no canvia en verificar.
+- Editar-lo al perfil no és d'aquest sprint.
+
+**Seed** (decisió de PO: als usuaris del seed se'ls assigna un àlies d'equip). Vuit usuaris actius, tots amb la contrasenya del seed ([8.13](#813-model-intern-de-laccés)). Els usuaris 3 a 8 tenen el compte principal a `0`, sense moviments ni guardioles. (P75)
+
+| Id | `id` a l'API | Nom | Email | `username` | Telèfon |
+|---|---|---|---|---|---|
+| 1 | `usr-01` | Usuari demo | `demo@evolt.test` | `demo` | `+34611223307` |
+| 2 | `usr-02` | Usuari nou | `buit@evolt.test` | `buit` | `+34611223308` |
+| 3 | `usr-03` | Alicia | `alicia@evolt.test` | `aliciaa415` | `+34611223301` |
+| 4 | `usr-04` | Huabin | `huabin@evolt.test` | `123huabin123` | `+34611223302` |
+| 5 | `usr-05` | Izan | `izan@evolt.test` | `izanfarreny47` | `+34611223303` |
+| 6 | `usr-06` | Jiajun | `jiajun@evolt.test` | `yayuuun` | `+34611223304` |
+| 7 | `usr-07` | Junhao | `junhao@evolt.test` | `junhaozhang` | `+34611223305` |
+| 8 | `usr-08` | Martí | `marti@evolt.test` | `sudo-itramplay` | `+34611223306` |
+
+Els telèfons del seed són fictius i segueixen el mockup de US-13 (`611 22 33 02` és Huabin). L'email continua sent l'identificador per iniciar sessió; el telèfon només serveix per a la cerca.
+
+**Enviaments:**
+
+- `Movement.kind` ([apartat 6](#6-model-intern-no-exposat-a-lapi)) guanya dos valors: `"transfer_out"` al moviment de qui envia i `"transfer_in"` al de qui rep. El límit diari ([13.5](#135-límit-diari-denviament)) suma els `transfer_out` d'avui de l'usuari, **sense dependre del concepte**, que el pot escriure qui envia.
+- Les sis escriptures d'un enviament van dins d'una **transacció** amb Firestore, i amb el mateix pany en memòria, com l'aportació ([9.8](#98-model-intern-de-lestalvi)). Es valida tot abans d'escriure; si una escriptura falla a mig camí, es desfan les anteriors.
+- **Invariants:** el saldo de cada compte és la suma dels seus moviments; la suma dels saldos de tots els comptes no canvia amb un enviament.
+
+**Amb Firestore:**
+
+- `username` i `phone` són camps nous del document de `users`. Una col·lecció `usernames` (un document per `username`, que apunta a l'usuari) impedeix dos `@usuari` iguals encara que arribin dos registres alhora, com `user_identifiers` ([8.13](#813-model-intern-de-laccés)).
+- La cerca llegeix els usuaris i filtra al backend. Amb les dades de la demo (pocs usuaris) és suficient; si l'app creix, caldria un índex de cerca.
