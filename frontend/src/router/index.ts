@@ -10,6 +10,8 @@ import HomeView from '@/views/HomeView.vue'
 import LoginView from '@/views/LoginView.vue'
 import MovementDetailView from '@/views/MovementDetailView.vue'
 import MovementsView from '@/views/MovementsView.vue'
+import MoneyRequestsView from '@/views/MoneyRequestsView.vue'
+import NewMoneyRequestView from '@/views/NewMoneyRequestView.vue'
 import NewPasswordView from '@/views/NewPasswordView.vue'
 import PaymentsView from '@/views/PaymentsView.vue'
 import PotView from '@/views/PotView.vue'
@@ -54,6 +56,9 @@ const router = createRouter({
         concept: queryText(route.query.concept),
       }),
     },
+    // US-15: reached from the menu of every screen; «Demanar diners» lives inside the list.
+    { path: '/requests', name: 'money-requests', component: MoneyRequestsView },
+    { path: '/requests/new', name: 'new-money-request', component: NewMoneyRequestView },
     { path: '/divises', name: 'currencies', component: CurrenciesView },
     { path: '/divises/afegir', name: 'add-currency', component: AddCurrencyView },
     // US-26: one currency account (EUR or a sub-account). The static «afegir» above always wins.

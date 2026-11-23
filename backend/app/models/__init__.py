@@ -14,6 +14,13 @@ from app.models.currency import (
     rate_bps,
     total_in_euros,
 )
+from app.models.money_request import (
+    MAX_REQUEST_AMOUNT,
+    MAX_REQUEST_CONCEPT,
+    REQUEST_EXPIRED,
+    REQUEST_PENDING,
+    MoneyRequest,
+)
 from app.models.movement import (
     ICONS,
     KIND_OTHER,
@@ -38,6 +45,7 @@ from app.models.outbox import (
     CHANNEL_EMAIL,
     CHANNEL_SMS,
     MESSAGE_ACCOUNT_LOCKED,
+    MESSAGE_MONEY_REQUEST,
     MESSAGE_PASSWORD_RESET,
     MESSAGE_TRANSFER_RECEIVED,
     MESSAGE_TRANSFER_SENT,
@@ -70,6 +78,12 @@ from app.models.user import (
 from app.models.verification import CODE_LENGTH, VerificationCode
 
 __all__ = [
+    "MAX_REQUEST_AMOUNT",
+    "MAX_REQUEST_CONCEPT",
+    "MESSAGE_MONEY_REQUEST",
+    "REQUEST_EXPIRED",
+    "REQUEST_PENDING",
+    "MoneyRequest",
     "Account",
     "Currency",
     "CURRENCIES",

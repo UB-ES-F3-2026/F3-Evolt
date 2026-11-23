@@ -12,6 +12,7 @@ from app.models import (
     CHANNEL_SMS,
     IDENTIFIER_EMAIL,
     MESSAGE_ACCOUNT_LOCKED,
+    MESSAGE_MONEY_REQUEST,
     MESSAGE_PASSWORD_RESET,
     MESSAGE_TRANSFER_RECEIVED,
     MESSAGE_TRANSFER_SENT,
@@ -117,6 +118,22 @@ def send_transfer_received(
             channel=_channel(recipient),
             type=MESSAGE_TRANSFER_RECEIVED,
             text=text,
+            date=now,
+        )
+    )
+
+
+def send_money_request(
+    requester: User, recipient: User, amount: int, concept: str, now: datetime, outbox: OutboxRepository
+) -> None:
+    """Avís a qui ha de pagar una sol·licitud (US-15, T15.2, docs/api.md §14.6)."""
+    requester_name = requester.name or f"@{requester.visible_username}"
+    outbox.add(
+        OutboxMessage(
+            to=recipient.identifier,
+            channel=_channel(recipient),
+            type=MESSAGE_MONEY_REQUEST,
+            text=f"{requester_name} et demana {format_euros(amount)}: {concept}.",
             date=now,
         )
     )

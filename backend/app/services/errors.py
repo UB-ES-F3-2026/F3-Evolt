@@ -45,6 +45,11 @@ SUBACCOUNT_NOT_EMPTY = "SUBACCOUNT_NOT_EMPTY"
 RECIPIENT_NOT_FOUND = "RECIPIENT_NOT_FOUND"
 SELF_TRANSFER = "SELF_TRANSFER"
 TRANSFER_LIMIT_EXCEEDED = "TRANSFER_LIMIT_EXCEEDED"
+# Sol·licituds (docs/api.md §5 i §14.7).
+SELF_REQUEST = "SELF_REQUEST"
+INVALID_CONCEPT = "INVALID_CONCEPT"
+REQUEST_NOT_FOUND = "REQUEST_NOT_FOUND"
+REQUEST_NOT_PENDING = "REQUEST_NOT_PENDING"
 
 # Codi d'error → estat HTTP de la resposta.
 ERROR_STATUS: dict[str, int] = {
@@ -78,6 +83,10 @@ ERROR_STATUS: dict[str, int] = {
     RECIPIENT_NOT_FOUND: 404,
     SELF_TRANSFER: 422,
     TRANSFER_LIMIT_EXCEEDED: 422,
+    SELF_REQUEST: 422,
+    INVALID_CONCEPT: 422,
+    REQUEST_NOT_FOUND: 404,
+    REQUEST_NOT_PENDING: 422,
 }
 
 # Missatge per defecte de cada codi (docs/api.md §5). El contracte els marca
@@ -119,6 +128,10 @@ ERROR_MESSAGES: dict[str, str] = {
     # Textos de la US-14 i de §13.5 i §13.8.
     SELF_TRANSFER: "No et pots enviar diners a tu mateix.",
     TRANSFER_LIMIT_EXCEEDED: "Has superat el límit diari d'enviament.",
+    SELF_REQUEST: "No et pots demanar diners a tu mateix.",
+    INVALID_CONCEPT: "El concepte ha de tenir entre 1 i 140 caràcters.",
+    REQUEST_NOT_FOUND: "Aquesta sol·licitud ja no existeix.",
+    REQUEST_NOT_PENDING: "Només es poden cancel·lar les sol·licituds pendents.",
 }
 
 
