@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { onSessionEnded, touchSession } from '@/services/session'
 import AddCurrencyView from '@/views/AddCurrencyView.vue'
+import ConfirmPaymentView from '@/views/ConfirmPaymentView.vue'
 import ContributeView from '@/views/ContributeView.vue'
 import CreatePotView from '@/views/CreatePotView.vue'
 import CurrenciesView from '@/views/CurrenciesView.vue'
@@ -39,7 +40,18 @@ const router = createRouter({
       path: '/pagaments/enviar',
       name: 'send-payment',
       component: SendPaymentView,
-      props: (route) => ({ to: typeof route.query.to === 'string' ? route.query.to : undefined }),
+      props: (route) => ({ to: queryText(route.query.to) }),
+    },
+    // What «Enviar» chose travels in the URL too, so «Confirmar» survives a reload (US-14).
+    {
+      path: '/pagaments/confirmar',
+      name: 'confirm-payment',
+      component: ConfirmPaymentView,
+      props: (route) => ({
+        to: queryText(route.query.to),
+        amount: queryText(route.query.amount),
+        concept: queryText(route.query.concept),
+      }),
     },
     { path: '/divises', name: 'currencies', component: CurrenciesView },
     { path: '/divises/afegir', name: 'add-currency', component: AddCurrencyView },
@@ -62,3 +74,8 @@ onSessionEnded((reason) => {
 })
 
 export default router
+
+/** A query value as text, or undefined when it is missing or repeated. */
+function queryText(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined
+}
