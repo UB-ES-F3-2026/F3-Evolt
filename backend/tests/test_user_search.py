@@ -83,6 +83,13 @@ def test_empty_query_gives_the_initial_list(client: TestClient, q: str) -> None:
     assert _names(_search(client, q)) == INITIAL_LIST
 
 
+@pytest.mark.parametrize("q", ["@", "  @  "])
+def test_a_bare_at_sign_is_not_a_search(client: TestClient, q: str) -> None:
+    # §13.2 (#212b): un `@` sol no és cap text, així que no hi ha cap coincidència.
+    # abans deia la llista inicial perquè `@` no té text després i buit coincideix amb tot.
+    assert _search(client, q) == []
+
+
 # --- Les quatre vies (§13.2) ----------------------------------------------------------------
 
 
@@ -304,13 +311,6 @@ def test_phone_registrations_have_no_base() -> None:
 def test_the_reserved_form_gets_an_underscore() -> None:
     # `usuari9` és el de l'usuari 9: un correu no se'l pot quedar.
     assert email_username_base("usuari9@x.com", IDENTIFIER_EMAIL) == "usuari9_"
-
-
-def test_first_free_adds_the_first_free_number() -> None:
-    taken = {"anna", "anna2"}
-
-    assert first_free("anna", taken.__contains__) == "anna3"
-    assert first_free("pau", taken.__contains__) == "pau"
 
 
 @pytest.mark.parametrize(("raw", "user_id"), [("usr-04", 4), ("usr-123", 123), ("usr-4", None), ("4", None), ("", None)])

@@ -2334,6 +2334,7 @@ Cerca d'usuaris per a «Enviar diners» (US-13). (P66, P67)
 
 - L'usuari de la sessió **no surt mai**, ni a la llista inicial ni a cap cerca: cercar el meu nom, `@demo`, `demo@evolt.test` o el meu telèfon dona `items: []`.
 - Sense coincidències → `200` amb `items: []`, no un error. La pantalla mostra «No hi ha resultats»; amb el camp buit torna la llista inicial, sense aquest text.
+- Un `@` sol no és cap cerca: `q="@"` → `200` amb `items: []`, mai la llista inicial.
 - **Ordre:** per nom visible (el `name` o, si no en té, l'`username`), sense distingir majúscules ni accents; si dos coincideixen, primer el d'id més petit.
 - **Com a màxim 10** usuaris, tant a la llista inicial com a les cerques (US-14: «màxim 10 resultats»). No hi ha paginació.
 - La cerca no canvia res i no compta com a cap enviament.
@@ -2577,7 +2578,7 @@ El `name` que ja existia és el nom visible; buit (`""`) vol dir que no en té, 
 - Registre amb email: la part d'abans de l'`@`, en minúscules, sense els caràcters que no siguin `a`–`z`, `0`–`9`, `.`, `_` o `-`. `Anna.Puig+evolt@x.com` → `anna.puigevolt`.
 - Si ja existeix, s'hi afegeix el primer número lliure a partir de `2`: `anna.puigevolt2`, `anna.puigevolt3`…
 - Registre amb telèfon, o una part local que es queda buida: `usuari` seguit de l'id de l'usuari (`usuari9`). No es fa servir el telèfon, perquè l'`@usuari` és visible per a tothom.
-- La forma `usuari` + xifres queda reservada per a aquest cas: una part local que ja la té hi afegeix `_` (`usuari9@x.com` → `usuari9_`), perquè no xoqui amb l'usuari 9. També és la que es mostra als usuaris creats abans de la T13.2, que no en tenen cap de desat.
+- La forma `usuari` + xifres queda reservada per a aquest cap: una part local que ja la té hi afegeix `_` (`usuari9@x.com` → `usuari9_`), perquè no xoqui amb l'usuari 9. També és la que es mostra als usuaris creats abans de la T13.2, que no en tenen cap de desat.
 - L'`@usuari` es decideix en el registre, encara que el compte quedi pendent: així no canvia en verificar.
 - Editar-lo al perfil no és d'aquest sprint.
 
