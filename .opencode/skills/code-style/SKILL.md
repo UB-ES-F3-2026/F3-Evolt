@@ -41,7 +41,7 @@ Avoid: `manager`, `helper`, `misc`, `stuff`, `data2`, `handleThing`, `comp1`.
 ## Composable ViewModel shape
 
 ```ts
-// frontend/src/viewmodels/useXxxViewModel.ts
+// frontend/src/viewmodels/<domain>/useXxxViewModel.ts
 export function useXxxViewModel() {
   const isLoading = ref(false)
   const error = ref<string | null>(null)

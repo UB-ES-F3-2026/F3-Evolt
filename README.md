@@ -386,6 +386,7 @@ The only complete list of documents; the others link here.
 | `CLAUDE.md` | Entry point for Claude Code; points to `AGENTS.md` |
 | `.claude/skills/` · `.opencode/skills/` | The 11 lazy AI skills (same content in both) |
 | `docs/api.md` | API contract shared by backend and frontend |
+| `docs/pages.md` | Page separation: domain folders in views/viewmodels/services ↔ routes |
 | `docs/api.http` | Example request collection for manual API testing (T09.6) |
 | `docs/ci-cd.md` | CI/CD pipeline: jobs, how to read runs, how to edit |
 | `backend/README.md` | Backend setup, Ruff config/commands and troubleshooting |
