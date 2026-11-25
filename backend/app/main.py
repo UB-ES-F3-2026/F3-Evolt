@@ -22,6 +22,7 @@ from app.data.seed import build_seed
 from app.middleware import SimulationMiddleware, load_simulation_settings
 from app.repositories.atomic import MemoryAtomic
 from app.routers import (
+    account,
     auth,
     dev,
     exchanges,
@@ -209,9 +210,11 @@ def create_app() -> FastAPI:
     app.include_router(subaccounts.router, prefix="/api")
     app.include_router(exchanges.router, prefix="/api")
     app.include_router(transfers.router, prefix="/api")
+    app.include_router(account.router, prefix="/api")
     # Eines de desenvolupament: fora quan ENABLE_DEV_ROUTES=false (desplegament).
     if app_settings.dev_routes_enabled:
         app.include_router(dev.router, prefix="/api")
+        app.include_router(account.dev_router, prefix="/api")
     # La bústia té el seu interruptor (ENABLE_DEV_OUTBOX) i, al desplegament, clau (§8.12).
     if app_settings.dev_outbox_enabled:
         app.include_router(dev.outbox_router, prefix="/api")
