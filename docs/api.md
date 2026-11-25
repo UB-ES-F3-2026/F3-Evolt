@@ -22,6 +22,7 @@ Contracte compartit entre el backend (FastAPI) i el frontend per a les històrie
 12. [Multidivisa: subcomptes i canvi (US-25, US-26 i US-27)](#12-multidivisa-subcomptes-i-canvi-us-25-us-26-i-us-27)
 13. [Pagaments: cercar usuaris i enviar diners (US-13 i US-14)](#13-pagaments-cercar-usuaris-i-enviar-diners-us-13-i-us-14)
 14. [Sol·licituds de diners (US-15)](#14-sol·licituds-de-diners-us-15)
+16. [Dades del compte (US-12)](#16-dades-del-compte-us-12)
 
 ---
 
@@ -183,6 +184,8 @@ Exemple:
 | `POST /api/money-requests` | `201` | US-15 · [14.2](#142-post-apimoney-requests) |
 | `GET /api/money-requests` | `200` | US-15 · [14.3](#143-get-apimoney-requests) |
 | `POST /api/money-requests/{requestId}/cancel` | `200` | US-15 · [14.4](#144-post-apimoney-requestsrequestidcancel) |
+| `GET /api/account` | `200` | US-12 · [16.1](#161-get-apiaccount) |
+| `POST /api/dev/incoming-transfers` | `201` | US-12 · [16.3](#163-post-apidevincoming-transfers) |
 
 A partir de la T03.1, `GET /api/home`, `GET /api/movements` i `POST /api/topups` són **rutes protegides**: necessiten una sessió ([apartat 8.2](#82-sessió)).
 
@@ -616,7 +619,7 @@ Codis de les sol·licituds (Sprint 2, [apartat 14](#14-sol·licituds-de-diners-u
 | `REQUEST_NOT_FOUND` | 404 | La sol·licitud no existeix, ja s'ha cancel·lat o és d'un altre usuari | — |
 | `REQUEST_NOT_PENDING` | 422 | Cancel·lar una sol·licitud que ja no és pendent | — |
 
-`RECIPIENT_NOT_FOUND`, `INVALID_AMOUNT` i `AMOUNT_OVER_LIMIT` (amb el límit d'1.000.000,00 €) també surten a `POST /api/money-requests`.
+`RECIPIENT_NOT_FOUND`, `INVALID_AMOUNT` i `AMOUNT_OVER_LIMIT` (amb el límit d'1.000.000,00 €) també surten a `POST /api/money-requests`, i a l'eina de desenvolupament `POST /api/dev/incoming-transfers` ([16.3](#163-post-apidevincoming-transfers)).
 
 ### Exemples
 
@@ -691,7 +694,7 @@ Aquest apartat és per al backend. El frontend no en depèn.
 
 ## 7. Propostes del contracte
 
-Totes les propostes d'aquesta llista estan acceptades: es van validar en aprovar-se la PR que les proposava. Les noves continuen a partir de la P86 i porten la marca fins que s'aproven.
+Totes les propostes d'aquesta llista estan acceptades: es van validar en aprovar-se la PR que les proposava. Les noves continuen a partir de la P98 i porten la marca fins que s'aproven.
 
 Propostes de l'Sprint 0 (PR #29):
 
@@ -817,6 +820,16 @@ Propostes de les sol·licituds (T15.1, US-15, PR #238):
 | P81 | [14.5](#145-caducitat) | La caducitat es compta per dies naturals de Madrid: `expiresAt` són les 00:00 del setè dia després del de creació, i `expired` es calcula en llegir. |
 | P82 | [14.6](#146-avís-a-la-bústia-simulada) | L'avís al destinatari és un missatge `money_request` a la bústia simulada. |
 | P83 | [14.8](#148-model-intern) | Seed: l'usuari 1 té una sol·licitud caducada a Huabin i una de pendent a Alicia. |
+
+Propostes de les dades del compte (T12.1, US-12). Comencen a la P93 perquè les P86–P92 són de les sol·licituds rebudes (T16.1, PR #357):
+
+| # | Apartat | Proposta |
+|---|---|---|
+| P93 | [16.1](#161-get-apiaccount) | `GET /api/account` → `{ iban, bic, holder }`, amb l'IBAN sense espais (la pantalla l'agrupa de 4 en 4) i el titular amb el nom visible. |
+| P94 | [16.2](#162-com-es-fa-liban) | L'IBAN es calcula del número d'usuari (entitat 2100, oficina 0418, compte `0200051331 + n`, dígits de control del CCC i de l'IBAN) i no es desa. L'usuari 1 té el dels mockups. |
+| P95 | [16.1](#161-get-apiaccount) | El BIC és `EVOLESB1XXX` per a tothom (decisió D, 24/11). |
+| P96 | [16.3](#163-post-apidevincoming-transfers) | La transferència d'un altre banc es simula amb `POST /api/dev/incoming-transfers` `{ iban, amount, payer }`, només amb les rutes de desenvolupament actives. Crea un moviment «Transferència rebuda · <ordenant>» i l'avís `incoming_transfer`. Al desplegament no existeix: **el PO ha de confirmar on es fa la demo**. |
+| P97 | [16.3](#163-post-apidevincoming-transfers) | Ordre de les validacions: format → `RECIPIENT_NOT_FOUND` (IBAN que no és de cap usuari actiu) → `INVALID_AMOUNT` → `AMOUNT_OVER_LIMIT` (més d'1.000.000,00 €). |
 
 ---
 
@@ -1200,7 +1213,7 @@ X-Dev-Key: <DEV_OUTBOX_KEY>
 }
 ```
 
-Textos dels altres dos tipus (els avisos d'enviament, `transfer_sent` i `transfer_received`, són a [13.7](#137-avisos-a-la-bústia-simulada), i el de les sol·licituds, `money_request`, a [14.6](#146-avís-a-la-bústia-simulada)):
+Textos dels altres dos tipus (els avisos d'enviament, `transfer_sent` i `transfer_received`, són a [13.7](#137-avisos-a-la-bústia-simulada), el de les sol·licituds, `money_request`, a [14.6](#146-avís-a-la-bústia-simulada), i el de les transferències d'un altre banc, `incoming_transfer`, a [16.4](#164-avís-a-la-bústia-simulada)):
 
 - `account_locked`: «Hem bloquejat el teu compte d'Evolt durant 15 minuts després de 5 intents fallits. Si no has estat tu, canvia la contrasenya.»
 - `password_reset`: «Per canviar la contrasenya d'Evolt, obre aquest enllaç. Caduca en 30 minuts: <enllaç>»
@@ -3116,3 +3129,154 @@ Aquest apartat és per al backend. El frontend no en depèn.
   | `req-02` | Alicia (`usr-03`) | 25,00 € (`2500`) | El sopar de divendres | ahir, 19:30 | `pending` |
 
   Les dates són relatives a avui, com les dels moviments del seed. Una sol·licitud nova és, per tant, `req-03`.
+
+---
+
+## 16. Dades del compte (US-12)
+
+Consultar l'IBAN, el BIC i el titular del compte, i simular una transferència que arriba d'un altre banc. Tasca: T12.1 (issue #292). La pantalla, els textos i els mockups són a la història (`docs/us/US-12.md`); les proves d'acceptació, a [`docs/proves-compte.md`](proves-compte.md).
+
+| Tasca | Què implementa d'aquest apartat |
+|---|---|
+| T12.2 (backend, #293) | Tot l'apartat: [16.1](#161-get-apiaccount) a [16.5](#165-model-intern) |
+| T12.3 (frontend, #294) | «Dades del compte» al menú ☰, amb copiar i compartir |
+
+### 16.1 `GET /api/account`
+
+Les dades del compte de l'usuari de la sessió (US-12). Ruta **protegida** ([8.2](#82-sessió)). (P93, P95)
+
+**Resposta `200`:** `{ iban, bic, holder }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `iban` | string | IBAN espanyol de 24 caràcters, **sense espais** i en majúscules: `"ES9121000418450200051332"`. La pantalla l'agrupa de 4 en 4 («ES91 2100 0418 4502 0005 1332») i el copia sense espais (US-12). |
+| `bic` | string | `"EVOLESB1XXX"`, el mateix per a tothom (decisió D, 24/11). |
+| `holder` | string | El titular: el nom visible de l'usuari, és a dir, el `name` o, si no en té, `@username` (com a [13.1](#131-objecte-usersummary)). |
+
+- No canvia res i es pot demanar tantes vegades com calgui.
+- Si falla, la pantalla mostra «S'ha produït un error inesperat. Torna-ho a provar més tard.» amb «Reintentar» (US-12).
+- El text de «Compartir» el munta la pantalla amb aquests tres camps: «IBAN: ES91 2100 0418 4502 0005 1332 · BIC: EVOLESB1XXX · Titular: Usuari demo».
+
+**Resposta `200`** (usuari 1):
+
+```json
+{
+  "iban": "ES9121000418450200051332",
+  "bic": "EVOLESB1XXX",
+  "holder": "Usuari demo"
+}
+```
+
+### 16.2 Com es fa l'IBAN
+
+Cada usuari té el seu IBAN, sempre el mateix, i dos usuaris no en tenen mai el mateix (US-12). Es calcula a partir del número intern de l'usuari `n` (`usr-01` → `1`) i no es desa enlloc. (P94)
+
+| Part | Valor |
+|---|---|
+| Entitat | `2100` |
+| Oficina | `0418` |
+| Dígits de control nacionals | Els dos del CCC: el primer sobre `00` + entitat + oficina, i el segon sobre el número de compte, amb els pesos 1, 2, 4, 8, 5, 10, 9, 7, 3 i 6 (11 menys el residu entre 11; si dona 11 és 0, i si dona 10, 1) |
+| Número de compte | `0200051331 + n`, amb 10 xifres |
+| Dígits de control de l'IBAN | ISO 13616: `98 −` (BBAN + `142800`) mod 97 |
+
+- L'usuari 1 té, per tant, l'IBAN dels mockups: `ES91 2100 0418 4502 0005 1332`.
+- Els usuaris nous que es registren (US-01) també en tenen un, amb la mateixa regla.
+- Comprovació: qualsevol IBAN d'Evolt, amb els 4 primers caràcters passats al final i les lletres canviades per números (E = 14, S = 28), dona residu 1 entre 97.
+
+| Usuari | IBAN |
+|---|---|
+| `usr-01` Usuari demo | `ES91 2100 0418 4502 0005 1332` |
+| `usr-02` Usuari nou | `ES21 2100 0418 4102 0005 1333` |
+| `usr-03` Alicia | `ES02 2100 0418 4402 0005 1334` |
+| `usr-04` Huabin | `ES53 2100 0418 4902 0005 1335` |
+| `usr-05` Izan | `ES10 2100 0418 4302 0005 1336` |
+| `usr-06` Jiajun | `ES61 2100 0418 4802 0005 1337` |
+| `usr-07` Junhao | `ES18 2100 0418 4202 0005 1338` |
+| `usr-08` Martí | `ES69 2100 0418 4702 0005 1339` |
+
+### 16.3 `POST /api/dev/incoming-transfers`
+
+Simula una transferència que arriba d'un altre banc a un IBAN d'Evolt (US-12). És una eina de **desenvolupament**, com [`POST /api/dev/reset`](#44-post-apidevreset): no l'usa el frontend, no demana sessió i només existeix si `ENABLE_DEV_ROUTES` no és `false`. (P96)
+
+**Cos de la petició:** `{ iban, amount, payer }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `iban` | string | L'IBAN de qui rep. S'accepta amb espais i en minúscules: `"es91 2100 0418 4502 0005 1332"` és el mateix que `"ES9121000418450200051332"`. |
+| `amount` | integer | Import en cèntims. Enter JSON estricte, com a P5. |
+| `payer` | string | L'ordenant: qui envia els diners des de l'altre banc. Entre 1 i 70 caràcters, sense els espais dels extrems. |
+
+**Resposta `201`:** `{ balance, movement }`, el saldo nou de qui rep i el moviment creat.
+
+**Ordre de les validacions.** S'aturen al primer error (P97):
+
+1. Format del cos: falta algun camp, no és del tipus de la taula o `payer` és buit o passa de 70 caràcters → `VALIDATION_ERROR`.
+2. L'IBAN no és de cap usuari actiu (no existeix o l'usuari està pendent de verificar) → `RECIPIENT_NOT_FOUND` (`404`).
+3. `amount ≤ 0` → `INVALID_AMOUNT`.
+4. `amount > 100000000` (1.000.000,00 €) → `AMOUNT_OVER_LIMIT`.
+
+Si una validació falla, no es mou res.
+
+**Regles:**
+
+- Suma l'import al saldo principal de qui rep i crea un moviment, tot o res amb l'avís de [16.4](#164-avís-a-la-bústia-simulada):
+  - `type: "income"`, `icon: "transfer"`, `status: "completed"`, una `reference` nova i la data del moment;
+  - `concept`: «Transferència rebuda · <ordenant>», perquè Inici i Moviments el mostrin com al mockup;
+  - `counterparty`: l'ordenant.
+- No compta per a cap límit (ni de recàrrega ni d'enviament) i no dona XP.
+- Al desplegament les rutes de desenvolupament estan desactivades, i per tant aquesta també. Per a la demo es fa servir en local o en un entorn amb `ENABLE_DEV_ROUTES` activat (**ho ha de confirmar el PO**, P96).
+
+**Petició:**
+
+```http
+POST /api/dev/incoming-transfers HTTP/1.1
+Content-Type: application/json
+
+{
+  "iban": "ES91 2100 0418 4502 0005 1332",
+  "amount": 12000,
+  "payer": "Maria Puig"
+}
+```
+
+**Resposta `201`** (saldo anterior de l'usuari 1: `379521`; moment `2026-11-15T21:15:00+01:00`):
+
+```json
+{
+  "balance": 391521,
+  "movement": {
+    "id": "mov-31",
+    "amount": 12000,
+    "concept": "Transferència rebuda · Maria Puig",
+    "date": "2026-11-15T21:15:00+01:00",
+    "type": "income",
+    "icon": "transfer",
+    "counterparty": "Maria Puig",
+    "status": "completed",
+    "reference": "EVT-000031"
+  }
+}
+```
+
+Inici mostra el saldo 3.915,21 € i, el primer a «Últims moviments», «Transferència rebuda · Maria Puig» amb «+120,00 €» en verd.
+
+### 16.4 Avís a la bústia simulada
+
+Com la resta de missatges, va a la bústia simulada ([8.12](#812-get-apidevoutbox)). (P96)
+
+| `type` | A qui | `text` (exemple de 16.3) |
+|---|---|---|
+| `incoming_transfer` | Qui rep | «Has rebut 120,00 € de Maria Puig.» |
+
+- El text és el de la US-12, acabat en punt com els altres missatges de la bústia.
+- `to` i `channel` com a [13.7](#137-avisos-a-la-bústia-simulada). Sense `code` ni `link`.
+
+### 16.5 Model intern
+
+Aquest apartat és per al backend. El frontend no en depèn.
+
+- L'IBAN no es desa: es calcula amb la regla de [16.2](#162-com-es-fa-liban) cada vegada que cal. Per trobar l'usuari d'un IBAN a [16.3](#163-post-apidevincoming-transfers), es treu el número de compte i se'n resta `0200051331`, i després es comprova que l'IBAN sencer és el que toca a aquell usuari.
+- La transferència rebuda és un moviment més del compte principal: el saldo continua sent la suma dels moviments.
+- **Amb Firestore:** el moviment, el saldo i el missatge de la bústia van dins d'una **transacció**. En memòria, el mateix codi amb el pany.
+- El seed no canvia: no té cap transferència rebuda d'un altre banc.
+- Errors: no hi ha cap codi nou. `RECIPIENT_NOT_FOUND`, `INVALID_AMOUNT`, `AMOUNT_OVER_LIMIT` i `VALIDATION_ERROR` tenen el mateix significat que a [13.4](#134-post-apitransfers) i [14.2](#142-post-apimoney-requests).
