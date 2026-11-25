@@ -1,4 +1,4 @@
-"""Endpoints de les sol·licituds de diners (US-15 i US-16, docs/api.md §14.2 a §14.4 i §15.2)."""
+"""Endpoints de les sol·licituds de diners (US-15, US-16 i US-39, docs/api.md §14.2 a §14.4, §15.2 i §15.3)."""
 
 from typing import Annotated
 
@@ -6,18 +6,34 @@ from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from pydantic.alias_generators import to_camel
 
-from app.repositories import MoneyRequestRepository, OutboxRepository, UserRepository
+from app.repositories import (
+    AccountRepository,
+    MoneyRequestRepository,
+    MovementRepository,
+    OutboxRepository,
+    UserRepository,
+)
 from app.repositories.atomic import Atomic
 from app.routers.current_user import current_user_id
-from app.routers.dependencies import atomic, money_request_repository, outbox_repository, user_repository
+from app.routers.dependencies import (
+    account_repository,
+    atomic,
+    money_request_repository,
+    movement_repository,
+    outbox_repository,
+    user_repository,
+)
+from app.routers.schemas import MovementResponse
 from app.routers.users import UserSummaryResponse
 from app.services.money_request_service import (
+    PaymentResult,
     ReceivedRequest,
     SentRequest,
     cancel_request,
     create_request,
     list_received,
     list_sent,
+    pay_request,
 )
 
 router = APIRouter(tags=["money-requests"])
@@ -99,6 +115,22 @@ class ReceivedMoneyRequestListResponse(BaseModel):
     items: list[ReceivedMoneyRequestResponse]
 
 
+class PaymentResponse(BaseModel):
+    """Cos de la resposta `201` de pagar: `{ balance, movement, request }` (§15.3)."""
+
+    balance: int
+    movement: MovementResponse
+    request: ReceivedMoneyRequestResponse
+
+    @classmethod
+    def from_result(cls, result: PaymentResult) -> "PaymentResponse":
+        return cls(
+            balance=result.balance,
+            movement=MovementResponse.from_movement(result.movement),
+            request=ReceivedMoneyRequestResponse.from_received(result.request),
+        )
+
+
 class StatusResponse(BaseModel):
     status: str
 
@@ -151,3 +183,19 @@ def post_cancel_money_request(
     # Llegir i esborrar, junts: dues cancel·lacions alhora no poden passar totes dues.
     run.run(lambda: cancel_request(user_id, request_id, requests))
     return StatusResponse(status="ok")
+
+
+@router.post("/money-requests/{request_id}/pay", status_code=status.HTTP_201_CREATED)
+def post_pay_money_request(
+    request_id: str,
+    user_id: Annotated[int, Depends(current_user_id)],
+    users: Annotated[UserRepository, Depends(user_repository)],
+    accounts: Annotated[AccountRepository, Depends(account_repository)],
+    movements: Annotated[MovementRepository, Depends(movement_repository)],
+    requests: Annotated[MoneyRequestRepository, Depends(money_request_repository)],
+    outbox: Annotated[OutboxRepository, Depends(outbox_repository)],
+    run: Annotated[Atomic, Depends(atomic)],
+) -> PaymentResponse:
+    # L'enviament de la US-14 i el canvi a `paid`, en una sola operació (§15.8).
+    result = run.run(lambda: pay_request(user_id, request_id, users, accounts, movements, requests, outbox))
+    return PaymentResponse.from_result(result)
