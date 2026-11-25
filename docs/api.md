@@ -22,6 +22,7 @@ Contracte compartit entre el backend (FastAPI) i el frontend per a les històrie
 12. [Multidivisa: subcomptes i canvi (US-25, US-26 i US-27)](#12-multidivisa-subcomptes-i-canvi-us-25-us-26-i-us-27)
 13. [Pagaments: cercar usuaris i enviar diners (US-13 i US-14)](#13-pagaments-cercar-usuaris-i-enviar-diners-us-13-i-us-14)
 14. [Sol·licituds de diners (US-15)](#14-sol·licituds-de-diners-us-15)
+15. [Sol·licituds rebudes: veure, pagar i rebutjar (US-16, US-39 i US-40)](#15-sol·licituds-rebudes-veure-pagar-i-rebutjar-us-16-us-39-i-us-40)
 
 ---
 
@@ -613,10 +614,10 @@ Codis de les sol·licituds (Sprint 2, [apartat 14](#14-sol·licituds-de-diners-u
 |---|---|---|---|
 | `SELF_REQUEST` | 422 | Demanar-se diners a un mateix | — |
 | `INVALID_CONCEPT` | 422 | El concepte d'una sol·licitud és buit o passa de 140 caràcters | — |
-| `REQUEST_NOT_FOUND` | 404 | La sol·licitud no existeix, ja s'ha cancel·lat o és d'un altre usuari | — |
-| `REQUEST_NOT_PENDING` | 422 | Cancel·lar una sol·licitud que ja no és pendent | — |
+| `REQUEST_NOT_FOUND` | 404 | La sol·licitud no existeix, ja s'ha cancel·lat o és d'un altre usuari. També en pagar-ne o rebutjar-ne una que no és rebuda per l'usuari de la sessió ([15.3](#153-post-apimoney-requestsrequestidpay), [15.4](#154-post-apimoney-requestsrequestidreject)) | — |
+| `REQUEST_NOT_PENDING` | 422 | Cancel·lar, pagar o rebutjar una sol·licitud que ja no és pendent | — |
 
-`RECIPIENT_NOT_FOUND`, `INVALID_AMOUNT` i `AMOUNT_OVER_LIMIT` (amb el límit d'1.000.000,00 €) també surten a `POST /api/money-requests`.
+`RECIPIENT_NOT_FOUND`, `INVALID_AMOUNT` i `AMOUNT_OVER_LIMIT` (amb el límit d'1.000.000,00 €) també surten a `POST /api/money-requests`. `INSUFFICIENT_BALANCE` i `TRANSFER_LIMIT_EXCEEDED` també surten en pagar una sol·licitud ([15.3](#153-post-apimoney-requestsrequestidpay)).
 
 ### Exemples
 
@@ -691,7 +692,7 @@ Aquest apartat és per al backend. El frontend no en depèn.
 
 ## 7. Propostes del contracte
 
-Totes les propostes d'aquesta llista estan acceptades: es van validar en aprovar-se la PR que les proposava. Les noves continuen a partir de la P86 i porten la marca fins que s'aproven.
+Totes les propostes d'aquesta llista estan acceptades: es van validar en aprovar-se la PR que les proposava. Les noves continuen a partir de la P93 i porten la marca fins que s'aproven.
 
 Propostes de l'Sprint 0 (PR #29):
 
@@ -817,6 +818,18 @@ Propostes de les sol·licituds (T15.1, US-15, PR #238):
 | P81 | [14.5](#145-caducitat) | La caducitat es compta per dies naturals de Madrid: `expiresAt` són les 00:00 del setè dia després del de creació, i `expired` es calcula en llegir. |
 | P82 | [14.6](#146-avís-a-la-bústia-simulada) | L'avís al destinatari és un missatge `money_request` a la bústia simulada. |
 | P83 | [14.8](#148-model-intern) | Seed: l'usuari 1 té una sol·licitud caducada a Huabin i una de pendent a Alicia. |
+
+Propostes de les sol·licituds rebudes (T16.1, US-16, US-39 i US-40). Les altres tasques de contracte de l'Sprint 3 continuen a partir de la P93:
+
+| # | Apartat | Proposta |
+|---|---|---|
+| P86 | [15.1](#151-objecte-receivedmoneyrequest) | `ReceivedMoneyRequest` és com `MoneyRequest`, però amb `from` (qui demana) en lloc de `to`. |
+| P87 | [15.2](#152-get-apimoney-requestsreceived) | `GET /api/money-requests/received` → `{ items }`: totes les rebudes, en qualsevol estat, de la més recent a la més antiga i sense paginació. |
+| P88 | [15.3](#153-post-apimoney-requestsrequestidpay) | Pagar és `POST /api/money-requests/{requestId}/pay`, sense cos, que respon `201` amb `{ balance, movement, request }`. És un enviament de la US-14 i el canvi a `paid`, en una sola transacció. |
+| P89 | [15.3](#153-post-apimoney-requestsrequestidpay) | Ordre de les validacions de pagar: `REQUEST_NOT_FOUND` → `REQUEST_NOT_PENDING` → `INSUFFICIENT_BALANCE` → `TRANSFER_LIMIT_EXCEEDED`. |
+| P90 | [15.4](#154-post-apimoney-requestsrequestidreject) | Rebutjar és `POST /api/money-requests/{requestId}/reject`, sense cos, que respon `200` amb `{ request }` i deixa el missatge `money_request_rejected` a la bústia de qui la va fer. |
+| P91 | [15.7](#157-errors) | Pagar o rebutjar una sol·licitud que qui l'ha enviada acaba de cancel·lar (`REQUEST_NOT_FOUND`) mostra el mateix «Aquesta sol·licitud ja no està pendent.» i recarrega la llista. Les històries no ho diuen: **ho ha de confirmar el PO**. |
+| P92 | [15.8](#158-model-intern) | Seed: l'usuari 1 ha rebut una sol·licitud en cada estat (`req-03` a `req-06`, dades dels mockups). La pagada no té moviments al seed, perquè el saldo de la demo no canviï. **Ho ha de confirmar el PO.** |
 
 ---
 
@@ -1200,7 +1213,7 @@ X-Dev-Key: <DEV_OUTBOX_KEY>
 }
 ```
 
-Textos dels altres dos tipus (els avisos d'enviament, `transfer_sent` i `transfer_received`, són a [13.7](#137-avisos-a-la-bústia-simulada), i el de les sol·licituds, `money_request`, a [14.6](#146-avís-a-la-bústia-simulada)):
+Textos dels altres dos tipus (els avisos d'enviament, `transfer_sent` i `transfer_received`, són a [13.7](#137-avisos-a-la-bústia-simulada), el de les sol·licituds, `money_request`, a [14.6](#146-avís-a-la-bústia-simulada), i el de rebutjar-ne una, `money_request_rejected`, a [15.6](#156-avisos-a-la-bústia-simulada)):
 
 - `account_locked`: «Hem bloquejat el teu compte d'Evolt durant 15 minuts després de 5 intents fallits. Si no has estat tu, canvia la contrasenya.»
 - `password_reset`: «Per canviar la contrasenya d'Evolt, obre aquest enllaç. Caduca en 30 minuts: <enllaç>»
@@ -2934,7 +2947,7 @@ Demanar diners a un altre usuari i veure i cancel·lar les sol·licituds enviade
 
 Totes les rutes són **protegides** ([8.2](#82-sessió)). El destinatari es tria amb la cerca de [13.2](#132-get-apiusers) i es representa amb un `UserSummary` ([13.1](#131-objecte-usersummary)). Els exemples fan servir l'usuari 1 del seed i el moment `2026-11-15T21:15:00+01:00`.
 
-Una sol·licitud **no mou diners**: ni saldos, ni moviments, ni `totalSaved`, ni XP. Pagar-la o rebutjar-la és de la US-16, que no entra en aquest sprint.
+Una sol·licitud **no mou diners**: ni saldos, ni moviments, ni `totalSaved`, ni XP. Veure les rebudes, pagar-les o rebutjar-les és de la US-16, la US-39 i la US-40 ([apartat 15](#15-sol·licituds-rebudes-veure-pagar-i-rebutjar-us-16-us-39-i-us-40)).
 
 ### 14.1 Objecte `MoneyRequest`
 
@@ -2950,12 +2963,12 @@ L'objecte que la pantalla pinta a `/requests`. (P76, P77)
 | `createdAt` | string | Quan es va enviar, ISO 8601 amb el desplaçament de Madrid. |
 | `expiresAt` | string | A partir de quan es veu «Caducada» si encara és pendent: les 00:00 de Madrid del setè dia després del de `createdAt` ([14.5](#145-caducitat)). |
 
-- En aquest sprint, una sol·licitud només pot ser `pending` o `expired`. `paid` i `rejected` arribaran amb la US-16, però ja són al contracte perquè el frontend en tingui l'etiqueta.
+- Una sol·licitud passa a `paid` o `rejected` quan qui la rep la paga o la rebutja ([15.5](#155-estats)).
 - El frontend no calcula mai l'estat: pinta el `status` que rep.
 
 ```json
 {
-  "id": "req-03",
+  "id": "req-07",
   "to": {
     "id": "usr-03",
     "name": "Alicia",
@@ -3040,7 +3053,7 @@ Cancel·la una sol·licitud **pendent**: s'esborra i no torna a sortir mai a `/r
 **Ordre de les validacions:**
 
 1. La sol·licitud no existeix, ja s'ha cancel·lat, és d'un altre usuari o l'id té un format qualsevol → `REQUEST_NOT_FOUND` (`404`, «Aquesta sol·licitud ja no existeix.»). El cos és el mateix en tots els casos.
-2. La sol·licitud no és pendent (`expired`, i amb la US-16 també `paid` o `rejected`) → `REQUEST_NOT_PENDING` (`422`, «Només es poden cancel·lar les sol·licituds pendents.»). La pantalla torna a carregar la llista.
+2. La sol·licitud no és pendent (`expired`, `paid` o `rejected`) → `REQUEST_NOT_PENDING` (`422`, «Només es poden cancel·lar les sol·licituds pendents.»). La pantalla torna a carregar la llista.
 
 **Regles:**
 
@@ -3104,7 +3117,7 @@ Un error deixa el destinatari, l'import i el concepte escrits.
 
 Aquest apartat és per al backend. El frontend no en depèn.
 
-- **`MoneyRequest`**: `id`, `requester_id` (qui demana), `recipient_id`, `amount`, `concept`, `created_at`, l'estat desat (`pending`, i amb la US-16 `paid` o `rejected`) i `seq` (ordre de creació, per al desempat de P4). `expired` es calcula, no es desa ([14.5](#145-caducitat)).
+- **`MoneyRequest`**: `id`, `requester_id` (qui demana), `recipient_id`, `amount`, `concept`, `created_at`, l'estat desat (`pending`, `paid` o `rejected`, [15.5](#155-estats)) i `seq` (ordre de creació, per al desempat de P4). `expired` es calcula, no es desa ([14.5](#145-caducitat)).
 - Els ids surten d'un comptador, com les guardioles: `req-01`, `req-02`… Cancel·lar esborra la sol·licitud i el seu id no es torna a fer servir.
 - **Amb Firestore:** col·lecció `money_requests`, un document per sol·licitud amb el seu id, i el comptador `next_money_request_number` al document `counters`. Crear la sol·licitud i el missatge de la bústia van dins d'una **transacció**; cancel·lar llegeix i esborra dins d'una altra. En memòria, el mateix codi amb el pany.
 - `POST /api/dev/reset` torna les sol·licituds al seed.
@@ -3115,4 +3128,279 @@ Aquest apartat és per al backend. El frontend no en depèn.
   | `req-01` | Huabin (`usr-04`) | 42,00 € (`4200`) | Pizza del diumenge | fa 9 dies, 21:15 | `expired` |
   | `req-02` | Alicia (`usr-03`) | 25,00 € (`2500`) | El sopar de divendres | ahir, 19:30 | `pending` |
 
-  Les dates són relatives a avui, com les dels moviments del seed. Una sol·licitud nova és, per tant, `req-03`.
+  Les dates són relatives a avui, com les dels moviments del seed. L'usuari 1 també n'ha rebut quatre ([15.8](#158-model-intern)), i una sol·licitud nova és, per tant, `req-07`.
+
+---
+
+## 15. Sol·licituds rebudes: veure, pagar i rebutjar (US-16, US-39 i US-40)
+
+Veure les sol·licituds de diners que he rebut, pagar-les o rebutjar-les. Tasca: T16.1 (issue #282). Les pantalles, els textos i els mockups són a les històries (`docs/us/US-16.md`, `docs/us/US-39.md` i `docs/us/US-40.md`); les proves d'acceptació, a [`docs/proves-pagaments.md`](proves-pagaments.md#us-16--veure-les-sol·licituds-rebudes).
+
+| Tasca | Què implementa d'aquest apartat |
+|---|---|
+| T16.2 (backend, #283) | [15.1](#151-objecte-receivedmoneyrequest), [15.2](#152-get-apimoney-requestsreceived), [15.5](#155-estats) i el seed de [15.8](#158-model-intern) |
+| T16.3 (frontend, #284) | «Sol·licituds rebudes» (`/requests/received`) i l'entrada al menú ☰ |
+| T39.1 (backend, #286) | [15.3](#153-post-apimoney-requestsrequestidpay) i els avisos de pagar de [15.6](#156-avisos-a-la-bústia-simulada) |
+| T39.2 (frontend, #287) | «Pagar», amb «Confirmar» de la US-14 ja omplert |
+| T40.1 (backend, #289) | [15.4](#154-post-apimoney-requestsrequestidreject) i l'avís de rebutjar de [15.6](#156-avisos-a-la-bústia-simulada) |
+| T40.2 (frontend, #290) | «Rebutjar» i el diàleg «Rebutjar sol·licitud» |
+
+Totes les rutes són **protegides** ([8.2](#82-sessió)). Les sol·licituds són les mateixes de l'[apartat 14](#14-sol·licituds-de-diners-us-15): aquí es veuen des de l'altra banda, la de qui ha de pagar. Els exemples fan servir l'usuari 1 del seed i el moment `2026-11-15T21:15:00+01:00`, com a l'apartat 14.
+
+### 15.1 Objecte `ReceivedMoneyRequest`
+
+L'objecte que la pantalla pinta a `/requests/received`. És igual que `MoneyRequest` ([14.1](#141-objecte-moneyrequest)), però en lloc de `to` porta `from`: qui demana els diners. (P86)
+
+| Camp | Tipus | Notes |
+|---|---|---|
+| `id` | string | El mateix id que veu qui l'ha enviada (`req-06`). |
+| `from` | `UserSummary` | Qui demana els diners ([13.1](#131-objecte-usersummary)). La pantalla en mostra el nom i l'@usuari. |
+| `amount` | integer | Cèntims, `> 0`. Sempre en euros (US-39). |
+| `concept` | string | El concepte de la sol·licitud. |
+| `status` | `"pending"` \| `"paid"` \| `"rejected"` \| `"expired"` | La pantalla mostra «Pendent» (groc), «Pagada» (verd), «Rebutjada» (vermell) o «Caducada» (gris). |
+| `createdAt` | string | Quan es va enviar, ISO 8601 amb el desplaçament de Madrid. |
+| `expiresAt` | string | Com a [14.1](#141-objecte-moneyrequest). Només compta mentre és pendent ([15.5](#155-estats)). |
+
+- El frontend no calcula mai l'estat: pinta el `status` que rep.
+- Només les `pending` porten els botons «Pagar» i «Rebutjar» (US-16).
+
+```json
+{
+  "id": "req-06",
+  "from": {
+    "id": "usr-03",
+    "name": "Alicia",
+    "username": "aliciaa415"
+  },
+  "amount": 2500,
+  "concept": "El sopar de divendres",
+  "status": "pending",
+  "createdAt": "2026-11-13T19:30:00+01:00",
+  "expiresAt": "2026-11-20T00:00:00+01:00"
+}
+```
+
+### 15.2 `GET /api/money-requests/received`
+
+Les sol·licituds **rebudes** per l'usuari de la sessió (US-16). Les enviades continuen a [14.3](#143-get-apimoney-requests). (P87)
+
+**Resposta `200`:** `{ items }`, una llista de `ReceivedMoneyRequest`.
+
+- Totes, en qualsevol estat: `pending`, `paid`, `rejected` i `expired`.
+- De la més recent a la més antiga per `createdAt`; si dues coincideixen, primer la creada més tard (P4).
+- Sense paginació, com a [14.3](#143-get-apimoney-requests).
+- Sense cap sol·licitud rebuda → `items: []`. La pantalla mostra «Encara no has rebut cap sol·licitud.».
+- L'estat es calcula en aquesta lectura ([15.5](#155-estats)).
+- Una sol·licitud que qui l'ha enviada cancel·la ([14.4](#144-post-apimoney-requestsrequestidcancel)) desapareix també d'aquesta llista.
+- Si la ruta falla, la pantalla mostra «S'ha produït un error inesperat. Torna-ho a provar més tard.» amb «Reintentar» (US-16).
+
+**Resposta `200`** (seed, usuari 1):
+
+```json
+{
+  "items": [
+    { "id": "req-06", "from": { "id": "usr-03", "name": "Alicia", "username": "aliciaa415" }, "amount": 2500, "concept": "El sopar de divendres", "status": "pending", "createdAt": "2026-11-13T19:30:00+01:00", "expiresAt": "2026-11-20T00:00:00+01:00" },
+    { "id": "req-05", "from": { "id": "usr-07", "name": "Junhao", "username": "junhaozhang" }, "amount": 1200, "concept": "Cafès de la setmana", "status": "paid", "createdAt": "2026-11-11T10:05:00+01:00", "expiresAt": "2026-11-18T00:00:00+01:00" },
+    { "id": "req-04", "from": { "id": "usr-05", "name": "Izan", "username": "izanfarreny47" }, "amount": 1800, "concept": "Taxi de l'aeroport", "status": "rejected", "createdAt": "2026-11-10T08:10:00+01:00", "expiresAt": "2026-11-17T00:00:00+01:00" },
+    { "id": "req-03", "from": { "id": "usr-06", "name": "Jiajun", "username": "yayuuun" }, "amount": 4200, "concept": "Entrades del concert", "status": "expired", "createdAt": "2026-11-04T21:15:00+01:00", "expiresAt": "2026-11-11T00:00:00+01:00" }
+  ]
+}
+```
+
+### 15.3 `POST /api/money-requests/{requestId}/pay`
+
+Paga una sol·licitud **pendent** que ha rebut l'usuari de la sessió (US-39). Pagar és un enviament de la US-14 ([13.4](#134-post-apitransfers)) lligat a la sol·licitud. (P88, P89)
+
+**Cos de la petició:** cap. L'import, el destinatari i el concepte són els de la sol·licitud i no es poden canviar.
+
+**Resposta `201`:** `{ balance, movement, request }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `balance` | integer | Saldo **nou** del compte de qui paga, en cèntims. |
+| `movement` | `Movement` | El moviment que s'ha creat al compte de qui paga. |
+| `request` | `ReceivedMoneyRequest` | La sol·licitud, ja amb `status: "paid"`. |
+
+Amb aquesta resposta, la pantalla pinta el tic verd «Has pagat 25,00 € a Alicia» i «Saldo disponible: 3.770,21 €» sense tornar a demanar res, i al cap d'1,5 s torna a «Sol·licituds rebudes».
+
+**Ordre de les validacions.** S'aturen al primer error:
+
+1. La sol·licitud no existeix, no l'ha rebut l'usuari de la sessió (també si és una que ha enviat ell), s'ha cancel·lat o l'id té un format qualsevol → `REQUEST_NOT_FOUND` (`404`). El cos és el mateix en tots els casos.
+2. La sol·licitud no és pendent (`paid`, `rejected` o `expired`, calculat en el moment de la petició) → `REQUEST_NOT_PENDING` (`422`).
+3. `amount` més gran que el saldo de qui paga → `INSUFFICIENT_BALANCE` (`422`), com a [13.4](#134-post-apitransfers).
+4. Enviat avui + `amount` supera el límit diari ([13.5](#135-límit-diari-denviament)) → `TRANSFER_LIMIT_EXCEEDED` (`422`), amb `details.remainingToday`.
+
+Si qualsevol validació falla, **no es mou res**: ni saldos, ni moviments, ni avisos, i la sol·licitud continua com estava.
+
+**Regles:**
+
+- **Tot o res.** Pagar fa les sis escriptures d'un enviament ([13.4](#134-post-apitransfers): els dos saldos, un moviment a cada compte i un avís a cadascú) i, a més, passa la sol·licitud a `paid`. O es fan totes, o no se'n fa cap.
+- **Moviments:** com els de [13.4](#134-post-apitransfers), amb el concepte de la sol·licitud: «El sopar de divendres», `−25,00 €` a qui paga i `+25,00 €` a qui la va fer.
+- **Compta com un enviament** per al límit diari ([13.5](#135-límit-diari-denviament)): després de pagar 25,00 €, `GET /api/transfers/limit` dona `remainingToday: 97500`.
+- **Casos límit:**
+  - Pagar amb **exactament** el saldo està permès: el compte queda a `0`.
+  - Pagar el dia que caduca, a partir de les 00:00, ja és `REQUEST_NOT_PENDING`.
+  - Dos pagaments alhora de la mateixa sol·licitud: un respon `201` i l'altre `REQUEST_NOT_PENDING`. Els diners es mouen una sola vegada.
+  - Pagar i rebutjar alhora: només un dels dos s'aplica, i l'altre respon `REQUEST_NOT_PENDING`.
+- Pagar una sol·licitud no dona ni treu XP (US-23).
+- A «Sol·licituds enviades» de qui la va fer ([14.3](#143-get-apimoney-requests)), la sol·licitud surt `paid`.
+
+**Com ho fa servir la pantalla (US-39):**
+
+- «Confirmar» s'obre amb les dades de la `ReceivedMoneyRequest` (`from`, `amount` i `concept`) i el «Saldo disponible» de `GET /api/home`. Abans de confirmar demana també `GET /api/transfers/limit`, com «Enviar».
+- Si `amount` és més gran que el saldo, en lloc de «Confirmar enviament» surt «No tens prou saldo.» en vermell i el botó «Afegir diners», que obre la recàrrega (US-09). Si passa el límit, «Has superat el límit diari de 1.000,00 €.» i no es pot confirmar.
+- El servidor ho torna a comprovar en confirmar: si entremig ha canviat, respon `INSUFFICIENT_BALANCE` o `TRANSFER_LIMIT_EXCEEDED` i la pantalla mostra el mateix missatge.
+
+**Petició:**
+
+```http
+POST /api/money-requests/req-06/pay HTTP/1.1
+Authorization: Bearer <token>
+```
+
+**Resposta `201`** (saldo anterior de l'usuari 1: `379521`):
+
+```json
+{
+  "balance": 377021,
+  "movement": {
+    "id": "mov-31",
+    "amount": 2500,
+    "concept": "El sopar de divendres",
+    "date": "2026-11-15T21:15:00+01:00",
+    "type": "expense",
+    "icon": "transfer",
+    "counterparty": "Alicia",
+    "status": "completed",
+    "reference": "EVT-000031"
+  },
+  "request": {
+    "id": "req-06",
+    "from": {
+      "id": "usr-03",
+      "name": "Alicia",
+      "username": "aliciaa415"
+    },
+    "amount": 2500,
+    "concept": "El sopar de divendres",
+    "status": "paid",
+    "createdAt": "2026-11-13T19:30:00+01:00",
+    "expiresAt": "2026-11-20T00:00:00+01:00"
+  }
+}
+```
+
+L'usuari 3 (Alicia) té ara saldo `2500` i un moviment `mov-32`: «El sopar de divendres», `type: "income"`, `counterparty: "Usuari demo"`.
+
+### 15.4 `POST /api/money-requests/{requestId}/reject`
+
+Rebutja una sol·licitud **pendent** que ha rebut l'usuari de la sessió (US-40). No es demana cap motiu i no es mou cap diner. (P90)
+
+**Cos de la petició:** cap.
+
+**Resposta `200`:** `{ request }`, la `ReceivedMoneyRequest` ja amb `status: "rejected"`. La pantalla mostra «Sol·licitud rebutjada.» a dalt en verd i la targeta passa a «Rebutjada», sense botons.
+
+**Ordre de les validacions:** les dues primeres de [15.3](#153-post-apimoney-requestsrequestidpay):
+
+1. No existeix, no és rebuda per l'usuari de la sessió, s'ha cancel·lat o l'id té un format qualsevol → `REQUEST_NOT_FOUND` (`404`).
+2. No és pendent → `REQUEST_NOT_PENDING` (`422`).
+
+**Regles:**
+
+- Només canvia l'estat a `rejected` i deixa l'avís de [15.6](#156-avisos-a-la-bústia-simulada) a qui la va fer. Totes dues coses van juntes: tot o res.
+- No crea cap moviment ni toca cap saldo, ni el límit diari, ni l'XP.
+- Una sol·licitud rebutjada no es pot tornar a obrir: pagar-la, rebutjar-la o cancel·lar-la després respon `REQUEST_NOT_PENDING`.
+- A «Sol·licituds enviades» de qui la va fer, surt `rejected`.
+
+**Petició:**
+
+```http
+POST /api/money-requests/req-06/reject HTTP/1.1
+Authorization: Bearer <token>
+```
+
+**Resposta `200`:**
+
+```json
+{
+  "request": {
+    "id": "req-06",
+    "from": {
+      "id": "usr-03",
+      "name": "Alicia",
+      "username": "aliciaa415"
+    },
+    "amount": 2500,
+    "concept": "El sopar de divendres",
+    "status": "rejected",
+    "createdAt": "2026-11-13T19:30:00+01:00",
+    "expiresAt": "2026-11-20T00:00:00+01:00"
+  }
+}
+```
+
+### 15.5 Estats
+
+| Estat desat | Com s'hi arriba | `status` que es llegeix |
+|---|---|---|
+| `pending` | En crear-la ([14.2](#142-post-apimoney-requests)) | `pending`, o `expired` a partir d'`expiresAt` ([14.5](#145-caducitat)) |
+| `paid` | En pagar-la ([15.3](#153-post-apimoney-requestsrequestidpay)) | `paid`, per sempre |
+| `rejected` | En rebutjar-la ([15.4](#154-post-apimoney-requestsrequestidreject)) | `rejected`, per sempre |
+
+- `expired` continua sense desar-se mai: només es calcula a partir d'una sol·licitud desada com a `pending`.
+- Una sol·licitud `paid` o `rejected` no caduca mai, encara que passin els 7 dies.
+- Cancel·lar ([14.4](#144-post-apimoney-requestsrequestidcancel)) una `paid` o una `rejected` respon `REQUEST_NOT_PENDING`, com ja deia l'apartat 14.
+
+### 15.6 Avisos a la bústia simulada
+
+Com la resta de missatges, van a la bústia simulada ([8.12](#812-get-apidevoutbox)); dins de l'app no hi ha cap llista d'avisos.
+
+| Acció | `type` | A qui | `text` (exemples de 15.3 i 15.4) |
+|---|---|---|---|
+| Pagar | `transfer_sent` | Qui paga | «Has enviat 25,00 € a Alicia.» ([13.7](#137-avisos-a-la-bústia-simulada)) |
+| Pagar | `transfer_received` | Qui la va fer | «Usuari demo t'ha enviat 25,00 €: El sopar de divendres.» ([13.7](#137-avisos-a-la-bústia-simulada)) |
+| Rebutjar | `money_request_rejected` | Qui la va fer | «Usuari demo ha rebutjat la teva sol·licitud.» |
+
+- Pagar envia els mateixos avisos que un enviament de la US-14 (US-39), i cap més.
+- El text de rebutjar és el de la US-40, acabat en punt com els altres missatges de la bústia. El nom és el visible de qui rebutja.
+- `to` i `channel` com a [13.7](#137-avisos-a-la-bústia-simulada). Sense `code` ni `link`.
+
+### 15.7 Errors
+
+Els codis són a la taula de l'[apartat 5](#taula-de-codis). Els missatges són orientatius: el frontend decideix a partir del `code`.
+
+| `code` | HTTP | Ruta | Quan |
+|---|---|---|---|
+| `REQUEST_NOT_FOUND` | 404 | `pay`, `reject` | No existeix, no és rebuda per l'usuari de la sessió o s'ha cancel·lat |
+| `REQUEST_NOT_PENDING` | 422 | `pay`, `reject` | Ja és `paid`, `rejected` o `expired` |
+| `INSUFFICIENT_BALANCE` | 422 | `pay` | L'import supera el saldo de qui paga |
+| `TRANSFER_LIMIT_EXCEEDED` | 422 | `pay` | Enviat avui + `amount` > `100000` |
+
+Textos de les pantalles de US-16, US-39 i US-40, en vermell sota el botó:
+
+| `code` | Text |
+|---|---|
+| `REQUEST_NOT_PENDING` | «Aquesta sol·licitud ja no està pendent.» (nou), i la llista es torna a carregar. A «Sol·licituds enviades» continua sent el de [14.7](#147-errors). |
+| `REQUEST_NOT_FOUND` | El mateix «Aquesta sol·licitud ja no està pendent.», i la llista es torna a carregar (P91). |
+| `INSUFFICIENT_BALANCE` | «No tens prou saldo.», amb «Afegir diners» (US-39). |
+| `TRANSFER_LIMIT_EXCEEDED` | «Has superat el límit diari de 1.000,00 €.» |
+| `INTERNAL_ERROR` o sense connexió | «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.». La sol·licitud continua «Pendent». |
+
+### 15.8 Model intern
+
+Aquest apartat és per al backend. El frontend no en depèn.
+
+- **`MoneyRequest`** ([14.8](#148-model-intern)) no canvia de camps: l'estat desat ara també pot ser `paid` o `rejected`.
+- **Amb Firestore:** pagar és **una sola transacció** amb la sol·licitud, els dos comptes, els dos moviments, els comptadors i els dos missatges de la bústia; rebutjar, una altra amb la sol·licitud i el missatge. En memòria, el mateix codi amb el pany.
+- `POST /api/dev/reset` torna les sol·licituds al seed.
+- **Seed** (P92): a més de les dues de [14.8](#148-model-intern), l'usuari 1 ha **rebut** una sol·licitud en cada estat, amb les dades dels mockups de la US-16:
+
+  | `id` | De qui | Import | Concepte | `createdAt` | Estat |
+  |---|---|---|---|---|---|
+  | `req-03` | Jiajun (`usr-06`) | 42,00 € (`4200`) | Entrades del concert | fa 11 dies, 21:15 | `expired` (desada `pending`) |
+  | `req-04` | Izan (`usr-05`) | 18,00 € (`1800`) | Taxi de l'aeroport | fa 5 dies, 08:10 | `rejected` |
+  | `req-05` | Junhao (`usr-07`) | 12,00 € (`1200`) | Cafès de la setmana | fa 4 dies, 10:05 | `paid` |
+  | `req-06` | Alicia (`usr-03`) | 25,00 € (`2500`) | El sopar de divendres | fa 2 dies, 19:30 | `pending` |
+
+  - La `req-05` surt com a pagada, però el seed **no té** els moviments d'aquell pagament: així el saldo de l'usuari 1 continua sent 3.795,21 €, el que fan servir tots els tests i els mockups. Per veure un pagament de veritat, es paga la `req-06` (US-39).
+  - Una sol·licitud nova és ara `req-07`. Les proves SO-01 i SO-22 passen de `req-03` a `req-07`.
