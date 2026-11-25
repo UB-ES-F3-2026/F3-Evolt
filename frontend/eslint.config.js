@@ -67,7 +67,7 @@ export default tseslint.config(
   {
     // Plain TypeScript cannot read `.vue` module types (vue-tsc uses its own
     // plugin), so these are tooling false positives, not unsafe code.
-    files: ['src/main.ts', 'src/router/index.ts', 'src/views/ConfirmPaymentView.test.ts'],
+    files: ['src/main.ts', 'src/router/index.ts', 'src/views/payments/ConfirmPaymentView.test.ts'],
     rules: {
       '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
@@ -85,7 +85,7 @@ export default tseslint.config(
   {
     // Real findings kept visible as warnings until the follow-up fix: warnings
     // do not fail `npm run lint` (only errors do).
-    files: ['src/views/MovementsView.vue', 'src/viewmodels/useMovementsViewModel.test.ts'],
+    files: ['src/views/movements/MovementsView.vue', 'src/viewmodels/movements/useMovementsViewModel.test.ts'],
     rules: {
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/require-await': 'warn',

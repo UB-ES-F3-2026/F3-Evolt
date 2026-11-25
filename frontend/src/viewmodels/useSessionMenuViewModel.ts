@@ -1,6 +1,6 @@
 import { useRouter } from 'vue-router'
 import type { StatusJson } from '@/models/auth'
-import { logout } from '@/services/authService'
+import { logout } from '@/services/auth/authService'
 import { closeSession, hasSession } from '@/services/session'
 
 export interface SessionMenuDependencies {
