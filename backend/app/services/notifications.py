@@ -2,7 +2,8 @@
 
 L'únic lloc que decideix el canal (email o SMS) i el text de cada missatge:
 el codi de verificació (T02.1), l'avís de bloqueig (T03.2), l'enllaç de
-recuperació (T04.1) i els avisos d'enviament (T14.2, §13.7).
+recuperació (T04.1), els avisos d'enviament (T14.2, §13.7) i el de les
+transferències d'un altre banc (T12.2, §16.4).
 """
 
 from datetime import datetime
@@ -12,6 +13,7 @@ from app.models import (
     CHANNEL_SMS,
     IDENTIFIER_EMAIL,
     MESSAGE_ACCOUNT_LOCKED,
+    MESSAGE_INCOMING_TRANSFER,
     MESSAGE_MONEY_REQUEST,
     MESSAGE_PASSWORD_RESET,
     MESSAGE_TRANSFER_RECEIVED,
@@ -137,6 +139,21 @@ def send_money_request(
             date=now,
         )
     )
+
+
+def send_incoming_transfer(
+    recipient: User, payer: str, amount: int, now: datetime, outbox: OutboxRepository
+) -> OutboxMessage:
+    """Avís a qui rep una transferència d'un altre banc (US-12, T12.2, docs/api.md §16.4)."""
+    message = OutboxMessage(
+        to=recipient.identifier,
+        channel=_channel(recipient),
+        type=MESSAGE_INCOMING_TRANSFER,
+        text=f"Has rebut {format_euros(amount)} de {payer}.",
+        date=now,
+    )
+    outbox.add(message)
+    return message
 
 
 def messages_for(raw_to: str | None, outbox: OutboxRepository) -> list[OutboxMessage]:
