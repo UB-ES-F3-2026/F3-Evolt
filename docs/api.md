@@ -184,6 +184,9 @@ Exemple:
 | `POST /api/money-requests` | `201` | US-15 · [14.2](#142-post-apimoney-requests) |
 | `GET /api/money-requests` | `200` | US-15 · [14.3](#143-get-apimoney-requests) |
 | `POST /api/money-requests/{requestId}/cancel` | `200` | US-15 · [14.4](#144-post-apimoney-requestsrequestidcancel) |
+| `GET /api/money-requests/received` | `200` | US-16 · [15.2](#152-get-apimoney-requestsreceived) |
+| `POST /api/money-requests/{requestId}/pay` | `201` | US-39 · [15.3](#153-post-apimoney-requestsrequestidpay) |
+| `POST /api/money-requests/{requestId}/reject` | `200` | US-40 · [15.4](#154-post-apimoney-requestsrequestidreject) |
 
 A partir de la T03.1, `GET /api/home`, `GET /api/movements` i `POST /api/topups` són **rutes protegides**: necessiten una sessió ([apartat 8.2](#82-sessió)).
 
