@@ -1,4 +1,4 @@
-"""Endpoints de les sol·licituds de diners (US-15, US-16 i US-39, docs/api.md §14.2 a §14.4, §15.2 i §15.3)."""
+"""Endpoints de les sol·licituds de diners (US-15, US-16, US-39 i US-40, docs/api.md §14.2 a §14.4 i §15.2 a §15.4)."""
 
 from typing import Annotated
 
@@ -34,6 +34,7 @@ from app.services.money_request_service import (
     list_received,
     list_sent,
     pay_request,
+    reject_request,
 )
 
 router = APIRouter(tags=["money-requests"])
@@ -131,6 +132,12 @@ class PaymentResponse(BaseModel):
         )
 
 
+class RejectResponse(BaseModel):
+    """Cos de la resposta `200` de rebutjar: `{ request }` (§15.4)."""
+
+    request: ReceivedMoneyRequestResponse
+
+
 class StatusResponse(BaseModel):
     status: str
 
@@ -199,3 +206,17 @@ def post_pay_money_request(
     # L'enviament de la US-14 i el canvi a `paid`, en una sola operació (§15.8).
     result = run.run(lambda: pay_request(user_id, request_id, users, accounts, movements, requests, outbox))
     return PaymentResponse.from_result(result)
+
+
+@router.post("/money-requests/{request_id}/reject")
+def post_reject_money_request(
+    request_id: str,
+    user_id: Annotated[int, Depends(current_user_id)],
+    users: Annotated[UserRepository, Depends(user_repository)],
+    requests: Annotated[MoneyRequestRepository, Depends(money_request_repository)],
+    outbox: Annotated[OutboxRepository, Depends(outbox_repository)],
+    run: Annotated[Atomic, Depends(atomic)],
+) -> RejectResponse:
+    # El canvi a `rejected` i l'avís, junts (§15.8).
+    received = run.run(lambda: reject_request(user_id, request_id, users, requests, outbox))
+    return RejectResponse(request=ReceivedMoneyRequestResponse.from_received(received))

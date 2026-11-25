@@ -1,4 +1,4 @@
-"""Sol·licituds de diners: crear, llistar, cancel·lar i pagar (US-15, US-16 i US-39, docs/api.md §14 i §15).
+"""Sol·licituds de diners: crear, llistar, cancel·lar, pagar i rebutjar (US-15, US-16, US-39 i US-40, docs/api.md §14 i §15).
 
 Ordre de les validacions en crear (s'aturen al primer error, §14.2):
   1. Format del cos → el router, VALIDATION_ERROR.
@@ -15,7 +15,8 @@ Ordre de les validacions en pagar una rebuda (§15.3, P89):
   1. No existeix, no és rebuda per l'usuari o s'ha cancel·lat → REQUEST_NOT_FOUND.
   2. Ja no és pendent → REQUEST_NOT_PENDING.
   3. i 4. Les de l'enviament de la US-14: INSUFFICIENT_BALANCE i TRANSFER_LIMIT_EXCEEDED.
-Pagar és l'enviament de la US-14 i el canvi a `paid`, tot o res.
+Pagar és l'enviament de la US-14 i el canvi a `paid`, tot o res. Rebutjar fa les dues
+primeres validacions i passa la sol·licitud a `rejected` amb un avís, sense moure diners (§15.4).
 """
 
 import threading
@@ -29,6 +30,7 @@ from app.models import (
     REQUEST_EXPIRED,
     REQUEST_PAID,
     REQUEST_PENDING,
+    REQUEST_REJECTED,
     MoneyRequest,
     Movement,
     now_madrid,
@@ -51,7 +53,7 @@ from app.services.errors import (
     ApiError,
 )
 from app.services.money_text import format_euros
-from app.services.notifications import send_money_request
+from app.services.notifications import send_money_request, send_money_request_rejected
 from app.services.transfer_service import send_money
 from app.services.user_search import UserSummary, find_active_user, public_user_id
 
@@ -247,6 +249,35 @@ def pay_request(
         requests.set_status(request.id, REQUEST_PAID)
         received = ReceivedRequest(request, UserSummary.from_user(requester), REQUEST_PAID, expires_at(request.created_at))
         return PaymentResult(transfer.balance, transfer.movement, received)
+
+
+def reject_request(
+    user_id: int,
+    request_id: str,
+    users: UserRepository,
+    requests: MoneyRequestRepository,
+    outbox: OutboxRepository,
+    now: datetime | None = None,
+) -> ReceivedRequest:
+    """Rebutja una sol·licitud pendent que ha rebut l'usuari i avisa qui la va fer (§15.4).
+
+    No mou cap diner. L'estat i l'avís van junts: si l'avís falla, la sol·licitud torna a
+    pendent (amb Firestore, la transacció ja no escriu res).
+    """
+    moment = now or now_madrid()
+    with _RESPOND_LOCK:
+        request = _pending_received(user_id, request_id, requests, moment)
+        requester = users.get(request.requester_id)
+        rejecter = users.get(user_id)
+        if requester is None or rejecter is None:
+            raise LookupError(f"Falta un dels usuaris de la sol·licitud {request.id}")
+        requests.set_status(request.id, REQUEST_REJECTED)
+        try:
+            send_money_request_rejected(rejecter, requester, moment, outbox)
+        except Exception:
+            requests.set_status(request.id, REQUEST_PENDING)
+            raise
+        return ReceivedRequest(request, UserSummary.from_user(requester), REQUEST_REJECTED, expires_at(request.created_at))
 
 
 def _pending_received(user_id: int, request_id: str, requests: MoneyRequestRepository, now: datetime) -> MoneyRequest:
