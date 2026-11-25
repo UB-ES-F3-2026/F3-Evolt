@@ -2,7 +2,8 @@
 
 L'únic lloc que decideix el canal (email o SMS) i el text de cada missatge:
 el codi de verificació (T02.1), l'avís de bloqueig (T03.2), l'enllaç de
-recuperació (T04.1) i els avisos d'enviament (T14.2, §13.7).
+recuperació (T04.1), els avisos d'enviament (T14.2, §13.7) i els de les
+sol·licituds (T15.2, §14.6, i T40.1, §15.6).
 """
 
 from datetime import datetime
@@ -13,6 +14,7 @@ from app.models import (
     IDENTIFIER_EMAIL,
     MESSAGE_ACCOUNT_LOCKED,
     MESSAGE_MONEY_REQUEST,
+    MESSAGE_MONEY_REQUEST_REJECTED,
     MESSAGE_PASSWORD_RESET,
     MESSAGE_TRANSFER_RECEIVED,
     MESSAGE_TRANSFER_SENT,
@@ -134,6 +136,20 @@ def send_money_request(
             channel=_channel(recipient),
             type=MESSAGE_MONEY_REQUEST,
             text=f"{requester_name} et demana {format_euros(amount)}: {concept}.",
+            date=now,
+        )
+    )
+
+
+def send_money_request_rejected(rejecter: User, requester: User, now: datetime, outbox: OutboxRepository) -> None:
+    """Avís a qui va fer la sol·licitud quan l'altre la rebutja (US-40, T40.1, docs/api.md §15.6)."""
+    rejecter_name = rejecter.name or f"@{rejecter.visible_username}"
+    outbox.add(
+        OutboxMessage(
+            to=requester.identifier,
+            channel=_channel(requester),
+            type=MESSAGE_MONEY_REQUEST_REJECTED,
+            text=f"{rejecter_name} ha rebutjat la teva sol·licitud.",
             date=now,
         )
     )
