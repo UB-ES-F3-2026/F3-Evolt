@@ -1,9 +1,9 @@
-"""Endpoints de les sol·licituds de diners (US-15, docs/api.md §14.2 a §14.4)."""
+"""Endpoints de les sol·licituds de diners (US-15 i US-16, docs/api.md §14.2 a §14.4 i §15.2)."""
 
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from pydantic.alias_generators import to_camel
 
 from app.repositories import MoneyRequestRepository, OutboxRepository, UserRepository
@@ -11,7 +11,14 @@ from app.repositories.atomic import Atomic
 from app.routers.current_user import current_user_id
 from app.routers.dependencies import atomic, money_request_repository, outbox_repository, user_repository
 from app.routers.users import UserSummaryResponse
-from app.services.money_request_service import SentRequest, cancel_request, create_request, list_sent
+from app.services.money_request_service import (
+    ReceivedRequest,
+    SentRequest,
+    cancel_request,
+    create_request,
+    list_received,
+    list_sent,
+)
 
 router = APIRouter(tags=["money-requests"])
 
@@ -59,6 +66,39 @@ class MoneyRequestListResponse(BaseModel):
     items: list[MoneyRequestResponse]
 
 
+class ReceivedMoneyRequestResponse(BaseModel):
+    """Objecte `ReceivedMoneyRequest` (§15.1): com `MoneyRequest`, però amb `from` en lloc de `to`."""
+
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
+    id: str
+    # `from` és una paraula reservada de Python: el camp es diu `sender` i surt com a `from`.
+    sender: UserSummaryResponse = Field(alias="from")
+    amount: int
+    concept: str
+    status: str
+    created_at: str
+    expires_at: str
+
+    @classmethod
+    def from_received(cls, received: ReceivedRequest) -> "ReceivedMoneyRequestResponse":
+        return cls(
+            id=received.request.id,
+            sender=UserSummaryResponse.from_summary(received.sender),
+            amount=received.request.amount,
+            concept=received.request.concept,
+            status=received.status,
+            created_at=received.request.created_at.isoformat(),
+            expires_at=received.expires_at.isoformat(),
+        )
+
+
+class ReceivedMoneyRequestListResponse(BaseModel):
+    """Cos de `GET /api/money-requests/received`: `{ items }`."""
+
+    items: list[ReceivedMoneyRequestResponse]
+
+
 class StatusResponse(BaseModel):
     status: str
 
@@ -87,6 +127,17 @@ def get_money_requests(
 ) -> MoneyRequestListResponse:
     return MoneyRequestListResponse(
         items=[MoneyRequestResponse.from_sent(sent) for sent in list_sent(user_id, requests, users)]
+    )
+
+
+@router.get("/money-requests/received")
+def get_received_money_requests(
+    user_id: Annotated[int, Depends(current_user_id)],
+    users: Annotated[UserRepository, Depends(user_repository)],
+    requests: Annotated[MoneyRequestRepository, Depends(money_request_repository)],
+) -> ReceivedMoneyRequestListResponse:
+    return ReceivedMoneyRequestListResponse(
+        items=[ReceivedMoneyRequestResponse.from_received(r) for r in list_received(user_id, requests, users)]
     )
 
 
