@@ -49,19 +49,21 @@ backend/
 
 frontend/src/
   models/        # Model: data and JSON mapping
-  services/      # Model: API calls
-  viewmodels/    # ViewModel: state and logic of each screen
-  views/         # View: screens
+  services/      # Model: API calls (services/<domain>/ + shared at root)
+  viewmodels/    # ViewModel: state and logic of each screen (viewmodels/<domain>/ + shared at root)
+  views/         # View: screens, one folder per domain (views/<domain>/)
   components/    # View: reusable pieces
-  router/
+  router/        # accessGuard + routes/<domain>.ts
   mocks/
 ```
 
 There are no feature folders (`features/<x>/`) and no `shared/` folder: `components/`, `models/` and `services/` are already shared by every screen.
 
+**Page separation lives in the router layer plus domain subfolders inside the layers:** one route module per domain in `router/routes/<domain>.ts` (`home.ts`, `movements.ts`, `pots.ts`, …), each view lazy-loaded at the route level (`component: () => import('@/views/<domain>/XxxView.vue')`). Inside each layer, files are grouped by domain — `views/<domain>/`, `viewmodels/<domain>/` (9 domains: `home`, `movements`, `topup`, `exchange`, `pots`, `payments`, `requests`, `currencies`, `auth`) and `services/<domain>/` (only the domains that own a single-domain service; `home` and `currencies` have none); co-located tests move with their source files. This domain-subfolder layout is the **team-agreed convention** (recorded via the page-separation refactor); `features/<x>/`, new top-level folders and `shared/` remain forbidden, and a domain folder may gain subfolders when the domain grows. Services used by exactly one domain live in `services/<domain>/`; services used by 2+ domains (`apiClient`, `session`, `homeService`, `usersService`, `subaccountsService`, `movementsService`) and the cross-domain composables (`useBalanceVisibility`, `useGoBack`, `usePasswordFields`, `useSessionMenuViewModel`) stay at the layer root. Route paths and names are a **contract** (backend links like `/nova-contrasenya`, `router.push({ name })`): never rename them. `router/index.ts` only aggregates the `routes/*` modules and wires the guards and session hooks — never re-center routes there. The full page map (domain → route → view → ViewModel) is in [`docs/pages.md`](docs/pages.md).
+
 ### 2.3 MVVM in the frontend (Model · ViewModel · View)
 
-A ViewModel is a Vue 3 **composable** named `useXxxViewModel` (`viewmodels/useHomeViewModel.ts`).
+A ViewModel is a Vue 3 **composable** named `useXxxViewModel` (`viewmodels/home/useHomeViewModel.ts`).
 
 | Layer | Folders | Contains | Must not contain |
 |-------|---------|----------|------------------|

@@ -28,9 +28,9 @@ View (.vue)
 Helper names (`eurosToCents`, `toUserMessage`) only show the shape.
 
 ```vue
-<!-- frontend/src/views/ContributeView.vue -->
+<!-- frontend/src/views/pots/ContributeView.vue -->
 <script setup lang="ts">
-import { useContributeViewModel } from '@/viewmodels/useContributeViewModel'
+import { useContributeViewModel } from '@/viewmodels/pots/useContributeViewModel'
 
 const props = defineProps<{ potId: string }>()
 const emit = defineEmits<{ (e: 'done'): void }>()
@@ -44,7 +44,7 @@ async function onSubmit() {
 ```
 
 ```ts
-// frontend/src/viewmodels/useContributeViewModel.ts
+// frontend/src/viewmodels/pots/useContributeViewModel.ts
 export function useContributeViewModel(potId: string) {
   const amount = ref('')
   const error = ref<string | null>(null)
