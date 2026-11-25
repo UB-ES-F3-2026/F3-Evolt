@@ -8,7 +8,7 @@ REQUEST_PENDING = "pending"
 REQUEST_PAID = "paid"
 REQUEST_REJECTED = "rejected"
 REQUEST_EXPIRED = "expired"
-# `expired` no es desa mai: es calcula en llegir (§14.5). `paid` i `rejected` arriben amb la US-16.
+# `expired` no es desa mai: es calcula en llegir (§14.5). `paid` i `rejected` sí (§15.5).
 STORED_REQUEST_STATUSES = frozenset({REQUEST_PENDING, REQUEST_PAID, REQUEST_REJECTED})
 
 MAX_REQUEST_CONCEPT = 140
