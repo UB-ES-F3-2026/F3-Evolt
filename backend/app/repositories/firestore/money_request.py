@@ -63,6 +63,10 @@ class FirestoreMoneyRequestRepository:
         received = [money_request_from_dict(snapshot.id, snapshot.to_dict()) for snapshot in snapshots]
         return sorted(received, key=MoneyRequest.sort_key, reverse=True)
 
+    def set_status(self, request_id: str, status: str) -> None:
+        """Dins de la transacció de pagar o rebutjar (§15.8): l'escriptura va després de les lectures."""
+        _tx.update(self._requests.document(request_id), {"status": status})
+
     def delete(self, request_id: str) -> None:
         _tx.delete(self._requests.document(request_id))
 
