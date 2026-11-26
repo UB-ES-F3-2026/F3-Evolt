@@ -1282,7 +1282,7 @@ A «Demanar diners» (`/requests/new`, US-15), a dalt hi ha dos botons de selecc
 A «Participants» hi ha la cerca de la US-13. Cada usuari triat surt en una fila (inicials, nom, «@usuari», la seva part i «×» per treure'l). Un usuari que ja hi és surt en gris a la cerca amb «Ja hi és». Amb 9 participants, la cerca es desactiva i diu «Màxim 9 participants»
 A sota de la llista hi ha la fila «Jo» amb la meva part. Per defecte, «Parts iguals»: el total es divideix entre els participants i jo, i els cèntims que sobren són per a mi
 Amb «Imports personalitzats» cada part es pot escriure (en euros, 2 decimals com a màxim). Si la suma no és el total surt «La suma de les parts ha de ser igual al total.»; si una part és 0, «Cada part ha de ser més gran que 0.»
-«Enviar sol·licituds» queda desactivat fins que hi ha import total (de 0,01 € a 1.000.000,00 €), concepte (d'1 a 140 caràcters), almenys un participant i les parts quadren
+«Enviar sol·licituds» queda desactivat fins que hi ha import total (de 0,01 € a 1.000.000,00 €), concepte (d'1 a 140 caràcters), almenys un participant i les parts quadren. Sense cap participant, sota la cerca surt en gris «Afegeix almenys un participant.»
 En enviar: tic verd «Has enviat 3 sol·licituds» i a sota «Pendent de cobrar: 45,00 €»; 1,5 s després torna a «Sol·licituds enviades» amb la despesa dividida a dalt de tot (US-31)
 Cada participant rep a la bústia «<nom> et demana 15,00 €: <concepte>.», com a la US-15. No es mou cap diner
 Es creen totes les sol·licituds o cap: si una falla, no se n'envia cap i les dades del formulari es mantenen
@@ -1354,7 +1354,7 @@ Estimació: SP 5 · VP 5 · Prioritat Mitjana
 
 Èpica: EP-09
 
-Revisió del 26/11 (TPO.1 #323): de Mitjana a Fina. Màxim 5 membres; la invitació s'accepta a «Guardioles»; les aportacions donen XP (US-23).
+Revisió del 26/11 (TPO.1 #323): de Mitjana a Fina. Màxim 5 membres; la invitació s'accepta a «Guardioles»; les aportacions donen XP (US-23); eliminar una guardiola compartida queda al backlog.
 ```
 
 **Checklist Acceptance Criteria:**
@@ -1367,7 +1367,7 @@ El detall d'una guardiola compartida mostra el total, l'objectiu i el progrés (
 Qualsevol membre pot aportar del seu saldo principal (US-18). L'aportació suma al total i a la seva fila, i dona XP com qualsevol aportació (US-23)
 «Retirar» deixa retirar com a màxim el que he aportat jo: a sota de l'import surt «Pots retirar fins a 200,00 €» i, si m'hi passo, «Només pots retirar el que has aportat (200,00 €).»
 Un membre que no l'ha creada té «Abandonar la guardiola» (text vermell): obre el diàleg «Abandonar la guardiola» («Sortiràs de «Viatge a Lisboa» i els 200,00 € que hi has aportat tornaran al teu saldo principal.») amb «Cancel·lar» i «Abandonar». En abandonar, torna a «Guardioles», on ja no surt
-Qui l'ha creada no la pot abandonar; només la pot eliminar, i en eliminar-la cada membre recupera el que hi havia aportat i rep a la bústia «S'ha eliminat la guardiola «Viatge a Lisboa». T'hem tornat 150,00 €.»
+Qui l'ha creada no la pot abandonar: no li surt «Abandonar la guardiola»
 Aportar, retirar i abandonar mouen els dos saldos alhora (tot o res), i surten als moviments de cada membre com a la US-18 i la US-19
 Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» sota el botó; cap saldo canvia
 ```
