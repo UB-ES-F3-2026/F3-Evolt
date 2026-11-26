@@ -22,6 +22,7 @@ Contracte compartit entre el backend (FastAPI) i el frontend per a les històrie
 12. [Multidivisa: subcomptes i canvi (US-25, US-26 i US-27)](#12-multidivisa-subcomptes-i-canvi-us-25-us-26-i-us-27)
 13. [Pagaments: cercar usuaris i enviar diners (US-13 i US-14)](#13-pagaments-cercar-usuaris-i-enviar-diners-us-13-i-us-14)
 14. [Sol·licituds de diners (US-15)](#14-sol·licituds-de-diners-us-15)
+17. [Despeses dividides (US-30 i US-31)](#17-despeses-dividides-us-30-i-us-31)
 
 ---
 
@@ -183,6 +184,10 @@ Exemple:
 | `POST /api/money-requests` | `201` | US-15 · [14.2](#142-post-apimoney-requests) |
 | `GET /api/money-requests` | `200` | US-15 · [14.3](#143-get-apimoney-requests) |
 | `POST /api/money-requests/{requestId}/cancel` | `200` | US-15 · [14.4](#144-post-apimoney-requestsrequestidcancel) |
+| `POST /api/split-expenses` | `201` | US-30 · [17.2](#172-post-apisplit-expenses) |
+| `GET /api/split-expenses` | `200` | US-31 · [17.3](#173-get-apisplit-expenses) |
+| `GET /api/split-expenses/{splitId}` | `200` | US-31 · [17.4](#174-get-apisplit-expensessplitid) |
+| `POST /api/split-expenses/{splitId}/parts/{userId}/resend` | `201` | US-31 · [17.5](#175-post-apisplit-expensessplitidpartsuseridresend) |
 
 A partir de la T03.1, `GET /api/home`, `GET /api/movements` i `POST /api/topups` són **rutes protegides**: necessiten una sessió ([apartat 8.2](#82-sessió)).
 
@@ -618,6 +623,18 @@ Codis de les sol·licituds (Sprint 2, [apartat 14](#14-sol·licituds-de-diners-u
 
 `RECIPIENT_NOT_FOUND`, `INVALID_AMOUNT` i `AMOUNT_OVER_LIMIT` (amb el límit d'1.000.000,00 €) també surten a `POST /api/money-requests`.
 
+Codis de les despeses dividides (Sprint 3, [apartat 17](#17-despeses-dividides-us-30-i-us-31)):
+
+| `code` | HTTP | Quan | `details` |
+|---|---|---|---|
+| `INVALID_SHARE` | 422 | Alguna part d'una despesa dividida, o la meva, és `≤ 0` | — |
+| `SHARES_DO_NOT_MATCH` | 422 | Les parts d'una despesa dividida no sumen el total | — |
+| `SPLIT_NOT_FOUND` | 404 | La despesa dividida no existeix o és d'un altre usuari | — |
+| `PART_NOT_FOUND` | 404 | L'usuari no és cap dels participants de la despesa | — |
+| `PART_NOT_RESENDABLE` | 422 | «Tornar a enviar» una part que no està rebutjada ni caducada | — |
+
+`VALIDATION_ERROR`, `RECIPIENT_NOT_FOUND`, `SELF_REQUEST`, `INVALID_AMOUNT`, `AMOUNT_OVER_LIMIT` i `INVALID_CONCEPT` també surten a `POST /api/split-expenses`.
+
 ### Exemples
 
 `INVALID_AMOUNT`:
@@ -691,7 +708,7 @@ Aquest apartat és per al backend. El frontend no en depèn.
 
 ## 7. Propostes del contracte
 
-Totes les propostes d'aquesta llista estan acceptades: es van validar en aprovar-se la PR que les proposava. Les noves continuen a partir de la P86 i porten la marca fins que s'aproven.
+Totes les propostes d'aquesta llista estan acceptades: es van validar en aprovar-se la PR que les proposava. Les noves continuen a partir de la P107 i porten la marca fins que s'aproven.
 
 Propostes de l'Sprint 0 (PR #29):
 
@@ -817,6 +834,20 @@ Propostes de les sol·licituds (T15.1, US-15, PR #238):
 | P81 | [14.5](#145-caducitat) | La caducitat es compta per dies naturals de Madrid: `expiresAt` són les 00:00 del setè dia després del de creació, i `expired` es calcula en llegir. |
 | P82 | [14.6](#146-avís-a-la-bústia-simulada) | L'avís al destinatari és un missatge `money_request` a la bústia simulada. |
 | P83 | [14.8](#148-model-intern) | Seed: l'usuari 1 té una sol·licitud caducada a Huabin i una de pendent a Alicia. |
+
+Propostes de les despeses dividides (T30.1, US-30 i US-31). Comencen a la P98 perquè les P86–P92 són de les sol·licituds rebudes (#357) i les P93–P97, de les dades del compte (#358):
+
+| # | Apartat | Proposta |
+|---|---|---|
+| P98 | [17.1](#171-objecte-splitexpense) | `SplitExpense` amb `id` (`split-01`), `concept`, `total`, `myShare`, `createdAt`, `status`, `people`, `paidCount`, `pendingAmount` i `parts` (`requestId`, `to`, `amount`, `status`). |
+| P99 | [17.2](#172-post-apisplit-expenses) | `POST /api/split-expenses` amb `{ concept, total, myShare, parts }`. La pantalla calcula les parts (també «Parts iguals») i el servidor només comprova que quadren. |
+| P100 | [17.2](#172-post-apisplit-expenses) | Ordre de les validacions: format → `RECIPIENT_NOT_FOUND` → `SELF_REQUEST` → `INVALID_AMOUNT` → `AMOUNT_OVER_LIMIT` → `INVALID_CONCEPT` → `INVALID_SHARE` → `SHARES_DO_NOT_MATCH`. |
+| P101 | [17.2](#172-post-apisplit-expenses) | «Cada part ha de ser més gran que 0» també val per a la meva part: la fila «Jo» és una part. Decisió del PO (26/11, #364). |
+| P102 | [17.3](#173-get-apisplit-expenses) | `GET /api/split-expenses` → `{ items }`, i «Sol·licituds enviades» l'ajunta per data amb `GET /api/money-requests`. |
+| P103 | [17.5](#175-post-apisplit-expensessplitidpartsuseridresend) | «Tornar a enviar» és `POST /api/split-expenses/{splitId}/parts/{userId}/resend`, que crea una sol·licitud nova i respon la `SplitExpense`; si la part no està rebutjada ni caducada, `PART_NOT_RESENDABLE`. |
+| P104 | [17.6](#176-efecte-sobre-les-sol·licituds-de-lapartat-14) | `GET /api/money-requests` ja no inclou les sol·licituds d'una despesa dividida. |
+| P105 | [17.6](#176-efecte-sobre-les-sol·licituds-de-lapartat-14) | Cancel·lar una sol·licitud d'una despesa dividida respon `REQUEST_NOT_FOUND`. Decisió del PO (26/11, #364). |
+| P106 | [17.9](#179-model-intern) | `MoneyRequest` té un camp nou `split_id`, i el seed no té cap despesa dividida. |
 
 ---
 
@@ -3020,7 +3051,7 @@ Content-Type: application/json
 
 ### 14.3 `GET /api/money-requests`
 
-Les sol·licituds **enviades** per l'usuari de la sessió (US-15). Les rebudes són de la US-16.
+Les sol·licituds **enviades** per l'usuari de la sessió (US-15), sense les que formen part d'una despesa dividida ([17.6](#176-efecte-sobre-les-sol·licituds-de-lapartat-14)). Les rebudes són de la US-16.
 
 **Resposta `200`:** `{ items }`, una llista de `MoneyRequest`.
 
@@ -3116,3 +3147,234 @@ Aquest apartat és per al backend. El frontend no en depèn.
   | `req-02` | Alicia (`usr-03`) | 25,00 € (`2500`) | El sopar de divendres | ahir, 19:30 | `pending` |
 
   Les dates són relatives a avui, com les dels moviments del seed. Una sol·licitud nova és, per tant, `req-03`.
+
+
+---
+
+## 17. Despeses dividides (US-30 i US-31)
+
+Dividir una despesa en sol·licituds de diners (US-30) i seguir qui ha pagat la seva part (US-31). Tasca: T30.1 (issue #326). Les pantalles, els textos i els mockups són a les històries (`docs/us/US-30.md` i `docs/us/US-31.md`); les proves d'acceptació, a [`docs/proves-despeses.md`](proves-despeses.md).
+
+| Tasca | Què implementa d'aquest apartat |
+|---|---|
+| T30.2 (backend, #327) | [17.1](#171-objecte-splitexpense), [17.2](#172-post-apisplit-expenses), el canvi de [17.6](#176-efecte-sobre-les-sol·licituds-de-lapartat-14) i el model de [17.9](#179-model-intern) |
+| T30.3 (frontend, #328) | «Dividir una despesa» a «Demanar diners» (`/requests/new`) |
+| T31.1 (backend, #330) | [17.3](#173-get-apisplit-expenses), [17.4](#174-get-apisplit-expensessplitid), [17.5](#175-post-apisplit-expensessplitidpartsuseridresend) i els estats de [17.7](#177-estats) |
+| T31.2 (frontend, #331) | La targeta de la despesa dividida a «Sol·licituds enviades» i el seu detall |
+
+Totes les rutes són **protegides** ([8.2](#82-sessió)). Una despesa dividida és un grup de sol·licituds de diners de l'[apartat 14](#14-sol·licituds-de-diners-us-15), una per participant: cada participant la veu i la paga o la rebutja com qualsevol altra sol·licitud rebuda (US-16, US-39 i US-40). No mou cap diner.
+
+### 17.1 Objecte `SplitExpense`
+
+L'objecte que pinten la targeta de «Sol·licituds enviades» i el detall (US-31), i l'èxit de la US-30. (P98)
+
+| Camp | Tipus | Notes |
+|---|---|---|
+| `id` | string | Identificador opac amb el format `split-01`. |
+| `concept` | string | El concepte comú de totes les sol·licituds. |
+| `total` | integer | Import total de la despesa, en cèntims, comptant la meva part. |
+| `myShare` | integer | La meva part, en cèntims. No genera cap sol·licitud. |
+| `createdAt` | string | Quan es va dividir, ISO 8601 amb el desplaçament de Madrid. |
+| `status` | `"pending"` \| `"completed"` \| `"closed"` | «Pendent», «Completada» o «Tancada» ([17.7](#177-estats)). |
+| `people` | integer | Persones de la despesa, comptant-me a mi: «Despesa dividida · 4 persones». |
+| `paidCount` | integer | Participants que han pagat: «1 de 3 han pagat». |
+| `pendingAmount` | integer | Suma de les parts `pending`, en cèntims: «Pendent: 30,00 €». Les rebutjades i caducades no hi compten. |
+| `parts` | llista | Una per participant, en l'ordre en què es van afegir. |
+
+Cada element de `parts`:
+
+| Camp | Tipus | Notes |
+|---|---|---|
+| `requestId` | string | La sol·licitud **més recent** d'aquell participant: després de «Tornar a enviar», la nova ([17.5](#175-post-apisplit-expensessplitidpartsuseridresend)). |
+| `to` | `UserSummary` | El participant ([13.1](#131-objecte-usersummary)). |
+| `amount` | integer | La seva part, en cèntims. |
+| `status` | `"pending"` \| `"paid"` \| `"rejected"` \| `"expired"` | L'estat de la seva sol·licitud, calculat en llegir ([14.5](#145-caducitat)). |
+
+- El frontend no calcula mai `status`, `paidCount` ni `pendingAmount`: pinta el que rep.
+- `paidCount` i «de 3» es compten sobre els participants; jo no hi compto.
+
+```json
+{
+  "id": "split-01",
+  "concept": "Sopar d'aniversari",
+  "total": 6000,
+  "myShare": 1500,
+  "createdAt": "2026-11-15T21:15:00+01:00",
+  "status": "pending",
+  "people": 4,
+  "paidCount": 0,
+  "pendingAmount": 4500,
+  "parts": [
+    { "requestId": "req-07", "to": { "id": "usr-05", "name": "Izan", "username": "izanfarreny47" }, "amount": 1500, "status": "pending" },
+    { "requestId": "req-08", "to": { "id": "usr-03", "name": "Alicia", "username": "aliciaa415" }, "amount": 1500, "status": "pending" },
+    { "requestId": "req-09", "to": { "id": "usr-08", "name": "Martí", "username": "sudo-itramplay" }, "amount": 1500, "status": "pending" }
+  ]
+}
+```
+
+Els ids de les sol·licituds dels exemples suposen el seed de [15.8](#158-model-intern): la primera sol·licitud nova és `req-07`.
+
+### 17.2 `POST /api/split-expenses`
+
+Divideix una despesa: crea una sol·licitud de diners per a cada participant, amb la seva part i el concepte comú (US-30). (P99, P100)
+
+**Cos de la petició:** `{ concept, total, myShare, parts }`
+
+| Camp | Tipus | Descripció |
+|---|---|---|
+| `concept` | string | Obligatori, entre 1 i 140 caràcters després de treure els espais dels extrems, com a [14.2](#142-post-apimoney-requests). |
+| `total` | integer | Import total en cèntims, comptant la meva part. Enter JSON estricte (P5). |
+| `myShare` | integer | La meva part, en cèntims. |
+| `parts` | llista | D'1 a 9 elements `{ toUserId, amount }`, sense repetir cap `toUserId`. |
+
+Les parts les calcula la pantalla i les envia totes, també amb «Parts iguals». La regla de «Parts iguals» és: cada part és `total / persones` arrodonit cap avall, i els cèntims que sobren van a `myShare` (60,00 € entre 4 → 15,00 € cadascú; 100,00 € entre 3 → 33,33 € cada participant i 33,34 € per a mi). El servidor no la torna a aplicar: només comprova que les parts quadren.
+
+**Resposta `201`:** la `SplitExpense` creada ([17.1](#171-objecte-splitexpense)), amb totes les parts `pending`. Amb aquesta resposta, la pantalla mostra «Has enviat 3 sol·licituds» (el nombre de `parts`) i «Pendent de cobrar: 45,00 €» (`pendingAmount`).
+
+**Ordre de les validacions.** S'aturen al primer error:
+
+1. Format del cos: falta algun camp, no és del tipus de la taula, `parts` és buida, té més de 9 elements o repeteix un `toUserId` → `VALIDATION_ERROR`.
+2. Algun participant no existeix, està pendent de verificar o l'id té un format qualsevol → `RECIPIENT_NOT_FOUND` (`404`).
+3. Algun participant és l'usuari de la sessió → `SELF_REQUEST` (`422`).
+4. `total ≤ 0` → `INVALID_AMOUNT`.
+5. `total > 100000000` (1.000.000,00 €) → `AMOUNT_OVER_LIMIT`.
+6. Concepte buit o de més de 140 caràcters → `INVALID_CONCEPT`.
+7. Alguna part, o `myShare`, és `≤ 0` → `INVALID_SHARE` (`422`, «Cada part ha de ser més gran que 0.»). La fila «Jo» també és una part (P101, decisió del PO).
+8. `myShare` + la suma de `parts` no és `total` → `SHARES_DO_NOT_MATCH` (`422`, «La suma de les parts ha de ser igual al total.»).
+
+Si una validació falla, no es desa res ni s'envia cap avís.
+
+**Regles:**
+
+- **Tot o res.** Es creen la despesa dividida, totes les sol·licituds i tots els avisos, o res (US-30).
+- Cada sol·licitud és com les de [14.2](#142-post-apimoney-requests): `pending`, amb la data de la despesa, el concepte comú i la part del participant, i caduca als 7 dies.
+- Cada participant rep l'avís `money_request` de [14.6](#146-avís-a-la-bústia-simulada): «Usuari demo et demana 15,00 €: Sopar d'aniversari.».
+
+**Petició:**
+
+```http
+POST /api/split-expenses HTTP/1.1
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "concept": "Sopar d'aniversari",
+  "total": 6000,
+  "myShare": 1500,
+  "parts": [
+    { "toUserId": "usr-05", "amount": 1500 },
+    { "toUserId": "usr-03", "amount": 1500 },
+    { "toUserId": "usr-08", "amount": 1500 }
+  ]
+}
+```
+
+**Resposta `201`:** la despesa dividida de l'exemple de [17.1](#171-objecte-splitexpense).
+
+### 17.3 `GET /api/split-expenses`
+
+Les despeses dividides de l'usuari de la sessió (US-31). (P102)
+
+**Resposta `200`:** `{ items }`, una llista de `SplitExpense`, de la més recent a la més antiga per `createdAt`; si dues coincideixen, primer la creada més tard (P4). Sense paginació, com a [14.3](#143-get-apimoney-requests). Sense cap despesa dividida → `items: []`.
+
+«Sol·licituds enviades» demana aquesta ruta i `GET /api/money-requests` ([14.3](#143-get-apimoney-requests)) i les ajunta per data, la més nova a dalt: les sol·licituds d'una despesa dividida ja no surten soles ([17.6](#176-efecte-sobre-les-sol·licituds-de-lapartat-14)).
+
+### 17.4 `GET /api/split-expenses/{splitId}`
+
+El detall d'una despesa dividida (US-31).
+
+**Resposta `200`:** la `SplitExpense` ([17.1](#171-objecte-splitexpense)).
+
+**Errors:** la despesa no existeix, és d'un altre usuari o l'id té un format qualsevol → `SPLIT_NOT_FOUND` (`404`). La pantalla mostra «S'ha produït un error inesperat. Torna-ho a provar més tard.» amb «Reintentar» (US-31).
+
+### 17.5 `POST /api/split-expenses/{splitId}/parts/{userId}/resend`
+
+«Tornar a enviar» la part d'un participant que l'ha rebutjada o a qui li ha caducat (US-31). Crea una sol·licitud nova, amb la mateixa part i el mateix concepte. (P103)
+
+**Cos de la petició:** cap. `userId` és l'`id` de l'`UserSummary` del participant (`usr-08`).
+
+**Resposta `201`:** la `SplitExpense` actualitzada, on aquella part ja té el `requestId` nou i `status: "pending"`. La pantalla mostra «Sol·licitud enviada a Martí.».
+
+**Ordre de les validacions:**
+
+1. La despesa no existeix, és d'un altre usuari o l'id té un format qualsevol → `SPLIT_NOT_FOUND` (`404`).
+2. `userId` no és cap dels participants → `PART_NOT_FOUND` (`404`).
+3. La sol·licitud més recent d'aquell participant no és `rejected` ni `expired` → `PART_NOT_RESENDABLE` (`422`, «Només es pot tornar a enviar una part rebutjada o caducada.»).
+
+**Regles:**
+
+- La sol·licitud nova és com les de [14.2](#142-post-apimoney-requests): `pending`, amb la data d'ara, i caduca als 7 dies. Té un id nou.
+- La rebutjada o caducada no canvia d'estat: es queda tal com estava, però el detall ja mostra la nova (US-31).
+- El participant rep l'avís `money_request` de [14.6](#146-avís-a-la-bústia-simulada).
+- La sol·licitud nova i l'avís van junts: tot o res.
+- Dos «Tornar a enviar» alhora de la mateixa part: un respon `201` i l'altre `PART_NOT_RESENDABLE`.
+
+### 17.6 Efecte sobre les sol·licituds de l'apartat 14
+
+- `GET /api/money-requests` ([14.3](#143-get-apimoney-requests)) **ja no inclou** les sol·licituds que formen part d'una despesa dividida: surten dins de la seva `SplitExpense` (US-31). (P104)
+- `POST /api/money-requests/{requestId}/cancel` ([14.4](#144-post-apimoney-requestsrequestidcancel)) amb una sol·licitud d'una despesa dividida respon `REQUEST_NOT_FOUND`, com si no existís: les parts no es poden cancel·lar (US-31), i la pantalla no les mostra soles. (P105, decisió del PO)
+- Per a qui rep la sol·licitud, no canvia res: la veu a «Sol·licituds rebudes» (US-16) i la paga o la rebutja com qualsevol altra (US-39 i US-40).
+
+### 17.7 Estats
+
+L'estat de la despesa es calcula en cada lectura a partir de la sol·licitud més recent de cada participant (US-31):
+
+| `status` | Quan | Etiqueta |
+|---|---|---|
+| `pending` | Alguna part és `pending` | «Pendent» (groc) |
+| `completed` | Totes les parts són `paid` | «Completada» (verd) |
+| `closed` | Cap part és `pending`, i alguna és `rejected` o `expired` | «Tancada» (gris) |
+
+Exemple de la US-31 (60,00 € entre Izan, Alicia, Martí i jo):
+
+| Què passa | `paidCount` | `pendingAmount` | `status` |
+|---|---|---|---|
+| En dividir-la | 0 | 4500 | `pending` |
+| Izan paga | 1 | 3000 | `pending` |
+| Martí la rebutja | 1 | 1500 | `pending` |
+| Alicia paga | 2 | 0 | `closed` |
+| Torno a enviar a Martí | 2 | 1500 | `pending` |
+| Martí paga | 3 | 0 | `completed` |
+
+- `expired` es calcula com a [14.5](#145-caducitat); `status` no es desa mai.
+- Un cop `completed`, no pot tornar enrere: una sol·licitud pagada no canvia més.
+
+### 17.8 Errors
+
+Els codis són a la taula de l'[apartat 5](#taula-de-codis). Els missatges són orientatius: el frontend decideix a partir del `code`.
+
+| `code` | HTTP | Ruta | Quan |
+|---|---|---|---|
+| `VALIDATION_ERROR` | 422 | `POST /api/split-expenses` | Cos mal format, sense parts, més de 9 o amb un participant repetit |
+| `RECIPIENT_NOT_FOUND` | 404 | `POST /api/split-expenses` | Algun participant no existeix o està pendent de verificar |
+| `SELF_REQUEST` | 422 | `POST /api/split-expenses` | Algun participant és l'usuari de la sessió |
+| `INVALID_AMOUNT` | 422 | `POST /api/split-expenses` | `total ≤ 0` |
+| `AMOUNT_OVER_LIMIT` | 422 | `POST /api/split-expenses` | `total > 100000000` |
+| `INVALID_CONCEPT` | 422 | `POST /api/split-expenses` | Concepte buit o de més de 140 caràcters |
+| `INVALID_SHARE` | 422 | `POST /api/split-expenses` | Alguna part o `myShare` és `≤ 0` |
+| `SHARES_DO_NOT_MATCH` | 422 | `POST /api/split-expenses` | Les parts no sumen el total |
+| `SPLIT_NOT_FOUND` | 404 | `GET /api/split-expenses/{splitId}`, `resend` | No existeix o és d'un altre usuari |
+| `PART_NOT_FOUND` | 404 | `resend` | L'usuari no és cap dels participants |
+| `PART_NOT_RESENDABLE` | 422 | `resend` | La part no està rebutjada ni caducada |
+
+Textos de les pantalles de US-30 i US-31, en vermell:
+
+| `code` | Text |
+|---|---|
+| `INVALID_SHARE` | «Cada part ha de ser més gran que 0.» (nou) |
+| `SHARES_DO_NOT_MATCH` | «La suma de les parts ha de ser igual al total.» (nou) |
+| `SPLIT_NOT_FOUND` | «No hem trobat aquesta despesa dividida.» (nou). La pantalla mostra el missatge genèric amb «Reintentar» (US-31) |
+| `PART_NOT_FOUND` | «Aquest usuari no forma part de la despesa.» (nou). La pantalla mostra el missatge genèric |
+| `PART_NOT_RESENDABLE` | «Només es pot tornar a enviar una part rebutjada o caducada.» (nou). La pantalla torna a carregar el detall: la part ja no té «Tornar a enviar» |
+| La resta | Els de [14.7](#147-errors), o «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» |
+
+La pantalla ja no deixa enviar una despesa amb parts a 0 o que no quadren («Enviar sol·licituds» desactivat, US-30); el servidor ho torna a comprovar.
+
+### 17.9 Model intern
+
+Aquest apartat és per al backend. El frontend no en depèn.
+
+- **`SplitExpense`**: `id` (`split-01`, d'un comptador), `requester_id`, `concept`, `total`, `my_share`, `created_at`, `seq` (desempat de P4) i la llista ordenada dels participants amb la seva part. (P106)
+- **`MoneyRequest`** ([14.8](#148-model-intern)) té un camp nou, `split_id`: `null` per a les sol·licituds normals, i l'id de la despesa per a les seves. «Tornar a enviar» crea una sol·licitud nova amb el mateix `split_id`; la més recent d'un participant és la de `seq` més gran.
+- **Amb Firestore:** col·lecció `split_expenses`, un document per despesa, i el comptador `next_split_expense_number` al document `counters`. Crear la despesa, les sol·licituds i els avisos va dins d'una **transacció**; «Tornar a enviar», dins d'una altra. En memòria, el mateix codi amb el pany.
+- `POST /api/dev/reset` les esborra: el seed no té cap despesa dividida.
