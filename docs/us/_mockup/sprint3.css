@@ -1,0 +1,65 @@
+/* sprint3.css — estil comú dels mockups de l'Sprint 3 (mateix aspecte que l'app de develop, 23/11/2026) */
+:root{--bg:#f7f9fc;--surface:#fff;--text:#1a2233;--muted:#6c7a96;--border:#e6ebf4;--primary:#4f46e5;--primary-soft:#ecebfd;--income:#16a34a;--expense:#dc2626;--radius:12px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--text);font-size:16px;line-height:1.45}
+.screen{width:390px;height:844px;overflow:hidden;position:relative;background:var(--bg)}
+.appbar{display:flex;align-items:center;gap:16px;padding:16px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
+.back{padding:6px 12px;border:1px solid var(--primary);border-radius:var(--radius);color:var(--primary);font-size:14px;white-space:nowrap}
+.title{font-size:20px;font-weight:700}
+.burger{margin-left:auto;color:var(--muted);font-size:22px;line-height:1}
+.content{padding:20px;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--surface);border-radius:var(--radius);padding:16px 20px}
+.card.bordered{border:1px solid var(--border)}
+.muted{color:var(--muted)} .small{font-size:14px} .bold{font-weight:700}
+.btn{display:block;width:100%;text-align:center;border-radius:var(--radius);padding:12px;font-weight:600;font-size:16px;border:1px solid transparent}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary.disabled{background:#c7c4f5}
+.btn-grey.disabled{background:#d5dbe8;color:#fff}
+.btn-outline{background:#fff;border-color:var(--border);color:var(--text)}
+.btn-danger-text{background:#fff;border-color:var(--border);color:var(--expense)}
+.btn-danger{background:var(--expense);color:#fff}
+.btn-row{display:flex;gap:10px} .btn-row .btn{flex:1}
+.req{display:flex;justify-content:space-between;gap:12px}
+.req .who{display:flex;flex-direction:column;color:var(--muted);font-size:15px}
+.req .who .name{color:var(--text);font-size:16px}
+.req .right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.amount{font-weight:700;font-variant-numeric:tabular-nums}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:700;background:#e9edf5;color:var(--text)}
+.badge.pending{background:#fff4d6;color:#8a5a00} .badge.paid{background:#dcfce7;color:#166534} .badge.rejected{background:#fee2e2;color:#991b1b} .badge.expired{background:#e9edf5;color:#475569}
+.actions-in{display:flex;gap:10px;margin-top:14px} .actions-in .btn{flex:1;padding:10px}
+.empty{text-align:center;color:var(--muted);padding:60px 20px}
+.empty .icon{font-size:36px;opacity:.5;margin-bottom:8px}
+.overlay{position:absolute;inset:0;background:rgba(26,34,51,.45);display:grid;place-items:center;padding:24px}
+.dialog{background:#fff;border-radius:var(--radius);padding:22px 20px;width:100%}
+.dialog h3{margin:0 0 8px;font-size:18px} .dialog p{margin:0 0 18px;color:var(--muted)}
+.menu{position:absolute;top:58px;right:14px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 24px rgba(26,34,51,.12);min-width:220px;padding:6px 0}
+.menu div{padding:10px 16px} .menu .hl{background:var(--primary-soft);color:var(--primary);font-weight:600} .menu .sep{border-top:1px solid var(--border);margin:4px 0;padding:0}
+.kv{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--border)} .kv:last-child{border-bottom:none}
+.kv .k{color:var(--muted)} .kv .v{text-align:right}
+.big{font-size:32px;font-weight:700;font-variant-numeric:tabular-nums}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--primary-soft);color:var(--primary);font-weight:700;display:grid;place-items:center;font-size:14px;flex:none}
+.person{display:flex;align-items:center;gap:12px} .person .u{color:var(--muted);font-size:13px}
+.error{color:var(--expense);font-size:14px;font-weight:600}
+.success{color:var(--income);font-weight:700}
+.tick{background:#fff;border-radius:var(--radius);padding:36px 20px;text-align:center;margin-top:60px}
+.tick .circle{width:64px;height:64px;border-radius:50%;background:var(--income);color:#fff;font-size:34px;display:grid;place-items:center;margin:0 auto 14px}
+.tick .t{font-size:18px;font-weight:700} .tick .s{color:var(--muted);margin-top:4px}
+.field-label{font-size:14px;color:var(--muted);margin-bottom:6px;display:block}
+.field{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+.select{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;display:flex;justify-content:space-between}
+.options{background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-top:4px;overflow:hidden}
+.options div{padding:10px 14px;border-bottom:1px solid var(--border)} .options div:last-child{border:none} .options .sel{background:var(--primary-soft);color:var(--primary);font-weight:600}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.keypad span{background:#fff;border-radius:var(--radius);padding:12px;text-align:center;font-size:20px;font-weight:600}
+.toast{position:absolute;left:20px;right:20px;top:72px;background:var(--primary);color:#fff;border-radius:var(--radius);padding:12px 16px;font-weight:700;box-shadow:0 8px 24px rgba(79,70,229,.3)}
+.snack{position:absolute;left:20px;right:20px;bottom:28px;background:var(--text);color:#fff;border-radius:var(--radius);padding:12px 16px;text-align:center}
+.progress{height:10px;background:#e9edf5;border-radius:999px;overflow:hidden} .progress span{display:block;height:100%;background:var(--primary)} .progress.done span{background:var(--income)}
+.progress.sm{height:6px}
+.row{display:flex;justify-content:space-between;align-items:center;padding:10px 0}
+.row .l{display:flex;flex-direction:column} .row .sub{color:var(--muted);font-size:13px}
+.inc{color:var(--income);font-weight:700} .exp{color:var(--expense);font-weight:700}
+.center{text-align:center}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.5px}
+.chip{display:inline-block;padding:6px 12px;border:1px solid var(--border);border-radius:999px;background:#fff;font-size:14px}
+.chip.sel{border-color:var(--primary);background:var(--primary-soft);color:var(--primary);font-weight:600}
+.switch-row{display:flex;justify-content:space-between;align-items:center}
