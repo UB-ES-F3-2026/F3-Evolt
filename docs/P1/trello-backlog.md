@@ -19,7 +19,7 @@
 | **P5** | Social | US-13, US-15, US-16, US-39, US-40, US-30…US-32 |
 | **P6** | Transferències + Multidivisa | US-12, US-14, US-21, US-41, US-25…US-29, US-42 |
 
-**Sincronitzat amb el Trello el 25/11/2026** (backlog de l'Sprint 3: 11 històries Fina a To Do, 9 Mitjana i les èpiques). Les històries fetes porten aquí només la descripció i els criteris; el detall complet és a `docs/us/US-XX.md`. Si canvies una card al Trello, canvia-la també aquí.
+**Sincronitzat amb el Trello el 26/11/2026** (backlog de l'Sprint 3: 20 històries Fina a To Do i les èpiques; les US-30 a US-38 han passat de Mitjana a Fina el 26/11). Les històries fetes porten aquí només la descripció i els criteris; el detall complet és a `docs/us/US-XX.md`. Si canvies una card al Trello, canvia-la també aquí.
 
 ## Perfils d'usuari
 
@@ -218,41 +218,48 @@ La recàrrega no suma XP
 
 ## US-36 Editar el perfil
 
-**Labels:** Mitjana, P1
+**Labels:** Fina, Mitjana, P1
 
 **Descripció:**
 
 ```
 COM: client estàndard
-VULL: editar les meves dades
-PER: mantenir-les al dia.
+VULL: canviar el meu nom visible i el meu email o telèfon
+PER: mantenir les meves dades al dia.
 
 Perfil: client estàndard.
 
 Assumptes:
 - «Perfil» és la pantalla de la US-24
-- Canviar l'email o el telèfon demana verificar-los amb un codi, com a la US-2
-- El nom legal i la data de naixement no es poden editar
+- L'email o el telèfon és el que faig servir per entrar (US-3): canviar-lo demana un codi com a la US-2
+- No hi ha foto (l'avatar continua sent les inicials) ni adreça: l'app no desa aquestes dades (decisió del PO, 26/11)
 
 Estimació: SP 3 · VP 4 · Prioritat Mitjana
 
-Èpica: EP-14. Granularitat mitjana: el detall de pantalles i missatges es fa quan entri en un sprint.
+Èpica: EP-14
+
+Revisió del 26/11 (TPO.3 #325): de Mitjana a Fina. Sense foto, adreça, nom legal ni data de naixement (l'app no els desa); el canvi d'email o telèfon es verifica amb codi.
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-A «Perfil» (US-24) hi ha «Editar el perfil», on puc canviar el nom visible i la foto
-Per canviar l'email o el telèfon he de posar el codi que s'envia a la dada nova (com a la US-2)
-El nom legal i la data de naixement es veuen però no es poden editar
-Si l'email o el telèfon ja els fa servir un altre usuari surt «Aquest email ja està registrat.» o «Aquest telèfon ja està registrat.»
+A «Perfil» (US-24) hi ha la fila «Editar el perfil ›», que obre «Editar el perfil» (capçalera «← Perfil» · «Editar el perfil») amb l'avatar d'inicials, «Nom visible», «@usuari» (gris, no editable) i «Email o telèfon» amb el botó «Canviar»
+«Nom visible» admet d'1 a 40 caràcters. Buit: «El nom no pot estar buit.» i «Desar» desactivat. «Desar» queda desactivat mentre el nom no canvia
+En desar surt «Perfil actualitzat.», torna a «Perfil» i el nom nou surt a tot arreu on surt el nom (Inici, cerca de la US-13, avisos)
+«Canviar» obre «Canviar l'email o el telèfon» amb una casella i «Enviar codi». Si ja és d'un altre compte surt «Aquest email o telèfon ja té un compte.»; si és el mateix que tinc, «Aquest ja és el teu email o telèfon.»
+«Enviar codi» envia un codi de 6 xifres a la dada nova i obre «Verifica'l» amb les 6 caselles, com a la US-2: caduca als 10 minuts, «Envia'm un codi nou» i, amb un codi dolent, «El codi no és correcte o ha caducat.»
+Amb el codi correcte surt «Email actualitzat.» (o «Telèfon actualitzat.») i torna a «Editar el perfil». Des d'ara s'entra amb la dada nova; l'antiga ja no serveix
+Després de 5 codis incorrectes, les caselles es bloquegen i surt «Has fet massa intents. Demana un codi nou», com a la US-2. La dada antiga continua funcionant
+«← Perfil» torna sense desar i sense preguntar; un nom escrit i no desat es perd
+Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» sota el botó; no canvia cap dada
 ```
 
 ---
 
 ## US-37 Canviar la contrasenya
 
-**Labels:** Mitjana, P1
+**Labels:** Fina, Mitjana, P1
 
 **Descripció:**
 
@@ -264,28 +271,36 @@ PER: mantenir el compte segur.
 Perfil: client estàndard amb la sessió iniciada.
 
 Assumptes:
-- La nova contrasenya segueix les regles de la US-1
+- La contrasenya nova segueix les regles de la US-1
 - Cal posar la contrasenya actual
+- En canviar-la es tanquen les altres sessions, com a la US-4
 
 Estimació: SP 2 · VP 5 · Prioritat Mitjana
 
-Èpica: EP-14. Granularitat mitjana: el detall de pantalles i missatges es fa quan entri en un sprint.
+Èpica: EP-14
+
+Revisió del 26/11 (TPO.3 #325): de Mitjana a Fina. Missatge de no coincidència de la US-1; es manté aquesta sessió i es tanquen les altres.
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-A «Perfil» hi ha «Canviar la contrasenya», amb la contrasenya actual, la nova i repetir la nova
-La nova ha de complir les regles de la US-1; si no, surt el mateix missatge que al registre
-Si l'actual no és correcta surt «La contrasenya actual no és correcta.» i no es canvia res
-En canviar-la surt «Contrasenya canviada.» i a la bústia arriba un avís de seguretat
+A «Perfil» hi ha la fila «Canviar la contrasenya ›», que obre «Canviar la contrasenya» (capçalera «← Perfil») amb «Contrasenya actual», «Contrasenya nova» (a sota, en gris, «Mínim 8 caràcters, amb una majúscula i un número.»), «Repeteix la contrasenya nova» i el botó lila «Canviar la contrasenya»
+El botó queda desactivat fins que les tres caselles estan plenes
+Si la nova no compleix les regles surt sota la casella «La contrasenya ha de tenir 8 caràcters, una majúscula i un número.»; si les dues noves no coincideixen, «Les contrasenyes no coincideixen»; si la nova és igual que l'actual, «La contrasenya nova ha de ser diferent de l'actual.»
+Si l'actual no és correcta surt «La contrasenya actual no és correcta.», no canvia res i la casella «Contrasenya actual» es buida
+Després de 5 contrasenyes actuals incorrectes seguides es tanca la sessió i l'app torna a «Inicia sessió»
+En canviar-la: torna a «Perfil» i a baix surt durant 2 s «Contrasenya canviada.». Aquesta sessió continua oberta i es tanquen les dels altres dispositius
+A la bústia arriba «La contrasenya d'Evolt s'ha canviat. Si no has estat tu, recupera-la amb «He oblidat la contrasenya».»
+«← Perfil» torna sense canviar res i sense preguntar
+Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» sota el botó; la contrasenya no canvia
 ```
 
 ---
 
 ## US-38 Preferències de notificacions
 
-**Labels:** Mitjana, P1
+**Labels:** Fina, Baixa, P1
 
 **Descripció:**
 
@@ -297,21 +312,28 @@ PER: no rebre avisos que no m'interessen.
 Perfil: client estàndard.
 
 Assumptes:
+- Els avisos són els de la bústia (email o SMS simulats)
+- Per defecte, tots activats
 - Els avisos de seguretat no es poden desactivar
-- Les preferències es guarden al servidor
 
 Estimació: SP 2 · VP 3 · Prioritat Baixa
 
-Èpica: EP-14. Granularitat mitjana: el detall de pantalles i missatges es fa quan entri en un sprint.
+Èpica: EP-14
+
+Revisió del 26/11 (TPO.3 #325): de Mitjana a Fina. Tipus: Pagaments, Sol·licituds, Estalvi i Pressupostos; Seguretat sempre activa; tots activats per defecte.
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-A «Perfil» hi ha «Notificacions», amb un interruptor per tipus: pagaments, sol·licituds, guardioles i gamificació
-Si desactivo un tipus, aquests avisos ja no arriben a la bústia
-Els avisos de seguretat (contrasenya i inici de sessió) surten sense interruptor i sempre arriben
+A «Perfil» hi ha la fila «Notificacions ›», que obre «Notificacions» (capçalera «← Perfil») amb un interruptor per tipus i, a sota de cada nom, en gris, què inclou
+Tipus: «Pagaments» (enviaments fets i rebuts, i transferències d'altres bancs), «Sol·licituds» (et demanen diners, et rebutgen una sol·licitud), «Estalvi» (aportacions automàtiques i invitacions a guardioles compartides) i «Pressupostos» (avisos del 80 % i del 100 %)
+A sota, la fila «Seguretat» (codis, compte bloquejat, recuperar i canviar la contrasenya) amb «Sempre activa» en gris, sense interruptor
+Un usuari nou té tots els interruptors activats
+En tocar un interruptor canvia i es desa sol, i a baix surt durant 2 s «Preferències desades.»; no hi ha botó «Desar»
+Amb un tipus desactivat, aquells avisos ja no arriben a la bústia; els que ja hi eren es queden
 Les preferències es guarden al servidor: no canvien en tancar la sessió ni des d'un altre dispositiu
+Si no es pot desar, l'interruptor torna a la posició d'abans i surt «No s'han pogut desar les preferències. Torna-ho a provar.»
 ```
 
 ---
@@ -351,7 +373,7 @@ PER: adaptar l'app a mi.
 
 Perfil: client estàndard.
 
-Històries (Mitjana, 24/11): US-36 Editar el perfil (inclou canviar l'email o el telèfon), US-37 Canviar la contrasenya i US-38 Preferències de notificacions.
+Històries (Fina, 26/11): US-36 Editar el perfil (inclou canviar l'email o el telèfon), US-37 Canviar la contrasenya i US-38 Preferències de notificacions.
 
 Estimació: 7 SP (suma de les històries) · Prioritat Mitjana
 ```
@@ -359,9 +381,9 @@ Estimació: 7 SP (suma de les històries) · Prioritat Mitjana
 **Checklist Acceptance Criteria:**
 
 ```
-Puc editar el nom visible, la foto i l'adreça.
+Puc editar el nom visible.
 Per canviar l'email o el telèfon he de verificar la nova dada amb un codi.
-El nom legal i la data de naixement no es poden editar des de l'app.
+No hi ha foto, adreça, nom legal ni data de naixement: l'app no desa aquestes dades (decisió del PO, 26/11).
 Puc canviar la contrasenya introduint l'actual.
 Puc activar o desactivar cada tipus de notificació, excepte les de seguretat.
 ```
@@ -892,7 +914,7 @@ Hi ha l'enllaç "Reportar un problema", que obre un formulari amb el moviment ja
 
 ## US-33 Categoritzar moviments
 
-**Labels:** Mitjana, Moviments, P4
+**Labels:** Fina, Mitjana, Moviments, P4
 
 **Descripció:**
 
@@ -904,29 +926,35 @@ PER: saber en què gasto.
 Perfil: client estàndard amb moviments.
 
 Assumptes:
-- Categories fixes: Menjar, Transport, Oci, Compres, Casa i Altres
-- La categoria automàtica surt de paraules clau del concepte; sense cap coincidència, «Altres» (resol el dubte de l'EP-10 sobre les despeses sense comerç)
-- La categoria es pot canviar a mà
+- Categories fixes: Menjar, Transport, Compres, Casa, Oci i Altres
+- Només tenen categoria les despeses del compte principal; els ingressos i les aportacions a guardioles, no
+- La categoria automàtica surt primer de paraules clau del concepte i, si no n'hi ha cap, de la icona del moviment
 
 Estimació: SP 3 · VP 5 · Prioritat Mitjana
 
-Èpica: EP-10. Granularitat mitjana: el detall de pantalles i missatges es fa quan entri en un sprint.
+Èpica: EP-10
+
+Revisió del 26/11 (TPO.2 #324): de Mitjana a Fina. Llista de paraules clau per categoria i pas de les icones del seed a categories.
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-Cada despesa té una categoria de la llista fixa: Menjar, Transport, Oci, Compres, Casa i Altres
-La categoria es posa sola segons paraules clau del concepte (per exemple «sopar» → Menjar); si no en coincideix cap, «Altres»
-Al detall del moviment (US-11) puc canviar la categoria, i el canvi es guarda
-A «Moviments» puc filtrar per categoria, junt amb els filtres de la US-10
+Cada despesa del compte principal té una categoria de la llista fixa: Menjar, Transport, Compres, Casa, Oci i Altres. Els ingressos i les aportacions a guardioles no en tenen
+La categoria es posa sola amb aquestes paraules clau del concepte (sense distingir majúscules ni accents): Menjar → restaurant, sopar, dinar, esmorzar, menú, cafeteria, cafè, fruiteria; Transport → taxi, tren, bitllet, abonament, bus, metro, gasolina; Compres → supermercat, botiga, llibreria, roba; Casa → lloguer, llum, aigua, gas, internet; Oci → cinema, gimnàs, concert, entrades
+Si el concepte no té cap paraula clau, la categoria surt de la icona: food → Menjar, transport → Transport, shopping → Compres, i la resta (transfer, other) → Altres
+A «Detall del moviment» (US-11), sota la contrapart, hi ha la fila «Categoria» amb el nom en lila i «▾». En tocar-la s'obre la llista de les 6 categories amb la triada marcada; en triar-ne una es tanca, es desa i surt «Categoria desada.»
+Una categoria triada a mà no la torna a canviar la regla automàtica
+A «Moviments», sota la cerca de la US-10, hi ha una fila de botons: «Totes» (per defecte) i les 6 categories. En triar-ne una, la llista només mostra les despeses d'aquella categoria, junt amb les dates, el tipus i la cerca de la US-10
+«Esborrar filtres» (US-10) també torna la categoria a «Totes». Si no hi ha cap moviment que compleixi els filtres surt «No hi ha resultats»
+Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» sota el botó en desar la categoria; es queda la que hi havia
 ```
 
 ---
 
 ## US-34 Despeses del mes per categoria
 
-**Labels:** Mitjana, Moviments, P4
+**Labels:** Fina, Mitjana, Moviments, P4
 
 **Descripció:**
 
@@ -938,28 +966,35 @@ PER: entendre on van els meus diners.
 Perfil: client estàndard amb moviments.
 
 Assumptes:
-- Depèn de la US-33
-- Només compten les despeses, no els ingressos ni els moviments entre guardioles
+- Depèn de la US-33 (categories)
+- Només compten les despeses amb categoria (no els ingressos ni les aportacions a guardioles)
+- Es pot mirar el mes actual i els 5 anteriors
 
 Estimació: SP 3 · VP 5 · Prioritat Mitjana
 
-Èpica: EP-10. Granularitat mitjana: el detall de pantalles i missatges es fa quan entri en un sprint.
+Èpica: EP-10
+
+Revisió del 26/11 (TPO.2 #324): de Mitjana a Fina. Gràfic de barres horitzontals; mes actual i 5 anteriors; variació en % enter.
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-Al menú ☰ hi ha «Anàlisi», amb el total gastat del mes i un gràfic de les despeses per categoria (US-33)
-Per defecte es mostra el mes actual, i puc canviar de mes amb fletxes
-Cada categoria mostra l'import, el percentatge del total i la variació respecte al mes anterior
-Sense despeses aquell mes surt «Aquest mes encara no tens despeses.»
+Al menú ☰ hi ha «Anàlisi», que obre la pantalla «Anàlisi» (capçalera «← Inici» · «Anàlisi»)
+A dalt, la targeta del mes: «‹», el mes («Novembre 2026») i «›». Per defecte, el mes actual. «›» queda desactivat al mes actual i «‹» al cinquè mes anterior
+Sota el mes, «Total gastat» i l'import en gran, i a sota la variació respecte al mes anterior en percentatge enter: en vermell «+8 % respecte a octubre» si he gastat més, en verd «−5 % respecte a octubre» si menys, i en gris «Igual que a octubre» si és el mateix
+El gràfic és de barres horitzontals: una fila per categoria amb despesa aquell mes, de la que més a la que menys, amb el nom, l'import a la dreta, la barra lila (la més gran fa tot l'ample) i a sota en gris el percentatge del total i la variació de la categoria
+En tocar una categoria s'obre «Moviments» amb aquella categoria i les dates del mes ja filtrades (US-33, US-10)
+Un mes sense cap despesa mostra «Aquest mes encara no tens despeses.» en gris sota la targeta del mes
+Si el mes anterior no té despeses, en lloc de la variació surt «Sense despeses a octubre»
+Si no es pot carregar surt «S'ha produït un error inesperat. Torna-ho a provar més tard.» amb el botó «Reintentar»
 ```
 
 ---
 
 ## US-35 Pressupost mensual per categoria
 
-**Labels:** Mitjana, Moviments, P4
+**Labels:** Fina, Mitjana, Moviments, P4
 
 **Descripció:**
 
@@ -972,20 +1007,28 @@ Perfil: client estàndard amb moviments.
 
 Assumptes:
 - Depèn de la US-33 i la US-34
-- L'XP per complir el pressupost depèn de la US-23
+- Un pressupost val per a tots els mesos fins que el canvio o el trec
+- Els XP del mes complert van al mateix fitxer de configuració que els de la US-23
 
 Estimació: SP 3 · VP 5 · Prioritat Mitjana
 
-Èpica: EP-10. Granularitat mitjana: el detall de pantalles i missatges es fa quan entri en un sprint.
+Èpica: EP-10
+
+Revisió del 26/11 (TPO.2 #324): de Mitjana a Fina. Text dels avisos del 80 % i del 100 %; +50 XP per mes complert.
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-A «Anàlisi» puc posar un pressupost mensual a cada categoria, i canviar-lo o treure'l
-Cada categoria amb pressupost mostra una barra «gastat / pressupost»
-En arribar al 80 % del pressupost arriba un avís a la bústia, i un altre en superar-lo
-Acabar el mes sense superar cap pressupost dona XP (US-23)
+A «Anàlisi» (US-34), sota el gràfic, hi ha la targeta «Pressupostos del mes» amb una fila per categoria: les que tenen pressupost mostren el nom, «238,10 / 280,00 €», la barra i a sota «85 % · et queden 41,90 €»; les que no en tenen, el nom i «Afegir ›» en lila
+La barra és lila fins al 79 %, taronja del 80 % al 100 % i vermella per sobre; per sobre del 100 % la barra queda plena i el text diu «Has superat el pressupost en 16,30 €»
+«Afegir ›» o tocar una fila amb pressupost obre el diàleg «Pressupost de <categoria>» amb «Import mensual» (en euros), «Cancel·lar» i «Desar». Si ja en té, també surt «Treure pressupost» en vermell
+Import buit: «Desar» desactivat. Import ≤ 0: «L'import ha de ser més gran que 0.» En desar surt «Pressupost desat.» i la fila s'actualitza; «Cancel·lar», Esc o clic fora tanquen sense canviar res
+«Treure pressupost» el treu sense preguntar més, surt «Pressupost tret.» i la fila torna a «Afegir ›»
+Quan una despesa fa arribar una categoria al 80 %, a la bústia arriba «Has gastat el 80 % del pressupost de Menjar: 224,00 € de 280,00 €.»; quan el supera, «Has superat el pressupost d'Oci: 96,30 € de 80,00 €.». Cada avís, com a màxim una vegada per categoria i mes
+Si acabo un mes amb almenys un pressupost i sense superar-ne cap, la propera vegada que obro l'app guanyo +50 XP amb l'avís «+50 XP · Pressupostos complerts a novembre» (US-23)
+Als mesos anteriors (US-34) els pressupostos es veuen però no es poden canviar: no surten «Afegir ›» ni el diàleg
+Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» sota el botó del diàleg; el pressupost queda com estava
 ```
 
 ---
@@ -1005,9 +1048,9 @@ Perfil: client estàndard amb moviments.
 
 Assumptes:
 - Depèn del sistema d'XP (US-23) per a l'XP del pressupost complert
-- Una despesa sense comerç es categoritza per paraules clau del concepte i, si no en coincideix cap, va a «Altres» (US-33)
+- Una despesa sense comerç es categoritza per paraules clau del concepte i, si no en coincideix cap, per la icona del moviment (US-33)
 
-Històries (Mitjana, 24/11): US-33 Categoritzar moviments, US-34 Despeses del mes per categoria i US-35 Pressupost mensual per categoria.
+Històries (Fina, 26/11): US-33 Categoritzar moviments, US-34 Despeses del mes per categoria i US-35 Pressupost mensual per categoria.
 
 Estimació: 9 SP (suma de les històries) · Prioritat Mitjana
 ```
@@ -1207,7 +1250,7 @@ Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a pr
 
 ## US-30 Dividir una despesa
 
-**Labels:** Mitjana, Social, P5
+**Labels:** Fina, Mitjana, Social, P5
 
 **Descripció:**
 
@@ -1219,29 +1262,37 @@ PER: no haver de calcular qui em deu què.
 Perfil: client estàndard que ha pagat una despesa compartida.
 
 Assumptes:
-- Fa servir les sol·licituds de la US-15: cada participant en rep una amb la seva part
-- A parts iguals o amb imports personalitzats
-- La meva part no genera cap sol·licitud
+- Cada participant rep una sol·licitud de la US-15 amb la seva part; la meva part no genera cap sol·licitud
+- Com a màxim 9 participants a més de mi (10 persones)
+- El seguiment de la despesa és la US-31
 
 Estimació: SP 3 · VP 5 · Prioritat Mitjana
 
-Èpica: EP-09. Granularitat mitjana: el detall de pantalles i missatges es fa quan entri en un sprint.
+Èpica: EP-09
+
+Revisió del 26/11 (TPO.1 #323): de Mitjana a Fina. Màxim 9 participants; parts iguals amb els cèntims per a mi; tot o res.
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-A «Demanar diners» puc triar «Dividir una despesa», posar l'import total i el concepte, i afegir participants per @usuari (US-13)
-Per defecte es divideix a parts iguals entre els participants i jo; els cèntims que sobren me'ls quedo jo
-Puc canviar la part de cada participant; si la suma no és igual al total surt «La suma de les parts ha de ser igual al total.» i no es pot continuar
-En confirmar, cada participant rep una sol·licitud (US-15) amb la seva part i el concepte
+A «Demanar diners» (`/requests/new`, US-15), a dalt hi ha dos botons de selecció, «A una persona» (per defecte) i «Dividir una despesa». «Dividir una despesa» canvia el formulari: «Import total», «Concepte» i «Participants»
+A «Participants» hi ha la cerca de la US-13. Cada usuari triat surt en una fila (inicials, nom, «@usuari», la seva part i «×» per treure'l). Un usuari que ja hi és surt en gris a la cerca amb «Ja hi és». Amb 9 participants, la cerca es desactiva i diu «Màxim 9 participants»
+A sota de la llista hi ha la fila «Jo» amb la meva part. Per defecte, «Parts iguals»: el total es divideix entre els participants i jo, i els cèntims que sobren són per a mi
+Amb «Imports personalitzats» cada part es pot escriure (en euros, 2 decimals com a màxim). Si la suma no és el total surt «La suma de les parts ha de ser igual al total.»; si una part és 0, «Cada part ha de ser més gran que 0.»
+«Enviar sol·licituds» queda desactivat fins que hi ha import total (de 0,01 € a 1.000.000,00 €), concepte (d'1 a 140 caràcters), almenys un participant i les parts quadren
+En enviar: tic verd «Has enviat 3 sol·licituds» i a sota «Pendent de cobrar: 45,00 €»; 1,5 s després torna a «Sol·licituds enviades» amb la despesa dividida a dalt de tot (US-31)
+Cada participant rep a la bústia «<nom> et demana 15,00 €: <concepte>.», com a la US-15. No es mou cap diner
+Es creen totes les sol·licituds o cap: si una falla, no se n'envia cap i les dades del formulari es mantenen
+«← Inici» (la tornada de la capçalera de la US-15) surt sense enviar res ni preguntar; el que he escrit es perd
+Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» sota el botó; no s'envia cap sol·licitud
 ```
 
 ---
 
 ## US-31 Seguiment d'una despesa dividida
 
-**Labels:** Mitjana, Social, P5
+**Labels:** Fina, Baixa, Social, P5
 
 **Descripció:**
 
@@ -1254,27 +1305,34 @@ Perfil: client estàndard que ha dividit una despesa (US-30).
 
 Assumptes:
 - Depèn de la US-30
-- L'estat de cada part és el de la seva sol·licitud (US-15, US-16)
+- L'estat de cada part és el de la seva sol·licitud (US-15, US-39, US-40)
+- «Completada» vol dir que tothom ha pagat
 
 Estimació: SP 2 · VP 4 · Prioritat Baixa
 
-Èpica: EP-09. Granularitat mitjana: el detall de pantalles i missatges es fa quan entri en un sprint.
+Èpica: EP-09
+
+Revisió del 26/11 (TPO.1 #323): de Mitjana a Fina. «Completada» vol dir tots pagats; «Tancada» si no en queda cap de pendent però alguna s'ha rebutjat o ha caducat; «Tornar a enviar» crea una sol·licitud nova.
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-A «Sol·licituds enviades» una despesa dividida surt com una sola targeta amb el total, «X de Y han pagat» i l'import pendent
-En obrir-la veig cada participant amb la seva part i l'estat: «Pendent», «Pagada», «Rebutjada» o «Caducada»
-Puc tornar a enviar la sol·licitud a qui l'ha rebutjada o li ha caducat
-Quan tothom ha pagat, la targeta passa a «Completada»
+A «Sol·licituds enviades», una despesa dividida surt com una sola targeta: el concepte, a sota en gris «Despesa dividida · 4 persones», «1 de 3 han pagat» i la data; a la dreta el total en negreta i l'etiqueta d'estat; a baix, «Pendent: 30,00 €». Les seves sol·licituds no surten soles a la llista
+L'etiqueta és «Pendent» (groc) mentre alguna part està pendent; «Completada» (verd) quan totes estan pagades; i «Tancada» (gris) quan ja no n'hi ha cap de pendent però alguna està rebutjada o caducada
+En tocar la targeta s'obre el detall (capçalera «← Sol·licituds» · el concepte): a dalt el total i «1 de 3 han pagat · Pendent: 30,00 €», i a sota una fila per participant amb inicials, nom, la seva part i l'etiqueta de la seva sol·licitud
+Les files «Rebutjada» i «Caducada» tenen el botó «Tornar a enviar»: crea una sol·licitud nova de la mateixa part i el mateix concepte, surt «Sol·licitud enviada a Martí.» i la fila passa a «Pendent»
+Quan una part es paga (US-39), el detall i la targeta s'actualitzen en tornar a la pantalla: «2 de 3 han pagat» i el pendent baixa
+Els imports pendents només sumen les parts «Pendent»; les rebutjades i caducades no compten com a cobrades
+Si no es pot carregar el detall surt «S'ha produït un error inesperat. Torna-ho a provar més tard.» amb el botó «Reintentar»
+Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» sota el botó en «Tornar a enviar»; la fila es queda com estava
 ```
 
 ---
 
 ## US-32 Guardiola compartida
 
-**Labels:** Mitjana, Estalvi, Social, P5
+**Labels:** Fina, Mitjana, Estalvi, Social, P5
 
 **Descripció:**
 
@@ -1283,26 +1341,33 @@ COM: client estàndard
 VULL: crear una guardiola amb altres usuaris
 PER: estalviar junts per a un objectiu comú.
 
-Perfil: client estàndard que vol estalviar amb contactes de l'app.
+Perfil: client estàndard que vol estalviar amb altres usuaris de l'app.
 
 Assumptes:
 - Amplia les guardioles de la US-17 a la US-20
-- Cada membre aporta del seu saldo principal
-- Les invitacions arriben a la bústia
+- Com a màxim 5 membres, comptant qui la crea
+- Les aportacions donen XP com qualsevol aportació (US-23)
 
 Estimació: SP 5 · VP 5 · Prioritat Mitjana
 
-Èpica: EP-09. Granularitat mitjana: el detall de pantalles i missatges es fa quan entri en un sprint.
+Èpica: EP-09
+
+Revisió del 26/11 (TPO.1 #323): de Mitjana a Fina. Màxim 5 membres; la invitació s'accepta a «Guardioles»; les aportacions donen XP (US-23).
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-En crear una guardiola (US-17) puc marcar «Compartida» i convidar usuaris per @usuari; reben un avís a la bústia i poden acceptar o rebutjar
-Cada membre veu el total, l'objectiu i quant ha aportat cada membre
-Cada membre només pot retirar el que ha aportat ell
-Si un membre abandona la guardiola, el que ha aportat torna al seu saldo principal
-Només qui l'ha creat la pot eliminar, i en eliminar-la cada membre recupera la seva aportació
+Al formulari «Nova guardiola» (US-17) hi ha l'interruptor «Compartida». En activar-lo surt «Convidar» amb la cerca de la US-13: cada usuari triat surt amb «Convidat» i «×». Amb 4 convidats, la cerca diu «Màxim 5 membres»
+En crear-la, cada convidat rep a la bústia «<nom> et convida a la guardiola «Viatge a Lisboa».» i a la seva pantalla «Guardioles» li surt a dalt la targeta «Invitació de <nom>» amb el nom i l'objectiu, i els botons «Acceptar» (lila) i «Rebutjar»
+«Acceptar» el fa membre i la guardiola surt a la seva llista amb l'etiqueta «Compartida». «Rebutjar» treu la invitació, i a qui l'ha creat li arriba «<nom> no s'ha afegit a «Viatge a Lisboa».»
+El detall d'una guardiola compartida mostra el total, l'objectiu i el progrés (US-20), i la llista «Aportacions» amb una fila per membre (inicials, nom i el que ha aportat); els convidats que no han respost surten amb «Pendent» i 0,00 €
+Qualsevol membre pot aportar del seu saldo principal (US-18). L'aportació suma al total i a la seva fila, i dona XP com qualsevol aportació (US-23)
+«Retirar» deixa retirar com a màxim el que he aportat jo: a sota de l'import surt «Pots retirar fins a 200,00 €» i, si m'hi passo, «Només pots retirar el que has aportat (200,00 €).»
+Un membre que no l'ha creada té «Abandonar la guardiola» (text vermell): obre el diàleg «Abandonar la guardiola» («Sortiràs de «Viatge a Lisboa» i els 200,00 € que hi has aportat tornaran al teu saldo principal.») amb «Cancel·lar» i «Abandonar». En abandonar, torna a «Guardioles», on ja no surt
+Qui l'ha creada no la pot abandonar; només la pot eliminar, i en eliminar-la cada membre recupera el que hi havia aportat i rep a la bústia «S'ha eliminat la guardiola «Viatge a Lisboa». T'hem tornat 150,00 €.»
+Aportar, retirar i abandonar mouen els dos saldos alhora (tot o res), i surten als moviments de cada membre com a la US-18 i la US-19
+Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» sota el botó; cap saldo canvia
 ```
 
 ---
@@ -1320,7 +1385,7 @@ PER: gestionar diners en comú sense complicacions.
 
 Perfil: client estàndard que comparteix despeses o estalvis amb altres clients.
 
-Històries (Mitjana, 24/11): US-30 Dividir una despesa, US-31 Seguiment d'una despesa dividida i US-32 Guardiola compartida.
+Històries (Fina, 26/11): US-30 Dividir una despesa, US-31 Seguiment d'una despesa dividida i US-32 Guardiola compartida.
 
 Estimació: 10 SP (suma de les històries) · Prioritat Mitjana
 ```
