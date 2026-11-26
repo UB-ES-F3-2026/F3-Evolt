@@ -831,8 +831,8 @@ Propostes de les sol·licituds rebudes (T16.1, US-16, US-39 i US-40). Les altres
 | P88 | [15.3](#153-post-apimoney-requestsrequestidpay) | Pagar és `POST /api/money-requests/{requestId}/pay`, sense cos, que respon `201` amb `{ balance, movement, request }`. És un enviament de la US-14 i el canvi a `paid`, en una sola transacció. |
 | P89 | [15.3](#153-post-apimoney-requestsrequestidpay) | Ordre de les validacions de pagar: `REQUEST_NOT_FOUND` → `REQUEST_NOT_PENDING` → `INSUFFICIENT_BALANCE` → `TRANSFER_LIMIT_EXCEEDED`. |
 | P90 | [15.4](#154-post-apimoney-requestsrequestidreject) | Rebutjar és `POST /api/money-requests/{requestId}/reject`, sense cos, que respon `200` amb `{ request }` i deixa el missatge `money_request_rejected` a la bústia de qui la va fer. |
-| P91 | [15.7](#157-errors) | Pagar o rebutjar una sol·licitud que qui l'ha enviada acaba de cancel·lar (`REQUEST_NOT_FOUND`) mostra el mateix «Aquesta sol·licitud ja no està pendent.» i recarrega la llista. Les històries no ho diuen: **ho ha de confirmar el PO**. |
-| P92 | [15.8](#158-model-intern) | Seed: l'usuari 1 ha rebut una sol·licitud en cada estat (`req-03` a `req-06`, dades dels mockups). La pagada no té moviments al seed, perquè el saldo de la demo no canviï. **Ho ha de confirmar el PO.** |
+| P91 | [15.7](#157-errors) | Pagar o rebutjar una sol·licitud que qui l'ha enviada acaba de cancel·lar (`REQUEST_NOT_FOUND`) mostra el mateix «Aquesta sol·licitud ja no està pendent.» i recarrega la llista. Si l'ha cancel·lada qui l'havia enviada, la sol·licitud s'ha esborrat i el codi és `REQUEST_NOT_FOUND`. Decisió del PO (26/11, #357). |
+| P92 | [15.8](#158-model-intern) | Seed: l'usuari 1 ha rebut una sol·licitud en cada estat (`req-03` a `req-06`, dades dels mockups). La pagada no té moviments al seed, perquè el saldo de la demo no canviï, i no es toca el `mov-18`. Decisió del PO (26/11, #357). |
 
 ---
 
@@ -3384,7 +3384,7 @@ Textos de les pantalles de US-16, US-39 i US-40, en vermell sota el botó:
 | `code` | Text |
 |---|---|
 | `REQUEST_NOT_PENDING` | «Aquesta sol·licitud ja no està pendent.» (nou), i la llista es torna a carregar. A «Sol·licituds enviades» continua sent el de [14.7](#147-errors). |
-| `REQUEST_NOT_FOUND` | El mateix «Aquesta sol·licitud ja no està pendent.», i la llista es torna a carregar (P91). |
+| `REQUEST_NOT_FOUND` | El mateix «Aquesta sol·licitud ja no està pendent.», i la llista es torna a carregar, on aquella sol·licitud ja no surt (P91, decisió del PO). |
 | `INSUFFICIENT_BALANCE` | «No tens prou saldo.», amb «Afegir diners» (US-39). |
 | `TRANSFER_LIMIT_EXCEEDED` | «Has superat el límit diari de 1.000,00 €.» |
 | `INTERNAL_ERROR` o sense connexió | «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.». La sol·licitud continua «Pendent». |
@@ -3405,5 +3405,5 @@ Aquest apartat és per al backend. El frontend no en depèn.
   | `req-05` | Junhao (`usr-07`) | 12,00 € (`1200`) | Cafès de la setmana | fa 4 dies, 10:05 | `paid` |
   | `req-06` | Alicia (`usr-03`) | 25,00 € (`2500`) | El sopar de divendres | fa 2 dies, 19:30 | `pending` |
 
-  - La `req-05` surt com a pagada, però el seed **no té** els moviments d'aquell pagament: així el saldo de l'usuari 1 continua sent 3.795,21 €, el que fan servir tots els tests i els mockups. Per veure un pagament de veritat, es paga la `req-06` (US-39).
+  - La `req-05` surt com a pagada, però el seed **no té** els moviments d'aquell pagament (decisió del PO, 26/11): així el saldo de l'usuari 1 continua sent 3.795,21 €, el que fan servir tots els tests i els mockups. Per veure un pagament de veritat, es paga la `req-06` (US-39).
   - Una sol·licitud nova és ara `req-07`. Les proves SO-01 i SO-22 passen de `req-03` a `req-07`.
