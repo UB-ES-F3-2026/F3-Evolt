@@ -16,6 +16,7 @@ MESSAGE_PASSWORD_RESET = "password_reset"  # T04.1
 MESSAGE_TRANSFER_SENT = "transfer_sent"  # T14.2, §13.7
 MESSAGE_TRANSFER_RECEIVED = "transfer_received"  # T14.2, §13.7
 MESSAGE_MONEY_REQUEST = "money_request"  # T15.2
+MESSAGE_INCOMING_TRANSFER = "incoming_transfer"  # T12.2, §16.4
 MESSAGE_TYPES = frozenset(
     {
         MESSAGE_VERIFICATION_CODE,
@@ -24,6 +25,7 @@ MESSAGE_TYPES = frozenset(
         MESSAGE_TRANSFER_SENT,
         MESSAGE_TRANSFER_RECEIVED,
         MESSAGE_MONEY_REQUEST,
+        MESSAGE_INCOMING_TRANSFER,
     }
 )
 
