@@ -1,8 +1,10 @@
-# Proves d'acceptació · Pagaments (US-13 a US-15)
+# Proves d'acceptació · Pagaments (US-13 a US-16, US-39 i US-40)
 
 Proves d'acceptació de cercar un usuari i d'enviar-li diners, escrites a partir de les històries (`docs/us/US-13.md` i `docs/us/US-14.md`) i del contracte de l'[apartat 13 de `docs/api.md`](api.md#13-pagaments-cercar-usuaris-i-enviar-diners-us-13-i-us-14). Tasca: T13.1 (issue #157).
 
 Les de demanar diners (US-15) segueixen l'[apartat 14](api.md#14-sol·licituds-de-diners-us-15) i `docs/us/US-15.md`. Tasca: T15.1 (issue #153).
+
+Les de veure, pagar i rebutjar les sol·licituds rebudes (US-16, US-39 i US-40) segueixen l'[apartat 15](api.md#15-sol·licituds-rebudes-veure-pagar-i-rebutjar-us-16-us-39-i-us-40) i `docs/us/US-16.md`, `docs/us/US-39.md` i `docs/us/US-40.md`. Tasca: T16.1 (issue #282).
 
 ## Índex
 
@@ -11,7 +13,10 @@ Les de demanar diners (US-15) segueixen l'[apartat 14](api.md#14-sol·licituds-d
 3. [US-13 · Cercar un usuari](#us-13--cercar-un-usuari)
 4. [US-14 · Enviar diners a usuaris](#us-14--enviar-diners-a-usuaris)
 5. [US-15 · Sol·licitar diners](#us-15--sol·licitar-diners)
-6. [Casos de les històries i proves](#casos-de-les-històries-i-proves)
+6. [US-16 · Veure les sol·licituds rebudes](#us-16--veure-les-sol·licituds-rebudes)
+7. [US-39 · Pagar una sol·licitud rebuda](#us-39--pagar-una-sol·licitud-rebuda)
+8. [US-40 · Rebutjar una sol·licitud rebuda](#us-40--rebutjar-una-sol·licitud-rebuda)
+9. [Casos de les històries i proves](#casos-de-les-històries-i-proves)
 
 ---
 
@@ -40,7 +45,8 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
   | `usr-08` | Martí | `sudo-itramplay` | `marti@evolt.test` | `+34611223306` | 0,00 € |
 
 - Cap enviament fet avui: el límit diari d'enviament comença a 1.000,00 € (`100000`).
-- Sol·licituds enviades per l'usuari 1 (US-15, [`api.md` §14.8](api.md#148-model-intern)): `req-01` a Huabin, 42,00 €, «Pizza del diumenge», fa 9 dies (caducada), i `req-02` a Alicia, 25,00 €, «El sopar de divendres», ahir a les 19:30 (pendent). La resta d'usuaris no n'han enviat cap.
+- Sol·licituds enviades per l'usuari 1 (US-15, [`api.md` §14.8](api.md#148-model-intern)): `req-01` a Huabin, 42,00 €, «Pizza del diumenge», fa 9 dies (caducada), i `req-02` a Alicia, 25,00 €, «El sopar de divendres», ahir a les 19:30 (pendent). La resta d'usuaris no n'han enviat cap, excepte les quatre que ha rebut l'usuari 1.
+- Sol·licituds rebudes per l'usuari 1 (US-16, [`api.md` §15.8](api.md#158-model-intern)): `req-03` de Jiajun, 42,00 €, «Entrades del concert», fa 11 dies (caducada); `req-04` d'Izan, 18,00 €, «Taxi de l'aeroport», fa 5 dies (rebutjada); `req-05` de Junhao, 12,00 €, «Cafès de la setmana», fa 4 dies (pagada, sense moviments al seed); i `req-06` d'Alicia, 25,00 €, «El sopar de divendres», fa 2 dies a les 19:30 (pendent). Una sol·licitud nova és `req-07`.
 - Rellotge fixat a **T0 = `2026-11-15T21:15:00+01:00`** a les proves que miren la data d'un enviament.
 
 ---
@@ -160,8 +166,8 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 
 | Id | Situació inicial | Acció | Resultat esperat |
 |---|---|---|---|
-| **SO-01** | Seed, T0 | `POST /api/money-requests` amb `{ "toUserId": "usr-03", "amount": 2500, "concept": "El sopar de divendres" }` | `201` `{ id: "req-03", to: { id: "usr-03", name: "Alicia", username: "aliciaa415" }, amount: 2500, concept: "El sopar de divendres", status: "pending", createdAt: T0, expiresAt: "2026-11-22T00:00:00+01:00" }`. |
-| **SO-02** | SO-01 fet | `GET /api/money-requests` (usuari 1) | `200` amb `req-03`, `req-02` i `req-01`, en aquest ordre. `req-01` és `expired` i les altres dues, `pending`. |
+| **SO-01** | Seed, T0 | `POST /api/money-requests` amb `{ "toUserId": "usr-03", "amount": 2500, "concept": "El sopar de divendres" }` | `201` `{ id: "req-07", to: { id: "usr-03", name: "Alicia", username: "aliciaa415" }, amount: 2500, concept: "El sopar de divendres", status: "pending", createdAt: T0, expiresAt: "2026-11-22T00:00:00+01:00" }`. |
+| **SO-02** | SO-01 fet | `GET /api/money-requests` (usuari 1) | `200` amb `req-07`, `req-02` i `req-01`, en aquest ordre. `req-01` és `expired` i les altres dues, `pending`. |
 | **SO-03** | SO-01 fet | Mirar cada element de SO-02 | Té exactament les claus `id`, `to`, `amount`, `concept`, `status`, `createdAt` i `expiresAt`; `to` només té `id`, `name` i `username`. |
 | **SO-04** | SO-01 fet | `GET /api/home`, `GET /api/movements`, `GET /api/pots` (usuaris 1 i 3) | Igual que abans de SO-01: una sol·licitud no mou diners. |
 | **SO-05** | SO-01 fet | `GET /api/dev/outbox?to=alicia@evolt.test` | El primer missatge és `money_request`, «Usuari demo et demana 25,00 €: El sopar de divendres.», canal `email`, sense `code` ni `link`. |
@@ -181,9 +187,9 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 | **SO-19** | Seed | Cancel·lar `req-02` com a usuari 3 (Alicia, la destinatària) | `404 REQUEST_NOT_FOUND`, amb el mateix cos que SO-17; `req-02` continua pendent. |
 | **SO-20** | Seed | Cancel·lar `req-99` i `abc` | `404 REQUEST_NOT_FOUND`. |
 | **SO-21** | Seed | Cancel·lar `req-02` el dia que caduca a les 00:00 (rellotge fixat) | `422 REQUEST_NOT_PENDING`: l'estat es calcula en el moment de la petició. |
-| **SO-22** | SO-16 fet | Crear una sol·licitud nova | Té l'id `req-03`: l'id d'una cancel·lada no es torna a fer servir. |
+| **SO-22** | SO-16 fet | Crear una sol·licitud nova | Té l'id `req-07`: l'id d'una cancel·lada no es torna a fer servir. |
 | **SO-23** | Seed. Test amb `monkeypatch`: falla el missatge de la bústia | Crear una sol·licitud | `500 INTERNAL_ERROR`; no es desa cap sol·licitud. |
-| **SO-24** | SO-01 fet | `POST /api/dev/reset` | Les sol·licituds tornen a ser `req-01` i `req-02`. |
+| **SO-24** | SO-01 fet | `POST /api/dev/reset` | Les sol·licituds tornen a ser les del seed, de `req-01` a `req-06`. |
 | **SO-25** | Seed | Les tres rutes sense sessió (backend amb `ALLOW_X_USER_ID=false`) | `401 UNAUTHENTICATED`. |
 
 ### Pantalla (T15.3)
@@ -201,6 +207,106 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 | **SOP-09** | Torna a obrir-lo i toca «Confirmar». | «Sol·licitud cancel·lada.» a dalt i la fila desapareix; recarregant, no torna. |
 | **SOP-10** | Cancel·la una sol·licitud que ha caducat mentre tenies la pantalla oberta. | «Només es poden cancel·lar les sol·licituds pendents.» i la llista es torna a carregar. |
 | **SOP-11** | Comprova Inici després d'enviar una sol·licitud. | El saldo i els moviments no han canviat. |
+
+## US-16 · Veure les sol·licituds rebudes
+
+### API (T16.2)
+
+| Id | Situació inicial | Acció | Resultat esperat |
+|---|---|---|---|
+| **SR-01** | Seed, T0 | `GET /api/money-requests/received` (usuari 1) | `200` amb `req-06` (Alicia, `pending`), `req-05` (Junhao, `paid`), `req-04` (Izan, `rejected`) i `req-03` (Jiajun, `expired`), en aquest ordre. |
+| **SR-02** | Seed | Mirar cada element de SR-01 | Té exactament les claus `id`, `from`, `amount`, `concept`, `status`, `createdAt` i `expiresAt`; `from` només té `id`, `name` i `username`. |
+| **SR-03** | Seed | `GET /api/money-requests/received` com a usuari 2 | `200` amb `items: []`. |
+| **SR-04** | Seed, T0 | `GET /api/money-requests/received` com a usuari 3 (Alicia) | Només `req-02`, de l'usuari 1, `pending`. La `req-06`, que ha enviat ella, no hi surt. |
+| **SR-05** | Seed | `GET /api/money-requests` (enviades) com a usuari 1 | Només `req-02` i `req-01`, com a SO-02: les rebudes no hi surten. |
+| **SR-06** | Seed | `GET /api/money-requests` com a usuari 3 | `req-06` amb `to` l'usuari 1 i `status: "pending"`. |
+| **SR-07** | Seed | `GET /api/money-requests/received` (usuari 1) el dia que caduca la `req-06`, a les 23:59:59 del dia abans i a les 00:00 (rellotge fixat) | `pending` i després `expired`. |
+| **SR-08** | Seed | `GET /api/money-requests/received` (usuari 1) amb el rellotge 30 dies endavant | `req-05` continua `paid` i `req-04`, `rejected`: no caduquen mai. |
+| **SR-09** | Seed | L'usuari 1 cancel·la la `req-02` i l'usuari 3 llegeix les seves rebudes | `items: []`: la cancel·lada també desapareix de les rebudes. |
+| **SR-10** | Seed, T0 | L'usuari 3 demana 10,00 € a l'usuari 1 i l'usuari 1 llegeix les rebudes | La nova, `req-07`, surt la primera, `pending`. |
+| **SR-11** | SR-10 fet | `POST /api/dev/reset` | Les rebudes de l'usuari 1 tornen a ser les quatre de SR-01. |
+| **SR-12** | Seed | `GET /api/money-requests/received` sense sessió (backend amb `ALLOW_X_USER_ID=false`) | `401 UNAUTHENTICATED`. |
+
+### Pantalla (T16.3)
+
+| Id | Què fas | Què has de veure |
+|---|---|---|
+| **SRP-01** | A Inici, obre el menú ☰. | «Sol·licituds rebudes» just sota «Sol·licituds enviades». Inici es queda amb els 4 botons. |
+| **SRP-02** | Toca «Sol·licituds rebudes» amb l'usuari 1. | `/requests/received`, capçalera «← Inici» · «Sol·licituds rebudes», i les quatre targetes de SR-01, la més nova a dalt. |
+| **SRP-03** | Mira cada targeta. | A l'esquerra el nom i, en gris, l'@usuari, el concepte i la data (per exemple «23 de nov. · 19:30» si avui és el 25 de nov.); a la dreta l'import en negreta i l'etiqueta: «Pendent» groc, «Pagada» verd, «Rebutjada» vermell, «Caducada» gris. |
+| **SRP-04** | Mira els botons. | Només la «Pendent» (Alicia) té «Pagar» (lila ple) i «Rebutjar» (blanc amb el text en vermell), un al costat de l'altre. Les altres no en tenen cap. |
+| **SRP-05** | Obre la pantalla amb l'usuari 2. | Una icona grisa i «Encara no has rebut cap sol·licitud.». |
+| **SRP-06** | Amb el backend a `SIMULATE_ERROR_RATE=100`, obre la pantalla. | «S'ha produït un error inesperat. Torna-ho a provar més tard.» amb «Reintentar»; amb el backend normal, «Reintentar» carrega la llista. |
+
+---
+
+## US-39 · Pagar una sol·licitud rebuda
+
+### API (T39.1)
+
+| Id | Situació inicial | Acció | Resultat esperat |
+|---|---|---|---|
+| **PG-01** | Seed, T0 | `POST /api/money-requests/req-06/pay` (usuari 1) | `201` amb `balance: 377021`, el `movement` de l'exemple de 15.3 (`mov-31`, «El sopar de divendres», `expense`, contrapart «Alicia») i la `request` amb `status: "paid"`. |
+| **PG-02** | PG-01 fet | `GET /api/home` dels usuaris 1 i 3 | Usuari 1: `balance` `377021` i «El sopar de divendres» `−2500` el primer. Usuari 3: `balance` `2500` i «El sopar de divendres» `+2500`, contrapart «Usuari demo». |
+| **PG-03** | PG-01 fet | Rebudes de l'usuari 1 i enviades de l'usuari 3 | La `req-06` és `paid` a totes dues llistes. |
+| **PG-04** | PG-01 fet | `GET /api/dev/outbox` de l'usuari 1 i de l'usuari 3 | `transfer_sent` «Has enviat 25,00 € a Alicia.» a l'usuari 1 i `transfer_received` «Usuari demo t'ha enviat 25,00 €: El sopar de divendres.» a l'usuari 3. Cap altre missatge nou. |
+| **PG-05** | PG-01 fet | `GET /api/transfers/limit` (usuari 1) | `remainingToday: 97500`: el pagament compta per al límit diari. |
+| **PG-06** | PG-01 fet | Tornar a pagar la `req-06` | `422 REQUEST_NOT_PENDING`; cap saldo ni moviment canvia. |
+| **PG-07** | Seed, T0 | Pagar la `req-03` (caducada), la `req-04` (rebutjada) i la `req-05` (pagada) | `422 REQUEST_NOT_PENDING` les tres vegades. |
+| **PG-08** | Seed | L'usuari 1 paga la `req-02` (l'ha enviada ell); l'usuari 2 paga la `req-06`; l'usuari 1 paga la `req-99` i `abc` | `404 REQUEST_NOT_FOUND`, amb el mateix cos totes les vegades. |
+| **PG-09** | Seed, T0 | L'usuari 3 demana 4.000,00 € (`400000`) a l'usuari 1, i l'usuari 1 la paga | `422 INSUFFICIENT_BALANCE`. La sol·licitud continua `pending` i cap saldo canvia. |
+| **PG-10** | Seed, T0. L'usuari 1 ha enviat avui 980,00 € a l'usuari 2 | Pagar la `req-06` (25,00 €) | `422 TRANSFER_LIMIT_EXCEEDED` amb `details.remainingToday: 2000`. La sol·licitud continua `pending`. |
+| **PG-11** | Seed, T0. L'usuari 1 ha enviat avui 975,00 € | Pagar la `req-06` | `201`: arribar exactament al límit està permès. |
+| **PG-12** | Una sol·licitud caducada de 50,00 € a l'usuari 2 (saldo 0) | L'usuari 2 la paga | `422 REQUEST_NOT_PENDING`, no `INSUFFICIENT_BALANCE`: l'ordre de 15.3. |
+| **PG-13** | Seed | Pagar la `req-06` el dia que caduca a les 00:00 (rellotge fixat) | `422 REQUEST_NOT_PENDING`. |
+| **PG-14** | Seed. Test amb dos fils | Dos pagaments alhora de la `req-06` | Un `201` i un `422 REQUEST_NOT_PENDING`; el saldo de l'usuari 1 baixa 25,00 € una sola vegada. |
+| **PG-15** | Seed. Test amb `monkeypatch`: falla el missatge de la bústia | Pagar la `req-06` | `500 INTERNAL_ERROR`; ni saldos, ni moviments, ni estat canvien. |
+| **PG-16** | PG-01 fet | Mirar l'XP de l'usuari 1 | No ha canviat. |
+| **PG-17** | Seed | Pagar sense sessió (backend amb `ALLOW_X_USER_ID=false`) | `401 UNAUTHENTICATED`. |
+
+### Pantalla (T39.2)
+
+| Id | Què fas | Què has de veure |
+|---|---|---|
+| **PGP-01** | A «Sol·licituds rebudes» (usuari 1), toca «Pagar» a la d'Alicia. | «Confirmar» amb Alicia (@aliciaa415), 25,00 €, «El sopar de divendres» i «Saldo disponible: 3.795,21 €». L'import i el concepte no es poden canviar. |
+| **PGP-02** | Toca «← Rebudes». | Tornes a la llista sense pagar: la sol·licitud continua «Pendent». |
+| **PGP-03** | Torna a «Pagar» i toca «Confirmar enviament». | Tic verd, «Has pagat 25,00 € a Alicia» i «Saldo disponible: 3.770,21 €»; 1,5 s després, «Sol·licituds rebudes» amb la d'Alicia «Pagada» i sense botons. |
+| **PGP-04** | Entra com a Alicia (usuari 3) a «Sol·licituds enviades». | La sol·licitud surt «Pagada». |
+| **PGP-05** | Amb la sol·licitud de PG-09, toca «Pagar». | «No tens prou saldo.» en vermell i, en lloc de «Confirmar enviament», «Afegir diners», que obre la recàrrega. La sol·licitud continua «Pendent». |
+| **PGP-06** | Amb la situació de PG-10, toca «Pagar». | «Has superat el límit diari de 1.000,00 €.» en vermell i no es pot confirmar. |
+| **PGP-07** | Obre «Confirmar» i, des d'una altra pestanya, rebutja la mateixa sol·licitud. Després confirma. | «Aquesta sol·licitud ja no està pendent.», no es paga res i tornes a la llista recarregada. |
+| **PGP-08** | Amb el backend a `SIMULATE_ERROR_RATE=100`, confirma. | «S'ha produït un error inesperat. Torna-ho a provar més tard.» sota el botó; la sol·licitud continua «Pendent» i el saldo no canvia. |
+
+---
+
+## US-40 · Rebutjar una sol·licitud rebuda
+
+### API (T40.1)
+
+| Id | Situació inicial | Acció | Resultat esperat |
+|---|---|---|---|
+| **RB-01** | Seed, T0 | `POST /api/money-requests/req-06/reject` (usuari 1) | `200` amb la `request` de l'exemple de 15.4, `status: "rejected"`. |
+| **RB-02** | RB-01 fet | Rebudes de l'usuari 1 i enviades de l'usuari 3 | La `req-06` és `rejected` a totes dues llistes. |
+| **RB-03** | RB-01 fet | `GET /api/dev/outbox?to=alicia@evolt.test` | El primer missatge és `money_request_rejected`, «Usuari demo ha rebutjat la teva sol·licitud.», canal `email`, sense `code` ni `link`. |
+| **RB-04** | RB-01 fet | `GET /api/home`, `GET /api/movements` i `GET /api/transfers/limit` dels usuaris 1 i 3 | Igual que abans de RB-01: rebutjar no mou diners. |
+| **RB-05** | RB-01 fet | Tornar a rebutjar la `req-06`, pagar-la, i que l'usuari 3 la cancel·li | `422 REQUEST_NOT_PENDING` les tres vegades. |
+| **RB-06** | Seed, T0 | Rebutjar la `req-03`, la `req-04` i la `req-05` | `422 REQUEST_NOT_PENDING`. |
+| **RB-07** | Seed | L'usuari 1 rebutja la `req-02`; l'usuari 2 rebutja la `req-06`; l'usuari 1 rebutja la `req-99` | `404 REQUEST_NOT_FOUND`. |
+| **RB-08** | Seed. Test amb dos fils | Pagar i rebutjar la `req-06` alhora | Només s'aplica una de les dues; l'altra respon `422 REQUEST_NOT_PENDING`. |
+| **RB-09** | Seed. Test amb `monkeypatch`: falla el missatge de la bústia | Rebutjar la `req-06` | `500 INTERNAL_ERROR`; la sol·licitud continua `pending`. |
+| **RB-10** | Seed | Rebutjar sense sessió (backend amb `ALLOW_X_USER_ID=false`) | `401 UNAUTHENTICATED`. |
+
+### Pantalla (T40.2)
+
+| Id | Què fas | Què has de veure |
+|---|---|---|
+| **RBP-01** | A «Sol·licituds rebudes» (usuari 1), toca «Rebutjar» a la d'Alicia. | Diàleg «Rebutjar sol·licitud» amb «Segur que vols rebutjar la sol·licitud d'Alicia de 25,00 €?», «Cancel·lar» i «Rebutjar» (vermell), com al mockup. |
+| **RBP-02** | Tanca el diàleg amb «Cancel·lar», amb `Esc` i fent clic fora. | Es tanca sense cap petició; la targeta continua «Pendent». |
+| **RBP-03** | Torna a obrir-lo i toca «Rebutjar». | «Sol·licitud rebutjada.» a dalt en verd i la targeta passa a «Rebutjada», sense botons. |
+| **RBP-04** | Entra com a Alicia a «Sol·licituds enviades». | La sol·licitud surt «Rebutjada». |
+| **RBP-05** | Comprova Inici de l'usuari 1. | El saldo i els moviments no han canviat. |
+| **RBP-06** | Obre el diàleg i, des d'una altra pestanya, paga la mateixa sol·licitud. Després toca «Rebutjar». | «Aquesta sol·licitud ja no està pendent.» i la llista es torna a carregar. |
+| **RBP-07** | Amb el backend a `SIMULATE_ERROR_RATE=100`, rebutja. | «S'ha produït un error inesperat. Torna-ho a provar més tard.» sota el botó; la sol·licitud continua «Pendent». |
 
 ---
 
@@ -239,3 +345,24 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 | US-15 · Èxit: «Sol·licitud enviada a Alicia.» i la fila nova la primera; un error deixa el formulari intacte | SO-01, SO-02, SOP-04, SOP-06 |
 
 Proves que no surten d'un cas de la història, sinó del contracte: CU-15, CU-17, CU-20 i CU-21 (comptes pendents, màxim de 10 i sessió); EN-06 a EN-08 (llistat, detall i invariants), EN-09 i EN-16 a EN-18 (límits independents), EN-23 a EN-25 (format i ordre de les validacions), EN-27 a EN-32 i EN-36 (tot o res, concurrència, XP, reinici i sessió); SO-03, SO-06, SO-08, SO-12, SO-23 a SO-25 (forma, llista buida, format, tot o res, reinici i sessió).
+| US-16 · «Sol·licituds rebudes» al menú ☰, sota «Sol·licituds enviades» | SRP-01, SRP-02 |
+| US-16 · Cada targeta amb el nom, l'@usuari, el concepte, la data, l'import i l'etiqueta de color, la més nova a dalt | SR-01, SR-02, SRP-02, SRP-03 |
+| US-16 · «Caducada» a partir del dia 7 (dia natural de Madrid) | SR-07, SR-08 |
+| US-16 · Només les «Pendent» tenen «Pagar» i «Rebutjar» | SRP-04 |
+| US-16 · Sense cap sol·licitud rebuda, «Encara no has rebut cap sol·licitud.» | SR-03, SRP-05 |
+| US-16 · Si no es pot carregar, error amb «Reintentar» | SRP-06 |
+| US-16 · El seed té sol·licituds rebudes en els quatre estats | SR-01 |
+| US-39 · «Pagar» obre «Confirmar» ja omplert; «← Rebudes» torna sense pagar | PGP-01, PGP-02 |
+| US-39 · Sense saldo, «No tens prou saldo.» i «Afegir diners»; continua «Pendent» | PG-09, PGP-05 |
+| US-39 · Si passa el límit diari, «Has superat el límit diari de 1.000,00 €.» | PG-10, PG-11, PGP-06 |
+| US-39 · Èxit: tic verd, «Has pagat…» i torna a la llista amb «Pagada» | PG-01, PG-03, PGP-03 |
+| US-39 · A les enviades de qui la va fer, «Pagada» | PG-03, PGP-04 |
+| US-39 · És un enviament de la US-14: moviments, límit i avisos | PG-02, PG-04, PG-05 |
+| US-39 · Si ja no és pendent, «Aquesta sol·licitud ja no està pendent.» i no es paga res | PG-06, PG-07, PG-13, PG-14, PGP-07 |
+| US-39 · Error del servidor o de xarxa: continua «Pendent» i cap saldo canvia | PG-15, PGP-08 |
+| US-40 · Diàleg «Rebutjar sol·licitud»; «Cancel·lar», Esc o clic fora el tanquen | RBP-01, RBP-02 |
+| US-40 · En confirmar, «Sol·licitud rebutjada.» i la targeta «Rebutjada» sense botons | RB-01, RBP-03 |
+| US-40 · A les enviades de qui la va fer, «Rebutjada», i l'avís a la seva bústia | RB-02, RB-03, RBP-04 |
+| US-40 · No es mou cap diner | RB-04, RBP-05 |
+| US-40 · Si ja no és pendent, «Aquesta sol·licitud ja no està pendent.» i la llista es recarrega | RB-05, RB-06, RB-08, RBP-06 |
+| US-40 · Error del servidor o de xarxa: continua «Pendent» | RB-09, RBP-07 |

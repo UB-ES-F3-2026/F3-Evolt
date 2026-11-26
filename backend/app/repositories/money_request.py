@@ -8,6 +8,7 @@ from datetime import datetime
 
 from app.data.seed import SeedData, money_request_id
 from app.models import REQUEST_PENDING, MoneyRequest
+from app.models.money_request import STORED_REQUEST_STATUSES
 
 
 class MoneyRequestRepository:
@@ -53,6 +54,20 @@ class MoneyRequestRepository:
         """Les enviades per un usuari, de la més recent a la més antiga (§14.3, P4)."""
         sent = [request for request in self._seed.money_requests if request.requester_id == requester_id]
         return sorted(sent, key=MoneyRequest.sort_key, reverse=True)
+
+    def list_by_recipient(self, recipient_id: int) -> list[MoneyRequest]:
+        """Les rebudes per un usuari, de la més recent a la més antiga (§15.2, P4)."""
+        received = [request for request in self._seed.money_requests if request.recipient_id == recipient_id]
+        return sorted(received, key=MoneyRequest.sort_key, reverse=True)
+
+    def set_status(self, request_id: str, status: str) -> None:
+        """Desa l'estat nou d'una sol·licitud: `paid` o `rejected` (§15.5)."""
+        request = self.get(request_id)
+        if request is None:
+            raise LookupError(f"La sol·licitud {request_id} no existeix")
+        if status not in STORED_REQUEST_STATUSES:
+            raise ValueError(f"status no vàlid per desar: {status!r}")
+        request.status = status
 
     def delete(self, request_id: str) -> None:
         """Esborra una sol·licitud cancel·lada (§14.4). El seu id no es torna a fer servir."""
