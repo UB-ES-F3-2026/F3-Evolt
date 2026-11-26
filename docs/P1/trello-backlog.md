@@ -8,18 +8,18 @@
 >
 > **No hi ha import automàtic.** Tot a mà des d'aquest fitxer.
 
-**Numeració:** `US-XX` sencera (01…29), com al doc de l'equip. Sense decimals.
+**Numeració:** `US-XX` sencera (01…42), com al doc de l'equip. Sense decimals. Les US-39 a US-42 venen de dividir la US-16, la US-21 i la US-28 (25/11/2026).
 
 | Persona | Bloc | US |
 |---------|------|-----|
-| **P1** | Alta i primers passos | US-01, US-02, US-03, US-04, US-09 |
+| **P1** | Alta i primers passos | US-01, US-02, US-03, US-04, US-09, US-36…US-38 |
 | **P2** | Estalvi | US-17…US-20 |
 | **P3** | Pantalla principal i XP | US-07, US-23, US-24 |
-| **P4** | Moviments | US-08, US-10, US-11 |
-| **P5** | Social | US-13, US-15, US-16 |
-| **P6** | Transferències + Multidivisa | US-12, US-14, US-21, US-25…US-29 |
+| **P4** | Moviments | US-08, US-10, US-11, US-33…US-35 |
+| **P5** | Social | US-13, US-15, US-16, US-39, US-40, US-30…US-32 |
+| **P6** | Transferències + Multidivisa | US-12, US-14, US-21, US-41, US-25…US-29, US-42 |
 
-**Sincronitzat amb el Trello el 20/10/2026.** Si canvies una card al Trello, canvia-la també aquí.
+**Sincronitzat amb el Trello el 26/11/2026** (backlog de l'Sprint 3: 20 històries Fina a To Do i les èpiques; les US-30 a US-38 han passat de Mitjana a Fina el 26/11). Les històries fetes porten aquí només la descripció i els criteris; el detall complet és a `docs/us/US-XX.md`. Si canvies una card al Trello, canvia-la també aquí.
 
 ## Perfils d'usuari
 
@@ -216,6 +216,128 @@ La recàrrega no suma XP
 
 ---
 
+## US-36 Editar el perfil
+
+**Labels:** Fina, Mitjana, P1
+
+**Descripció:**
+
+```
+COM: client estàndard
+VULL: canviar el meu nom visible i el meu email o telèfon
+PER: mantenir les meves dades al dia.
+
+Perfil: client estàndard.
+
+Assumptes:
+- «Perfil» és la pantalla de la US-24
+- L'email o el telèfon és el que faig servir per entrar (US-3): canviar-lo demana un codi com a la US-2
+- No hi ha foto (l'avatar continua sent les inicials) ni adreça: l'app no desa aquestes dades (decisió del PO, 26/11)
+
+Estimació: SP 3 · VP 4 · Prioritat Mitjana
+
+Èpica: EP-14
+
+Revisió del 26/11 (TPO.3 #325): de Mitjana a Fina. Sense foto, adreça, nom legal ni data de naixement (l'app no els desa); el canvi d'email o telèfon es verifica amb codi.
+```
+
+**Checklist Acceptance Criteria:**
+
+```
+A «Perfil» (US-24) hi ha la fila «Editar el perfil ›», que obre «Editar el perfil» (capçalera «← Perfil» · «Editar el perfil») amb l'avatar d'inicials, «Nom visible», «@usuari» (gris, no editable) i «Email o telèfon» amb el botó «Canviar»
+«Nom visible» admet d'1 a 40 caràcters. Buit: «El nom no pot estar buit.» i «Desar» desactivat. «Desar» queda desactivat mentre el nom no canvia
+En desar surt «Perfil actualitzat.», torna a «Perfil» i el nom nou surt a tot arreu on surt el nom (Inici, cerca de la US-13, avisos)
+«Canviar» obre «Canviar l'email o el telèfon» amb una casella i «Enviar codi». Si ja és d'un altre compte surt «Aquest email o telèfon ja té un compte.»; si és el mateix que tinc, «Aquest ja és el teu email o telèfon.»
+«Enviar codi» envia un codi de 6 xifres a la dada nova i obre «Verifica'l» amb les 6 caselles, com a la US-2: caduca als 10 minuts, «Envia'm un codi nou» i, amb un codi dolent, «El codi no és correcte o ha caducat.»
+Amb el codi correcte surt «Email actualitzat.» (o «Telèfon actualitzat.») i torna a «Editar el perfil». Des d'ara s'entra amb la dada nova; l'antiga ja no serveix
+Després de 5 codis incorrectes, les caselles es bloquegen i surt «Has fet massa intents. Demana un codi nou», com a la US-2. La dada antiga continua funcionant
+«← Perfil» torna sense desar i sense preguntar; un nom escrit i no desat es perd
+Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» sota el botó; no canvia cap dada
+```
+
+---
+
+## US-37 Canviar la contrasenya
+
+**Labels:** Fina, Mitjana, P1
+
+**Descripció:**
+
+```
+COM: client estàndard
+VULL: canviar la meva contrasenya
+PER: mantenir el compte segur.
+
+Perfil: client estàndard amb la sessió iniciada.
+
+Assumptes:
+- La contrasenya nova segueix les regles de la US-1
+- Cal posar la contrasenya actual
+- En canviar-la es tanquen les altres sessions, com a la US-4
+
+Estimació: SP 2 · VP 5 · Prioritat Mitjana
+
+Èpica: EP-14
+
+Revisió del 26/11 (TPO.3 #325): de Mitjana a Fina. Missatge de no coincidència de la US-1; es manté aquesta sessió i es tanquen les altres.
+```
+
+**Checklist Acceptance Criteria:**
+
+```
+A «Perfil» hi ha la fila «Canviar la contrasenya ›», que obre «Canviar la contrasenya» (capçalera «← Perfil») amb «Contrasenya actual», «Contrasenya nova» (a sota, en gris, «Mínim 8 caràcters, amb una majúscula i un número.»), «Repeteix la contrasenya nova» i el botó lila «Canviar la contrasenya»
+El botó queda desactivat fins que les tres caselles estan plenes
+Si la nova no compleix les regles surt sota la casella «La contrasenya ha de tenir 8 caràcters, una majúscula i un número.»; si les dues noves no coincideixen, «Les contrasenyes no coincideixen»; si la nova és igual que l'actual, «La contrasenya nova ha de ser diferent de l'actual.»
+Si l'actual no és correcta surt «La contrasenya actual no és correcta.», no canvia res i la casella «Contrasenya actual» es buida
+Després de 5 contrasenyes actuals incorrectes seguides es tanca la sessió i l'app torna a «Inicia sessió»
+En canviar-la: torna a «Perfil» i a baix surt durant 2 s «Contrasenya canviada.». Aquesta sessió continua oberta i es tanquen les dels altres dispositius
+A la bústia arriba «La contrasenya d'Evolt s'ha canviat. Si no has estat tu, recupera-la amb «He oblidat la contrasenya».»
+«← Perfil» torna sense canviar res i sense preguntar
+Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» sota el botó; la contrasenya no canvia
+```
+
+---
+
+## US-38 Preferències de notificacions
+
+**Labels:** Fina, Baixa, P1
+
+**Descripció:**
+
+```
+COM: client estàndard
+VULL: triar quins avisos rebo
+PER: no rebre avisos que no m'interessen.
+
+Perfil: client estàndard.
+
+Assumptes:
+- Els avisos són els de la bústia (email o SMS simulats)
+- Per defecte, tots activats
+- Els avisos de seguretat no es poden desactivar
+
+Estimació: SP 2 · VP 3 · Prioritat Baixa
+
+Èpica: EP-14
+
+Revisió del 26/11 (TPO.3 #325): de Mitjana a Fina. Tipus: Pagaments, Sol·licituds, Estalvi i Pressupostos; Seguretat sempre activa; tots activats per defecte.
+```
+
+**Checklist Acceptance Criteria:**
+
+```
+A «Perfil» hi ha la fila «Notificacions ›», que obre «Notificacions» (capçalera «← Perfil») amb un interruptor per tipus i, a sota de cada nom, en gris, què inclou
+Tipus: «Pagaments» (enviaments fets i rebuts, i transferències d'altres bancs), «Sol·licituds» (et demanen diners, et rebutgen una sol·licitud), «Estalvi» (aportacions automàtiques i invitacions a guardioles compartides) i «Pressupostos» (avisos del 80 % i del 100 %)
+A sota, la fila «Seguretat» (codis, compte bloquejat, recuperar i canviar la contrasenya) amb «Sempre activa» en gris, sense interruptor
+Un usuari nou té tots els interruptors activats
+En tocar un interruptor canvia i es desa sol, i a baix surt durant 2 s «Preferències desades.»; no hi ha botó «Desar»
+Amb un tipus desactivat, aquells avisos ja no arriben a la bústia; els que ja hi eren es queden
+Les preferències es guarden al servidor: no canvien en tancar la sessió ni des d'un altre dispositiu
+Si no es pot desar, l'interruptor torna a la posició d'abans i surt «No s'han pogut desar les preferències. Torna-ho a provar.»
+```
+
+---
+
 ### EP-01 Registre i accés
 
 **Labels:** Èpica, Alta-compte, P1
@@ -226,6 +348,14 @@ La recàrrega no suma XP
 Tot el que necessita un usuari per crear el compte i entrar-hi de forma segura.
 
 Perfil: visitant (registre), client nou (verificació del codi) i client estàndard (inici de sessió i recuperar la contrasenya). Històries: US-1, US-2, US-3 i US-4.
+```
+
+**Checklist Acceptance Criteria:**
+
+```
+Un visitant es pot registrar amb email o telèfon i verificar el compte amb un codi (US-1, US-2)
+Un client pot iniciar sessió amb la contrasenya (US-3)
+Un client pot recuperar la contrasenya (US-4)
 ```
 
 ---
@@ -239,19 +369,21 @@ Perfil: visitant (registre), client nou (verificació del codi) i client estànd
 ```
 COM: client estàndard
 VULL: gestionar les meves dades i preferències
-PER: adaptar l’app a mi
-
-Històries previstes: editar perfil, canviar email o telèfon, canviar contrasenya, preferències de notificacions
+PER: adaptar l'app a mi.
 
 Perfil: client estàndard.
+
+Històries (Fina, 26/11): US-36 Editar el perfil (inclou canviar l'email o el telèfon), US-37 Canviar la contrasenya i US-38 Preferències de notificacions.
+
+Estimació: 7 SP (suma de les històries) · Prioritat Mitjana
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-Puc editar el nom visible, la foto i l'adreça.
+Puc editar el nom visible.
 Per canviar l'email o el telèfon he de verificar la nova dada amb un codi.
-El nom legal i la data de naixement no es poden editar des de l'app.
+No hi ha foto, adreça, nom legal ni data de naixement: l'app no desa aquestes dades (decisió del PO, 26/11).
 Puc canviar la contrasenya introduint l'actual.
 Puc activar o desactivar cada tipus de notificació, excepte les de seguretat.
 ```
@@ -296,7 +428,7 @@ Si amago els imports i tanco l'app, en tornar a entrar segueixen amagats
 
 ## US-23 Guanyar XP per hàbits saludables
 
-**Labels:** Mitjana, Gamificació, XP, P3
+**Labels:** Fina, Mitjana, Gamificació, XP, P3
 
 **Descripció:**
 
@@ -305,57 +437,68 @@ COM: client estàndard
 VULL: guanyar XP quan faig accions financeres saludables
 PER: sentir-me motivat a mantenir bons hàbits d'estalvi.
 
-Perfil: client estàndard. Els XP de cada acció els configura l'administrador (EP-15).
+Perfil: client estàndard.
 
 Assumptes:
-- XP en crear la primera guardiola, aportar i assolir un objectiu
-- Límit diari d'XP per acció per evitar trampes
-- Retirar una aportació abans de 7 dies resta els XP que havia donat
+- Els XP i els límits diaris són en un sol fitxer de configuració del backend; el panell de l'administrador és l'EP-15 (decisió F, 24/11)
+- Valors: primera guardiola +50 XP, aportació +10 XP (màxim 3 per dia), objectiu assolit +100 XP
+- L'historial d'XP és a «Perfil» (US-24); aquesta història es demostra amb els avisos «+X XP»
 
-Estimació: SP 4 · VP 7 · Prioritat Mitjana
+Estimació: SP 3 · VP 7 · Prioritat Mitjana
+
+Revisió del 25/11: L'historial d'XP passa a la US-24. S'aclareix que cada aportació només es resta una vegada i què és la «primera guardiola».
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-Guanyo XP en crear la primera guardiola, en aportar a una guardiola i en assolir un objectiu d'estalvi
-Els XP que dona cada acció es defineixen en una configuració que l'administrador pot canviar (EP-15), no a cada pantalla
-Quan guanyo XP, surt a dalt de la pantalla durant uns segons un avís amb "+X XP" en lila i el motiu (per exemple "+20 XP · Aportació a Viatge")
-Si retiro una aportació abans de 7 dies, es resten sols els XP que m'havia donat i a l'historial surt "−X XP" en vermell
-Cada acció té un màxim d'XP per dia; un cop arribat, l'acció es pot fer però ja no dona XP
-La pantalla "Historial d'XP" mostra una fila per cada canvi amb la data, el motiu i els XP (en verd si en guanyo, en vermell si en perdo)
+Guanyo XP en: crear la primera guardiola de la meva vida (+50 XP; si ja en tenia alguna, no), aportar a una guardiola (+10 XP, com a màxim 3 aportacions amb XP per dia) i assolir l'objectiu d'una guardiola (+100 XP, una sola vegada per guardiola encara que hi torni a arribar)
+Els XP de cada acció i el màxim per dia són en un sol fitxer de configuració del backend; canviar-los no demana tocar cap pantalla
+Quan guanyo XP surt a dalt, sobre la pantalla on soc, un avís lila amb «+X XP · <motiu>» durant 3 s (per exemple «+10 XP · Aportació a Vacances»); se'n va sol o en tocar-lo
+Si una aportació fa assolir l'objectiu surten els dos avisos, primer «+10 XP · Aportació a <nom>» i després «+100 XP · Objectiu assolit»
+Un cop fetes 3 aportacions amb XP en un dia, les següents es fan igual però no donen XP ni surt l'avís. El dia es compta en hora de Madrid
+Enviar, demanar, pagar o rebutjar sol·licituds i canviar divises no donen XP
+Si retiro d'una guardiola menys de 7 dies després d'una aportació que em va donar XP, es resten els XP d'aquella aportació (la més recent de la guardiola que encara no s'havia restat) i surt l'avís vermell «−10 XP · Retirada de <nom>». Cada aportació només es resta una vegada: una segona retirada resta la següent aportació, si n'hi ha, i si no, no resta res. Els XP mai baixen de 0
+Els XP es guarden al servidor: tancar la sessió o entrar des d'un altre dispositiu no els canvia
 ```
 
 ---
 
-## US-24 Nivells i perfil de progrés
+## US-24 Nivells, perfil i historial d'XP
 
-**Labels:** Mitjana, Gamificació, XP, P3
+**Labels:** Fina, Mitjana, Gamificació, XP, P3
 
 **Descripció:**
 
 ```
 COM: client estàndard
-VULL: pujar de nivell en acumular XP
+VULL: pujar de nivell en acumular XP i veure com els he guanyat
 PER: veure el meu progrés financer a llarg termini.
 
 Perfil: client estàndard.
 
 Assumptes:
-- Cada nivell necessita més XP que l'anterior
-- Celebració en pujar de nivell
+- Depèn de la US-23 (XP)
+- La taula de nivells és al mateix fitxer de configuració que els XP: 1 amb 0 XP, 2 amb 100, 3 amb 250, 4 amb 450 i 5 amb 700
+- L'historial d'XP ve de la US-23 (revisió del 25/11)
 
-Estimació: SP 3 · VP 6 · Prioritat Mitjana
+Estimació: SP 4 · VP 6 · Prioritat Mitjana
+
+Revisió del 25/11: S'hi afegeix l'historial d'XP, que abans era a la US-23.
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-Quan els XP arriben al mínim del nivell següent, pujo de nivell sol, sense fer res
-En pujar de nivell surt una pantalla de celebració amb el text "Has pujat al nivell X!" i el botó lila "Continuar"
-Cada nivell necessita més XP que l'anterior (per exemple: nivell 2 amb 100 XP i nivell 3 amb 250 XP)
-La pantalla "Perfil" mostra el nivell actual en gran, els XP totals i una barra lila amb els XP que falten per al nivell següent (per exemple "180 / 250 XP")
-A "Inici", sota el saldo, surt en petit el nivell actual i la seva barra de progrés
+Els nivells són al mateix fitxer de configuració que els XP: 1 amb 0 XP, 2 amb 100, 3 amb 250, 4 amb 450 i 5 amb 700. Un usuari nou comença al nivell 1 amb 0 XP («0 / 100 XP»)
+Al menú ☰ hi ha «Perfil» (capçalera «← Inici» · «Perfil»)
+«Perfil» mostra «Nivell» i el número en gran en lila, a sota «X XP en total», la barra lila de progrés amb «180 / 250 XP» i «Et falten 70 XP per al nivell 3»; a baix, la fila «Historial d'XP ›». Al nivell 5 (el màxim) la barra surt plena i diu «Has arribat al nivell màxim»
+Quan una acció fa arribar els XP al mínim del nivell següent pujo de nivell sol: després de l'avís «+X XP» surt la pantalla de celebració amb una estrella lila, «Has pujat al nivell X!», «X XP en total» i el botó lila «Continuar», que torna a la pantalla on era. Si en pujo dos de cop, diu el nivell final
+A Inici, sota el saldo i «Total estalviat a guardioles», surt «Nivell X» en lila i a la dreta «180 / 250 XP», amb una barra petita a sota; en tocar-la s'obre «Perfil»
+Si perdo XP (US-23) el nivell no baixa, i la barra mostra els XP que falten des del total actual
+«Historial d'XP» mostra una fila per canvi: el motiu, la data («24 de nov. · 18:20») i a la dreta els XP, en verd amb «+» o en vermell amb «−», el més recent a dalt
+Sense cap canvi, «Historial d'XP» diu «Encara no has guanyat XP. Crea una guardiola per començar.»
+Si no es pot carregar «Perfil» o l'historial surt «S'ha produït un error inesperat. Torna-ho a provar més tard.» amb el botó «Reintentar»
 ```
 
 ---
@@ -369,7 +512,14 @@ A "Inici", sota el saldo, surt en petit el nivell actual i la seva barra de prog
 ```
 El nucli de la gamificació: premiar els hàbits saludables amb XP i nivells.
 
-Perfil: client estàndard. Els valors d'XP i els nivells els configura l'administrador (EP-15). Històries: US-23 i US-24.
+Perfil: client estàndard. A l'Sprint 3 els valors d'XP i els nivells són en un fitxer de configuració del backend (decisió F, 24/11); el panell de l'administrador és l'EP-15. Històries: US-23 i US-24.
+```
+
+**Checklist Acceptance Criteria:**
+
+```
+Guanya XP per hàbits d'estalvi saludables (US-23)
+Puja de nivell i veu el progrés i l'historial d'XP al seu perfil (US-24)
 ```
 
 ---
@@ -383,9 +533,17 @@ Perfil: client estàndard. Els valors d'XP i els nivells els configura l'adminis
 ```
 COM: administrador
 VULL: configurar reptes, insígnies i valors d'XP des d'un panell
-PER: mantenir la gamificació al dia sense publicar noves versions de l'app
+PER: mantenir la gamificació al dia sense publicar noves versions de l'app.
 
 Perfil: administrador, és a dir, una persona de l'equip d'Evolt amb permisos de gestió (no és un client).
+
+Assumptes:
+- A l'Sprint 3 els valors d'XP i els nivells són en un fitxer de configuració del backend (decisió F, 24/11); aquest panell el substituirà
+- Cal un rol d'administrador amb accés restringit
+
+Històries previstes: accés al panell amb rol d'administrador, editar els valors d'XP i els nivells, gestionar reptes i gestionar insígnies.
+
+Estimació: ~13 SP · Prioritat Baixa. Es divideix en històries quan entri en un sprint.
 ```
 
 **Checklist Acceptance Criteria:**
@@ -409,6 +567,15 @@ L'administrador pot modificar els valors d'XP per acció i els llindars de nivel
 Consultar el saldo, veure els moviments i afegir diners al compte.
 
 Perfil: client estàndard. El client nou, sense moviments, veu els estats buits. Històries: US-07 a US-12.
+```
+
+**Checklist Acceptance Criteria:**
+
+```
+El client veu el saldo a Inici i la llista de moviments (US-07, US-08)
+Pot afegir diners amb una recàrrega de prova (US-09)
+Pot filtrar i cercar els moviments i veure'n el detall (US-10, US-11)
+Pot consultar i compartir el seu IBAN per rebre transferències d'altres bancs (US-12)
 ```
 
 ---
@@ -504,23 +671,18 @@ Assumptes:
 - Es registra un moviment de retirada
 - L'import ha de ser més gran que 0
 - No es pot retirar més del que té la guardiola
-
-Estimació: SP 3 · VP 6 · Prioritat Alta
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-A la pantalla d'una guardiola hi ha el botó "Retirar", que obre la pantalla "Retirar de <nom de la guardiola>"
-A dalt es veu el saldo que té la guardiola
-L'import ha de ser més gran que 0 i no més gran que el saldo de la guardiola; si no, la casella es posa vermella, surt el motiu en vermell i el botó "Confirmar" queda desactivat
-En confirmar, el saldo de la guardiola baixa i el principal puja exactament el mateix import
-Surt un tic verd amb "Has retirat X € de <nom>"
-A l'historial de la guardiola surt la retirada en vermell amb "−" i el concepte "Retirada"
-Si el servidor falla, surt el missatge d'error en vermell i cap dels dos saldos canvia
-Si la guardiola té 0,00 €, el botó "Retirar" surt desactivat (gris clar)
-En tocar "Cancel·lar" a "Retirar de <nom de la guardiola>" s'obre la pantalla "Retirada cancel·lada" amb el text "No s'ha retirat res i cap dels dos saldos canvia." i els dos saldos sense canvi ("Saldo disponible: X € · <nom>: Y €"), sense mostrar l'import escrit
-En tocar "Tornar a la guardiola" es torna al detall sense esperar; si no, la pantalla de retirada cancel·lada hi torna sola al cap d'1,5 s
+Al detall de la guardiola hi ha «Retirar» al costat d'«Aportar». Amb 0,00 € surt desactivat (gris, no enfocable) i «Aportar» continua actiu.
+«Retirar de <nom>» mostra «Saldo de la guardiola», «Import», «Confirmar» i «Cancel·lar».
+Import buit: cap missatge i «Confirmar» desactivat. Import ≤ 0: «L'import ha de ser més gran que 0.»
+Més que el saldo de la guardiola: «La guardiola no té prou saldo per aquesta retirada.» i «Confirmar» desactivat. Retirar exactament tot el saldo sí que es pot.
+Èxit: tic verd «Has retirat 30,00 € de Vacances» amb «Saldo disponible: … · Vacances: …»; 1,5 s després torna al detall ja actualitzat.
+La guardiola baixa i el principal puja el mateix import. A l'historial surt «−30,00 €» «Retirada» en vermell i al compte, «Retirada de Vacances».
+Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» L'import es queda escrit i cap saldo canvia.
 ```
 
 ---
@@ -543,22 +705,19 @@ Assumptes:
 - Progrés = saldo / objectiu, en percentatge arrodonit a l'enter
 - Quan el saldo arriba a l'objectiu, la guardiola passa a "Objectiu assolit"
 - Es connecta amb la gamificació (EP-11 i EP-12)
-
-Estimació: SP 3 · VP 5 · Prioritat Alta
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-La pantalla d'una guardiola amb objectiu mostra el saldo i l'objectiu (per exemple "120,00 € de 500,00 €"), una barra de progrés i el percentatge
-La part plena de la barra, en lila, correspon al percentatge: amb un 24 %, la barra està plena una quarta part aproximadament
-Si el saldo és menor que l'objectiu, surt l'etiqueta grisa "En progrés"
-El backend capa el percentatge a 99 a cada lectura mentre el saldo sigui més petit que l'objectiu: amb "79,99 € de 80,00 €" l'API envia "99 %" i l'etiqueta "En progrés", i la pantalla només pinta el que arriba (no el recalcula ni el torna a capar); el 100 % i l'etiqueta verda "Objectiu assolit" només quan el saldo arriba a l'objectiu
-Si el saldo arriba o passa l'objectiu, la barra es posa verda i surt l'etiqueta verda "Objectiu assolit"
-A la llista de guardioles, cada guardiola amb objectiu té una barra petita sota el nom
-Les guardioles sense objectiu no tenen barra, només el saldo
-Després d'aportar o retirar, la barra i el percentatge ja surten actualitzats
-El percentatge també surt escrit amb números (per exemple "24 %"), no només com a barra
+El detall d'una guardiola amb objectiu mostra «150,00 € de 1.000,00 €», la barra, «15 %» i l'etiqueta.
+Saldo < objectiu: barra lila i etiqueta grisa «En progrés». Saldo ≥ objectiu: barra verda plena i etiqueta verda «Objectiu assolit».
+El percentatge s'arrodoneix mig cap amunt (62,5 → 63).
+Per sobre del 100 % el número diu el valor real («125 %») i la barra queda plena, sense passar-se.
+Sense objectiu: ni barra, ni percentatge, ni línia «Objectiu:».
+A la llista, només les guardioles amb objectiu tenen barra petita i «15 %» sota el nom.
+Després d'aportar o retirar, el detall i la llista surten actualitzats sense recarregar.
+El percentatge sempre és text visible: el color no és mai l'únic senyal.
 ```
 
 ---
@@ -572,7 +731,15 @@ El percentatge també surt escrit amb números (per exemple "24 %"), no només c
 ```
 Crear objectius d'estalvi i moure-hi diners, de forma manual o automàtica.
 
-Perfil: client estàndard. El client nou també pot crear la seva primera guardiola. Històries: US-17 a US-21.
+Perfil: client estàndard. El client nou també pot crear la seva primera guardiola. Històries: US-17 a US-21 i US-41 (la US-21 es va dividir en dues el 25/11).
+```
+
+**Checklist Acceptance Criteria:**
+
+```
+Pot crear guardioles i aportar-hi diners (US-17, US-18)
+Pot retirar-ne diners i veure el progrés cap a l'objectiu (US-19, US-20)
+Pot programar aportacions automàtiques i pausar-les, editar-les o eliminar-les (US-21, US-41)
 ```
 
 ---
@@ -584,24 +751,28 @@ Perfil: client estàndard. El client nou també pot crear la seva primera guardi
 **Descripció:**
 
 ```
-COM: equip / PO
-VULL: refinar l'àrea de reptes i ratxes d'estalvi
-PER: tenir claredat abans dels sprints que ho implementen.
+COM: client estàndard
+VULL: superar reptes d'estalvi i mantenir ratxes
+PER: convertir l'estalvi en un hàbit.
+
+Perfil: client estàndard amb almenys una guardiola.
 
 Assumptes:
-- Relació: refina P2
-- Reptes d'estalvi, ratxes, XP per aportar
+- Depèn de l'XP (US-23) i de les aportacions (US-18, US-21)
+- Els reptes els crea l'administrador (EP-15)
 
-Estimació: per definir en refinement
+Històries previstes: apuntar-se a un repte d'estalvi, progrés i recompensa del repte, ratxa setmanal d'aportacions.
 
-Perfil: les futures històries seran de client estàndard.
+Estimació: ~10 SP · Prioritat Baixa. Es divideix en històries quan entri en un sprint.
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-L'àrea té almenys una US futura o spike associat
-El PO accepta l'èpica com a contenidor del backlog
+Puc apuntar-me a un repte d'estalvi (per exemple «Estalvia 50 € aquesta setmana») i en veig el progrés
+Completar un repte dona XP (US-23)
+Cada setmana amb almenys una aportació suma 1 a la ratxa; una setmana sense cap aportació la torna a 0
+La ratxa actual i la millor ratxa surten a «Perfil» (US-24)
 ```
 
 ---
@@ -615,9 +786,17 @@ El PO accepta l'èpica com a contenidor del backlog
 ```
 COM: client estàndard
 VULL: aconseguir insígnies i desbloquejar recompenses
-PER: sentir que els meus progressos es reconeixen i mantenir la motivació
+PER: sentir que els meus progressos es reconeixen i mantenir la motivació.
 
 Perfil: client estàndard. El client nou veu el tutorial de benvinguda.
+
+Assumptes:
+- Depèn de l'XP i els nivells (US-23, US-24)
+- Les insígnies es configuren des del panell de l'EP-15
+
+Històries previstes: insígnies per fites d'estalvi, pantalla d'insígnies amb el progrés de les bloquejades, compartir una insígnia sense dades financeres, recompenses visuals en pujar de nivell i tutorial de benvinguda.
+
+Estimació: ~15 SP · Prioritat Baixa. Es divideix en històries quan entri en un sprint.
 ```
 
 **Checklist Acceptance Criteria:**
@@ -733,6 +912,127 @@ Hi ha l'enllaç "Reportar un problema", que obre un formulari amb el moviment ja
 
 ---
 
+## US-33 Categoritzar moviments
+
+**Labels:** Fina, Mitjana, Moviments, P4
+
+**Descripció:**
+
+```
+COM: client estàndard
+VULL: que cada despesa tingui una categoria
+PER: saber en què gasto.
+
+Perfil: client estàndard amb moviments.
+
+Assumptes:
+- Categories fixes: Menjar, Transport, Compres, Casa, Oci i Altres
+- Només tenen categoria les despeses del compte principal; els ingressos i les aportacions a guardioles, no
+- La categoria automàtica surt primer de paraules clau del concepte i, si no n'hi ha cap, de la icona del moviment
+
+Estimació: SP 3 · VP 5 · Prioritat Mitjana
+
+Èpica: EP-10
+
+Revisió del 26/11 (TPO.2 #324): de Mitjana a Fina. Llista de paraules clau per categoria i pas de les icones del seed a categories.
+```
+
+**Checklist Acceptance Criteria:**
+
+```
+Cada despesa del compte principal té una categoria de la llista fixa: Menjar, Transport, Compres, Casa, Oci i Altres. Els ingressos i les aportacions a guardioles no en tenen
+La categoria es posa sola amb aquestes paraules clau del concepte (sense distingir majúscules ni accents): Menjar → restaurant, sopar, dinar, esmorzar, menú, cafeteria, cafè, fruiteria; Transport → taxi, tren, bitllet, abonament, bus, metro, gasolina; Compres → supermercat, botiga, llibreria, roba; Casa → lloguer, llum, aigua, gas, internet; Oci → cinema, gimnàs, concert, entrades
+Si el concepte no té cap paraula clau, la categoria surt de la icona: food → Menjar, transport → Transport, shopping → Compres, i la resta (transfer, other) → Altres
+A «Detall del moviment» (US-11), sota la contrapart, hi ha la fila «Categoria» amb el nom en lila i «▾». En tocar-la s'obre la llista de les 6 categories amb la triada marcada; en triar-ne una es tanca, es desa i surt «Categoria desada.»
+Una categoria triada a mà no la torna a canviar la regla automàtica
+A «Moviments», sota la cerca de la US-10, hi ha una fila de botons: «Totes» (per defecte) i les 6 categories. En triar-ne una, la llista només mostra les despeses d'aquella categoria, junt amb les dates, el tipus i la cerca de la US-10
+«Esborrar filtres» (US-10) també torna la categoria a «Totes». Si no hi ha cap moviment que compleixi els filtres surt «No hi ha resultats»
+Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» sota el botó en desar la categoria; es queda la que hi havia
+```
+
+---
+
+## US-34 Despeses del mes per categoria
+
+**Labels:** Fina, Mitjana, Moviments, P4
+
+**Descripció:**
+
+```
+COM: client estàndard
+VULL: veure un gràfic de les despeses del mes per categoria
+PER: entendre on van els meus diners.
+
+Perfil: client estàndard amb moviments.
+
+Assumptes:
+- Depèn de la US-33 (categories)
+- Només compten les despeses amb categoria (no els ingressos ni les aportacions a guardioles)
+- Es pot mirar el mes actual i els 5 anteriors
+
+Estimació: SP 3 · VP 5 · Prioritat Mitjana
+
+Èpica: EP-10
+
+Revisió del 26/11 (TPO.2 #324): de Mitjana a Fina. Gràfic de barres horitzontals; mes actual i 5 anteriors; variació en % enter.
+```
+
+**Checklist Acceptance Criteria:**
+
+```
+Al menú ☰ hi ha «Anàlisi», que obre la pantalla «Anàlisi» (capçalera «← Inici» · «Anàlisi»)
+A dalt, la targeta del mes: «‹», el mes («Novembre 2026») i «›». Per defecte, el mes actual. «›» queda desactivat al mes actual i «‹» al cinquè mes anterior
+Sota el mes, «Total gastat» i l'import en gran, i a sota la variació respecte al mes anterior en percentatge enter: en vermell «+8 % respecte a octubre» si he gastat més, en verd «−5 % respecte a octubre» si menys, i en gris «Igual que a octubre» si és el mateix
+El gràfic és de barres horitzontals: una fila per categoria amb despesa aquell mes, de la que més a la que menys, amb el nom, l'import a la dreta, la barra lila (la més gran fa tot l'ample) i a sota en gris el percentatge del total i la variació de la categoria
+En tocar una categoria s'obre «Moviments» amb aquella categoria i les dates del mes ja filtrades (US-33, US-10)
+Un mes sense cap despesa mostra «Aquest mes encara no tens despeses.» en gris sota la targeta del mes
+Si el mes anterior no té despeses, en lloc de la variació surt «Sense despeses a octubre»
+Si no es pot carregar surt «S'ha produït un error inesperat. Torna-ho a provar més tard.» amb el botó «Reintentar»
+```
+
+---
+
+## US-35 Pressupost mensual per categoria
+
+**Labels:** Fina, Mitjana, Moviments, P4
+
+**Descripció:**
+
+```
+COM: client estàndard
+VULL: fixar un pressupost mensual per categoria
+PER: no gastar més del que vull.
+
+Perfil: client estàndard amb moviments.
+
+Assumptes:
+- Depèn de la US-33 i la US-34
+- Un pressupost val per a tots els mesos fins que el canvio o el trec
+- Els XP del mes complert van al mateix fitxer de configuració que els de la US-23
+
+Estimació: SP 3 · VP 5 · Prioritat Mitjana
+
+Èpica: EP-10
+
+Revisió del 26/11 (TPO.2 #324): de Mitjana a Fina. Text dels avisos del 80 % i del 100 %; +50 XP per mes complert.
+```
+
+**Checklist Acceptance Criteria:**
+
+```
+A «Anàlisi» (US-34), sota el gràfic, hi ha la targeta «Pressupostos del mes» amb una fila per categoria: les que tenen pressupost mostren el nom, «238,10 / 280,00 €», la barra i a sota «85 % · et queden 41,90 €»; les que no en tenen, el nom i «Afegir ›» en lila
+La barra és lila fins al 79 %, taronja del 80 % al 100 % i vermella per sobre; per sobre del 100 % la barra queda plena i el text diu «Has superat el pressupost en 16,30 €»
+«Afegir ›» o tocar una fila amb pressupost obre el diàleg «Pressupost de <categoria>» amb «Import mensual» (en euros), «Cancel·lar» i «Desar». Si ja en té, també surt «Treure pressupost» en vermell
+Import buit: «Desar» desactivat. Import ≤ 0: «L'import ha de ser més gran que 0.» En desar surt «Pressupost desat.» i la fila s'actualitza; «Cancel·lar», Esc o clic fora tanquen sense canviar res
+«Treure pressupost» el treu sense preguntar més, surt «Pressupost tret.» i la fila torna a «Afegir ›»
+Quan una despesa fa arribar una categoria al 80 %, a la bústia arriba «Has gastat el 80 % del pressupost de Menjar: 224,00 € de 280,00 €.»; quan el supera, «Has superat el pressupost d'Oci: 96,30 € de 80,00 €.». Cada avís, com a màxim una vegada per categoria i mes
+Si acabo un mes amb almenys un pressupost i sense superar-ne cap, la propera vegada que obro l'app guanyo +50 XP amb l'avís «+50 XP · Pressupostos complerts a novembre» (US-23)
+Als mesos anteriors (US-34) els pressupostos es veuen però no es poden canviar: no surten «Afegir ›» ni el diàleg
+Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» sota el botó del diàleg; el pressupost queda com estava
+```
+
+---
+
 ### EP-10 Anàlisi de despeses i pressupostos
 
 **Labels:** Èpica, Moviments, P4
@@ -744,14 +1044,15 @@ COM: client estàndard
 VULL: veure en què gasto i fixar pressupostos
 PER: controlar millor les meves finances.
 
-Assumptes:
-- Històries previstes: categorització automàtica i manual, gràfic mensual, crear pressupost, avisos de pressupost, XP per pressupost complert
-- Depèn del sistema d'XP (US-23)
-- Pendent de decidir com es categoritza una despesa sense comerços
-
-Estimació: per definir en refinement
-
 Perfil: client estàndard amb moviments.
+
+Assumptes:
+- Depèn del sistema d'XP (US-23) per a l'XP del pressupost complert
+- Una despesa sense comerç es categoritza per paraules clau del concepte i, si no en coincideix cap, per la icona del moviment (US-33)
+
+Històries (Fina, 26/11): US-33 Categoritzar moviments, US-34 Despeses del mes per categoria i US-35 Pressupost mensual per categoria.
+
+Estimació: 9 SP (suma de les històries) · Prioritat Mitjana
 ```
 
 **Checklist Acceptance Criteria:**
@@ -785,23 +1086,26 @@ Assumptes:
 - Cerca per @usuari, telèfon o email
 - Mai es mostren dades financeres als resultats
 - No apareixo als meus propis resultats
-
-Estimació: SP 2 · VP 6 · Prioritat Alta
+- `User` porta `username` i `phone`, i el seed té 8 usuaris (T13.2)
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-A la pantalla "Enviar diners" hi ha una barra de cerca amb el text gris "@usuari, telèfon o email", i mentre escric surten els usuaris que coincideixen
-Cada resultat mostra només la foto rodona, el nom visible i, a sota en gris, el @usuari; mai cap saldo ni moviment
-Si busco el meu propi nom o @usuari, no surto als resultats
+A «Enviar diners» (`/pagaments`, des de l'enllaç d'Inici) hi ha la barra amb el text gris «@usuari, telèfon o email» i els resultats surten mentre escric.
+Cada fila només té inicials (o foto), nom i «@usuari» en gris: cap import ni saldo. Un usuari sense nom mostra el «@usuari» com a nom.
+«611 22 33 02», «+34 611 22 33 02» i «611223302» donen la mateixa fila.
+Cercar el meu nom, «@demo», el meu email o el meu telèfon no em retorna mai.
+Sense coincidències surt «No hi ha resultats»; amb el camp buit torna la llista inicial sense aquest text.
+Tocar una fila obre `/pagaments/enviar?to=<id>`, i recarregar-la manté el destinatari.
+Amb més de 64 caràcters surt «Les dades no són vàlides. Revisa-les i torna-ho a provar.» amb «Reintentar».
 ```
 
 ---
 
 ## US-15 Sol·licitar diners
 
-**Labels:** Mitjana, Social, P5
+**Labels:** Fina, Mitjana, Social, P5
 
 **Descripció:**
 
@@ -813,50 +1117,259 @@ PER: que em torni el que em deu.
 Perfil: client estàndard.
 
 Assumptes:
-- Estats: pendent, pagada, rebutjada i caducada (a l'Sprint 2 només se'n veuen "Pendent" i "Caducada"; "Pagada" i "Rebutjada" arriben amb la US-16)
+- Estats: pendent, pagada, rebutjada i caducada
 - Una sol·licitud sense resposta caduca als 7 dies
-
-Estimació: SP 3 · VP 6 · Prioritat Mitjana
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-A "Inici" entro pel menú hamburguesa a "Sol·licituds enviades" i el botó "Demanar diners" viu allà dins (no hi ha cap targeta a Inici): trio el destinatari, escric l'import i un concepte; en tocar el botó lila "Enviar sol·licitud", el destinatari rep la notificació "<nom> et demana 30,00 €: <concepte>."
-A "Sol·licituds enviades" veig cada sol·licitud amb el seu estat en una etiqueta de color: "Pendent" (gris), "Pagada" (verd), "Rebutjada" (vermell) o "Caducada" (gris clar)
-Les sol·licituds pendents tenen el botó "Cancel·lar", que demana confirmació i l'esborra: la fila desapareix de la llista per sempre (no hi ha cap estat "Cancel·lada")
-Si en 7 dies ningú respon, la sol·licitud passa sola a "Caducada"
+S'hi entra des d'Inici → menú hamburguesa → «Sol·licituds enviades» (`/requests`). Inici es queda amb els 4 botons.
+Dins de `/requests`, el botó «Demanar diners» obre `/requests/new` amb destinatari (cerca de la US-13), import i concepte.
+«Enviar sol·licitud» queda desactivat fins que hi ha destinatari, import vàlid (fins a 1.000.000,00 €) i concepte d'1 a 140 caràcters.
+Demanar-me a mi mateix: «No et pots demanar diners a tu mateix.»
+Èxit: «Sol·licitud enviada a <nom>.» i, 1,5 s després, `/requests` amb la nova la primera. La bústia simulada rep «<nom> et demana X €: <concepte>.». Si hi ha un error, les dades es mantenen.
+`/requests` mostra cada sol·licitud amb la seva etiqueta. Hi ha quatre estats (Pendent, Pagada, Rebutjada, Caducada); en aquest sprint només es poden veure «Pendent» i «Caducada» (Pagada i Rebutjada arriben amb la US-16).
+Sense resposta, es veu «Caducada» a partir del dia 7 (dia natural de Madrid).
+Només les «Pendent» tenen «Cancel·lar», que obre el diàleg «Cancel·lar sol·licitud». «Cancel·lar», Esc o clic fora el tanquen sense fer res.
+En confirmar surt «Sol·licitud cancel·lada.» i la sol·licitud s'esborra: desapareix de `/requests` per sempre (no hi ha estat «Cancel·lada»).
+Una sol·licitud no mou diners: ni saldo, ni moviments, ni XP.
 ```
 
 ---
 
-## US-16 Respondre a una sol·licitud
+## US-16 Veure les sol·licituds rebudes
 
-**Labels:** Mitjana, Social, P5
+**Labels:** Fina, Mitjana, Social, P5
 
 **Descripció:**
 
 ```
 COM: client estàndard
-VULL: pagar o rebutjar les sol·licituds que rebo
-PER: decidir què pago.
+VULL: veure les sol·licituds de diners que he rebut
+PER: saber qui em demana diners i quant.
 
-Perfil: client estàndard que ha rebut una sol·licitud.
+Perfil: client estàndard que ha rebut alguna sol·licitud (US-15).
 
 Assumptes:
-- En pagar s'obre l'enviament amb les dades ja posades
-- Sense saldo, s'ofereix afegir diners
+- «Sol·licituds rebudes» s'obre des del menú, sota «Sol·licituds enviades» (decisió B, 24/11)
+- Pagar és la US-39 i rebutjar és la US-40
+- Al seed, l'usuari de la demo té sol·licituds rebudes en els quatre estats
 
-Estimació: SP 3 · VP 6 · Prioritat Mitjana
+Estimació: SP 1 · VP 5 · Prioritat Mitjana
+
+Revisió del 25/11: La US-16 original («Respondre a una sol·licitud») es divideix en US-16 (veure), US-39 (pagar) i US-40 (rebutjar).
+
+Revisió del 26/11 (decisió del PO, P92 a #357): al seed, l'usuari de la demo rep quatre sol·licituds, una en cada estat (`req-03` a `req-06`). La «Pagada» (`req-05`) no té cap moviment, i per això el saldo de la demo es queda en 3.795,21 €. Per veure un pagament de veritat, es paga la «Pendent» (US-39).
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-A "Sol·licituds rebudes" cada sol·licitud té dos botons: "Pagar" (lila) i "Rebutjar" (blanc amb el text en vermell)
-En tocar "Pagar" s'obre la pantalla "Confirmar" de l'enviament (US-14) amb el destinatari, l'import i el concepte ja posats
-En tocar "Rebutjar", qui l'ha enviada rep la notificació "<nom> ha rebutjat la teva sol·licitud"
-Si no tinc prou saldo per pagar-la, surt en vermell "No tens prou saldo" i el botó lila "Afegir diners", que obre la recàrrega
+Al menú ☰, sota «Sol·licituds enviades», hi ha «Sol·licituds rebudes», que obre /requests/received (capçalera «← Inici» · «Sol·licituds rebudes»). Inici es queda amb els 4 botons
+Cada sol·licitud rebuda és una targeta, la més nova a dalt: a l'esquerra el nom i, a sota en gris, l'@usuari, el concepte i la data («23 de nov. · 19:30»); a la dreta l'import en negreta i l'etiqueta d'estat: «Pendent» (groc), «Pagada» (verd), «Rebutjada» (vermell) o «Caducada» (gris)
+Una sol·licitud passa a «Caducada» a partir del dia 7 (dia natural de Madrid), com a la US-15
+Només les «Pendent» tenen, a baix i un al costat de l'altre, els botons «Pagar» (lila ple, US-39) i «Rebutjar» (blanc amb el text en vermell, US-40). Les altres no tenen cap botó
+Sense cap sol·licitud rebuda surt una icona grisa i «Encara no has rebut cap sol·licitud.»
+Si no es pot carregar la llista surt «S'ha produït un error inesperat. Torna-ho a provar més tard.» amb el botó «Reintentar»
+```
+
+---
+
+## US-39 Pagar una sol·licitud rebuda
+
+**Labels:** Fina, Mitjana, Social, P5
+
+**Descripció:**
+
+```
+COM: client estàndard
+VULL: pagar una sol·licitud que he rebut
+PER: tornar els diners sense haver d'escriure res.
+
+Perfil: client estàndard amb una sol·licitud «Pendent» a «Sol·licituds rebudes» (US-16).
+
+Assumptes:
+- Depèn de la US-16 (llista) i reutilitza «Confirmar» de la US-14
+- Pagar és un enviament de la US-14: compta per al límit diari i envia els mateixos avisos
+- Les sol·licituds són sempre en euros (US-15)
+
+Estimació: SP 2 · VP 6 · Prioritat Mitjana
+
+Revisió del 25/11: Ve de la US-16 original («Respondre a una sol·licitud»).
+```
+
+**Checklist Acceptance Criteria:**
+
+```
+«Pagar» obre «Confirmar» de la US-14 amb el destinatari, l'import i el concepte ja posats, que no es poden canviar, i el «Saldo disponible». «← Rebudes» torna a la llista sense pagar
+Si l'import supera el saldo, a «Confirmar» surt en vermell «No tens prou saldo.» i, en lloc de «Confirmar enviament», el botó lila «Afegir diners», que obre la recàrrega (US-09). La sol·licitud continua «Pendent»
+Si l'import passa el límit diari de la US-14, surt en vermell «Has superat el límit diari de 1.000,00 €.» i no es pot confirmar
+En confirmar: tic verd «Has pagat 25,00 € a Alicia» amb «Saldo disponible: …»; 1,5 s després torna a «Sol·licituds rebudes» amb la sol·licitud «Pagada» i sense botons
+A «Sol·licituds enviades» de qui la va fer (US-15), la sol·licitud surt «Pagada»
+El pagament és un enviament de la US-14: −25,00 € als moviments de qui paga, +25,00 € als de qui la va fer, amb el concepte de la sol·licitud, i els avisos de la US-14 a la bústia
+Si en confirmar la sol·licitud ja no és pendent (ha caducat o s'ha respost en un altre dispositiu), surt «Aquesta sol·licitud ja no està pendent.», no es paga res i torna a la llista recarregada
+Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» sota el botó; la sol·licitud continua «Pendent» i cap saldo canvia
+```
+
+---
+
+## US-40 Rebutjar una sol·licitud rebuda
+
+**Labels:** Fina, Mitjana, Social, P5
+
+**Descripció:**
+
+```
+COM: client estàndard
+VULL: rebutjar una sol·licitud que he rebut
+PER: que qui me l'ha enviat sàpiga que no la pagaré.
+
+Perfil: client estàndard amb una sol·licitud «Pendent» a «Sol·licituds rebudes» (US-16).
+
+Assumptes:
+- Depèn de la US-16 (llista)
+- Rebutjar no mou cap diner
+- No es demana cap motiu
+
+Estimació: SP 1 · VP 4 · Prioritat Mitjana
+
+Revisió del 25/11: Ve de la US-16 original («Respondre a una sol·licitud»).
+```
+
+**Checklist Acceptance Criteria:**
+
+```
+«Rebutjar» obre el diàleg «Rebutjar sol·licitud» amb «Segur que vols rebutjar la sol·licitud de <nom> de X €?», «Cancel·lar» i «Rebutjar» (vermell). «Cancel·lar», Esc o clic fora el tanquen sense fer res
+En confirmar surt a dalt «Sol·licitud rebutjada.» en verd i la targeta passa a «Rebutjada», sense botons
+A «Sol·licituds enviades» de qui la va fer surt «Rebutjada», i a la seva bústia arriba «<nom> ha rebutjat la teva sol·licitud»
+No es mou cap diner: els saldos i els moviments de tots dos no canvien
+Si en confirmar la sol·licitud ja no és pendent, surt «Aquesta sol·licitud ja no està pendent.» i la llista es recarrega
+Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» sota el botó; la sol·licitud continua «Pendent»
+```
+
+---
+
+## US-30 Dividir una despesa
+
+**Labels:** Fina, Mitjana, Social, P5
+
+**Descripció:**
+
+```
+COM: client estàndard
+VULL: dividir una despesa amb altres usuaris
+PER: no haver de calcular qui em deu què.
+
+Perfil: client estàndard que ha pagat una despesa compartida.
+
+Assumptes:
+- Cada participant rep una sol·licitud de la US-15 amb la seva part; la meva part no genera cap sol·licitud
+- Com a màxim 9 participants a més de mi (10 persones)
+- El seguiment de la despesa és la US-31
+
+Estimació: SP 3 · VP 5 · Prioritat Mitjana
+
+Èpica: EP-09
+
+Revisió del 26/11 (TPO.1 #323): de Mitjana a Fina. Màxim 9 participants; parts iguals amb els cèntims per a mi; tot o res.
+```
+
+**Checklist Acceptance Criteria:**
+
+```
+A «Demanar diners» (`/requests/new`, US-15), a dalt hi ha dos botons de selecció, «A una persona» (per defecte) i «Dividir una despesa». «Dividir una despesa» canvia el formulari: «Import total», «Concepte» i «Participants»
+A «Participants» hi ha la cerca de la US-13. Cada usuari triat surt en una fila (inicials, nom, «@usuari», la seva part i «×» per treure'l). Un usuari que ja hi és surt en gris a la cerca amb «Ja hi és». Amb 9 participants, la cerca es desactiva i diu «Màxim 9 participants»
+A sota de la llista hi ha la fila «Jo» amb la meva part. Per defecte, «Parts iguals»: el total es divideix entre els participants i jo, i els cèntims que sobren són per a mi
+Amb «Imports personalitzats» cada part es pot escriure (en euros, 2 decimals com a màxim). Si la suma no és el total surt «La suma de les parts ha de ser igual al total.»; si una part és 0, «Cada part ha de ser més gran que 0.»
+«Enviar sol·licituds» queda desactivat fins que hi ha import total (de 0,01 € a 1.000.000,00 €), concepte (d'1 a 140 caràcters), almenys un participant i les parts quadren. Sense cap participant, sota la cerca surt en gris «Afegeix almenys un participant.»
+En enviar: tic verd «Has enviat 3 sol·licituds» i a sota «Pendent de cobrar: 45,00 €»; 1,5 s després torna a «Sol·licituds enviades» amb la despesa dividida a dalt de tot (US-31)
+Cada participant rep a la bústia «<nom> et demana 15,00 €: <concepte>.», com a la US-15. No es mou cap diner
+Es creen totes les sol·licituds o cap: si una falla, no se n'envia cap i les dades del formulari es mantenen
+«← Inici» (la tornada de la capçalera de la US-15) surt sense enviar res ni preguntar; el que he escrit es perd
+Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» sota el botó; no s'envia cap sol·licitud
+```
+
+---
+
+## US-31 Seguiment d'una despesa dividida
+
+**Labels:** Fina, Baixa, Social, P5
+
+**Descripció:**
+
+```
+COM: client estàndard
+VULL: veure qui m'ha pagat la seva part d'una despesa dividida
+PER: saber què em falta cobrar.
+
+Perfil: client estàndard que ha dividit una despesa (US-30).
+
+Assumptes:
+- Depèn de la US-30
+- L'estat de cada part és el de la seva sol·licitud (US-15, US-39, US-40)
+- «Completada» vol dir que tothom ha pagat
+
+Estimació: SP 2 · VP 4 · Prioritat Baixa
+
+Èpica: EP-09
+
+Revisió del 26/11 (TPO.1 #323): de Mitjana a Fina. «Completada» vol dir tots pagats; «Tancada» si no en queda cap de pendent però alguna s'ha rebutjat o ha caducat; «Tornar a enviar» crea una sol·licitud nova.
+```
+
+**Checklist Acceptance Criteria:**
+
+```
+A «Sol·licituds enviades», una despesa dividida surt com una sola targeta: el concepte, a sota en gris «Despesa dividida · 4 persones», «1 de 3 han pagat» i la data; a la dreta el total en negreta i l'etiqueta d'estat; a baix, «Pendent: 30,00 €». Les seves sol·licituds no surten soles a la llista
+L'etiqueta és «Pendent» (groc) mentre alguna part està pendent; «Completada» (verd) quan totes estan pagades; i «Tancada» (gris) quan ja no n'hi ha cap de pendent però alguna està rebutjada o caducada
+En tocar la targeta s'obre el detall (capçalera «← Sol·licituds» · el concepte): a dalt el total i «1 de 3 han pagat · Pendent: 30,00 €», i a sota una fila per participant amb inicials, nom, la seva part i l'etiqueta de la seva sol·licitud
+Les files «Rebutjada» i «Caducada» tenen el botó «Tornar a enviar»: crea una sol·licitud nova de la mateixa part i el mateix concepte, surt «Sol·licitud enviada a Martí.» i la fila passa a «Pendent»
+Quan una part es paga (US-39), el detall i la targeta s'actualitzen en tornar a la pantalla: «2 de 3 han pagat» i el pendent baixa
+Els imports pendents només sumen les parts «Pendent»; les rebutjades i caducades no compten com a cobrades
+Si no es pot carregar el detall surt «S'ha produït un error inesperat. Torna-ho a provar més tard.» amb el botó «Reintentar»
+Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» sota el botó en «Tornar a enviar»; la fila es queda com estava
+```
+
+---
+
+## US-32 Guardiola compartida
+
+**Labels:** Fina, Mitjana, Estalvi, Social, P5
+
+**Descripció:**
+
+```
+COM: client estàndard
+VULL: crear una guardiola amb altres usuaris
+PER: estalviar junts per a un objectiu comú.
+
+Perfil: client estàndard que vol estalviar amb altres usuaris de l'app.
+
+Assumptes:
+- Amplia les guardioles de la US-17 a la US-20
+- Com a màxim 5 membres, comptant qui la crea
+- Les aportacions donen XP com qualsevol aportació (US-23)
+
+Estimació: SP 5 · VP 5 · Prioritat Mitjana
+
+Èpica: EP-09
+
+Revisió del 26/11 (TPO.1 #323): de Mitjana a Fina. Màxim 5 membres; la invitació s'accepta a «Guardioles»; les aportacions donen XP (US-23); eliminar una guardiola compartida queda al backlog.
+```
+
+**Checklist Acceptance Criteria:**
+
+```
+Al formulari «Nova guardiola» (US-17) hi ha l'interruptor «Compartida». En activar-lo surt «Convidar» amb la cerca de la US-13: cada usuari triat surt amb «Convidat» i «×». Amb 4 convidats, la cerca diu «Màxim 5 membres»
+En crear-la, cada convidat rep a la bústia «<nom> et convida a la guardiola «Viatge a Lisboa».» i a la seva pantalla «Guardioles» li surt a dalt la targeta «Invitació de <nom>» amb el nom i l'objectiu, i els botons «Acceptar» (lila) i «Rebutjar»
+«Acceptar» el fa membre i la guardiola surt a la seva llista amb l'etiqueta «Compartida». «Rebutjar» treu la invitació, i a qui l'ha creat li arriba «<nom> no s'ha afegit a «Viatge a Lisboa».»
+El detall d'una guardiola compartida mostra el total, l'objectiu i el progrés (US-20), i la llista «Aportacions» amb una fila per membre (inicials, nom i el que ha aportat); els convidats que no han respost surten amb «Pendent» i 0,00 €
+Qualsevol membre pot aportar del seu saldo principal (US-18). L'aportació suma al total i a la seva fila, i dona XP com qualsevol aportació (US-23)
+«Retirar» deixa retirar com a màxim el que he aportat jo: a sota de l'import surt «Pots retirar fins a 200,00 €» i, si m'hi passo, «Només pots retirar el que has aportat (200,00 €).»
+Un membre que no l'ha creada té «Abandonar la guardiola» (text vermell): obre el diàleg «Abandonar la guardiola» («Sortiràs de «Viatge a Lisboa» i els 200,00 € que hi has aportat tornaran al teu saldo principal.») amb «Cancel·lar» i «Abandonar». En abandonar, torna a «Guardioles», on ja no surt
+Qui l'ha creada no la pot abandonar: no li surt «Abandonar la guardiola»
+Aportar, retirar i abandonar mouen els dos saldos alhora (tot o res), i surten als moviments de cada membre com a la US-18 i la US-19
+Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» sota el botó; cap saldo canvia
 ```
 
 ---
@@ -868,11 +1381,15 @@ Si no tinc prou saldo per pagar-la, surt en vermell "No tens prou saldo" i el bo
 **Descripció:**
 
 ```
-Dividir despeses i estalviar en grup per gestionar diners en comú sense complicacions.
-
-(Històries previstes: dividir una despesa, seguiment de pagaments dividits, crear guardiola compartida, aportar, retirar i abandonar en grup.)
+COM: client estàndard
+VULL: dividir despeses i estalviar en grup
+PER: gestionar diners en comú sense complicacions.
 
 Perfil: client estàndard que comparteix despeses o estalvis amb altres clients.
+
+Històries (Fina, 26/11): US-30 Dividir una despesa, US-31 Seguiment d'una despesa dividida i US-32 Guardiola compartida.
+
+Estimació: 10 SP (suma de les històries) · Prioritat Mitjana
 ```
 
 **Checklist Acceptance Criteria:**
@@ -894,11 +1411,19 @@ Si un membre abandona la guardiola, se li retorna la seva aportació.
 **Descripció:**
 
 ```
-Competir i col·laborar amb amics per motivar-nos mútuament a estalviar.
-
-(Històries previstes: reptes amb amics, invitacions a reptes, rànquing setmanal, privacitat del rànquing.)
+COM: client estàndard
+VULL: competir i col·laborar amb amics
+PER: motivar-nos mútuament a estalviar.
 
 Perfil: client estàndard que té contactes a l'app.
+
+Assumptes:
+- Depèn de l'XP (US-23) i dels reptes (EP-12)
+- Mai es mostren saldos ni imports d'altres usuaris
+
+Històries previstes: reptes amb amics, invitacions a reptes, rànquing setmanal d'XP i privacitat del rànquing.
+
+Estimació: ~13 SP · Prioritat Baixa. Es divideix en històries quan entri en un sprint.
 ```
 
 **Checklist Acceptance Criteria:**
@@ -922,7 +1447,16 @@ Puc sortir del rànquing des dels ajustos de privacitat.
 ```
 Enviar, demanar i rebre diners entre usuaris de l'app.
 
-Perfil: client estàndard. Històries: US-13, US-14, US-15 i US-16.
+Perfil: client estàndard. Històries: US-13, US-14, US-15, US-16, US-39 i US-40 (la US-16 es va dividir en tres el 25/11).
+```
+
+**Checklist Acceptance Criteria:**
+
+```
+Pot cercar un altre usuari de l'app (US-13)
+Pot enviar-li diners, amb un límit diari (US-14)
+Pot demanar-li diners (US-15)
+Veu les sol·licituds que rep i les pot pagar o rebutjar (US-16, US-39, US-40)
 ```
 
 ---
@@ -931,7 +1465,7 @@ Perfil: client estàndard. Històries: US-13, US-14, US-15 i US-16.
 
 ## US-12 Dades del compte (IBAN)
 
-**Labels:** Mitjana, Transferències, P6
+**Labels:** Fina, Mitjana, Transferències, P6
 
 **Descripció:**
 
@@ -943,24 +1477,31 @@ PER: poder rebre transferències d'altres bancs.
 Perfil: client estàndard amb el compte actiu.
 
 Assumptes:
-- IBAN, BIC i titular visibles
-- L'IBAN es pot copiar
+- Cada usuari té un IBAN espanyol fix al seed, amb el dígit de control correcte, i el BIC és el mateix per a tothom (decisió D, 24/11)
+- La transferència d'un altre banc es simula amb una ruta de desenvolupament, com la recàrrega de prova
+- L'IBAN es pot copiar i compartir
 
 Estimació: SP 2 · VP 5 · Prioritat Mitjana
+
+Revisió del 26/11 (decisions del PO a #358): el text de «Compartir» porta l'IBAN en grups de 4 (en tocar l'IBAN es continua copiant sense espais), i l'avís de la bústia acaba amb punt. La transferència d'un altre banc es demostra a preproducció, si la TR06.5 hi activa les rutes de desenvolupament, o en local; a producció no s'activa mai, perquè sumaria diners a qualsevol IBAN (P96).
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-A la pantalla "Dades del compte" surten, una sota l'altra, l'IBAN (en grups de 4 caràcters, per exemple "ES12 3456 7890 ..."), el BIC i el nom del titular
-En tocar l'IBAN es copia, i a baix surt durant uns segons el missatge "IBAN copiat"
-El botó "Compartir" obre el menú del mòbil per enviar les dades per WhatsApp, email o altres apps
-Quan arriba una transferència d'un altre banc, surt als moviments en verd amb "+" i arriba la notificació "Has rebut X €"
+Al menú ☰ hi ha «Dades del compte» (capçalera «← Inici» · «Dades del compte»)
+Una targeta mostra, una sota l'altra i amb l'etiqueta a l'esquerra: «IBAN» en grups de 4 caràcters (24 en total, per exemple «ES91 2100 0418 4502 0005 1332»), «BIC» («EVOLESB1XXX») i «Titular» (el nom de l'usuari; sense nom, l'@usuari)
+Cada usuari té el seu IBAN, sempre el mateix, amb el dígit de control correcte; dos usuaris no tenen mai el mateix
+En tocar l'IBAN es copia sense espais, i a baix surt durant 2 s «IBAN copiat»
+«Compartir» (botó blanc) obre el menú del mòbil amb el text «IBAN: ES91 2100 0418 4502 0005 1332 · BIC: EVOLESB1XXX · Titular: Usuari demo», amb l'IBAN en grups de 4; si el navegador no ho permet, copia aquest text i surt «Dades copiades»
+Una transferència d'un altre banc (simulada amb una ruta de desenvolupament) suma l'import al saldo principal i surt a Inici i a Moviments en verd: «Transferència rebuda · <ordenant>» i «+120,00 €»
+A la bústia arriba «Has rebut 120,00 € de <ordenant>.»
+Si no es poden carregar les dades surt «S'ha produït un error inesperat. Torna-ho a provar més tard.» amb el botó «Reintentar»
 ```
 
 ---
 
-## US-14 Enviar Diners a Usuaris
+## US-14 Enviar diners a usuaris
 
 **Labels:** Fina, Alta, Transferències, P6
 
@@ -977,52 +1518,97 @@ Assumptes:
 - Import més gran que 0 i per sota del límit diari
 - Concepte opcional
 - Notificació a qui envia i a qui rep
-
-Estimació: SP 5 · VP 8 · Prioritat Alta
+- Depèn de la US-13 (llista i cerca de destinataris)
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-A la pantalla "Pagaments" puc triar un destinatari de la llista o amb la cerca (US-13)
-En triar-lo s'obre la pantalla "Enviar", amb la foto i el nom del destinatari a dalt, un teclat numèric per escriure l'import (més gran que 0 i per sota del límit diari) i una casella opcional "Concepte"
-En tocar el botó lila "Continuar" s'obre la pantalla "Confirmar" amb el resum: foto i nom del destinatari, import en gran i concepte
-Si a la pantalla "Enviar" no tinc prou saldo, surt en vermell "No tens prou saldo." i "Continuar" queda desactivat; no s'envia res
-Si l'import supera el que queda del límit diari, a la pantalla "Enviar" surt en vermell "Has superat el límit diari de 1.000,00 €." i "Continuar" queda desactivat; no s'envia res (a "Confirmar enviament" el servidor ho torna a comprovar com a backstop)
-Si tinc saldo, surt un tic verd amb "Has enviat X € a <nom>", els diners arriben a l'instant i el saldo ja surt actualitzat
-Tots dos reben una notificació: "Has enviat X € a <nom>" i "<nom> t'ha enviat X €"
-En tornar a "Inici", el pagament surt a la llista de moviments de tots dos: en vermell amb "−" per a qui envia i en verd amb "+" per a qui rep
+En triar el destinatari (llista o cerca de la US-13) s'obre «Enviar»: destinatari a dalt, «Import» amb teclat numèric i «Concepte» opcional.
+Sense prou saldo, a «Enviar» surt «No tens prou saldo.» en vermell i «Continuar» queda desactivat; no s'envia res.
+Límit de 1.000,00 €/dia, igualtat permesa: si avui he enviat 20,00 €, encara puc enviar 980,00 €. Si l'import el supera, a «Enviar» surt «Has superat el límit diari de 1.000,00 €. Avui encara pots enviar 980,00 €.» en vermell i «Continuar» queda desactivat. El límit no és editable en aquest sprint.
+«Continuar» obre «Confirmar» amb el destinatari, l'import i el concepte, i el botó «Confirmar enviament». El servidor torna a comprovar saldo i límit: si han canviat, surt el mateix missatge i no s'envia res.
+Enviar-me a mi mateix: «No et pots enviar diners a tu mateix.» i no es mou res.
+Destinatari inexistent: «No hem trobat aquest destinatari.» i «Torna a triar el destinatari».
+Èxit: tic verd «Has enviat 20,00 € a Usuari nou» i «Saldo disponible: …»; 1,5 s després torna a Inici.
+A Inici surt «−20,00 €» en vermell a qui envia i «+20,00 €» en verd a qui rep, i recarregar no ho perd. Sense concepte: «Transferència enviada» / «Transferència rebuda».
+A la bústia simulada hi ha «Has enviat X € a <nom>» i «<nom> t'ha enviat X €». No hi ha avisos dins de l'app.
 ```
 
 ---
 
-## US-21 Aportació periòdica automàtica
+## US-21 Programar una aportació automàtica
 
-**Labels:** Mitjana, Estalvi, Transferències, P6
+**Labels:** Fina, Mitjana, Estalvi, Transferències, P6
 
 **Descripció:**
 
 ```
 COM: client estàndard amb guardioles
-VULL: programar aportacions automàtiques
+VULL: programar una aportació automàtica a una guardiola
 PER: estalviar de forma constant sense pensar-hi.
 
 Perfil: client estàndard que ja té almenys una guardiola.
 
 Assumptes:
 - Freqüència setmanal o mensual
-- Sense saldo, no es fa l'aportació i arriba una notificació
+- Les aportacions que ja toquen es fan en llegir les dades, com la caducitat de la US-15; no hi ha cap tasca programada (decisió E, 24/11)
+- El dia es compta en hora de Madrid
+- Pausar, editar i eliminar són la US-41
 
-Estimació: SP 4 · VP 6 · Prioritat Mitjana
+Estimació: SP 3 · VP 6 · Prioritat Mitjana
+
+Revisió del 25/11: La US-21 original es divideix en US-21 (programar) i US-41 (pausar, editar i eliminar). S'hi afegeixen la regla del primer dia i la pausa en assolir l'objectiu.
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-A la pantalla d'una guardiola, l'opció "Aportació automàtica" permet triar l'import, la freqüència ("Cada setmana" o "Cada mes") i el dia
-El dia programat, l'import passa sol del saldo principal a la guardiola i surt als moviments amb el concepte "Aportació automàtica"
-Si aquell dia no hi ha prou saldo, no es fa l'aportació i arriba la notificació "No s'ha pogut fer l'aportació automàtica a <nom>: saldo insuficient"
-L'aportació programada té els botons "Pausar", "Editar" i "Eliminar" (aquest últim en vermell i amb confirmació)
+Al detall de la guardiola, sota «Aportar» i «Retirar», hi ha la targeta «Aportació automàtica ›» amb «Encara no n'has programat cap.»
+El formulari «Aportació automàtica» té «Import» (en euros, amb 2 decimals com a màxim), «Freqüència» («Cada setmana» o «Cada mes») i «Dia» (de dilluns a diumenge si és setmanal; del 1 al 28 si és mensual), i el botó lila «Programar». «Programar» queda desactivat fins que hi ha import i dia; amb import ≤ 0 surt «L'import ha de ser més gran que 0.»
+En programar no es comprova el saldo. Surt «Aportació automàtica programada.» i torna al detall, on la targeta mostra «25,00 € cada mes», «El dia 1 · propera: 1 de des.» i l'etiqueta «Activa». Cada guardiola en té com a màxim una
+La primera aportació és el primer dia programat a partir de demà: si la programo avui amb el dia d'avui, avui no es fa
+Un cop passat el dia programat (des de les 00:00 de Madrid), la propera vegada que obro l'app l'import ja ha passat del saldo principal a la guardiola, amb el concepte «Aportació automàtica» i la data del dia programat. Si n'han passat diversos, se'n fa una per cada dia, de la més antiga a la més nova
+El saldo es comprova en fer cada aportació. Si no n'hi ha prou, aquella no es fa ni es torna a intentar, i a la bústia arriba «No s'ha pogut fer l'aportació automàtica a <nom>: saldo insuficient»
+Una aportació automàtica compta com una aportació normal: actualitza el progrés (US-20) i dona XP (US-23), dins del màxim del dia
+Quan la guardiola arriba a l'objectiu, l'aportació automàtica es pausa sola: la targeta mostra l'etiqueta «Pausada» amb «Objectiu assolit» a sota, i a la bústia arriba «<nom> ha arribat a l'objectiu: s'ha pausat l'aportació automàtica»
+Si s'elimina la guardiola, també s'elimina la seva aportació automàtica
+Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» sota el botó; no es programa res
+```
+
+---
+
+## US-41 Pausar, editar i eliminar l'aportació automàtica
+
+**Labels:** Fina, Mitjana, Estalvi, Transferències, P6
+
+**Descripció:**
+
+```
+COM: client estàndard amb una aportació automàtica
+VULL: pausar, canviar o eliminar l'aportació automàtica
+PER: adaptar l'estalvi quan canvia la meva situació.
+
+Perfil: client estàndard amb una aportació automàtica programada (US-21).
+
+Assumptes:
+- Depèn de la US-21
+- Les aportacions que ja s'han fet no es toquen mai
+
+Estimació: SP 2 · VP 4 · Prioritat Mitjana
+
+Revisió del 25/11: Ve de la US-21 original («Aportació periòdica automàtica»).
+```
+
+**Checklist Acceptance Criteria:**
+
+```
+La targeta d'una aportació automàtica té els botons «Pausar», «Editar» i «Eliminar» (aquest en vermell)
+«Pausar» canvia l'etiqueta a «Pausada» i el botó a «Reprendre». Mentre està pausada no es fa cap aportació, ni tampoc després les dels dies que han passat en pausa
+«Reprendre» torna l'etiqueta a «Activa»; la propera aportació és el primer dia programat a partir de demà. També es pot reprendre una aportació pausada per objectiu assolit (US-21)
+«Editar» obre el formulari de la US-21 amb les dades actuals i el botó «Desar»; en desar surt «Aportació automàtica actualitzada.» i la propera aportació es torna a calcular amb la mateixa regla
+«Eliminar» obre el diàleg «Eliminar aportació automàtica» («Ja no es faran més aportacions de X € a <nom>. Les que ja s'han fet es queden.») amb «Cancel·lar» i «Eliminar». En eliminar, la targeta torna a «Encara no n'has programat cap.»
+Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» sota el botó; l'aportació automàtica queda com estava
 ```
 
 ---
@@ -1044,19 +1630,17 @@ Assumptes:
 - Un sol subcompte per divisa
 - El subcompte nou neix amb saldo 0
 - El total de totes les divises es mostra aproximat en euros
-
-Estimació: SP 4 · VP 6 · Prioritat Mitjana
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-A "Inici" hi ha el botó "Divises", que obre la gestió de subcomptes
-El botó "Afegir divisa" obre la llista de divises disponibles, cadascuna amb el codi i el nom (per exemple "USD · Dòlar americà")
-Les divises de les quals ja tinc subcompte surten en gris i no es poden triar, perquè només hi pot haver un subcompte per divisa
-En triar una divisa surt un tic verd amb "Subcompte en USD creat" i l'app torna a "Inici"
-A "Inici", el subcompte nou surt a la llista amb saldo 0 i el símbol de la seva moneda (per exemple "0,00 $")
-A "Inici" es veu el saldo de cada divisa i, a sota, el total aproximat en euros (per exemple "Total ≈ 1.540,20 €")
+A Inici hi ha el botó «Divises» i la card «Divises» amb «Total ≈ … €».
+`/divises` mostra els comptes i el botó «Afegir divisa».
+«Afegir divisa» mostra EUR, USD, GBP, CHF i JPY amb codi i nom. Les que ja tinc (inclòs l'EUR) surten en gris amb «ja la tens».
+En triar-ne una surt el tic verd «Subcompte en USD creat» i, 1,5 s després, torna a Inici, on surt amb «0,00 $».
+Divisa repetida: «Ja tens un subcompte en aquesta divisa.» Divisa fora de la llista: «Aquesta divisa no és a la llista de divises disponibles.»
+Un subcompte nou no mou el total. El JPY no té decimals («1.234 ¥»).
 ```
 
 ---
@@ -1077,26 +1661,24 @@ Perfil: client estàndard que té almenys un subcompte en divisa.
 Assumptes:
 - Només es pot eliminar si el saldo és 0
 - Si té saldo, cal buidar-lo abans
-
-Estimació: SP 2 · VP 4 · Prioritat Mitjana
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-A la pantalla d'un subcompte hi ha el botó vermell "Eliminar subcompte"
-Si el subcompte té saldo, surt una finestra amb el text "Abans d'eliminar-lo has de deixar el saldo a 0" i no s'elimina
-Si el saldo és 0, surt una finestra que pregunta "Segur que vols eliminar aquest subcompte?" amb els botons "Cancel·lar" i "Eliminar" (en vermell)
-En confirmar, l'app torna a "Inici" i el subcompte ja no surt a la llista
-El detall del subcompte no té botó "Aportar" (decisió del PO): el saldo només s'omple amb "Canviar" (US-27)
-En eliminar-lo, els moviments en euros dels canvis es queden a "Moviments"/Inici; el moviment en divisa només vivia a l'historial del subcompte i desapareix amb ell
+El detall del subcompte té el botó vermell «Eliminar subcompte». Al de l'EUR no surt, i el servidor respon «El compte en euros no es pot eliminar.»
+Amb saldo diferent de 0 (n'hi ha prou amb 0,01 $) surt «Abans d'eliminar-lo has de deixar el saldo a 0» amb «D'acord», i no s'elimina.
+Amb saldo 0 surt «Segur que vols eliminar aquest subcompte?» amb «Cancel·lar» i «Eliminar».
+En confirmar surt el tic «Subcompte eliminat», l'app torna sola a Inici i el subcompte ja no hi és. La divisa torna a estar disponible a «Afegir divisa».
+Els moviments antics es queden a l'historial.
+El subcompte no té botó «Aportar» en aquest sprint: el saldo només s'omple (i es buida) amb «Canviar» (US-27).
 ```
 
 ---
 
 ## US-27 Canviar entre divises
 
-**Labels:** Fina, Mitjana, Multidivisa, P6
+**Labels:** Fina, Alta, Multidivisa, P6
 
 **Descripció:**
 
@@ -1110,80 +1692,138 @@ Perfil: client estàndard amb almenys dos subcomptes, un d'ells amb saldo.
 Assumptes:
 - Calen dos subcomptes i saldo a l'origen
 - Es mostra el tipus de canvi i la comissió abans de confirmar
-
-Estimació: SP 5 · VP 7 · Prioritat Alta
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-A la pantalla "Canviar" trio el subcompte d'origen (a dalt) i el de destí (a sota)
-Amb un teclat numèric escric l'import que vull canviar, i a sota surt en gris quant rebré aproximadament
-En tocar "Continuar" surt la pantalla de resum amb el tipus de canvi (per exemple "1 € = 1,08 $"), la comissió, que s'aplica sempre (1,5 % amb un mínim de 0,50 €), i l'import exacte que rebré
-En tocar el botó lila "Confirmar canvi", si tinc prou saldo a l'origen surt un tic verd amb "Canvi fet"; si no, surt en vermell "No tens prou saldo"
-En tornar a "Inici", els saldos dels dos subcomptes ja surten actualitzats
+Amb un sol subcompte, «Canviar» mostra «Necessites dos subcomptes per canviar divises.» i el botó «Divises».
+A «Canviar» trio l'origen i el destí. L'origen surt en gris al selector de destí.
+Amb el teclat surt «Rebràs aproximadament». Si l'import és massa petit: «L'import és massa petit per canviar.» i «Continuar» queda desactivat.
+El resum mostra el tipus, la comissió (sempre n'hi ha: 1,5 %, mínim 0,50 €), el càrrec a l'origen i «Rebràs exactament». No s'envia res fins a «Confirmar canvi».
+Saldo insuficient (import + comissió): «No tens prou saldo» en vermell.
+Èxit: tic «Canvi fet» i torna a Inici amb els dos saldos i el total actualitzats.
+Tot o res: o canvien els dos saldos i els dos moviments, o no en canvia cap.
 ```
 
 ---
 
-## US-28 Pagaments en divisa
+## US-28 Pagar en divisa des del subcompte
 
-**Labels:** Mitjana, Multidivisa, P6
+**Labels:** Fina, Alta, Multidivisa, P6
 
 **Descripció:**
 
 ```
 COM: client estàndard amb subcomptes en divisa
-VULL: fer pagaments en una altra divisa
-PER: fer compres internacionals o viatjar sense preocupacions.
+VULL: enviar diners a un altre usuari en una divisa des del meu subcompte
+PER: pagar despeses de viatges i compres internacionals amb amics.
 
-Perfil: client estàndard que paga en una moneda que no és l'euro.
+Perfil: client estàndard que té almenys un subcompte en divisa (US-25).
 
 Assumptes:
-- Si hi ha saldo al subcompte d'aquella divisa, es cobra d'allà
-- Si no, es cobra dels euros amb el canvi aplicat sol
-- Els moviments mostren l'import original, el tipus de canvi i la comissió
+- És un enviament de la US-14 amb una divisa triada (decisió C, 24/11)
+- Aquí es paga només des del subcompte d'aquella divisa; pagar des dels euros és la US-42
+- Qui rep ho rep en la mateixa divisa si té aquell subcompte; si no, en euros al tipus de canvi, sense comissió
+- El límit diari de 1.000,00 € de la US-14 compta l'equivalent en euros
 
-Estimació: SP 5 · VP 7 · Prioritat Alta
+Estimació: SP 3 · VP 7 · Prioritat Alta
+
+Revisió del 25/11: La US-28 original («Pagaments en divisa») es divideix en US-28 (des del subcompte) i US-42 (des dels euros).
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-Si pago en una divisa estrangera i tinc prou saldo al subcompte d'aquella divisa, el pagament es treu d'aquest subcompte
-Si no tinc prou saldo en aquella divisa, el pagament es treu del compte principal en euros, aplicant el canvi sol
-Als moviments, un pagament en divisa mostra en vermell l'import original (per exemple "−20,00 $") i a sota, en gris, el tipus de canvi aplicat i la comissió si n'hi ha
+A «Enviar» (US-14), si tinc algun subcompte en divisa, sota el destinatari hi ha el selector «Divisa» amb EUR i els meus subcomptes amb el seu saldo (per exemple «USD · Dòlar nord-americà · 109,61 $»); per defecte, EUR. Sense subcomptes no surt i «Enviar» és com a la US-14
+Amb una divisa triada, l'import s'escriu en aquella divisa amb el símbol al final («20,00 $»; el ien, sense decimals) i a sota, en gris, «Saldo en USD: 109,61 $». Amb l'import a 0, «Continuar» queda desactivat
+Si el subcompte en té prou, «Confirmar» mostra el destinatari, l'import en la divisa, «Es cobra de: Subcompte USD» i el saldo que hi quedarà. No hi ha comissió
+Si el subcompte no en té prou, surt en vermell «No tens prou saldo en USD.» i «Continuar» queda desactivat (la US-42 hi afegeix pagar des dels euros)
+El límit diari de 1.000,00 € de la US-14 compta l'equivalent en euros al tipus de canvi del moment: per sobre surt «Has superat el límit diari de 1.000,00 €.» i «Continuar» queda desactivat
+En confirmar: tic verd «Has enviat 20,00 $ a Izan» amb el saldo que queda al subcompte; 1,5 s després torna a Inici
+Qui rep ho rep al seu subcompte d'aquella divisa si el té («+20,00 $»); si no, al compte en euros al tipus de canvi i sense comissió («+18,18 €»). A la seva bústia arriba «<nom> t'ha enviat 20,00 $»
+A l'historial del subcompte de qui envia surt en vermell «−20,00 $» amb el nom i el concepte
+Si el saldo o el límit canvien entre «Continuar» i «Confirmar enviament», surt el mateix missatge i no s'envia res
+Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» sota el botó; no canvia cap saldo
 ```
 
 ---
 
-## US-29 Límit de canvi sense comissió
+## US-42 Pagar en divisa des dels euros
 
-**Labels:** Mitjana, Multidivisa, P6
+**Labels:** Fina, Mitjana, Multidivisa, P6
 
 **Descripció:**
 
 ```
-COM: client estàndard o client premium
-VULL: tenir un límit mensual de canvi de moneda sense comissions
-PER: estalviar diners en les meves operacions internacionals.
+COM: client estàndard
+VULL: enviar diners en una divisa encara que el meu subcompte no en tingui prou
+PER: poder pagar igualment des dels meus euros.
 
-Perfil: client estàndard (límit de 1.000 € al mes sense comissió) i client premium (límit de 5.000 € al mes).
+Perfil: client estàndard o premium que paga en una divisa (US-28) sense prou saldo al subcompte.
 
 Assumptes:
-- Fins al límit del mes, 0 % de comissió
-- Un cop passat el límit, la comissió es mostra abans d'acceptar
-- El límit torna a començar el dia 1 de cada mes
+- Depèn de la US-28 (selector de divisa)
+- Es fa servir el tipus de canvi i la comissió de la US-27 (1,5 %, mínim 0,50 €)
+- Per al client premium compta com un canvi per al límit mensual sense comissió de la US-29
+- Mai es barregen els dos orígens: o tot del subcompte o tot dels euros
 
-Estimació: SP 3 · VP 5 · Prioritat Mitjana
+Estimació: SP 3 · VP 6 · Prioritat Mitjana
+
+Revisió del 25/11: Ve de la US-28 original («Pagaments en divisa»). Defineix què paga el client premium.
 ```
 
 **Checklist Acceptance Criteria:**
 
 ```
-Fins al límit del mes (1.000 € per al client estàndard i 5.000 € per al client premium), els canvis de divisa tenen 0 % de comissió i al resum surt "Sense comissió"
-Un cop passat el límit, la pantalla de resum mostra en vermell la comissió que se suma (per exemple "Comissió: 2,50 €") abans de tocar "Confirmar canvi"
-Als moviments posteriors al límit, la comissió cobrada surt en gris sota l'import
+Si el subcompte no en té prou però els euros sí, ja no surt «No tens prou saldo en USD.»: «Continuar» queda actiu i «Confirmar» mostra «Es cobra de: Compte en euros», el tipus de canvi («1 € = 1,10 $»), la comissió en vermell i «Se't descomptaran X €» (import en euros + comissió)
+Si tampoc hi ha prou euros per a l'import i la comissió, a «Enviar» surt en vermell «No tens prou saldo.» i «Continuar» queda desactivat
+Per al client premium, aquest pagament compta per al límit de 5.000,00 € al mes de la US-29, com un canvi: dins del límit, «Confirmar» diu «Sense comissió» en verd; si el passa, la comissió és només de la part que el passa
+En confirmar: tic verd «Has enviat 150,00 $ a Izan» amb el saldo en euros que queda; 1,5 s després torna a Inici
+Als moviments de qui paga surt a Inici i a Moviments en vermell l'import en euros («−138,41 €») i a sota, en gris, «150,00 $ · 1 € = 1,10 $» i «Comissió: 2,05 €» (sense comissió, aquesta última línia no surt)
+Qui rep ho rep igual que a la US-28
+El tipus de canvi i la comissió els calcula el servidor: si canvien entre «Continuar» i «Confirmar enviament», surt «El tipus de canvi ha canviat. Revisa l'import.» amb les xifres noves i no s'envia res fins que es torna a confirmar
+Error del servidor o de xarxa: «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» sota el botó; no canvia cap saldo
+```
+
+---
+
+## US-29 Canvi sense comissió per al client premium
+
+**Labels:** Fina, Mitjana, Multidivisa, P6
+
+**Descripció:**
+
+```
+COM: client premium
+VULL: tenir un límit mensual de canvi de moneda sense comissió
+PER: estalviar diners en les meves operacions internacionals.
+
+Perfil: client premium (límit de 5.000 € al mes sense comissió). El client estàndard no canvia: sempre paga la comissió de la US-27 (1,5 %, mínim 0,50 €) (decisió A, 24/11).
+
+Assumptes:
+- Al seed hi ha un usuari premium per a la demo
+- Fins al límit del mes, 0 % de comissió; el límit compta l'import en euros de cada canvi
+- També compten els pagaments en divisa cobrats dels euros (US-42)
+- Un canvi que passa el límit paga comissió només sobre la part que el passa
+- El límit torna a començar el dia 1 de cada mes, en hora de Madrid
+
+Estimació: SP 3 · VP 5 · Prioritat Mitjana
+
+Revisió del 25/11: S'aclareix que els pagaments en divisa cobrats dels euros (US-42) compten per al límit.
+```
+
+**Checklist Acceptance Criteria:**
+
+```
+Al seed hi ha un usuari premium per a la demo. Per al client premium, els canvis fins a 5.000,00 € al mes (sumant l'import en euros de cada canvi) no tenen comissió
+Els pagaments en divisa cobrats dels euros (US-42) compten per al mateix límit, igual que un canvi
+Mentre no arriba al límit, el resum del canvi (US-27) diu «Sense comissió» en verd en lloc de «Comissió: …» i a sota, en gris, «Et queden X € sense comissió aquest mes»; «Se't descomptaran» és igual a l'import
+Si un canvi passa el límit, la comissió (1,5 %, mínim 0,50 €) es calcula només sobre la part que el passa, surt en vermell i a sota diu «Passes el límit en X €: només pagues comissió d'aquesta part»
+Un cop passat el límit, els canvis tenen la comissió normal de la US-27 fins al dia 1 del mes següent a les 00:00 de Madrid
+Als moviments, els canvis amb comissió la mostren en gris sota l'import; els que no en tenen, no
+Per al client estàndard no canvia res: el resum mostra sempre la comissió de la US-27 i mai «Sense comissió»
+El càlcul el fa el servidor: si el límit canvia entre el resum i «Confirmar canvi», s'aplica el que toca i el tic mostra la comissió cobrada
 ```
 
 ---
@@ -1197,9 +1837,9 @@ Als moviments posteriors al límit, la comissió cobrada surt en gris sota l'imp
 ```
 COM: client estàndard
 VULL: tenir saldos en diferents divises dins del meu compte i canviar entre elles
-PER: gestionar els diners quan viatjo o pago en altres monedes
+PER: gestionar els diners quan viatjo o pago en altres monedes.
 
-Perfil: client estàndard i client premium (el premium té un límit de canvi sense comissió més alt, US-29). Històries: US-25 a US-29.
+Perfil: client estàndard i client premium (el premium té un límit de canvi sense comissió més alt, US-29). Històries: US-25 a US-29 i US-42 (la US-28 es va dividir en dues el 25/11).
 ```
 
 **Checklist Acceptance Criteria:**
@@ -1208,7 +1848,7 @@ Perfil: client estàndard i client premium (el premium té un límit de canvi se
 L'usuari pot afegir i eliminar subcomptes en diferents divises (un subcompte per divisa).
 La pantalla principal mostra el saldo de cada divisa i el total aproximat en EUR.
 L'usuari pot canviar diners entre divises visualitzant el tipus de canvi, la comissió i l'import final abans de confirmar.
-Els pagaments es cobren de la divisa corresponent si hi ha saldo, o de la principal aplicant el canvi.
+Els pagaments es cobren de la divisa corresponent si hi ha saldo (US-28), o de la principal aplicant el canvi (US-42).
 Els moviments mostren l'import original, el tipus de canvi i la comissió de les operacions en divises.
 ```
 
@@ -1237,8 +1877,8 @@ Estimació: Sprint 0
 **Checklist Acceptance Criteria:**
 
 ```
-Pipeline es pot executar
-Falla si els tests KO
+Cada push executa build i tests automàticament
+Un test fallit deixa el pipeline en vermell
 ```
 
 ---
