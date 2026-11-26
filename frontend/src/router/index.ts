@@ -10,6 +10,7 @@ import { routes as paymentsRoutes } from './routes/payments'
 import { routes as requestsRoutes } from './routes/requests'
 import { routes as currenciesRoutes } from './routes/currencies'
 import { routes as authRoutes } from './routes/auth'
+import { routes as accountRoutes } from './routes/account'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -23,6 +24,7 @@ const router = createRouter({
     ...requestsRoutes,
     ...currenciesRoutes,
     ...authRoutes,
+    ...accountRoutes,
   ],
 })
 
