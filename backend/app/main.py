@@ -30,6 +30,7 @@ from app.routers import (
     money_requests,
     movements,
     pots,
+    split_expenses,
     subaccounts,
     topups,
     transfers,
@@ -206,6 +207,7 @@ def create_app() -> FastAPI:
     app.include_router(pots.router, prefix="/api")
     app.include_router(users.router, prefix="/api")
     app.include_router(money_requests.router, prefix="/api")
+    app.include_router(split_expenses.router, prefix="/api")
     app.include_router(subaccounts.router, prefix="/api")
     app.include_router(exchanges.router, prefix="/api")
     app.include_router(transfers.router, prefix="/api")
