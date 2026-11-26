@@ -54,6 +54,11 @@ class MoneyRequestRepository:
         sent = [request for request in self._seed.money_requests if request.requester_id == requester_id]
         return sorted(sent, key=MoneyRequest.sort_key, reverse=True)
 
+    def list_by_recipient(self, recipient_id: int) -> list[MoneyRequest]:
+        """Les rebudes per un usuari, de la més recent a la més antiga (§15.2, P4)."""
+        received = [request for request in self._seed.money_requests if request.recipient_id == recipient_id]
+        return sorted(received, key=MoneyRequest.sort_key, reverse=True)
+
     def delete(self, request_id: str) -> None:
         """Esborra una sol·licitud cancel·lada (§14.4). El seu id no es torna a fer servir."""
         self._seed.money_requests = [r for r in self._seed.money_requests if r.id != request_id]

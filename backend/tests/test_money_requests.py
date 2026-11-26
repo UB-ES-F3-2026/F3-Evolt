@@ -41,7 +41,7 @@ def clock(monkeypatch: pytest.MonkeyPatch) -> Clock:
 
 @pytest.fixture
 def seed(client: TestClient, clock: Clock) -> SeedData:
-    """Seed a T0: `req-01` (6/11, caducada) i `req-02` (14/11 a les 19:30, pendent)."""
+    """Seed a T0: enviades `req-01` (6/11, caducada) i `req-02` (14/11 a les 19:30, pendent), i les rebudes `req-03` a `req-06` (§15.8)."""
     fixed = build_seed(now=T0)
     client.app.state.seed = fixed
     return fixed
@@ -75,7 +75,7 @@ def test_create_a_request(client: TestClient, seed: SeedData) -> None:
 
     assert response.status_code == 201
     assert response.json() == {
-        "id": "req-03",
+        "id": "req-07",
         "to": {"id": "usr-03", "name": "Alicia", "username": "aliciaa415"},
         "amount": 2500,
         "concept": "El sopar de divendres",
@@ -92,7 +92,7 @@ def test_sent_requests_newest_first_with_their_state(client: TestClient, seed: S
     items = _list(client)
 
     assert [(item["id"], item["status"]) for item in items] == [
-        ("req-03", "pending"),
+        ("req-07", "pending"),
         ("req-02", "pending"),
         ("req-01", "expired"),
     ]
@@ -238,9 +238,14 @@ def test_expired_is_never_stored(client: TestClient, seed: SeedData, clock: Cloc
     clock.now = datetime(2026, 11, 21, 0, 0, 0, tzinfo=MADRID_TZ)
     _list(client)
 
+    # La `req-03` (rebuda, §15.8) també es veu caducada i continua desada com a pendent.
     assert {request.id: request.status for request in seed.money_requests} == {
         "req-01": "pending",
         "req-02": "pending",
+        "req-03": "pending",
+        "req-04": "rejected",
+        "req-05": "paid",
+        "req-06": "pending",
     }
 
 
@@ -323,10 +328,10 @@ def test_state_is_checked_at_the_moment_of_cancelling(client: TestClient, seed: 
 
 
 def test_the_id_of_a_cancelled_request_is_not_reused(client: TestClient, seed: SeedData) -> None:
-    # SO-22: `req-02` cancel·lada, la nova és `req-03`.
+    # SO-22: `req-02` cancel·lada, la nova és `req-07` (les rebudes del seed són `req-03` a `req-06`, §15.8).
     _cancel(client, "req-02")
 
-    assert _create(client, DINNER).json()["id"] == "req-03"
+    assert _create(client, DINNER).json()["id"] == "req-07"
 
 
 # --- Tot o res, reinici -------------------------------------------------------------------

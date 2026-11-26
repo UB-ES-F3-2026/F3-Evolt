@@ -29,7 +29,9 @@ from app.models import (
     MOVEMENT_STATUS_COMPLETED,
     MOVEMENT_STATUS_PENDING,
     POT_INITIAL_CONCEPT,
+    REQUEST_PAID,
     REQUEST_PENDING,
+    REQUEST_REJECTED,
     STATUS_ACTIVE,
     TOPUP_CONCEPT,
     TOPUP_ICON,
@@ -83,6 +85,15 @@ FIRST_TEAM_USER_ID = 3
 _USER1_MONEY_REQUESTS = [
     (9, "21:15", 4, 4200, "Pizza del diumenge"),
     (1, "19:30", 3, 2500, "El sopar de divendres"),
+]
+# Sol·licituds rebudes per l'usuari 1, una en cada estat (docs/api.md §15.8, P92), amb les
+# dades dels mockups de la US-16: (dies enrere, hora, qui la demana, import, concepte, estat).
+# La de fa 11 dies es veu caducada. La pagada no té moviments: el saldo de l'usuari 1 no canvia.
+_USER1_RECEIVED_MONEY_REQUESTS = [
+    (11, "21:15", 6, 4200, "Entrades del concert", REQUEST_PENDING),
+    (5, "08:10", 5, 1800, "Taxi de l'aeroport", REQUEST_REJECTED),
+    (4, "10:05", 7, 1200, "Cafès de la setmana", REQUEST_PAID),
+    (2, "19:30", 3, 2500, "El sopar de divendres", REQUEST_PENDING),
 ]
 SEED_PASSWORD = "Evolt2026"
 # Hash de bcrypt de SEED_PASSWORD, calculat una vegada i escrit aquí: bcrypt és
@@ -360,6 +371,22 @@ def build_seed(now: datetime | None = None) -> SeedData:
             seq=number,
         )
         for number, (days_ago, hhmm, recipient_id, amount, concept) in enumerate(_USER1_MONEY_REQUESTS, start=1)
+    ]
+    first_received = len(money_requests) + 1
+    money_requests += [
+        MoneyRequest(
+            id=money_request_id(number),
+            requester_id=requester_id,
+            recipient_id=DEMO_USER_ID,
+            amount=amount,
+            concept=concept,
+            created_at=_days_ago_at(now, days_ago, hhmm),
+            status=stored_status,
+            seq=number,
+        )
+        for number, (days_ago, hhmm, requester_id, amount, concept, stored_status) in enumerate(
+            _USER1_RECEIVED_MONEY_REQUESTS, start=first_received
+        )
     ]
 
     next_number = len(movements) + 1

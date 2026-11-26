@@ -1,4 +1,4 @@
-"""Sol·licituds de diners: crear, llistar les enviades i cancel·lar (US-15, docs/api.md §14).
+"""Sol·licituds de diners: crear, llistar les enviades i les rebudes, i cancel·lar (US-15 i US-16, docs/api.md §14 i §15).
 
 Ordre de les validacions en crear (s'aturen al primer error, §14.2):
   1. Format del cos → el router, VALIDATION_ERROR.
@@ -49,6 +49,16 @@ class SentRequest:
 
     request: MoneyRequest
     to: UserSummary
+    status: str
+    expires_at: datetime
+
+
+@dataclass(frozen=True)
+class ReceivedRequest:
+    """Una sol·licitud tal com la veu qui l'ha rebut (§15.1): amb `from` en lloc de `to`."""
+
+    request: MoneyRequest
+    sender: UserSummary
     status: str
     expires_at: datetime
 
@@ -134,6 +144,27 @@ def list_sent(
             )
         )
     return sent
+
+
+def list_received(
+    user_id: int, requests: MoneyRequestRepository, users: UserRepository, now: datetime | None = None
+) -> list[ReceivedRequest]:
+    """Les rebudes per l'usuari, en qualsevol estat, de la més recent a la més antiga (§15.2)."""
+    moment = now or now_madrid()
+    received = []
+    for request in requests.list_by_recipient(user_id):
+        requester = users.get(request.requester_id)
+        if requester is None:
+            raise LookupError(f"Qui ha fet la sol·licitud {request.requester_id} no existeix")
+        received.append(
+            ReceivedRequest(
+                request,
+                UserSummary.from_user(requester),
+                current_status(request, moment),
+                expires_at(request.created_at),
+            )
+        )
+    return received
 
 
 def cancel_request(
