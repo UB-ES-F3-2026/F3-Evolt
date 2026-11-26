@@ -20,7 +20,8 @@ MAX_REQUEST_AMOUNT = 100_000_000
 class MoneyRequest:
     """Camps de l'API: id, to (el destinatari), amount, concept, status, createdAt (§14.1).
 
-    Camps interns: requester_id (qui demana), recipient_id i seq (ordre de creació, P4).
+    Camps interns: requester_id (qui demana), recipient_id, seq (ordre de creació, P4) i
+    split_id (la despesa dividida, §17.9).
     """
 
     id: str
@@ -31,6 +32,8 @@ class MoneyRequest:
     created_at: datetime
     status: str
     seq: int
+    # La despesa dividida de la qual forma part, o None (§17.9, P106).
+    split_id: str | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.id, str) or not self.id:

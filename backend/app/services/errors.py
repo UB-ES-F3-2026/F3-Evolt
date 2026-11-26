@@ -53,6 +53,12 @@ SELF_REQUEST = "SELF_REQUEST"
 INVALID_CONCEPT = "INVALID_CONCEPT"
 REQUEST_NOT_FOUND = "REQUEST_NOT_FOUND"
 REQUEST_NOT_PENDING = "REQUEST_NOT_PENDING"
+# Despeses dividides (docs/api.md §5 i §17.8).
+INVALID_SHARE = "INVALID_SHARE"
+SHARES_DO_NOT_MATCH = "SHARES_DO_NOT_MATCH"
+SPLIT_NOT_FOUND = "SPLIT_NOT_FOUND"
+PART_NOT_FOUND = "PART_NOT_FOUND"
+PART_NOT_RESENDABLE = "PART_NOT_RESENDABLE"
 
 # Codi d'error → estat HTTP de la resposta.
 ERROR_STATUS: dict[str, int] = {
@@ -93,6 +99,11 @@ ERROR_STATUS: dict[str, int] = {
     INVALID_CONCEPT: 422,
     REQUEST_NOT_FOUND: 404,
     REQUEST_NOT_PENDING: 422,
+    INVALID_SHARE: 422,
+    SHARES_DO_NOT_MATCH: 422,
+    SPLIT_NOT_FOUND: 404,
+    PART_NOT_FOUND: 404,
+    PART_NOT_RESENDABLE: 422,
 }
 
 # Missatge per defecte de cada codi (docs/api.md §5). El contracte els marca
@@ -143,6 +154,12 @@ ERROR_MESSAGES: dict[str, str] = {
     INVALID_CONCEPT: "El concepte ha de tenir entre 1 i 140 caràcters.",
     REQUEST_NOT_FOUND: "Aquesta sol·licitud ja no existeix.",
     REQUEST_NOT_PENDING: "Només es poden cancel·lar les sol·licituds pendents.",
+    # Textos de la US-30 i la US-31 (§17.8).
+    INVALID_SHARE: "Cada part ha de ser més gran que 0.",
+    SHARES_DO_NOT_MATCH: "La suma de les parts ha de ser igual al total.",
+    SPLIT_NOT_FOUND: "No hem trobat aquesta despesa dividida.",
+    PART_NOT_FOUND: "Aquest usuari no forma part de la despesa.",
+    PART_NOT_RESENDABLE: "Només es pot tornar a enviar una part rebutjada o caducada.",
 }
 
 
