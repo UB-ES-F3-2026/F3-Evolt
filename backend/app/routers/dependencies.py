@@ -24,6 +24,7 @@ from app.repositories import (
     PasswordResetTokenRepository,
     PotRepository,
     SessionRepository,
+    SplitExpenseRepository,
     SubaccountRepository,
     UserRepository,
     VerificationCodeRepository,
@@ -127,6 +128,14 @@ def money_request_repository(request: Request) -> MoneyRequestRepository:
 
         return FirestoreMoneyRequestRepository(client)
     return MoneyRequestRepository(request.app.state.seed)
+
+
+def split_expense_repository(request: Request) -> SplitExpenseRepository:
+    if client := _firestore(request):
+        from app.repositories.firestore import FirestoreSplitExpenseRepository
+
+        return FirestoreSplitExpenseRepository(client)
+    return SplitExpenseRepository(request.app.state.seed)
 
 
 def atomic(request: Request) -> Atomic:

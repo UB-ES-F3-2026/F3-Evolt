@@ -34,6 +34,7 @@ from app.repositories.firestore.pot import (
     pot_to_dict,
 )
 from app.repositories.firestore.session import SESSIONS
+from app.repositories.firestore.split_expense import SPLIT_EXPENSE_COUNTER, SPLIT_EXPENSES
 from app.repositories.firestore.subaccount import (
     SUBACCOUNT_COUNTER,
     SUBACCOUNT_MOVEMENT_COUNTER,
@@ -62,6 +63,7 @@ COLLECTIONS = (
     MOVEMENTS,
     MOVEMENT_REPORTS,
     MONEY_REQUESTS,
+    SPLIT_EXPENSES,
     SESSIONS,
     VERIFICATION_CODES,
     OUTBOX,
@@ -128,6 +130,7 @@ def write_seed(client: firestore.Client, seed: SeedData) -> None:
             OUTBOX_COUNTER: 1,
             REPORT_COUNTER: seed.next_report_number,
             MONEY_REQUEST_COUNTER: seed.next_money_request_number,
+            SPLIT_EXPENSE_COUNTER: seed.next_split_expense_number,
             SUBACCOUNT_COUNTER: seed.next_subaccount_number,
             SUBACCOUNT_MOVEMENT_COUNTER: seed.next_subaccount_movement_number,
         },

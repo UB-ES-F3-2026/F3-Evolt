@@ -125,18 +125,21 @@ def send_transfer_received(
 
 def send_money_request(
     requester: User, recipient: User, amount: int, concept: str, now: datetime, outbox: OutboxRepository
-) -> None:
-    """Avís a qui ha de pagar una sol·licitud (US-15, T15.2, docs/api.md §14.6)."""
+) -> OutboxMessage:
+    """Avís a qui ha de pagar una sol·licitud (US-15, T15.2, docs/api.md §14.6).
+
+    Retorna el missatge perquè una despesa dividida el pugui treure si falla (§17.2).
+    """
     requester_name = requester.name or f"@{requester.visible_username}"
-    outbox.add(
-        OutboxMessage(
-            to=recipient.identifier,
-            channel=_channel(recipient),
-            type=MESSAGE_MONEY_REQUEST,
-            text=f"{requester_name} et demana {format_euros(amount)}: {concept}.",
-            date=now,
-        )
+    message = OutboxMessage(
+        to=recipient.identifier,
+        channel=_channel(recipient),
+        type=MESSAGE_MONEY_REQUEST,
+        text=f"{requester_name} et demana {format_euros(amount)}: {concept}.",
+        date=now,
     )
+    outbox.add(message)
+    return message
 
 
 def messages_for(raw_to: str | None, outbox: OutboxRepository) -> list[OutboxMessage]:

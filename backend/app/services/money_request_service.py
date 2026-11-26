@@ -118,10 +118,15 @@ def create_request(
 def list_sent(
     user_id: int, requests: MoneyRequestRepository, users: UserRepository, now: datetime | None = None
 ) -> list[SentRequest]:
-    """Les enviades per l'usuari, de la més recent a la més antiga, amb l'estat d'ara (§14.3)."""
+    """Les enviades per l'usuari, de la més recent a la més antiga, amb l'estat d'ara (§14.3).
+
+    Sense les d'una despesa dividida: surten dins de la seva despesa (§17.6, P104).
+    """
     moment = now or now_madrid()
     sent = []
     for request in requests.list_by_requester(user_id):
+        if request.split_id is not None:
+            continue
         recipient = users.get(request.recipient_id)
         if recipient is None:
             raise LookupError(f"El destinatari {request.recipient_id} no existeix")
@@ -141,7 +146,8 @@ def cancel_request(
 ) -> None:
     """Esborra una sol·licitud pendent de l'usuari (§14.4)."""
     request = requests.get(request_id)
-    if request is None or request.requester_id != user_id:
+    # Les parts d'una despesa dividida no es poden cancel·lar (§17.6, P105).
+    if request is None or request.requester_id != user_id or request.split_id is not None:
         raise ApiError(REQUEST_NOT_FOUND)
     if current_status(request, now or now_madrid()) != REQUEST_PENDING:
         raise ApiError(REQUEST_NOT_PENDING)
