@@ -1,4 +1,4 @@
-"""Despeses dividides: dividir una despesa en sol·licituds de diners (US-30, docs/api.md §17).
+"""Despeses dividides: dividir una despesa i seguir-la (US-30 i US-31, docs/api.md §17).
 
 Ordre de les validacions en dividir (s'aturen al primer error, §17.2, P100):
   1. Format del cos (al router) i un participant repetit → VALIDATION_ERROR.
@@ -12,8 +12,11 @@ Ordre de les validacions en dividir (s'aturen al primer error, §17.2, P100):
 Tot o res: la despesa, totes les sol·licituds i tots els avisos, o res. No mou diners.
 
 L'estat, «X de Y han pagat» i el pendent es calculen en llegir (§17.7): no es desen mai.
+
+«Tornar a enviar» (§17.5): SPLIT_NOT_FOUND → PART_NOT_FOUND → PART_NOT_RESENDABLE.
 """
 
+import threading
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -21,8 +24,10 @@ from datetime import datetime
 from app.models import (
     MAX_REQUEST_AMOUNT,
     MAX_REQUEST_CONCEPT,
+    REQUEST_EXPIRED,
     REQUEST_PAID,
     REQUEST_PENDING,
+    REQUEST_REJECTED,
     MoneyRequest,
     SplitExpense,
     SplitPart,
@@ -34,21 +39,31 @@ from app.services.errors import (
     INVALID_AMOUNT,
     INVALID_CONCEPT,
     INVALID_SHARE,
+    PART_NOT_FOUND,
+    PART_NOT_RESENDABLE,
     RECIPIENT_NOT_FOUND,
     SELF_REQUEST,
     SHARES_DO_NOT_MATCH,
+    SPLIT_NOT_FOUND,
     VALIDATION_ERROR,
     ApiError,
 )
 from app.services.money_request_service import current_status
 from app.services.money_text import format_euros
 from app.services.notifications import send_money_request
-from app.services.user_search import UserSummary, find_active_user
+from app.services.user_search import UserSummary, find_active_user, parse_public_user_id
 
 # Estats de la despesa (§17.7).
 SPLIT_PENDING = "pending"
 SPLIT_COMPLETED = "completed"
 SPLIT_CLOSED = "closed"
+
+# Només es pot tornar a enviar una part rebutjada o caducada (US-31).
+RESENDABLE = frozenset({REQUEST_REJECTED, REQUEST_EXPIRED})
+
+# «Tornar a enviar» llegeix l'estat de la part i després crea la sol·licitud. El router ja
+# ho fa dins d'`atomic.run(...)`; el pany protegeix també les crides directes al servei.
+_RESEND_LOCK = threading.RLock()
 
 
 @dataclass(frozen=True)
@@ -180,3 +195,83 @@ def split_view(
         pending_amount=sum(part.amount for part in parts if part.status == REQUEST_PENDING),
         parts=parts,
     )
+
+
+def list_splits(
+    user_id: int,
+    splits: SplitExpenseRepository,
+    requests: MoneyRequestRepository,
+    users: UserRepository,
+    now: datetime | None = None,
+) -> list[SplitView]:
+    """Les despeses dividides de l'usuari, de la més recent a la més antiga (§17.3)."""
+    moment = now or now_madrid()
+    return [split_view(split, requests.list_by_split(split.id), users, moment) for split in splits.list_by_requester(user_id)]
+
+
+def get_split(
+    user_id: int,
+    split_id: str,
+    splits: SplitExpenseRepository,
+    requests: MoneyRequestRepository,
+    users: UserRepository,
+    now: datetime | None = None,
+) -> SplitView:
+    """El detall d'una despesa de l'usuari (§17.4)."""
+    split = _own_split(user_id, split_id, splits)
+    return split_view(split, requests.list_by_split(split.id), users, now or now_madrid())
+
+
+def resend_part(
+    user_id: int,
+    split_id: str,
+    raw_user_id: str,
+    users: UserRepository,
+    splits: SplitExpenseRepository,
+    requests: MoneyRequestRepository,
+    outbox: OutboxRepository,
+    now: datetime | None = None,
+) -> SplitView:
+    """Torna a enviar la part d'un participant que l'ha rebutjada o a qui li ha caducat (§17.5).
+
+    Crea una sol·licitud nova, amb la mateixa part i el mateix concepte; la vella no canvia.
+    """
+    moment = now or now_madrid()
+    with _RESEND_LOCK:
+        split = _own_split(user_id, split_id, splits)
+        participant_id = parse_public_user_id(raw_user_id)
+        part = next((p for p in split.parts if p.user_id == participant_id), None)
+        if part is None:
+            raise ApiError(PART_NOT_FOUND)
+        split_requests = requests.list_by_split(split.id)
+        latest = max((r for r in split_requests if r.recipient_id == part.user_id), key=lambda r: r.seq)
+        if current_status(latest, moment) not in RESENDABLE:
+            raise ApiError(PART_NOT_RESENDABLE)
+        requester = users.get(user_id)
+        participant = users.get(part.user_id)
+        if requester is None or participant is None:
+            raise LookupError(f"Falta un dels usuaris de la despesa {split.id}")
+
+        request = requests.add(
+            requester_id=user_id,
+            recipient_id=part.user_id,
+            amount=part.amount,
+            concept=split.concept,
+            created_at=moment,
+            split_id=split.id,
+        )
+        try:
+            send_money_request(requester, participant, part.amount, split.concept, moment, outbox)
+        except Exception:
+            # Tot o res: sense avís, la sol·licitud nova no es queda.
+            requests.undo_add(request)
+            raise
+        return split_view(split, [*split_requests, request], users, moment)
+
+
+def _own_split(user_id: int, split_id: str, splits: SplitExpenseRepository) -> SplitExpense:
+    """La despesa de l'usuari, o SPLIT_NOT_FOUND si no existeix o és d'un altre (§17.4)."""
+    split = splits.get(split_id)
+    if split is None or split.requester_id != user_id:
+        raise ApiError(SPLIT_NOT_FOUND)
+    return split

@@ -18,7 +18,7 @@ from app.routers.dependencies import (
     user_repository,
 )
 from app.routers.users import UserSummaryResponse
-from app.services.split_expense_service import SplitView, create_split
+from app.services.split_expense_service import SplitView, create_split, get_split, list_splits, resend_part
 
 router = APIRouter(tags=["split-expenses"])
 
@@ -93,6 +93,12 @@ class SplitExpenseResponse(BaseModel):
         )
 
 
+class SplitExpenseListResponse(BaseModel):
+    """Cos de `GET /api/split-expenses`: `{ items }` (§17.3)."""
+
+    items: list[SplitExpenseResponse]
+
+
 @router.post("/split-expenses", status_code=status.HTTP_201_CREATED)
 def post_split_expense(
     body: CreateSplitExpenseRequest,
@@ -108,4 +114,43 @@ def post_split_expense(
     view = run.run(
         lambda: create_split(user_id, body.concept, body.total, body.my_share, parts, users, splits, requests, outbox)
     )
+    return SplitExpenseResponse.from_view(view)
+
+
+@router.get("/split-expenses")
+def get_split_expenses(
+    user_id: Annotated[int, Depends(current_user_id)],
+    users: Annotated[UserRepository, Depends(user_repository)],
+    splits: Annotated[SplitExpenseRepository, Depends(split_expense_repository)],
+    requests: Annotated[MoneyRequestRepository, Depends(money_request_repository)],
+) -> SplitExpenseListResponse:
+    return SplitExpenseListResponse(
+        items=[SplitExpenseResponse.from_view(view) for view in list_splits(user_id, splits, requests, users)]
+    )
+
+
+@router.get("/split-expenses/{split_id}")
+def get_split_expense(
+    split_id: str,
+    user_id: Annotated[int, Depends(current_user_id)],
+    users: Annotated[UserRepository, Depends(user_repository)],
+    splits: Annotated[SplitExpenseRepository, Depends(split_expense_repository)],
+    requests: Annotated[MoneyRequestRepository, Depends(money_request_repository)],
+) -> SplitExpenseResponse:
+    return SplitExpenseResponse.from_view(get_split(user_id, split_id, splits, requests, users))
+
+
+@router.post("/split-expenses/{split_id}/parts/{participant_id}/resend", status_code=status.HTTP_201_CREATED)
+def post_resend_split_part(
+    split_id: str,
+    participant_id: str,
+    user_id: Annotated[int, Depends(current_user_id)],
+    users: Annotated[UserRepository, Depends(user_repository)],
+    splits: Annotated[SplitExpenseRepository, Depends(split_expense_repository)],
+    requests: Annotated[MoneyRequestRepository, Depends(money_request_repository)],
+    outbox: Annotated[OutboxRepository, Depends(outbox_repository)],
+    run: Annotated[Atomic, Depends(atomic)],
+) -> SplitExpenseResponse:
+    # La sol·licitud nova i l'avís van junts (§17.5).
+    view = run.run(lambda: resend_part(user_id, split_id, participant_id, users, splits, requests, outbox))
     return SplitExpenseResponse.from_view(view)
