@@ -30,6 +30,7 @@ class FirestoreMoneyRequestRepository:
         amount: int,
         concept: str,
         created_at: datetime,
+        split_id: str | None = None,
     ) -> MoneyRequest:
         """El model es valida abans de gastar cap número, com a la memòria."""
         request = MoneyRequest(
@@ -41,6 +42,7 @@ class FirestoreMoneyRequestRepository:
             created_at=created_at,
             status=REQUEST_PENDING,
             seq=0,
+            split_id=split_id,
         )
         request.seq = _tx.allocate(self._client, MONEY_REQUEST_COUNTER)
         request.id = money_request_id(request.seq)
@@ -57,6 +59,10 @@ class FirestoreMoneyRequestRepository:
         snapshots = _tx.query(self._requests.where(filter=FieldFilter("requester_id", "==", requester_id)))
         sent = [money_request_from_dict(snapshot.id, snapshot.to_dict()) for snapshot in snapshots]
         return sorted(sent, key=MoneyRequest.sort_key, reverse=True)
+
+    def list_by_split(self, split_id: str) -> list[MoneyRequest]:
+        snapshots = _tx.query(self._requests.where(filter=FieldFilter("split_id", "==", split_id)))
+        return sorted((money_request_from_dict(s.id, s.to_dict()) for s in snapshots), key=lambda r: r.seq)
 
     def delete(self, request_id: str) -> None:
         _tx.delete(self._requests.document(request_id))
@@ -76,6 +82,7 @@ def money_request_to_dict(request: MoneyRequest) -> dict:
         "created_at": request.created_at,
         "status": request.status,
         "seq": request.seq,
+        "split_id": request.split_id,
     }
 
 
@@ -89,4 +96,6 @@ def money_request_from_dict(request_id: str, data: dict) -> MoneyRequest:
         created_at=_tx.to_madrid(data["created_at"]),
         status=data["status"],
         seq=data["seq"],
+        # Les sol·licituds desades abans de la US-30 no tenen el camp.
+        split_id=data.get("split_id"),
     )

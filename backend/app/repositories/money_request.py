@@ -24,6 +24,7 @@ class MoneyRequestRepository:
         amount: int,
         concept: str,
         created_at: datetime,
+        split_id: str | None = None,
     ) -> MoneyRequest:
         """Crea i desa una sol·licitud pendent amb un id nou, i la retorna.
 
@@ -40,6 +41,7 @@ class MoneyRequestRepository:
             created_at=created_at,
             status=REQUEST_PENDING,
             seq=number,
+            split_id=split_id,
         )
         self._seed.next_money_request_number = number + 1
         self._seed.money_requests.append(request)
@@ -53,6 +55,10 @@ class MoneyRequestRepository:
         """Les enviades per un usuari, de la més recent a la més antiga (§14.3, P4)."""
         sent = [request for request in self._seed.money_requests if request.requester_id == requester_id]
         return sorted(sent, key=MoneyRequest.sort_key, reverse=True)
+
+    def list_by_split(self, split_id: str) -> list[MoneyRequest]:
+        """Les sol·licituds d'una despesa dividida, en l'ordre de creació (§17.9)."""
+        return sorted((r for r in self._seed.money_requests if r.split_id == split_id), key=lambda r: r.seq)
 
     def delete(self, request_id: str) -> None:
         """Esborra una sol·licitud cancel·lada (§14.4). El seu id no es torna a fer servir."""

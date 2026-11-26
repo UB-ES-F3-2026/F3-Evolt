@@ -44,6 +44,7 @@ from app.models import (
     Pot,
     PotMovement,
     Session,
+    SplitExpense,
     Subaccount,
     SubaccountMovement,
     User,
@@ -186,6 +187,9 @@ class SeedData:
     # Sol·licituds de diners (T15.2). Cancel·lar-ne una l'esborra (docs/api.md §14.4).
     money_requests: list[MoneyRequest] = field(default_factory=list)
     next_money_request_number: int = field(default=1)
+    # El seed no té cap despesa dividida (§17.9, P106).
+    split_expenses: list[SplitExpense] = field(default_factory=list)
+    next_split_expense_number: int = field(default=1)
     # Subcomptes en divisa (T25.2, docs/api.md §12.11). El seed no en té cap: el compte
     # en euros és l'`Account` de cada usuari, i els nous comencen per sub-01.
     subaccounts: list[Subaccount] = field(default_factory=list)
@@ -225,6 +229,11 @@ def report_id(number: int) -> str:
 def pot_id(number: int) -> str:
     """Id opac de les guardioles (docs/api.md §9.1, P21). El frontend no l'ha d'interpretar."""
     return f"pot-{number:02d}"
+
+
+def split_expense_id(number: int) -> str:
+    """Id opac de les despeses dividides (docs/api.md §17.1, P98). El frontend no l'ha d'interpretar."""
+    return f"split-{number:02d}"
 
 
 def money_request_id(number: int) -> str:

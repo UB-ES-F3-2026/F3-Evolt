@@ -8,6 +8,7 @@ from app.repositories.outbox import ClosedOutboxRepository, OutboxRepository
 from app.repositories.password_reset import PasswordResetTokenRepository
 from app.repositories.pot import PotRepository
 from app.repositories.session import SessionRepository
+from app.repositories.split_expense import SplitExpenseRepository
 from app.repositories.subaccount import SubaccountRepository
 from app.repositories.user import UserRepository
 from app.repositories.verification_code import VerificationCodeRepository
@@ -22,6 +23,7 @@ __all__ = [
     "PasswordResetTokenRepository",
     "PotRepository",
     "SessionRepository",
+    "SplitExpenseRepository",
     "SubaccountRepository",
     "UserRepository",
     "VerificationCodeRepository",
