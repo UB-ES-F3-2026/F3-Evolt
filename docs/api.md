@@ -842,11 +842,11 @@ Propostes de les despeses dividides (T30.1, US-30 i US-31). Comencen a la P98 pe
 | P98 | [17.1](#171-objecte-splitexpense) | `SplitExpense` amb `id` (`split-01`), `concept`, `total`, `myShare`, `createdAt`, `status`, `people`, `paidCount`, `pendingAmount` i `parts` (`requestId`, `to`, `amount`, `status`). |
 | P99 | [17.2](#172-post-apisplit-expenses) | `POST /api/split-expenses` amb `{ concept, total, myShare, parts }`. La pantalla calcula les parts (també «Parts iguals») i el servidor només comprova que quadren. |
 | P100 | [17.2](#172-post-apisplit-expenses) | Ordre de les validacions: format → `RECIPIENT_NOT_FOUND` → `SELF_REQUEST` → `INVALID_AMOUNT` → `AMOUNT_OVER_LIMIT` → `INVALID_CONCEPT` → `INVALID_SHARE` → `SHARES_DO_NOT_MATCH`. |
-| P101 | [17.2](#172-post-apisplit-expenses) | «Cada part ha de ser més gran que 0» també val per a la meva part. La US-30 no ho diu: **ho ha de confirmar el PO**. |
+| P101 | [17.2](#172-post-apisplit-expenses) | «Cada part ha de ser més gran que 0» també val per a la meva part: la fila «Jo» és una part. Decisió del PO (26/11, #364). |
 | P102 | [17.3](#173-get-apisplit-expenses) | `GET /api/split-expenses` → `{ items }`, i «Sol·licituds enviades» l'ajunta per data amb `GET /api/money-requests`. |
 | P103 | [17.5](#175-post-apisplit-expensessplitidpartsuseridresend) | «Tornar a enviar» és `POST /api/split-expenses/{splitId}/parts/{userId}/resend`, que crea una sol·licitud nova i respon la `SplitExpense`; si la part no està rebutjada ni caducada, `PART_NOT_RESENDABLE`. |
 | P104 | [17.6](#176-efecte-sobre-les-sol·licituds-de-lapartat-14) | `GET /api/money-requests` ja no inclou les sol·licituds d'una despesa dividida. |
-| P105 | [17.6](#176-efecte-sobre-les-sol·licituds-de-lapartat-14) | Cancel·lar una sol·licitud d'una despesa dividida respon `REQUEST_NOT_FOUND`. **Ho ha de confirmar el PO.** |
+| P105 | [17.6](#176-efecte-sobre-les-sol·licituds-de-lapartat-14) | Cancel·lar una sol·licitud d'una despesa dividida respon `REQUEST_NOT_FOUND`. Decisió del PO (26/11, #364). |
 | P106 | [17.9](#179-model-intern) | `MoneyRequest` té un camp nou `split_id`, i el seed no té cap despesa dividida. |
 
 ---
@@ -3239,7 +3239,7 @@ Les parts les calcula la pantalla i les envia totes, també amb «Parts iguals»
 4. `total ≤ 0` → `INVALID_AMOUNT`.
 5. `total > 100000000` (1.000.000,00 €) → `AMOUNT_OVER_LIMIT`.
 6. Concepte buit o de més de 140 caràcters → `INVALID_CONCEPT`.
-7. Alguna part, o `myShare`, és `≤ 0` → `INVALID_SHARE` (`422`, «Cada part ha de ser més gran que 0.»). (P101)
+7. Alguna part, o `myShare`, és `≤ 0` → `INVALID_SHARE` (`422`, «Cada part ha de ser més gran que 0.»). La fila «Jo» també és una part (P101, decisió del PO).
 8. `myShare` + la suma de `parts` no és `total` → `SHARES_DO_NOT_MATCH` (`422`, «La suma de les parts ha de ser igual al total.»).
 
 Si una validació falla, no es desa res ni s'envia cap avís.
@@ -3312,7 +3312,7 @@ El detall d'una despesa dividida (US-31).
 ### 17.6 Efecte sobre les sol·licituds de l'apartat 14
 
 - `GET /api/money-requests` ([14.3](#143-get-apimoney-requests)) **ja no inclou** les sol·licituds que formen part d'una despesa dividida: surten dins de la seva `SplitExpense` (US-31). (P104)
-- `POST /api/money-requests/{requestId}/cancel` ([14.4](#144-post-apimoney-requestsrequestidcancel)) amb una sol·licitud d'una despesa dividida respon `REQUEST_NOT_FOUND`, com si no existís: les parts no es poden cancel·lar (US-31), i la pantalla no les mostra soles. (P105, **ho ha de confirmar el PO**)
+- `POST /api/money-requests/{requestId}/cancel` ([14.4](#144-post-apimoney-requestsrequestidcancel)) amb una sol·licitud d'una despesa dividida respon `REQUEST_NOT_FOUND`, com si no existís: les parts no es poden cancel·lar (US-31), i la pantalla no les mostra soles. (P105, decisió del PO)
 - Per a qui rep la sol·licitud, no canvia res: la veu a «Sol·licituds rebudes» (US-16) i la paga o la rebutja com qualsevol altra (US-39 i US-40).
 
 ### 17.7 Estats
@@ -3363,7 +3363,9 @@ Textos de les pantalles de US-30 i US-31, en vermell:
 |---|---|
 | `INVALID_SHARE` | «Cada part ha de ser més gran que 0.» (nou) |
 | `SHARES_DO_NOT_MATCH` | «La suma de les parts ha de ser igual al total.» (nou) |
-| `PART_NOT_RESENDABLE` | La pantalla torna a carregar el detall: la part ja no té «Tornar a enviar» |
+| `SPLIT_NOT_FOUND` | «No hem trobat aquesta despesa dividida.» (nou). La pantalla mostra el missatge genèric amb «Reintentar» (US-31) |
+| `PART_NOT_FOUND` | «Aquest usuari no forma part de la despesa.» (nou). La pantalla mostra el missatge genèric |
+| `PART_NOT_RESENDABLE` | «Només es pot tornar a enviar una part rebutjada o caducada.» (nou). La pantalla torna a carregar el detall: la part ja no té «Tornar a enviar» |
 | La resta | Els de [14.7](#147-errors), o «S'ha produït un error inesperat. Torna-ho a provar més tard.» / «No hi ha connexió amb el servidor. Torna-ho a provar.» |
 
 La pantalla ja no deixa enviar una despesa amb parts a 0 o que no quadren («Enviar sol·licituds» desactivat, US-30); el servidor ho torna a comprovar.

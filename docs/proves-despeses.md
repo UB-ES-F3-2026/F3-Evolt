@@ -69,6 +69,7 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 | **DDP-07** | Envia la despesa de 60,00 €. | Tic verd, «Has enviat 3 sol·licituds» i «Pendent de cobrar: 45,00 €»; 1,5 s després, «Sol·licituds enviades» amb la despesa a dalt de tot. |
 | **DDP-08** | Escriu alguna cosa i toca «← Inici». | Surts sense enviar res i sense cap pregunta. |
 | **DDP-09** | Amb el backend a `SIMULATE_ERROR_RATE=100`, envia. | «S'ha produït un error inesperat. Torna-ho a provar més tard.» sota el botó, i el formulari continua omplert. |
+| **DDP-10** | A «Dividir una despesa», escriu l'import i el concepte sense afegir cap participant. | Sota la cerca, en gris, «Afegeix almenys un participant.», i «Enviar sol·licituds» desactivat. |
 
 ---
 
@@ -116,7 +117,7 @@ L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.m
 | US-30 · 2 · Participants amb la cerca, «Ja hi és» i màxim 9 | DD-07, DD-08, DDP-02, DDP-06 |
 | US-30 · 3 · Fila «Jo» i parts iguals amb els cèntims per a mi | DD-06, DDP-03 |
 | US-30 · 4 · Imports personalitzats: la suma i les parts a 0 | DD-13, DD-14, DDP-04, DDP-05 |
-| US-30 · 5 · «Enviar sol·licituds» desactivat fins que tot quadra | DD-11, DD-12, DDP-04 |
+| US-30 · 5 · «Enviar sol·licituds» desactivat fins que tot quadra; sense participants, «Afegeix almenys un participant.» | DD-07, DD-11, DD-12, DDP-04, DDP-10 |
 | US-30 · 6 · Èxit: «Has enviat 3 sol·licituds» i «Pendent de cobrar» | DD-01, DDP-07 |
 | US-30 · 7 · Avís a cada participant; no es mou cap diner | DD-02, DD-03, DD-04 |
 | US-30 · 8 · Totes les sol·licituds o cap | DD-09, DD-17 |
