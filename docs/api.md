@@ -828,7 +828,7 @@ Propostes de les dades del compte (T12.1, US-12). Comencen a la P93 perquè les 
 | P93 | [16.1](#161-get-apiaccount) | `GET /api/account` → `{ iban, bic, holder }`, amb l'IBAN sense espais (la pantalla l'agrupa de 4 en 4) i el titular amb el nom visible. |
 | P94 | [16.2](#162-com-es-fa-liban) | L'IBAN es calcula del número d'usuari (entitat 2100, oficina 0418, compte `0200051331 + n`, dígits de control del CCC i de l'IBAN) i no es desa. L'usuari 1 té el dels mockups. |
 | P95 | [16.1](#161-get-apiaccount) | El BIC és `EVOLESB1XXX` per a tothom (decisió D, 24/11). |
-| P96 | [16.3](#163-post-apidevincoming-transfers) | La transferència d'un altre banc es simula amb `POST /api/dev/incoming-transfers` `{ iban, amount, payer }`, només amb les rutes de desenvolupament actives. Crea un moviment «Transferència rebuda · <ordenant>» i l'avís `incoming_transfer`. Al desplegament no existeix: **el PO ha de confirmar on es fa la demo**. |
+| P96 | [16.3](#163-post-apidevincoming-transfers) | La transferència d'un altre banc es simula amb `POST /api/dev/incoming-transfers` `{ iban, amount, payer }`, només amb les rutes de desenvolupament actives. Crea un moviment «Transferència rebuda · <ordenant>» i l'avís `incoming_transfer`. Al desplegament no existeix. Decisió del PO (26/11, #358): la demo es fa a preproducció si la TR06.5 hi activa les rutes de desenvolupament, i si no, en local; a producció, mai. |
 | P97 | [16.3](#163-post-apidevincoming-transfers) | Ordre de les validacions: format → `RECIPIENT_NOT_FOUND` (IBAN que no és de cap usuari actiu) → `INVALID_AMOUNT` → `AMOUNT_OVER_LIMIT` (més d'1.000.000,00 €). |
 
 ---
@@ -3155,7 +3155,7 @@ Les dades del compte de l'usuari de la sessió (US-12). Ruta **protegida** ([8.2
 
 - No canvia res i es pot demanar tantes vegades com calgui.
 - Si falla, la pantalla mostra «S'ha produït un error inesperat. Torna-ho a provar més tard.» amb «Reintentar» (US-12).
-- El text de «Compartir» el munta la pantalla amb aquests tres camps: «IBAN: ES91 2100 0418 4502 0005 1332 · BIC: EVOLESB1XXX · Titular: Usuari demo».
+- El text de «Compartir» el munta la pantalla amb aquests tres camps, amb l'IBAN agrupat (decisió del PO, 26/11); en tocar l'IBAN es continua copiant sense espais: «IBAN: ES91 2100 0418 4502 0005 1332 · BIC: EVOLESB1XXX · Titular: Usuari demo».
 
 **Resposta `200`** (usuari 1):
 
@@ -3224,7 +3224,7 @@ Si una validació falla, no es mou res.
   - `concept`: «Transferència rebuda · <ordenant>», perquè Inici i Moviments el mostrin com al mockup;
   - `counterparty`: l'ordenant.
 - No compta per a cap límit (ni de recàrrega ni d'enviament) i no dona XP.
-- Al desplegament les rutes de desenvolupament estan desactivades, i per tant aquesta també. Per a la demo es fa servir en local o en un entorn amb `ENABLE_DEV_ROUTES` activat (**ho ha de confirmar el PO**, P96).
+- Al desplegament les rutes de desenvolupament estan desactivades, i per tant aquesta també. Per a la demo es fa servir a preproducció, si la TR06.5 hi activa les rutes de desenvolupament, o en local. A producció no s'activa mai, perquè suma diners a qualsevol IBAN (decisió del PO, 26/11, P96).
 
 **Petició:**
 
