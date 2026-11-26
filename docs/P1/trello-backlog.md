@@ -1159,6 +1159,8 @@ Assumptes:
 Estimació: SP 1 · VP 5 · Prioritat Mitjana
 
 Revisió del 25/11: La US-16 original («Respondre a una sol·licitud») es divideix en US-16 (veure), US-39 (pagar) i US-40 (rebutjar).
+
+Revisió del 26/11 (decisió del PO, P92 a #357): al seed, l'usuari de la demo rep quatre sol·licituds, una en cada estat (`req-03` a `req-06`). La «Pagada» (`req-05`) no té cap moviment, i per això el saldo de la demo es queda en 3.795,21 €. Per veure un pagament de veritat, es paga la «Pendent» (US-39).
 ```
 
 **Checklist Acceptance Criteria:**
@@ -1480,6 +1482,8 @@ Assumptes:
 - L'IBAN es pot copiar i compartir
 
 Estimació: SP 2 · VP 5 · Prioritat Mitjana
+
+Revisió del 26/11 (decisions del PO a #358): el text de «Compartir» porta l'IBAN en grups de 4 (en tocar l'IBAN es continua copiant sense espais), i l'avís de la bústia acaba amb punt. La transferència d'un altre banc es demostra a preproducció, si la TR06.5 hi activa les rutes de desenvolupament, o en local; a producció no s'activa mai, perquè sumaria diners a qualsevol IBAN (P96).
 ```
 
 **Checklist Acceptance Criteria:**
@@ -1489,9 +1493,9 @@ Al menú ☰ hi ha «Dades del compte» (capçalera «← Inici» · «Dades del
 Una targeta mostra, una sota l'altra i amb l'etiqueta a l'esquerra: «IBAN» en grups de 4 caràcters (24 en total, per exemple «ES91 2100 0418 4502 0005 1332»), «BIC» («EVOLESB1XXX») i «Titular» (el nom de l'usuari; sense nom, l'@usuari)
 Cada usuari té el seu IBAN, sempre el mateix, amb el dígit de control correcte; dos usuaris no tenen mai el mateix
 En tocar l'IBAN es copia sense espais, i a baix surt durant 2 s «IBAN copiat»
-«Compartir» (botó blanc) obre el menú del mòbil amb el text «IBAN: … · BIC: … · Titular: …»; si el navegador no ho permet, copia aquest text i surt «Dades copiades»
+«Compartir» (botó blanc) obre el menú del mòbil amb el text «IBAN: ES91 2100 0418 4502 0005 1332 · BIC: EVOLESB1XXX · Titular: Usuari demo», amb l'IBAN en grups de 4; si el navegador no ho permet, copia aquest text i surt «Dades copiades»
 Una transferència d'un altre banc (simulada amb una ruta de desenvolupament) suma l'import al saldo principal i surt a Inici i a Moviments en verd: «Transferència rebuda · <ordenant>» i «+120,00 €»
-A la bústia arriba «Has rebut 120,00 € de <ordenant>»
+A la bústia arriba «Has rebut 120,00 € de <ordenant>.»
 Si no es poden carregar les dades surt «S'ha produït un error inesperat. Torna-ho a provar més tard.» amb el botó «Reintentar»
 ```
 
