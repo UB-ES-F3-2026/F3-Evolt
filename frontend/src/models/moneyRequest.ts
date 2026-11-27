@@ -1,5 +1,5 @@
 /**
- * Money requests the logged-in person sent (docs/api.md §14).
+ * Money requests the logged-in person sent (docs/api.md §14) and received (§15).
  *
  * Contract invariants worth remembering:
  * - The frontend never works out the status: it shows the `status` it receives (§14.1).
@@ -13,7 +13,7 @@ import { fromApiUser, type UserSummary, type UserSummaryJson } from './user'
 export const MONEY_REQUEST_STATUSES = ['pending', 'paid', 'rejected', 'expired'] as const
 export type MoneyRequestStatus = (typeof MONEY_REQUEST_STATUSES)[number]
 
-/** The label of each status (US-15). In this sprint only «Pendent» and «Caducada» can happen. */
+/** The label of each status (US-15, US-16). A sent request also reaches «Pagada» and «Rebutjada» once US-39 and US-40 exist. */
 export const MONEY_REQUEST_STATUS_LABELS: Record<MoneyRequestStatus, string> = {
   pending: 'Pendent',
   paid: 'Pagada',
@@ -62,14 +62,18 @@ function isStatus(value: string): value is MoneyRequestStatus {
   return (MONEY_REQUEST_STATUSES as readonly string[]).includes(value)
 }
 
+/** An unknown status is safest shown as still pending: the server decides what can be done with it. */
+function toStatus(value: string): MoneyRequestStatus {
+  return isStatus(value) ? value : 'pending'
+}
+
 export function fromApiMoneyRequest(json: MoneyRequestJson): MoneyRequest {
   return {
     id: json.id,
     to: fromApiUser(json.to),
     amount: json.amount,
     concept: json.concept,
-    // An unknown status is safest shown as still pending: it can be cancelled and the server decides.
-    status: isStatus(json.status) ? json.status : 'pending',
+    status: toStatus(json.status),
     createdAt: json.createdAt,
     expiresAt: json.expiresAt,
   }
@@ -77,6 +81,48 @@ export function fromApiMoneyRequest(json: MoneyRequestJson): MoneyRequest {
 
 export function fromApiMoneyRequests(jsonList: MoneyRequestJson[] | null | undefined): MoneyRequest[] {
   return (jsonList ?? []).map(fromApiMoneyRequest)
+}
+
+/** A request someone sent to the logged-in person (§15.1): like `MoneyRequest`, with `from` instead of `to`. */
+export interface ReceivedMoneyRequest {
+  id: string
+  from: UserSummary
+  amount: number
+  concept: string
+  status: MoneyRequestStatus
+  createdAt: string
+  expiresAt: string
+}
+
+export interface ReceivedMoneyRequestJson {
+  id: string
+  from: UserSummaryJson
+  amount: number
+  concept: string
+  status: string
+  createdAt: string
+  expiresAt: string
+}
+
+/** GET /api/money-requests/received. */
+export interface ReceivedMoneyRequestsJson {
+  items: ReceivedMoneyRequestJson[]
+}
+
+export function fromApiReceivedMoneyRequest(json: ReceivedMoneyRequestJson): ReceivedMoneyRequest {
+  return {
+    id: json.id,
+    from: fromApiUser(json.from),
+    amount: json.amount,
+    concept: json.concept,
+    status: toStatus(json.status),
+    createdAt: json.createdAt,
+    expiresAt: json.expiresAt,
+  }
+}
+
+export function fromApiReceivedMoneyRequests(jsonList: ReceivedMoneyRequestJson[] | null | undefined): ReceivedMoneyRequest[] {
+  return (jsonList ?? []).map(fromApiReceivedMoneyRequest)
 }
 
 /** «L'import màxim és d'1.000.000,00 €.», the text of «Demanar diners» for AMOUNT_OVER_LIMIT (§14.7). */

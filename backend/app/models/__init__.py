@@ -21,7 +21,9 @@ from app.models.money_request import (
     MAX_REQUEST_AMOUNT,
     MAX_REQUEST_CONCEPT,
     REQUEST_EXPIRED,
+    REQUEST_PAID,
     REQUEST_PENDING,
+    REQUEST_REJECTED,
     MoneyRequest,
 )
 from app.models.movement import (
@@ -86,7 +88,9 @@ __all__ = [
     "MAX_REQUEST_CONCEPT",
     "MESSAGE_MONEY_REQUEST",
     "REQUEST_EXPIRED",
+    "REQUEST_PAID",
     "REQUEST_PENDING",
+    "REQUEST_REJECTED",
     "MoneyRequest",
     "Account",
     "Currency",

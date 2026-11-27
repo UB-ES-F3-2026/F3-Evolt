@@ -58,6 +58,11 @@ class FirestoreMoneyRequestRepository:
         sent = [money_request_from_dict(snapshot.id, snapshot.to_dict()) for snapshot in snapshots]
         return sorted(sent, key=MoneyRequest.sort_key, reverse=True)
 
+    def list_by_recipient(self, recipient_id: int) -> list[MoneyRequest]:
+        snapshots = _tx.query(self._requests.where(filter=FieldFilter("recipient_id", "==", recipient_id)))
+        received = [money_request_from_dict(snapshot.id, snapshot.to_dict()) for snapshot in snapshots]
+        return sorted(received, key=MoneyRequest.sort_key, reverse=True)
+
     def delete(self, request_id: str) -> None:
         _tx.delete(self._requests.document(request_id))
 
