@@ -23,6 +23,8 @@ const { isLoggedIn, logOut } = useSessionMenuViewModel()
           <Menu :size="20" />
         </summary>
         <div class="menu-list">
+          <!-- US-12: above «Sol·licituds enviades», as in the mockup US-12-acces-menu. -->
+          <router-link :to="{ name: 'account-details' }" class="menu-item">Dades del compte</router-link>
           <!-- US-15: Inici → menú → «Sol·licituds enviades» (PO decision: no card in Inici). -->
           <router-link :to="{ name: 'money-requests' }" class="menu-item">Sol·licituds enviades</router-link>
           <button type="button" class="menu-item" @click="logOut">Tancar sessió</button>

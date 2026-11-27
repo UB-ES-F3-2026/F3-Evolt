@@ -62,6 +62,12 @@ Full page map (all 26 routes):
 | `/requests` | `money-requests` | `views/requests/MoneyRequestsView.vue` | `viewmodels/requests/useMoneyRequestsViewModel.ts` |
 | `/requests/new` | `new-money-request` | `views/requests/NewMoneyRequestView.vue` | `viewmodels/requests/useNewMoneyRequestViewModel.ts` |
 
+## Account
+
+| Route path | Route name | View file | ViewModel file |
+|------------|-----------|-----------|----------------|
+| `/account` | `account-details` | `views/account/AccountDetailsView.vue` | `viewmodels/account/useAccountDetailsViewModel.ts` |
+
 ## Currencies
 
 | Route path | Route name | View file | ViewModel file |
@@ -95,6 +101,7 @@ root.
 | `potsService` | `services/pots/` | pots only |
 | `transfersService` | `services/payments/` | payments only |
 | `moneyRequestsService` | `services/requests/` | requests only |
+| `accountService` | `services/account/` | account only |
 | `fileDownload`, `receiptPdf` | `services/movements/` | only consumer is the movement-detail ViewModel |
 | `apiClient` | `services/` root (shared) | used by every service |
 | `session` | `services/` root (shared) | used by the router guard and auth ViewModels |
@@ -121,8 +128,9 @@ domains:
 
 1. **Page separation = router + domain subfolders inside the layers.** Each
    layer groups its files by domain: `views/<domain>/`,
-   `viewmodels/<domain>/` (9 domains: `home`, `movements`, `topup`,
-   `exchange`, `pots`, `payments`, `requests`, `currencies`, `auth`) and
+   `viewmodels/<domain>/` (10 domains: `home`, `movements`, `topup`,
+   `exchange`, `pots`, `payments`, `requests`, `currencies`, `auth`,
+   `account`) and
    `services/<domain>/` (only the domains that own a single-domain service;
    `home` and `currencies` have none). Co-located tests move with their
    source files.
@@ -132,7 +140,7 @@ domains:
    domain grows.
 2. **One route module per domain:** `frontend/src/router/routes/<domain>.ts`
    (`home.ts`, `movements.ts`, `topup.ts`, `exchange.ts`, `pots.ts`,
-   `payments.ts`, `requests.ts`, `currencies.ts`, `auth.ts`). A route module
+   `payments.ts`, `requests.ts`, `currencies.ts`, `auth.ts`, `account.ts`). A route module
    exports an array of `RouteRecordRaw` for its domain.
 3. **Service placement rule:** a service used by exactly one domain lives in
    `services/<domain>/`; a service used by 2+ domains or by shared infra
