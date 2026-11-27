@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { mockCancelMoneyRequest, mockCreateMoneyRequest, mockMoneyRequests } from './moneyRequests'
+import {
+  mockCancelMoneyRequest,
+  mockCreateMoneyRequest,
+  mockMoneyRequests,
+  mockReceivedMoneyRequests,
+} from './moneyRequests'
 
 // Logged in as the user 1 of the seed. The mock keeps its state for the whole file: tests in order.
 const DEMO = 'demo@evolt.test'
@@ -52,10 +57,10 @@ describe('mockCreateMoneyRequest (docs/api.md §14.2)', () => {
     expect(Date.parse(created.expiresAt)).toBeGreaterThan(Date.parse(created.createdAt))
   })
 
-  it('SO-02: lists the newest first', () => {
+  it('SO-02: lists the newest first; the ids go on after the received ones of the seed (§15.8)', () => {
     mockCreateMoneyRequest({ toUserId: 'usr-04', amount: 100, concept: 'Cafè' }, DEMO)
 
-    expect(mockMoneyRequests().items.map((request) => request.id)).toEqual(['req-04', 'req-03', 'req-02', 'req-01'])
+    expect(mockMoneyRequests().items.map((request) => request.id)).toEqual(['req-08', 'req-07', 'req-02', 'req-01'])
   })
 })
 
@@ -81,5 +86,44 @@ describe('mockCancelMoneyRequest (docs/api.md §14.4)', () => {
 
   it('SO-20: an id that is not there is REQUEST_NOT_FOUND', () => {
     expect(() => mockCancelMoneyRequest('req-99')).toThrow(expect.objectContaining({ code: 'REQUEST_NOT_FOUND' }) as Error)
+  })
+})
+
+describe('mockReceivedMoneyRequests seed (docs/api.md §15.8)', () => {
+  // The seed is built from today's clock (2, 4, 5 and 11 days ago), so the order and the statuses hold on any day.
+  it('SR-01: one in each status, newest first: Alicia pending, Junhao paid, Izan rejected, Jiajun expired', () => {
+    expect(
+      mockReceivedMoneyRequests().items.map(({ id, from, amount, status }) => [id, from.name, amount, status]),
+    ).toEqual([
+      ['req-06', 'Alicia', 2500, 'pending'],
+      ['req-05', 'Junhao', 1200, 'paid'],
+      ['req-04', 'Izan', 1800, 'rejected'],
+      ['req-03', 'Jiajun', 4200, 'expired'],
+    ])
+  })
+
+  it('SR-02: each one has exactly the keys of §15.1, with `from` instead of `to`', () => {
+    for (const request of mockReceivedMoneyRequests().items) {
+      expect(Object.keys(request).sort()).toEqual(['amount', 'concept', 'createdAt', 'expiresAt', 'from', 'id', 'status'])
+      expect(Object.keys(request.from).sort()).toEqual(['id', 'name', 'username'])
+    }
+  })
+
+  it('SR-08: a paid or rejected one never expires', () => {
+    const inAMonth = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+
+    const statuses = mockReceivedMoneyRequests(inAMonth).items.map(({ id, status }) => [id, status])
+
+    expect(statuses).toEqual([
+      ['req-06', 'expired'],
+      ['req-05', 'paid'],
+      ['req-04', 'rejected'],
+      ['req-03', 'expired'],
+    ])
+  })
+
+  it('a received request cannot be cancelled: cancel only knows the sent ones (§14.4)', () => {
+    expect(() => mockCancelMoneyRequest('req-06')).toThrow(expect.objectContaining({ code: 'REQUEST_NOT_FOUND' }) as Error)
+    expect(mockReceivedMoneyRequests().items.map((request) => request.id)).toContain('req-06')
   })
 })
