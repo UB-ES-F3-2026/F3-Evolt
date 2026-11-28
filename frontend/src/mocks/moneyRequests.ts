@@ -23,6 +23,8 @@ interface StoredRequest {
   /** Instant in ms and creation order, to sort newest first with the P4 tie-break. */
   at: number
   seq: number
+  /** The split expense it belongs to (§17.6): such requests only show inside it. */
+  splitId: string | null
 }
 
 let requests: StoredRequest[] = []
@@ -43,7 +45,24 @@ function startRequests(now: Date = new Date()): void {
 
 /** GET /api/money-requests — newest first; the status is worked out now (§14.5). */
 export function mockMoneyRequests(now: Date = new Date()): MoneyRequestsJson {
-  return { items: [...requests].sort((a, b) => b.at - a.at || b.seq - a.seq).map((request) => toJson(request, now)) }
+  // The parts of a split expense are not listed on their own (§17.6, P104).
+  const single = requests.filter((request) => request.splitId === null)
+  return { items: single.sort((a, b) => b.at - a.at || b.seq - a.seq).map((request) => toJson(request, now)) }
+}
+
+/**
+ * The requests of a split expense, one per participant, as POST /api/split-expenses creates them (§17.2):
+ * the same concept and date for all. The caller has already checked the body, so nothing here fails.
+ */
+export function mockAddSplitRequests(
+  splitId: string,
+  concept: string,
+  parts: { toUserId: string; amount: number }[],
+  at: Date,
+): MoneyRequestJson[] {
+  const created = parts.map((part) => ({ ...stored(nextNumber++, part.toUserId, part.amount, concept, at), splitId }))
+  requests.push(...created)
+  return created.map((request) => toJson(request, at))
 }
 
 /**
@@ -80,7 +99,8 @@ export function mockCreateMoneyRequest(
  * REQUEST_NOT_FOUND when it is not there; REQUEST_NOT_PENDING when it already expired.
  */
 export function mockCancelMoneyRequest(requestId: string, now: Date = new Date()): { status: 'ok' } {
-  const request = requests.find((candidate) => candidate.id === requestId)
+  // A part of a split expense cannot be cancelled: it reads as not there (§17.6, P105).
+  const request = requests.find((candidate) => candidate.id === requestId && candidate.splitId === null)
   if (request === undefined) throw mockError('REQUEST_NOT_FOUND', 'Aquesta sol·licitud ja no existeix.')
   if (toJson(request, now).status !== 'pending') {
     throw mockError('REQUEST_NOT_PENDING', 'Només es poden cancel·lar les sol·licituds pendents.')
@@ -90,7 +110,15 @@ export function mockCancelMoneyRequest(requestId: string, now: Date = new Date()
 }
 
 function stored(number: number, toUserId: string, amount: number, concept: string, at: Date): StoredRequest {
-  return { id: `req-${String(number).padStart(2, '0')}`, toUserId, amount, concept, at: at.getTime(), seq: number }
+  return {
+    id: `req-${String(number).padStart(2, '0')}`,
+    toUserId,
+    amount,
+    concept,
+    at: at.getTime(),
+    seq: number,
+    splitId: null,
+  }
 }
 
 /** 00:00 Madrid of the seventh day after the day it was created: from then it reads «Caducada» (§14.5). */

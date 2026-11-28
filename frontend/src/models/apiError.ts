@@ -45,6 +45,9 @@ const API_ERROR_CODES = [
   // Currency exchange (US-27, docs/api.md §12.7).
   'AMOUNT_TOO_SMALL',
   'SAME_CURRENCY',
+  // Split expenses (US-30, docs/api.md §17.8).
+  'INVALID_SHARE',
+  'SHARES_DO_NOT_MATCH',
 ] as const
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number]

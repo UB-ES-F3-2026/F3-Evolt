@@ -53,6 +53,9 @@ const MESSAGES: Record<ApiErrorCode, string> = {
   // Currency exchange (US-27, docs/api.md §12.7).
   AMOUNT_TOO_SMALL: "L'import és massa petit per canviar.",
   SAME_CURRENCY: 'Origen i destí no poden ser el mateix subcompte.',
+  // Split expenses (US-30, docs/api.md §17.8).
+  INVALID_SHARE: 'Cada part ha de ser més gran que 0.',
+  SHARES_DO_NOT_MATCH: 'La suma de les parts ha de ser igual al total.',
 }
 
 export function messageForCode(code: ApiErrorCode, details?: ApiError['details']): string {

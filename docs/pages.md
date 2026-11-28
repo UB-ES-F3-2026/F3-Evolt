@@ -60,7 +60,7 @@ Full page map (all 26 routes):
 | Route path | Route name | View file | ViewModel file |
 |------------|-----------|-----------|----------------|
 | `/requests` | `money-requests` | `views/requests/MoneyRequestsView.vue` | `viewmodels/requests/useMoneyRequestsViewModel.ts` |
-| `/requests/new` | `new-money-request` | `views/requests/NewMoneyRequestView.vue` | `viewmodels/requests/useNewMoneyRequestViewModel.ts` |
+| `/requests/new` | `new-money-request` | `views/requests/NewMoneyRequestView.vue` | `viewmodels/requests/useNewMoneyRequestViewModel.ts`, `viewmodels/requests/useSplitExpenseViewModel.ts` (US-30) |
 
 ## Currencies
 
