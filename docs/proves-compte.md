@@ -16,7 +16,7 @@ Proves d'acceptació de consultar l'IBAN i de rebre una transferència d'un altr
 - **API:** proves del backend. Cada fila es converteix en un test de pytest a la tasca indicada, amb l'id de la prova al nom o al comentari del test (skill `qa-strategy`). Els esperats surten del seed, escrits tal qual.
 - **Pantalla:** proves del frontend. Es comproven a mà amb l'app arrencada a 375 px i, quan es pugui, amb un test de Vitest del ViewModel.
 
-L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.md` §8.2](api.md#82-sessió)). «Usuari 1» és `demo@evolt.test` i «usuari 2», `buit@evolt.test`; tots els usuaris del seed tenen la contrasenya `Evolt2026` (P13). La ruta `POST /api/dev/incoming-transfers` no demana sessió.
+L'usuari de cada petició és el de la sessió (`Authorization: Bearer`, [`api.md` §8.2](api.md#82-sessió)). Els tests de pytest el posen amb la capçalera `X-User-Id`, que §8.2 permet als tests (`ALLOW_X_USER_ID`); IB-07 prova la ruta sense aquesta capçalera. «Usuari 1» és `demo@evolt.test` i «usuari 2», `buit@evolt.test`; tots els usuaris del seed tenen la contrasenya `Evolt2026` (P13). La ruta `POST /api/dev/incoming-transfers` no demana sessió.
 
 ## Dades de partida
 
