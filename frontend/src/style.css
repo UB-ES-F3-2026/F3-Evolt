@@ -18,6 +18,15 @@
   --color-pot-orange: #ea580c;
   --color-pot-pink: #db2777;
   --color-pot-yellow: #ca8a04;
+  /* Labels of a money request status (US-16): the colours of the mockup, docs/us/_mockup/sprint3.css. */
+  --color-status-pending-bg: #fff4d6;
+  --color-status-pending-text: #8a5a00;
+  --color-status-paid-bg: #dcfce7;
+  --color-status-paid-text: #166534;
+  --color-status-rejected-bg: #fee2e2;
+  --color-status-rejected-text: #991b1b;
+  --color-status-expired-bg: #e9edf5;
+  --color-status-expired-text: #475569;
   --radius: 0.75rem;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }

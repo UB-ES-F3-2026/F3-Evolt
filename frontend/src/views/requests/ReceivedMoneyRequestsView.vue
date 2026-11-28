@@ -99,7 +99,7 @@ onMounted(load)
   font-weight: 700;
 }
 
-/* The colours of the mockup US-16-sollicituds-rebudes: yellow, green, red and grey (US-16). */
+/* Yellow, green, red and grey, as in the mockup US-16-sollicituds-rebudes (tokens in style.css). */
 .status {
   padding: 0.125rem 0.625rem;
   border-radius: 999px;
@@ -108,22 +108,22 @@ onMounted(load)
 }
 
 .status.pending {
-  background: #fff4d6;
-  color: #8a5a00;
+  background: var(--color-status-pending-bg);
+  color: var(--color-status-pending-text);
 }
 
 .status.paid {
-  background: #dcfce7;
-  color: #166534;
+  background: var(--color-status-paid-bg);
+  color: var(--color-status-paid-text);
 }
 
 .status.rejected {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--color-status-rejected-bg);
+  color: var(--color-status-rejected-text);
 }
 
 .status.expired {
-  background: #e9edf5;
-  color: #475569;
+  background: var(--color-status-expired-bg);
+  color: var(--color-status-expired-text);
 }
 </style>
