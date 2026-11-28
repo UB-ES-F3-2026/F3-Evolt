@@ -11,7 +11,7 @@ const ownedEurAndUsd: Subaccount[] = [
 
 function fakeDependencies(overrides: Partial<AddCurrencyDependencies> = {}) {
   return {
-    getSubaccounts: vi.fn(() => Promise.resolve(ownedEur)),
+    getSubaccounts: vi.fn(() => Promise.resolve({ items: ownedEur, totalInEuros: 0 })),
     addSubaccount: vi.fn((code: CurrencyCode) =>
       Promise.resolve({ id: `sub-${code.toLowerCase()}`, code, balance: 0 }),
     ),
@@ -45,7 +45,7 @@ describe('useAddCurrencyViewModel', () => {
   it('creates the sub-account, confirms, pauses and goes back to Home', async () => {
     // The reload after the POST is the call that brings the new USD row.
     const dependencies = fakeDependencies({
-      getSubaccounts: vi.fn(() => Promise.resolve(ownedEurAndUsd)),
+      getSubaccounts: vi.fn(() => Promise.resolve({ items: ownedEurAndUsd, totalInEuros: 0 })),
     })
     const viewModel = useAddCurrencyViewModel(dependencies)
 

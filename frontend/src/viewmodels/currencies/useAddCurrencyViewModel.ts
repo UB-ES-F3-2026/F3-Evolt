@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { CURRENCIES, type CurrencyCode, type Subaccount } from '@/models/currency'
+import { CURRENCIES, type CurrencyCode, type Subaccount, type SubaccountList } from '@/models/currency'
 import { toUserMessage } from '@/models/errorMessages'
 import { addSubaccount, getSubaccounts } from '@/services/subaccountsService'
 
@@ -8,7 +8,7 @@ import { addSubaccount, getSubaccounts } from '@/services/subaccountsService'
 const CONFIRMATION_MS = 1500
 
 export interface AddCurrencyDependencies {
-  getSubaccounts: () => Promise<Subaccount[]>
+  getSubaccounts: () => Promise<SubaccountList>
   addSubaccount: (code: CurrencyCode) => Promise<Subaccount>
   goHome: () => Promise<unknown>
   pause: (ms: number) => Promise<void>
@@ -57,7 +57,7 @@ export function useAddCurrencyViewModel(dependencies: AddCurrencyDependencies = 
     isLoading.value = true
     error.value = null
     try {
-      subaccounts.value = await dependencies.getSubaccounts()
+      subaccounts.value = (await dependencies.getSubaccounts()).items
     } catch (failure) {
       error.value = toUserMessage(failure)
     } finally {
@@ -83,7 +83,7 @@ export function useAddCurrencyViewModel(dependencies: AddCurrencyDependencies = 
     // The sub-account exists from here on: a failed reload must never read as a failed add.
     try {
       // Reload instead of pushing the new row: the backend is the source of truth.
-      subaccounts.value = await dependencies.getSubaccounts()
+      subaccounts.value = (await dependencies.getSubaccounts()).items
     } catch {
       // The picker is already leaving; Home reloads the list when it arrives.
     }

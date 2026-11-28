@@ -5,6 +5,7 @@ import {
   formatCurrencyAmount,
   fromApiSubaccount,
   fromApiSubaccounts,
+  fromApiSubaccountsList,
   isCurrencyCode,
   totalInEurosMinor,
 } from './currency'
@@ -107,5 +108,42 @@ describe('fromApiSubaccounts', () => {
 
   it('throws on a single row with an unknown currency', () => {
     expect(() => fromApiSubaccount({ id: '1', currency: 'AUD', balance: 100 })).toThrow()
+  })
+})
+
+describe('fromApiSubaccountsList', () => {
+  it('maps known rows, drops unknown currencies and keeps the server total', () => {
+    expect(
+      fromApiSubaccountsList({
+        items: [
+          { id: '1', currency: 'USD', balance: 31755 },
+          { id: '2', currency: 'AUD', balance: 100 },
+          { id: '3', currency: 'JPY', balance: 1234 },
+        ],
+        totalInEuros: 154020,
+      }),
+    ).toEqual({
+      items: [
+        { id: '1', code: 'USD', balance: 31755 },
+        { id: '3', code: 'JPY', balance: 1234 },
+      ],
+      totalInEuros: 154020,
+    })
+  })
+
+  it('passes totalInEuros through untouched: the server computes it (§12.3)', () => {
+    // EUR 125050 + USD 42716 → 38970: the rows would sum to 164020…
+    const rows = [
+      { id: '1', currency: 'EUR', balance: 125050 },
+      { id: '2', currency: 'USD', balance: 42716 },
+    ]
+    expect(totalInEurosMinor(fromApiSubaccounts(rows))).toBe(164020)
+    // …but the server's own total wins, even when it does not match the rows.
+    expect(fromApiSubaccountsList({ items: rows, totalInEuros: 999999 }).totalInEuros).toBe(999999)
+  })
+
+  it('treats a missing list as an empty one', () => {
+    expect(fromApiSubaccountsList(null)).toEqual({ items: [], totalInEuros: 0 })
+    expect(fromApiSubaccountsList(undefined)).toEqual({ items: [], totalInEuros: 0 })
   })
 })

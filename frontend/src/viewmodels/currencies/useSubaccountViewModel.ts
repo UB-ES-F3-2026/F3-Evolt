@@ -1,6 +1,12 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { currencyByCode, formatCurrencyAmount, type CurrencyCode, type Subaccount } from '@/models/currency'
+import {
+  currencyByCode,
+  formatCurrencyAmount,
+  type CurrencyCode,
+  type Subaccount,
+  type SubaccountList,
+} from '@/models/currency'
 import { formatDateTime } from '@/models/date'
 import { isApiError } from '@/models/apiError'
 import { messageForCode, toUserMessage } from '@/models/errorMessages'
@@ -15,7 +21,7 @@ const CONFIRMATION_MS = 1500
 const EURO_LAST_MOVEMENTS = 5
 
 export interface SubaccountDependencies {
-  getSubaccounts: () => Promise<Subaccount[]>
+  getSubaccounts: () => Promise<SubaccountList>
   getSubaccountMovements: (subaccountId: string) => Promise<SubaccountMovement[]>
   getMovements: (offset: number, limit: number) => Promise<MovementsPage>
   deleteSubaccount: (subaccountId: string) => Promise<void>
@@ -76,7 +82,7 @@ export function useSubaccountViewModel(
     error.value = null
     try {
       // There is no GET /api/subaccounts/{id} (docs/api.md §12): the account comes from the list.
-      const accounts = await dependencies.getSubaccounts()
+      const accounts = (await dependencies.getSubaccounts()).items
       const found = accounts.find((candidate) => candidate.id === subaccountId) ?? null
       subaccount.value = found
       if (found === null) {

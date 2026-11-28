@@ -16,6 +16,7 @@ import {
   isMainCurrency,
   toSubaccountOption,
   type Subaccount,
+  type SubaccountList,
   type SubaccountOption,
 } from '@/models/currency'
 import { currencyDecimals, formatMinor } from '@/models/money'
@@ -27,7 +28,7 @@ const AMOUNT_FORMAT_TWO_DECIMALS = 'Escriu un import vàlid, amb 2 decimals com 
 const AMOUNT_FORMAT_WHOLE_UNITS = 'Escriu un import vàlid.'
 
 export interface ExchangeDependencies {
-  getSubaccounts: () => Promise<Subaccount[]>
+  getSubaccounts: () => Promise<SubaccountList>
   goToSummary: (draft: ExchangeDraft) => Promise<unknown>
   goToCurrencies: () => Promise<unknown>
 }
@@ -117,7 +118,7 @@ export function useExchangeViewModel(dependencies: ExchangeDependencies = defaul
     isLoading.value = true
     loadError.value = null
     try {
-      applyInitialSelection(await dependencies.getSubaccounts())
+      applyInitialSelection((await dependencies.getSubaccounts()).items)
     } catch (failure) {
       loadError.value = toUserMessage(failure)
     } finally {

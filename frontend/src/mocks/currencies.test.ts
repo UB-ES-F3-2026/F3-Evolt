@@ -4,6 +4,7 @@ import {
   mockAddSubaccount,
   mockDeleteSubaccount,
   mockRecordSubaccountMovement,
+  mockSetSubaccountBalance,
   mockSubaccountMovements,
   mockSubaccounts,
 } from './currencies'
@@ -143,5 +144,24 @@ describe('mockDeleteSubaccount (US-26, docs/api.md §12.5)', () => {
     expect(() => mockRecordSubaccountMovement('main', entry)).toThrow()
     expect(() => mockRecordSubaccountMovement('sub-02', entry)).toThrow()
     expect(mockSubaccounts().items.at(-1)?.balance).toBe(0)
+  })
+})
+
+describe('mockSubaccounts total (§12.3)', () => {
+  // Continues the state above: EUR (`main`) at the live balance, and USD (`sub-02`) at 0.
+
+  it('answers §12.3: totalInEuros computed with the server algorithm (§12.1)', () => {
+    // 31755 USD at 9123 bps → 28970 euro cents, rounded on its own (§12.1).
+    mockSetSubaccountBalance('USD', 31755)
+
+    expect(mockSubaccounts().totalInEuros).toBe(mockBalance() + 28970)
+  })
+
+  it('a new sub-account at 0 does not move the total (§12.3)', () => {
+    const totalBefore = mockSubaccounts().totalInEuros
+
+    expect(mockAddSubaccount({ currency: 'GBP' }).balance).toBe(0)
+
+    expect(mockSubaccounts().totalInEuros).toBe(totalBefore)
   })
 })

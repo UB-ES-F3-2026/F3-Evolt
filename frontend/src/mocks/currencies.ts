@@ -6,7 +6,9 @@
 
 import {
   MAIN_SUBACCOUNT_ID,
+  fromApiSubaccounts,
   isCurrencyCode,
+  totalInEurosMinor,
   type CurrencyCode,
   type DeleteSubaccountJson,
   type SubaccountJson,
@@ -41,18 +43,18 @@ function startSubaccounts(): void {
 }
 
 /**
- * GET /api/subaccounts (US-25). Copies, so callers cannot change the state.
+ * GET /api/subaccounts (US-25, docs/api.md §12.3). Copies, so callers cannot change the state.
  * The EUR row is rebuilt on every read with the live balance of the mocks, so a
  * top-up made elsewhere never leaves it stale; the foreign rows keep theirs.
+ * Like the backend, the total is computed with the §12.1 algorithm (§12.3).
  */
 export function mockSubaccounts(): SubaccountsJson {
-  return {
-    items: subaccounts.map((subaccount) =>
-      subaccount.currency === 'EUR'
-        ? { ...subaccount, balance: mockBalance() }
-        : { ...subaccount },
-    ),
-  }
+  const items = subaccounts.map((subaccount) =>
+    subaccount.currency === 'EUR'
+      ? { ...subaccount, balance: mockBalance() }
+      : { ...subaccount },
+  )
+  return { items, totalInEuros: totalInEurosMinor(fromApiSubaccounts(items)) }
 }
 
 /**

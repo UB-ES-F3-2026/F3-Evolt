@@ -78,9 +78,16 @@ export interface SubaccountJson {
   balance: number
 }
 
-/** GET /api/subaccounts (docs/api.md). */
+/** GET /api/subaccounts (docs/api.md §12.3): the rows plus the server-computed total. */
 export interface SubaccountsJson {
   items: SubaccountJson[]
+  totalInEuros: number
+}
+
+/** A mapped §12.3 list: the rows plus the server-computed total, in euro cents. */
+export interface SubaccountList {
+  items: Subaccount[]
+  totalInEuros: number
 }
 
 /** The id of the main euro account in every multi-currency answer (docs/api.md §12.2). */
@@ -123,8 +130,17 @@ export function fromApiSubaccounts(list: SubaccountJson[] | null | undefined): S
 }
 
 /**
- * The total of every subaccount in euro cents: each row is converted and rounded
- * on its own, and only then summed — never the other way around.
+ * Maps a §12.3 list: the rows through `fromApiSubaccounts`, and `totalInEuros`
+ * passes through untouched — the server computes it (§12.3), no screen recomputes it.
+ */
+export function fromApiSubaccountsList(json: SubaccountsJson | null | undefined): SubaccountList {
+  if (json === null || json === undefined) return { items: [], totalInEuros: 0 }
+  return { items: fromApiSubaccounts(json.items), totalInEuros: json.totalInEuros }
+}
+
+/**
+ * The server's approximate-total algorithm (§12.1), used by the mock: every row
+ * is converted to euro cents and rounded on its own, and only then summed.
  */
 export function totalInEurosMinor(subaccounts: readonly { code: CurrencyCode; balance: number }[]): number {
   return subaccounts.reduce((total, subaccount) => {

@@ -10,19 +10,24 @@ import {
 } from '@/mocks/currencies'
 import {
   fromApiSubaccount,
-  fromApiSubaccounts,
+  fromApiSubaccountsList,
   type CurrencyCode,
   type DeleteSubaccountJson,
   type Subaccount,
   type SubaccountJson,
+  type SubaccountList,
   type SubaccountMovement,
   type SubaccountMovementsJson,
   type SubaccountsJson,
 } from '@/models/currency'
 
-export async function getSubaccounts(): Promise<Subaccount[]> {
+/**
+ * GET /api/subaccounts (US-25, docs/api.md §12.3): the rows plus the server-computed
+ * total in euro cents, which is passed through untouched and never recomputed here.
+ */
+export async function getSubaccounts(): Promise<SubaccountList> {
   const json = useMocks() ? mockSubaccounts() : await apiGet<SubaccountsJson>('/api/subaccounts')
-  return fromApiSubaccounts(json.items)
+  return fromApiSubaccountsList(json)
 }
 
 export async function addSubaccount(code: CurrencyCode): Promise<Subaccount> {
