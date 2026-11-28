@@ -219,7 +219,10 @@ def test_a_pending_user_cannot_receive(client: TestClient, seed: SeedData) -> No
     # IB-13: usr-09 registrat però sense verificar.
     _register(client, "anna@x.com")
 
-    assert _incoming(client, {**MARIA, "iban": iban_for(9)}).json()["code"] == "RECIPIENT_NOT_FOUND"
+    response = _incoming(client, {**MARIA, "iban": iban_for(9)})
+
+    assert response.status_code == 404
+    assert response.json()["code"] == "RECIPIENT_NOT_FOUND"
 
 
 @pytest.mark.parametrize(
@@ -245,7 +248,10 @@ def test_amount_between_one_cent_and_one_million(
 @pytest.mark.parametrize("payer", ["", "   ", "x" * 71])
 def test_the_payer_must_have_1_to_70_characters(client: TestClient, seed: SeedData, payer: str) -> None:
     # IB-15
-    assert _incoming(client, {**MARIA, "payer": payer}).json()["code"] == "VALIDATION_ERROR"
+    response = _incoming(client, {**MARIA, "payer": payer})
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "VALIDATION_ERROR"
 
 
 def test_the_payer_is_trimmed_and_70_characters_fit(client: TestClient, seed: SeedData) -> None:
@@ -266,7 +272,10 @@ def test_the_payer_is_trimmed_and_70_characters_fit(client: TestClient, seed: Se
 )
 def test_badly_formed_body_is_a_validation_error(client: TestClient, seed: SeedData, body: dict) -> None:
     # IB-16
-    assert _incoming(client, body).json()["code"] == "VALIDATION_ERROR"
+    response = _incoming(client, body)
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "VALIDATION_ERROR"
 
 
 def test_receiving_counts_for_no_limit_and_gives_no_xp(client: TestClient, seed: SeedData) -> None:
