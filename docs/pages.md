@@ -7,7 +7,7 @@ via the frontend page-separation refactor). The router mirrors the same
 domains: `frontend/src/router/routes/<domain>.ts`, one file per domain, with
 each view lazy-loaded at the route level.
 
-Full page map (all 26 routes):
+Full page map (all 27 routes):
 
 ## Home
 
