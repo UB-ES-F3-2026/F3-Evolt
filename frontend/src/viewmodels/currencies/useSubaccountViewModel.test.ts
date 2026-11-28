@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { ApiError } from '@/models/apiError'
-import type { Subaccount, SubaccountMovement } from '@/models/currency'
+import type { Subaccount, SubaccountList, SubaccountMovement } from '@/models/currency'
 import type { MovementsPage } from '@/models/movement'
 import { useSubaccountViewModel, type SubaccountDependencies } from './useSubaccountViewModel'
 
@@ -28,7 +28,7 @@ function apiError(code: ApiError['code']): ApiError {
 
 function fakeDependencies(accounts: Subaccount[], overrides: Partial<SubaccountDependencies> = {}) {
   return {
-    getSubaccounts: vi.fn(() => Promise.resolve(accounts)),
+    getSubaccounts: vi.fn(() => Promise.resolve({ items: accounts, totalInEuros: 0 })),
     getSubaccountMovements: vi.fn(() => Promise.resolve<SubaccountMovement[]>([])),
     getMovements: vi.fn(() => Promise.resolve(EURO_PAGE)),
     deleteSubaccount: vi.fn(() => Promise.resolve()),
@@ -118,9 +118,9 @@ describe('useSubaccountViewModel: the detail (US-26)', () => {
   it('a failed load shows the error and can be retried', async () => {
     const dependencies = fakeDependencies([EUR, USD_EMPTY], {
       getSubaccounts: vi
-        .fn<() => Promise<Subaccount[]>>()
+        .fn<() => Promise<SubaccountList>>()
         .mockRejectedValueOnce(apiError('NETWORK_ERROR'))
-        .mockResolvedValueOnce([EUR, USD_EMPTY]),
+        .mockResolvedValueOnce({ items: [EUR, USD_EMPTY], totalInEuros: 0 }),
     })
     const viewModel = useSubaccountViewModel('sub-01', dependencies)
 

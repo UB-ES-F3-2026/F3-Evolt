@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { messageForCode } from '@/models/errorMessages'
 import type { ExchangeDraft } from '@/models/exchange'
-import type { Subaccount } from '@/models/currency'
+import type { Subaccount, SubaccountList } from '@/models/currency'
 import type { ExchangeResult } from '@/services/exchange/exchangeService'
 import {
   CONFIRMATION_MS,
@@ -34,10 +34,15 @@ function subaccounts(eurBalanceMinor: number): Subaccount[] {
   return [eurAccount(eurBalanceMinor), usdAccount(31755)]
 }
 
+/** The §12.3 answer shape: the rows plus the server total, which this screen ignores. */
+function list(items: Subaccount[]): SubaccountList {
+  return { items, totalInEuros: 0 }
+}
+
 function fakeDependencies(overrides: Partial<ExchangeSummaryDependencies> = {}) {
   return {
     draft: eurToUsd,
-    getSubaccounts: vi.fn(() => Promise.resolve(subaccounts(125050))),
+    getSubaccounts: vi.fn(() => Promise.resolve(list(subaccounts(125050)))),
     confirmExchange: vi.fn(() => Promise.resolve(exchanged)),
     goHome: vi.fn(() => Promise.resolve()),
     goToExchange: vi.fn(() => Promise.resolve()),
@@ -71,7 +76,7 @@ describe('useExchangeSummaryViewModel', () => {
     const viewModel = useExchangeSummaryViewModel(
       fakeDependencies({
         draft: { srcCurrency: 'JPY', tgtCurrency: 'EUR', amountMinor: 10000 },
-        getSubaccounts: vi.fn(() => Promise.resolve(jpyItems)),
+        getSubaccounts: vi.fn(() => Promise.resolve(list(jpyItems))),
       }),
     )
 
@@ -84,7 +89,7 @@ describe('useExchangeSummaryViewModel', () => {
   it('says "No tens prou saldo" and sends nothing when amount + commission does not fit (US-27)', async () => {
     // 101,49 € cannot pay a 101,50 € charge.
     const dependencies = fakeDependencies({
-      getSubaccounts: vi.fn(() => Promise.resolve(subaccounts(10149))),
+      getSubaccounts: vi.fn(() => Promise.resolve(list(subaccounts(10149)))),
     })
     const viewModel = useExchangeSummaryViewModel(dependencies)
 

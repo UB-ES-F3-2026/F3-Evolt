@@ -3,15 +3,15 @@ import { useRouter } from 'vue-router'
 import {
   CURRENCIES,
   formatCurrencyAmount,
-  totalInEurosMinor,
   type CurrencyCode,
   type Subaccount,
+  type SubaccountList,
 } from '@/models/currency'
 import { toUserMessage } from '@/models/errorMessages'
 import { getSubaccounts } from '@/services/subaccountsService'
 
 export interface CurrenciesDependencies {
-  getSubaccounts: () => Promise<Subaccount[]>
+  getSubaccounts: () => Promise<SubaccountList>
   goToAdd: () => unknown
   goChange: () => unknown
   /** US-26: each row opens its account's detail. */
@@ -55,14 +55,18 @@ export function useCurrenciesViewModel(dependencies: CurrenciesDependencies = de
     }),
   )
 
-  // Each row is converted to euros on its own and then summed (see the model).
-  const totalCents = computed(() => totalInEurosMinor(subaccounts.value))
+  // The server computes the total (§12.3): the screen only displays it, never
+  // recomputes it from the rows. `null` until the first answer arrives.
+  const totalInEuros = ref<number | null>(null)
+  const totalCents = computed(() => totalInEuros.value ?? 0)
 
   async function load(): Promise<void> {
     isLoading.value = true
     error.value = null
     try {
-      subaccounts.value = await dependencies.getSubaccounts()
+      const list = await dependencies.getSubaccounts()
+      subaccounts.value = list.items
+      totalInEuros.value = list.totalInEuros
     } catch (failure) {
       error.value = toUserMessage(failure)
     } finally {

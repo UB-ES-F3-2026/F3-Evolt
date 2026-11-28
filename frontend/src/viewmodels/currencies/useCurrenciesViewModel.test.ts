@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { totalInEurosMinor, type Subaccount } from '@/models/currency'
+import { type Subaccount, type SubaccountList } from '@/models/currency'
 import { messageForCode } from '@/models/errorMessages'
 import { useCurrenciesViewModel, type CurrenciesDependencies } from './useCurrenciesViewModel'
 
@@ -8,9 +8,15 @@ const owned: Subaccount[] = [
   { id: 'sub-usd', code: 'USD', balance: 42716 },
 ]
 
+// A §12.3 list: the rows plus the total the server already computed.
+function fakeList(totalInEuros: number): SubaccountList {
+  return { items: owned, totalInEuros }
+}
+
 function fakeDependencies(overrides: Partial<CurrenciesDependencies> = {}) {
   return {
-    getSubaccounts: vi.fn(() => Promise.resolve(owned)),
+    // A well-behaved server: the total matches what the rows sum to (§12.1).
+    getSubaccounts: vi.fn(() => Promise.resolve(fakeList(164020))),
     goToAdd: vi.fn(),
     goChange: vi.fn(),
     goToSubaccount: vi.fn(),
@@ -25,6 +31,7 @@ describe('useCurrenciesViewModel', () => {
     expect(viewModel.isLoading.value).toBe(true)
     expect(viewModel.error.value).toBeNull()
     expect(viewModel.rows.value).toEqual([])
+    expect(viewModel.totalCents.value).toBe(0)
   })
 
   it('lists only the owned sub-accounts, in CURRENCIES order (EUR first)', async () => {
@@ -45,14 +52,16 @@ describe('useCurrenciesViewModel', () => {
     expect(viewModel.rows.value[1].amountText).toMatch(/^427,16\s\$$/)
   })
 
-  it('totals every sub-account in euro cents', async () => {
-    const viewModel = useCurrenciesViewModel(fakeDependencies())
+  it('shows the server total instead of recomputing it from the rows', async () => {
+    // The server total deliberately differs from what the rows would sum to
+    // (164020): the screen must display the server's figure untouched (§12.3).
+    const viewModel = useCurrenciesViewModel(
+      fakeDependencies({ getSubaccounts: vi.fn(() => Promise.resolve(fakeList(199999))) }),
+    )
 
     await viewModel.load()
 
-    // EUR 125050 stays as is; USD 42716 at 9123 bps is 38970.
-    expect(viewModel.totalCents.value).toBe(164020)
-    expect(viewModel.totalCents.value).toBe(totalInEurosMinor(owned))
+    expect(viewModel.totalCents.value).toBe(199999)
   })
 
   it('shows the user message of a rejected load and no rows', async () => {

@@ -5,7 +5,7 @@ import {
   currencyByCode,
   isCurrencyCode,
   isMainCurrency,
-  type Subaccount,
+  type SubaccountList,
 } from '@/models/currency'
 import { EXCHANGE_INSUFFICIENT_BALANCE_MESSAGE, toUserMessage } from '@/models/errorMessages'
 import {
@@ -29,7 +29,7 @@ export const CONFIRMATION_MS = 1500
 export interface ExchangeSummaryDependencies {
   /** What «Canviar» left in `history.state`; null when someone opens the screen directly. */
   draft: ExchangeDraft | null
-  getSubaccounts: () => Promise<Subaccount[]>
+  getSubaccounts: () => Promise<SubaccountList>
   confirmExchange: (request: ExchangeRequestJson) => Promise<ExchangeResult>
   goHome: () => Promise<unknown>
   goToExchange: () => Promise<unknown>
@@ -140,7 +140,7 @@ export function useExchangeSummaryViewModel(
     isLoading.value = true
     loadError.value = null
     try {
-      const subaccounts = await dependencies.getSubaccounts()
+      const subaccounts = (await dependencies.getSubaccounts()).items
       // Fetched fresh: the server balance decides, whatever «Canviar» showed.
       originBalance.value =
         subaccounts.find((subaccount) => subaccount.code === draft.srcCurrency)?.balance ?? 0
